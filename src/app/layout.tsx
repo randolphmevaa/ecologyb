@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+// In your global CSS or _app.tsx/layout.tsx
+import "leaflet/dist/leaflet.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -10,6 +13,34 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Import Custom Header Font
+const fontHeader = localFont({
+  src: [
+    {
+      path: "./fonts/Sato-Medium.ttf",
+      // weight: "700", // Adjust based on your font's weight
+      style: "normal",
+    },
+    // Add more variants if available
+  ],
+  variable: "--font-header",
+  display: "swap",
+});
+
+// Import Custom Body Font
+const fontBody = localFont({
+  src: [
+    {
+      path: "./fonts/RedHatDisplayMedium.ttf",
+      weight: "400", // Adjust based on your font's weight
+      style: "normal",
+    },
+    // Add more variants if available
+  ],
+  variable: "--font-body",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -25,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${fontHeader.variable} ${fontBody.variable}  antialiased`}
       >
         {children}
       </body>
