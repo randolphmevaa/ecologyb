@@ -13,7 +13,7 @@ interface IconDefaultPrototype {
 
 // Dynamically import components that depend on Leaflet.
 const ContactTable = dynamic(() => import("./ContactTable"), { ssr: false });
-const OrganizationMap = dynamic(() => import("./OrganizationMap"), { ssr: false });
+// const OrganizationMap = dynamic(() => import("./OrganizationMap"), { ssr: false });
 
 export default function ContactsPage() {
   // Configure Leaflet only on the client side.
@@ -54,7 +54,7 @@ export default function ContactsPage() {
           </motion.h1>
           <div className="grid grid-cols-1 gap-10">
             <ContactTable />
-            <OrganizationMap />
+            {/* <OrganizationMap /> */}
           </div>
         </main>
       </div>

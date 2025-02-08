@@ -21,7 +21,8 @@ import {
   ChartBarIcon,
   LifebuoyIcon,
   DocumentIcon,
-  Cog6ToothIcon,
+  // Cog6ToothIcon,
+  UserGroupIcon,
   CodeBracketIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
@@ -55,8 +56,8 @@ export function Sidebar({ role }) {
       { name: "Leads", href: "/dashboard/sales/leads", icon: SparklesIcon },
       { name: "Opportunités", href: "/dashboard/sales/opportunities", icon: BriefcaseIcon },
       { name: "Contacts & Organisations", href: "/dashboard/sales/contacts-organizations", icon: UserCircleIcon },
-      { name: "Emails", href: "/dashboard/sales/emails", icon: EnvelopeIcon },
-      { name: "Calendrier", href: "/dashboard/sales/calendar", icon: CalendarIcon }
+      { name: "Chat", href: "/dashboard/sales/emails", icon: EnvelopeIcon },
+      { name: "Agenda", href: "/dashboard/sales/calendar", icon: CalendarIcon }
     ];
   } else if (role === "Project / Installation Manager") {
     navigation = [
@@ -64,8 +65,8 @@ export function Sidebar({ role }) {
       { name: "Projets", href: "/dashboard/pm/projects", icon: FolderIcon },
       { name: "Tâches", href: "/dashboard/pm/tasks", icon: ClipboardDocumentCheckIcon },
       { name: "Contacts & Organisations", href: "/dashboard/pm/contacts-organizations", icon: UserCircleIcon },
-      { name: "Calendrier", href: "/dashboard/pm/calendar", icon: CalendarIcon },
-      { name: "Emails", href: "/dashboard/pm/emails", icon: EnvelopeIcon },
+      { name: "Agenda", href: "/dashboard/pm/calendar", icon: CalendarIcon },
+      { name: "Chat", href: "/dashboard/pm/emails", icon: EnvelopeIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/pm/documents", icon: DocumentIcon },
     ];
   } else if (role === "Technician / Installer") {
@@ -73,7 +74,7 @@ export function Sidebar({ role }) {
       { name: "Accueil", href: "/dashboard/technician", icon: HomeIcon },
       { name: "Tâches / Jobs", href: "/dashboard/technician/tasks", icon: ClipboardDocumentCheckIcon },
       { name: "Projets", href: "/dashboard/technician/projects", icon: FolderIcon },
-      { name: "Calendrier", href: "/dashboard/technician/calendar", icon: CalendarIcon },
+      { name: "Agenda", href: "/dashboard/technician/calendar", icon: CalendarIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/technician/documents", icon: DocumentIcon },
     ];
   } else if (role === "Customer Support / Service Representative") {
@@ -81,8 +82,8 @@ export function Sidebar({ role }) {
       { name: "Accueil", href: "/dashboard/support", icon: HomeIcon },
       { name: "Support & Tickets", href: "/dashboard/support/tickets", icon: LifebuoyIcon },
       { name: "Contacts & Organisations", href: "/dashboard/support/contacts-organizations", icon: UserCircleIcon },
-      { name: "Emails", href: "/dashboard/support/emails", icon: EnvelopeIcon },
-      { name: "Calendrier", href: "/dashboard/support/calendar", icon: CalendarIcon },
+      { name: "Chat", href: "/dashboard/support/emails", icon: EnvelopeIcon },
+      { name: "Agenda", href: "/dashboard/support/calendar", icon: CalendarIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/support/documents", icon: DocumentIcon },
     ];
   } else if (role === "Client / Customer (Client Portal)") {
@@ -110,14 +111,14 @@ export function Sidebar({ role }) {
           { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
         ]
       },
-      { name: "Emails", href: "/dashboard/admin/emails", icon: EnvelopeIcon, badge: 24 },
-      { name: "Calendrier", href: "/dashboard/admin/calendar", icon: CalendarIcon },
+      { name: "Chat", href: "/dashboard/admin/emails", icon: EnvelopeIcon, badge: 24 },
+      { name: "Agenda", href: "/dashboard/admin/calendar", icon: CalendarIcon },
       { name: "Produits & Services", href: "/dashboard/admin/products-services", icon: ShoppingBagIcon },
       { name: "Facturation / Paiements", href: "/dashboard/admin/billing", icon: CreditCardIcon },
       { name: "Rapports / Statistiques", href: "/dashboard/admin/reports", icon: ChartBarIcon },
       { name: "Support & Tickets", href: "/dashboard/admin/support", icon: LifebuoyIcon },
-      { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
-      { name: "Administration / Paramètres", href: "/dashboard/admin/administration", icon: Cog6ToothIcon },
+      // { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
+      { name: "Mes Utilisateurs", href: "/dashboard/admin/administration", icon: UserGroupIcon },
       { name: "Intégrations / API", href: "/dashboard/admin/integrations", icon: CodeBracketIcon }
     ];
   }

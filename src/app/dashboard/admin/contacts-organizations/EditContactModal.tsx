@@ -15,7 +15,67 @@ interface EditContactModalProps {
   onSave: (updatedContact: Contact) => void;
 }
 
-// Composant réutilisable pour les sections déroulantes (accrodéon), ouvert par défaut
+// A custom TagInput component for a modern tag UI.
+const TagInput: React.FC<{
+  tags: string[];
+  setTags: (tags: string[]) => void;
+}> = ({ tags, setTags }) => {
+  const [input, setInput] = useState("");
+
+  const addTag = () => {
+    const trimmed = input.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
+    }
+    setInput("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // When user presses Enter or comma, add the tag.
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag();
+    }
+    // Allow Backspace to remove the last tag if input is empty.
+    if (e.key === "Backspace" && !input && tags.length > 0) {
+      setTags(tags.slice(0, tags.length - 1));
+    }
+  };
+
+  const removeTag = (index: number) => {
+    setTags(tags.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 p-2 border border-gray-300 rounded-md">
+      {tags.map((tag, index) => (
+        <div
+          key={index}
+          className="flex items-center bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
+        >
+          <span>{tag}</span>
+          <button
+            onClick={() => removeTag(index)}
+            className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+            aria-label={`Supprimer le tag ${tag}`}
+          >
+            &times;
+          </button>
+        </div>
+      ))}
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Tapez un tag et appuyez sur Entrée..."
+        className="flex-grow min-w-[150px] focus:outline-none"
+      />
+    </div>
+  );
+};
+
+// Reusable collapsible section component (accordion style), open by default.
 const SectionDeroulante: React.FC<{ titre: string; children: React.ReactNode }> = ({
   titre,
   children,
@@ -40,13 +100,13 @@ const SectionDeroulante: React.FC<{ titre: string; children: React.ReactNode }> 
 };
 
 export function EditContactModal({ contact, onClose, onSave }: EditContactModalProps) {
-  // État pour "Nom et Poste"
+  // States for "Nom et Poste"
   const [nom, setNom] = useState(contact.name || "");
   const [prefixe, setPrefixe] = useState(contact.prefix || "");
   const [organisation, setOrganisation] = useState(contact.organization || "");
   const [titre, setTitre] = useState(contact.titre || "");
 
-  // État pour "Détails du contact"
+  // States for "Détails du contact"
   const [email, setEmail] = useState(contact.email || "");
   const [emailDesinscrit, setEmailDesinscrit] = useState(contact.emailOptedOut || false);
   const [telephone, setTelephone] = useState(contact.phone || "");
@@ -60,19 +120,19 @@ export function EditContactModal({ contact, onClose, onSave }: EditContactModalP
   const [facebook, setFacebook] = useState(contact.facebook || "");
   const [twitter, setTwitter] = useState(contact.twitter || "");
 
-  // État pour "Informations d'adresse"
+  // States for "Informations d'adresse"
   const [adressePrincipale, setAdressePrincipale] = useState(contact.mailingAddress || "");
   const [autreAdresse, setAutreAdresse] = useState(contact.otherAddress || "");
 
-  // État pour "Dates à retenir"
+  // States for "Dates à retenir"
   const [dateARetenir, setDateARetenir] = useState(contact.dateToRemember || "");
   const [dateDeNaissance, setDateDeNaissance] = useState(contact.dateOfBirth || "");
 
-  // État pour "Informations de description"
+  // State for "Informations de description"
   const [description, setDescription] = useState(contact.description || "");
 
-  // État pour "Informations sur les étiquettes" (tags)
-  const [etiquettes, setEtiquettes] = useState(contact.tags ? contact.tags.join(", ") : "");
+  // New state for tags, as an array of strings.
+  const [tags, setTags] = useState<string[]>(contact.tags || []);
 
   // Loading state while saving
   const [isLoading, setIsLoading] = useState(false);
@@ -85,7 +145,7 @@ export function EditContactModal({ contact, onClose, onSave }: EditContactModalP
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ [field]: value }), // update only the changed field
+        body: JSON.stringify({ [field]: value }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -123,7 +183,7 @@ export function EditContactModal({ contact, onClose, onSave }: EditContactModalP
       await updateContactField("dateToRemember", dateARetenir);
       await updateContactField("dateOfBirth", dateDeNaissance);
       await updateContactField("description", description);
-      await updateContactField("tags", etiquettes.split(",").map(t => t.trim()).filter(Boolean));
+      await updateContactField("tags", tags);
 
       // Optionally update parent state with the fully updated contact
       onSave({
@@ -149,7 +209,7 @@ export function EditContactModal({ contact, onClose, onSave }: EditContactModalP
         dateToRemember: dateARetenir,
         dateOfBirth: dateDeNaissance,
         description: description,
-        tags: etiquettes.split(",").map(t => t.trim()).filter(Boolean),
+        tags: tags,
       });
     } catch (error) {
       console.error("Error in handleSave", error);
@@ -158,7 +218,6 @@ export function EditContactModal({ contact, onClose, onSave }: EditContactModalP
       onClose();
     }
   };
-  
 
   return (
     <AnimatePresence>
@@ -176,14 +235,14 @@ export function EditContactModal({ contact, onClose, onSave }: EditContactModalP
           exit={{ scale: 0.8 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* En-tête de la modale */}
+          {/* Modal Header */}
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold text-gray-800">Modifier le contact</h2>
             <button onClick={onClose} className="text-gray-600 hover:text-gray-800 transition-colors">
               <XMarkIcon className="h-7 w-7" />
             </button>
           </div>
-          {/* Sections du formulaire */}
+          {/* Form Sections */}
           <div className="space-y-8">
             {/* Section Nom et Poste */}
             <SectionDeroulante titre="Nom et Poste">
@@ -419,21 +478,17 @@ export function EditContactModal({ contact, onClose, onSave }: EditContactModalP
                 />
               </div>
             </SectionDeroulante>
-            {/* Section Informations sur les étiquettes */}
+            {/* Improved Section for Tag Input */}
             <SectionDeroulante titre="Informations sur les étiquettes">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Étiquettes (séparées par des virgules)</label>
-                <input
-                  type="text"
-                  value={etiquettes}
-                  onChange={(e) => setEtiquettes(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="exemple: client, prospect, VIP"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Étiquettes (séparées par des virgules)
+                </label>
+                <TagInput tags={tags} setTags={setTags} />
               </div>
             </SectionDeroulante>
           </div>
-          {/* Actions de la modale */}
+          {/* Modal Actions */}
           <div className="mt-8 flex justify-end space-x-4">
             <button
               onClick={onClose}

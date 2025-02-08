@@ -12,12 +12,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Connect to DB
+    // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    // Find user by email
-    const user = await db.collection("users").findOne({ email });
+    // Look for the user in the "users" collection
+    let user = await db.collection("users").findOne({ email });
+
+    // If not found, try the "contacts" collection
+    if (!user) {
+      user = await db.collection("contacts").findOne({ email });
+    }
+
     if (!user) {
       return NextResponse.json(
         { success: false, message: "Identifiants invalides." },
@@ -25,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check password (hashed)
+    // Verify the password
     const passwordMatch = await compare(password, user.password);
     if (!passwordMatch) {
       return NextResponse.json(
@@ -34,20 +40,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If correct, return role
+    // Return the user role so the client can route accordingly
     return NextResponse.json({
       success: true,
       role: user.role,
-      message: "Connexion réussie"
+      message: "Connexion réussie",
     });
   } catch (error: unknown) {
-    // Narrow the type:
     if (error instanceof Error) {
       console.error("Login error:", error.message);
     } else {
       console.error("Login error:", error);
     }
-
     return NextResponse.json(
       { success: false, message: "Erreur interne." },
       { status: 500 }
