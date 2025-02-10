@@ -253,13 +253,35 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const idParam = searchParams.get("id");
+
     const client = await clientPromise;
     const db = client.db("yourdbname");
-    const contacts = await db.collection("contacts").find({}).toArray();
+
+    let query = {};
+    if (idParam) {
+      // If idParam contains only digits, match both string and numeric representations.
+      if (/^\d+$/.test(idParam)) {
+        query = { $or: [{ id: idParam }, { id: Number(idParam) }] };
+      } else {
+        // Otherwise, treat it as a string (e.g. a GUID)
+        query = { id: idParam };
+      }
+    }
+
+    const contacts = await db.collection("contacts").find(query).toArray();
     return NextResponse.json(contacts);
-  } catch {
-    return NextResponse.json({ error: "Une erreur est survenue" }, { status: 500 });
+  } catch (error: unknown) {
+    // Narrow the type to Error if possible
+    const message =
+      error instanceof Error ? error.message : "An unknown error occurred.";
+    console.error("Error fetching activities:", error);
+    return NextResponse.json(
+      { success: false, message },
+      { status: 500 }
+    );
   }
 }

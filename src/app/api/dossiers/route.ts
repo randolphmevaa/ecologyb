@@ -2,41 +2,53 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
-// GET: Retrieve all dossiers (optionally filtered by contactId)
+// GET: List dossiers for a specific contact (if provided via query parameter)
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const contactId = searchParams.get("contactId");
+
   try {
-    const { searchParams } = new URL(request.url);
-    const contactId = searchParams.get("contactId");
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    const query = contactId ? { contactId } : {};
+    let query = {};
+    if (contactId) {
+      // If contactId contains only digits, match both the numeric and string representations.
+      if (/^\d+$/.test(contactId)) {
+        query = { $or: [{ contactId: contactId }, { contactId: Number(contactId) }] };
+      } else {
+        // Otherwise, use the provided string value.
+        query = { contactId: contactId };
+      }
+    }
+
     const dossiers = await db.collection("dossiers").find(query).toArray();
     return NextResponse.json(dossiers);
-  } catch {
-    // Removed "error" because it was not used
-    return NextResponse.error();
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 500 });
   }
 }
 
 // POST: Insert new dossiers into MongoDB
 export async function POST(request: Request) {
   try {
-    const dossiers = await request.json(); // Expecting an array of dossiers
+    // Expecting a single dossier document (not an array)
+    const dossierData = await request.json();
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    const result = await db.collection("dossiers").insertMany(dossiers);
+    const result = await db.collection("dossiers").insertOne(dossierData);
     return NextResponse.json(
-      { insertedCount: result.insertedCount, insertedIds: result.insertedIds },
+      { insertedId: result.insertedId },
       { status: 201 }
     );
   } catch (error: unknown) {
-    // Now we use `unknown` instead of `any` and safely narrow the type
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    // Fallback if it's not an instance of Error
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

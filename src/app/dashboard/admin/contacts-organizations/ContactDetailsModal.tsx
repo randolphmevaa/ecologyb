@@ -555,6 +555,8 @@ export const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({
                         <Image
                           src={contact.imageUrl}
                           alt={getContactName(contact)}
+                          width={112}  // 28 * 4 (since 1rem = 16px, 28rem = 448px)
+                          height={112} // 28 * 4
                           className="h-full w-full object-cover object-top"
                         />
                       ) : (
@@ -1107,6 +1109,8 @@ export const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({
             <Image
                 src={weather.icon}
                 alt={weather.condition}
+                width={112}  // 28 * 4 (since 1rem = 16px, 28rem = 448px)
+                height={112} // 28 * 4
                 className="h-12 w-12"
             />
             )}
