@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import UpdatedHeader from "./UpdatedHeader";
+// import TabsUI from "./TabsUI";
 import {
   // EnvelopeIcon,
   // PhoneIcon,
@@ -23,6 +24,7 @@ import {
   CloudIcon, // For the file upload area
 } from "@heroicons/react/24/outline";
 import { Header } from "@/components/Header";
+import PremiumTabs from "./TabsUI";
 
 // Define the predefined document types in a shared scope.
 const predefinedTypes = [
@@ -1244,63 +1246,7 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-          <div className="flex border-b border-gray-300 mb-4">
-            <button
-              onClick={() => setActiveTab("info")}
-              className={`px-4 py-2 -mb-px font-semibold ${
-                activeTab === "info"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-blue-500"
-              }`}
-            >
-              Cartes d&apos;information
-            </button>
-            <button
-              onClick={() => setActiveTab("documents")}
-              className={`px-4 py-2 -mb-px font-semibold ${
-                activeTab === "documents"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-blue-500"
-              }`}
-            >
-              Documents
-            </button>
-            <button
-              onClick={() => setActiveTab("photo")}
-              className={`px-4 py-2 -mb-px font-semibold ${
-                activeTab === "photo"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-blue-500"
-              }`}
-            >
-              Photo d&apos;installation
-            </button>
-            <button
-              onClick={() => setActiveTab("chat")}
-              className={`relative px-4 py-2 -mb-px font-semibold ${
-                activeTab === "chat"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-blue-500"
-              }`}
-            >
-              Chat
-              {chatMessageCount > 0 && (
-                <span className="absolute top-0 right-0 -mt-1 -mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white">
-                  {chatMessageCount}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("sav")}
-              className={`px-4 py-2 -mb-px font-semibold ${
-                activeTab === "sav"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-blue-500"
-              }`}
-            >
-              S.A.V.
-            </button>
-          </div>
+        <PremiumTabs activeTab={activeTab} setActiveTab={setActiveTab} chatMessageCount={chatMessageCount} />
 
           {activeTab === "info" && (
             <div className="flex justify-end mb-4">
