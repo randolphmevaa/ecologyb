@@ -22,24 +22,25 @@ export async function GET(request: Request) {
 // POST: Insert new commentaires into MongoDB
 export async function POST(request: Request) {
   try {
-    const commentaires = await request.json(); // Expecting an array of commentaires
+    // Expecting a single commentaire object (not an array)
+    const commentaire = await request.json();
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    const result = await db.collection("commentaires").insertMany(commentaires);
+    // Use insertOne since we're inserting a single document
+    const result = await db.collection("commentaires").insertOne(commentaire);
     return NextResponse.json(
       {
-        insertedCount: result.insertedCount,
-        insertedIds: result.insertedIds,
+        insertedId: result.insertedId,
       },
-      { status: 201 },
+      { status: 201 }
     );
   } catch (error: unknown) {
     console.error(error);
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    // Fallback for non-Error values.
     return NextResponse.json({ error: "An unknown error occurred" }, { status: 500 });
   }
 }
+

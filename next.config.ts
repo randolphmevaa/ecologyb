@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   images: {
     domains: [
       "cdn.prod.website-files.com", // Add your image host here
+      "example.com",
+      "via.placeholder.com",
+      "images.blush.design",
       // You can add more domains if needed
     ],
   },

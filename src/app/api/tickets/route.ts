@@ -26,18 +26,22 @@ export async function GET(request: Request) {
 // POST: Insert new tickets into MongoDB
 export async function POST(request: Request) {
   try {
-    const tickets = await request.json(); // Expecting an array of tickets
-    
+    // Parse the request body
+    const data = await request.json();
+
+    // Ensure that "data" is an array; if not, wrap it in one
+    const tickets = Array.isArray(data) ? data : [data];
+
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
+    // Insert the tickets array into MongoDB
     const result = await db.collection("tickets").insertMany(tickets);
     return NextResponse.json(
       { insertedCount: result.insertedCount, insertedIds: result.insertedIds },
       { status: 201 }
     );
   } catch (error: unknown) {
-    // Use a runtime check to safely handle the error
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

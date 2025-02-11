@@ -1,30 +1,40 @@
 "use client";
 
+// import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
 import { useParams } from "next/navigation";
-import { useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { EnvelopeIcon, PhoneIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import {
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
   ClipboardDocumentCheckIcon,
   HomeIcon,
   BriefcaseIcon,
   InformationCircleIcon,
-} from "@heroicons/react/24/outline";
-import { Header } from "@/components/Header";
-import {
   DocumentTextIcon,
   CloudArrowDownIcon,
   XMarkIcon,
   ArrowUpTrayIcon,
   PlusIcon,
+  CloudIcon, // For the file upload area
 } from "@heroicons/react/24/outline";
+import { Header } from "@/components/Header";
+
+// Define the predefined document types in a shared scope.
+const predefinedTypes = [
+  "avis d'imposition",
+  "devis facture",
+  "checklist PAC",
+  "note de dimensionnement",
+];
 
 // ------------------------
 // Types
 // ------------------------
 
-// New interface for the form data (used in editing)
 interface DossierFormData {
   client: string;
   projet: string;
@@ -47,7 +57,14 @@ interface DossierFormData {
   };
 }
 
-// New interface for users
+interface DocumentApiResponse {
+  _id: string;
+  type: string;
+  date: string;
+  statut: string;
+  filePath?: string;
+}
+
 interface User {
   email: string;
   role: string;
@@ -87,8 +104,245 @@ type StepProgressProps = {
 };
 
 // ------------------------
-// Composant StepProgress
+// Component: AddDocumentForm
 // ------------------------
+
+// When editing an existing document, we pass initialData (including the document id).
+// Otherwise, for a new document the initialData prop is omitted.
+interface DocumentInitialData {
+  id: string;
+  docType: string;
+  solution: string;
+  status?: string;
+  customDocType?: string;
+}
+
+interface AddDocumentFormProps {
+  onClose: () => void;
+  contactId: string;
+  // Optional initial data for editing an existing document.
+  initialData?: DocumentInitialData;
+  // Callback called with the saved document data (after POST or PUT).
+  onDocumentSaved: (doc: DocumentData) => void;
+}
+
+const AddDocumentForm = ({
+  onClose,
+  contactId,
+  initialData,
+  onDocumentSaved,
+}: AddDocumentFormProps) => {
+  // Initialize state using initialData if provided.
+  const [docType, setDocType] = useState(
+    initialData
+      ? predefinedTypes.includes(initialData.docType)
+        ? initialData.docType
+        : "autre"
+      : ""
+  );
+  const [customDocType, setCustomDocType] = useState(
+    initialData
+      ? predefinedTypes.includes(initialData.docType)
+        ? ""
+        : initialData.customDocType || initialData.docType
+      : ""
+  );
+  const [file, setFile] = useState<File | null>(null);
+  const [status, setStatus] = useState(
+    initialData ? initialData.status || "Manquant" : "Manquant"
+  );
+  // Format current date in French (day/month/year)
+  const currentDate = new Date().toLocaleDateString("fr-FR");
+  const [solution, setSolution] = useState(initialData ? initialData.solution : "");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setStatus("Soumis");
+    } else {
+      setFile(null);
+      setStatus("Manquant");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Use the custom type if "autre" is selected.
+    const finalDocType = docType === "autre" ? customDocType : docType;
+    if (!finalDocType || !solution || !contactId) {
+      alert("Veuillez remplir tous les champs obligatoires.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("docType", finalDocType);
+    formData.append("date", currentDate);
+    formData.append("status", status);
+    formData.append("solution", solution);
+    formData.append("contactId", contactId);
+    if (file) {
+      formData.append("file", file);
+    }
+    try {
+      let res;
+      // If initialData exists, update the document via PUT.
+      if (initialData) {
+        res = await fetch(`/api/documents/${initialData.id}`, {
+          method: "PUT",
+          body: formData,
+        });
+      } else {
+        // Otherwise, create a new document via POST.
+        res = await fetch("/api/documents", {
+          method: "POST",
+          body: formData,
+        });
+      }
+      if (!res.ok) throw new Error("Erreur lors de l'enregistrement du document");
+      const savedDoc: DocumentData = await res.json();
+      onDocumentSaved(savedDoc);
+      onClose();
+    } catch (error) {
+      console.error(error);
+      alert("Une erreur est survenue lors de l'enregistrement.");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <h3 className="text-2xl font-semibold text-gray-800 mb-4">
+        Informations du document
+      </h3>
+      {/* Type de document */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Type de document <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={docType}
+          onChange={(e) => setDocType(e.target.value)}
+          className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          required
+        >
+          <option value="">Sélectionner le type</option>
+          <option value="avis d'imposition">Avis d&apos;imposition</option>
+          <option value="devis facture">Devis / Facture</option>
+          <option value="checklist PAC">Checklist PAC</option>
+          <option value="note de dimensionnement">Note de dimensionnement</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+      {/* Champ personnalisé pour "autre" */}
+      {docType === "autre" && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Spécifiez le type <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={customDocType}
+            onChange={(e) => setCustomDocType(e.target.value)}
+            placeholder="Entrez le type personnalisé..."
+            className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            required
+          />
+        </div>
+      )}
+      {/* Date de téléversement */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Date de téléversement
+        </label>
+        <input
+          type="text"
+          value={currentDate}
+          disabled
+          className="w-full border border-gray-300 rounded-md px-4 py-2 bg-gray-100"
+        />
+      </div>
+      {/* Zone de téléversement de fichier */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Fichier
+        </label>
+        <div className="relative">
+          <input
+            id="file-upload"
+            type="file"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <label
+            htmlFor="file-upload"
+            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          >
+            <CloudIcon className="w-10 h-10 text-gray-400 mb-2" />
+            {file ? (
+              <span className="text-gray-700">{file.name}</span>
+            ) : (
+              <span className="text-gray-500">
+                Cliquez ou glissez-déposez votre fichier ici
+              </span>
+            )}
+          </label>
+        </div>
+        {!file && (
+          <p className="mt-1 text-xs text-gray-500">
+            Vous pouvez enregistrer ce document et téléverser le fichier ultérieurement.
+          </p>
+        )}
+      </div>
+      {/* Statut */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Statut
+        </label>
+        <input
+          type="text"
+          value={status}
+          disabled
+          className="w-full border border-gray-300 rounded-md px-4 py-2 bg-gray-100"
+        />
+      </div>
+      {/* Solution */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Solution <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={solution}
+          onChange={(e) => setSolution(e.target.value)}
+          className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          required
+        >
+          <option value="">Sélectionner une solution</option>
+          <option value="Pompes a chaleur">Pompes à chaleur</option>
+          <option value="Chauffe-eau solaire individuel">
+            Chauffe-eau solaire individuel
+          </option>
+          <option value="Chauffe-eau thermodynamique">
+            Chauffe-eau thermodynamique
+          </option>
+          <option value="Système Solaire Combiné">
+            Système Solaire Combiné
+          </option>
+        </select>
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition-colors text-center"
+        >
+          {file ? "Téléverser" : "Enregistrer"}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+// ------------------------
+// Component: StepProgress
+// ------------------------
+
 function StepProgress({ currentStep }: StepProgressProps) {
   const steps = [
     "Prise de contact",
@@ -100,13 +354,9 @@ function StepProgress({ currentStep }: StepProgressProps) {
     "Dossier clôturé",
   ];
 
-  // Calculate the percentage of progress (for the fill)
   const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
-
-  // Track hovered step for tooltip display
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
-  // Tooltip animation variants with a gentle scale and fade effect
   const tooltipVariants = {
     hidden: { opacity: 0, y: 10, scale: 0.95 },
     visible: { opacity: 1, y: 0, scale: 1 },
@@ -121,7 +371,6 @@ function StepProgress({ currentStep }: StepProgressProps) {
       className="relative px-4 py-8"
     >
       <div className="relative flex items-center justify-between">
-        {/* Background track with subtle shimmer */}
         <div className="absolute top-1/2 left-0 w-full h-2 bg-gray-200 rounded-full transform -translate-y-1/2 overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-40"
@@ -129,15 +378,12 @@ function StepProgress({ currentStep }: StepProgressProps) {
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           />
         </div>
-
-        {/* Animated progress fill */}
         <motion.div
           className="absolute top-1/2 left-0 h-2 bg-gradient-to-r from-blue-400 via-blue-500 to-green-500 rounded-full transform -translate-y-1/2"
           initial={{ width: 0 }}
           animate={{ width: `${progressPercent}%` }}
           transition={{ duration: 1, ease: "easeOut" }}
         />
-
         {steps.map((step, index) => {
           const stepNumber = index + 1;
           const isCompleted = stepNumber < currentStep;
@@ -163,7 +409,6 @@ function StepProgress({ currentStep }: StepProgressProps) {
                 }`}
               >
                 {isCurrent && (
-                  // Continuous ripple (pulsating) effect on the current step
                   <motion.div
                     className="absolute inset-0 rounded-full border border-blue-300"
                     animate={{ scale: [1, 1.5, 1] }}
@@ -181,40 +426,24 @@ function StepProgress({ currentStep }: StepProgressProps) {
                     strokeWidth="2"
                     viewBox="0 0 24 24"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </motion.svg>
                 ) : (
-                  <span
-                    className={`text-base font-semibold ${
-                      isCurrent ? "text-white" : "text-gray-500"
-                    }`}
-                  >
+                  <span className={`text-base font-semibold ${isCurrent ? "text-white" : "text-gray-500"}`}>
                     {stepNumber}
                   </span>
                 )}
               </motion.div>
-
-              {/* Step label */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 + index * 0.1 }}
                 className={`mt-2 text-center text-xs font-medium ${
-                  isCurrent
-                    ? "text-blue-600"
-                    : isCompleted
-                    ? "text-green-600"
-                    : "text-gray-500"
+                  isCurrent ? "text-blue-600" : isCompleted ? "text-green-600" : "text-gray-500"
                 }`}
               >
                 {step}
               </motion.div>
-
-              {/* Tooltip with arrow pointer */}
               <AnimatePresence>
                 {hoveredStep === stepNumber && (
                   <motion.div
@@ -240,168 +469,148 @@ function StepProgress({ currentStep }: StepProgressProps) {
   );
 }
 
+// ------------------------
+// Types for Document Data
+// ------------------------
+
 interface DocumentData {
   id: string;
   type: string;
   date: string;
   status: string;
+  filePath?: string;
 }
 
-function AddDocumentModal({
-  isOpen,
-  onClose,
-  onAdd,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onAdd: (doc: DocumentData) => void;
-}) {
-  const [docType, setDocType] = useState("");
-  const [docDate, setDocDate] = useState("");
-  const [docStatus, setDocStatus] = useState("");
+// ------------------------
+// Component: DocumentsTab
+// ------------------------
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newDoc: DocumentData = {
-      id: Date.now().toString(),
-      type: docType,
-      date: docDate,
-      status: docStatus || "En attente",
-    };
-    onAdd(newDoc);
-    // Clear form fields
-    setDocType("");
-    setDocDate("");
-    setDocStatus("");
-    onClose();
-  };
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.8 }}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">
-                Ajouter un document
-              </h3>
-              <button onClick={onClose} aria-label="Fermer">
-                <XMarkIcon className="h-6 w-6 text-gray-600 hover:text-gray-800" />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Type de document
-                </label>
-                <input
-                  type="text"
-                  value={docType}
-                  onChange={(e) => setDocType(e.target.value)}
-                  placeholder="Ex: Devis, Facture, etc."
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={docDate}
-                  onChange={(e) => setDocDate(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Statut
-                </label>
-                <input
-                  type="text"
-                  value={docStatus}
-                  onChange={(e) => setDocStatus(e.target.value)}
-                  placeholder="Ex: En attente, Prêt, etc."
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  Ajouter
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+interface DocumentsTabProps {
+  contactId: string;
 }
 
-function DocumentsTab() {
-  // Dummy data – replace these with your actual API data.
-  const [downloadableDocs] = useState([
-    { id: "doc1", type: "Devis", date: "2024-01-01", status: "Prêt" },
-    { id: "doc2", type: "Facture", date: "2024-02-01", status: "Téléchargé" },
-  ]);
-
-  const [transmittableDocs, setTransmittableDocs] = useState([
-    { id: "doc3", type: "Avis d'imposition", date: "2024-03-01", status: "En attente" },
-    { id: "doc4", type: "Autre", date: "2024-03-15", status: "En cours" },
-  ]);
-
-  // Search states for filtering
+function DocumentsTab({ contactId }: DocumentsTabProps) {
+  const [downloadableDocs, setDownloadableDocs] = useState<DocumentData[]>([]);
+  const [transmittableDocs, setTransmittableDocs] = useState<DocumentData[]>([]);
   const [searchDownload, setSearchDownload] = useState("");
   const [searchTransmit, setSearchTransmit] = useState("");
-  // Modal state for adding new documents
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // If docToEdit is set, then we are editing that document (prefilled form).
+  const [docToEdit, setDocToEdit] = useState<DocumentData | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<DocumentData | null>(null);
+
+  useEffect(() => {
+    if (contactId) {
+      fetch(`/api/documents?contactId=${contactId}`)
+        .then((res) => res.json())
+        // Specify that data is an array of DocumentApiResponse
+        .then((data: DocumentApiResponse[]) => {
+          const mappedDocs: DocumentData[] = data.map((doc) => ({
+            id: doc._id,
+            type: doc.type,
+            date: doc.date,
+            status: doc.statut,
+            filePath: doc.filePath,
+          }));
+          const downloadable = mappedDocs.filter((doc) => doc.status === "Soumis");
+          const transmittable = mappedDocs.filter((doc) => doc.status === "Manquant");
+          setDownloadableDocs(downloadable);
+          setTransmittableDocs(transmittable);
+        })
+        .catch((err) => console.error("Error fetching documents:", err));
+    }
+  }, [contactId]);
 
   const filteredDownloadableDocs = downloadableDocs.filter((doc) =>
     doc.type.toLowerCase().includes(searchDownload.toLowerCase())
   );
-
   const filteredTransmittableDocs = transmittableDocs.filter((doc) =>
     doc.type.toLowerCase().includes(searchTransmit.toLowerCase())
   );
 
-  const handleVisualiser = (docId: string): void => {
-    console.log("Visualiser document", docId);
-    // Implement preview/download logic.
+  const handleVisualiser = (doc: DocumentData): void => {
+    setPreviewDoc(doc);
   };
 
-  const handleAjouterDocTransmettre = (docId: string): void => {
-    console.log("Ajouter document", docId);
-    // Implement add/submit logic.
+  // When clicking the row-level "Ajouter" button, open the modal for editing.
+  const handleAjouterDocTransmettre = (doc: DocumentData): void => {
+    setDocToEdit(doc);
+    setIsModalOpen(true);
   };
 
-  const handleAddDocument = (newDoc: DocumentData): void => {
-    // Here we add the new document to the transmittable list.
-    setTransmittableDocs((prev) => [...prev, newDoc]);
+  // Callback after a document is saved (either updated or added).
+  const handleDocumentSaved = (savedDoc: DocumentData) => {
+    if (docToEdit) {
+      // Update an existing document.
+      setTransmittableDocs((prev) =>
+        prev.map((d) => (d.id === savedDoc.id ? savedDoc : d))
+      );
+      if (savedDoc.status === "Soumis") {
+        setTransmittableDocs((prev) => prev.filter((d) => d.id !== savedDoc.id));
+        setDownloadableDocs((prev) => [...prev, savedDoc]);
+      }
+    } else {
+      // Add a new document.
+      if (savedDoc.status === "Manquant") {
+        setTransmittableDocs((prev) => [...prev, savedDoc]);
+      } else if (savedDoc.status === "Soumis") {
+        setDownloadableDocs((prev) => [...prev, savedDoc]);
+      }
+    }
+    setDocToEdit(null);
   };
 
   return (
     <>
-      <AddDocumentModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAdd={handleAddDocument}
-      />
+      {/* Modal for adding/editing a document */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-2xl p-6 w-full max-w-md relative"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+            >
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setDocToEdit(null);
+                }}
+                className="absolute top-4 right-4"
+              >
+                <XMarkIcon className="h-6 w-6 text-gray-600 hover:text-gray-800" />
+              </button>
+              <AddDocumentForm
+                onClose={() => {
+                  setIsModalOpen(false);
+                  setDocToEdit(null);
+                }}
+                contactId={contactId}
+                initialData={
+                  docToEdit
+                    ? {
+                        id: docToEdit.id,
+                        // Use "autre" if the document type is not one of the predefined ones.
+                        docType: predefinedTypes.includes(docToEdit.type) ? docToEdit.type : "autre",
+                        customDocType: predefinedTypes.includes(docToEdit.type) ? "" : docToEdit.type,
+                        solution: "", // Optionally prefill the solution if available.
+                        status: docToEdit.status,
+                      }
+                    : undefined
+                }
+                onDocumentSaved={handleDocumentSaved}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -414,15 +623,11 @@ function DocumentsTab() {
             className="bg-white rounded-2xl shadow-xl overflow-hidden transition-transform duration-300 hover:scale-105"
             whileHover={{ scale: 1.02 }}
           >
-            {/* Card Header */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-4 flex items-center gap-3">
               <CloudArrowDownIcon className="h-10 w-10 text-white" />
-              <h2 className="text-2xl font-bold text-white">
-                Documents à télécharger
-              </h2>
+              <h2 className="text-2xl font-bold text-white">Documents à télécharger</h2>
             </div>
             <div className="p-6">
-              {/* Search Input */}
               <div className="mb-6">
                 <input
                   type="text"
@@ -436,18 +641,10 @@ function DocumentsTab() {
                 <table className="min-w-full">
                   <thead className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white sticky top-0">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">
-                        Type
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">
-                        Date
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">
-                        Statut
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">
-                        Actions
-                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -458,18 +655,12 @@ function DocumentsTab() {
                         transition={{ duration: 0.2 }}
                         className="transition-colors duration-200"
                       >
-                        <td className="px-4 py-3 text-sm text-gray-700">
-                          {doc.type}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">
-                          {doc.date}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">
-                          {doc.status}
-                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{doc.type}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{doc.date}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{doc.status}</td>
                         <td className="px-4 py-3">
                           <button
-                            onClick={() => handleVisualiser(doc.id)}
+                            onClick={() => handleVisualiser(doc)}
                             className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                           >
                             <DocumentTextIcon className="h-5 w-5" />
@@ -480,10 +671,7 @@ function DocumentsTab() {
                     ))}
                     {filteredDownloadableDocs.length === 0 && (
                       <tr>
-                        <td
-                          colSpan={4}
-                          className="px-4 py-3 text-sm text-center text-gray-500"
-                        >
+                        <td colSpan={4} className="px-4 py-3 text-sm text-center text-gray-500">
                           Aucun document trouvé.
                         </td>
                       </tr>
@@ -499,15 +687,11 @@ function DocumentsTab() {
             className="bg-white rounded-2xl shadow-xl overflow-hidden transition-transform duration-300 hover:scale-105 flex flex-col"
             whileHover={{ scale: 1.02 }}
           >
-            {/* Card Header */}
             <div className="bg-gradient-to-r from-green-500 to-teal-500 px-6 py-4 flex items-center gap-3">
               <ArrowUpTrayIcon className="h-10 w-10 text-white" />
-              <h2 className="text-2xl font-bold text-white">
-                Documents à transmettre
-              </h2>
+              <h2 className="text-2xl font-bold text-white">Documents à transmettre</h2>
             </div>
             <div className="flex flex-col flex-grow p-6">
-              {/* Search Input */}
               <div className="mb-6">
                 <input
                   type="text"
@@ -521,18 +705,10 @@ function DocumentsTab() {
                 <table className="min-w-full">
                   <thead className="bg-gradient-to-r from-green-500 to-teal-500 text-white sticky top-0">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">
-                        Type
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">
-                        Date
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">
-                        Statut
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">
-                        Actions
-                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -543,18 +719,12 @@ function DocumentsTab() {
                         transition={{ duration: 0.2 }}
                         className="transition-colors duration-200"
                       >
-                        <td className="px-4 py-3 text-sm text-gray-700">
-                          {doc.type}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">
-                          {doc.date}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">
-                          {doc.status}
-                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{doc.type}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{doc.date}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{doc.status}</td>
                         <td className="px-4 py-3">
                           <button
-                            onClick={() => handleAjouterDocTransmettre(doc.id)}
+                            onClick={() => handleAjouterDocTransmettre(doc)}
                             className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-green-700"
                           >
                             <PlusIcon className="h-5 w-5" />
@@ -565,10 +735,7 @@ function DocumentsTab() {
                     ))}
                     {filteredTransmittableDocs.length === 0 && (
                       <tr>
-                        <td
-                          colSpan={4}
-                          className="px-4 py-3 text-sm text-center text-gray-500"
-                        >
+                        <td colSpan={4} className="px-4 py-3 text-sm text-center text-gray-500">
                           Aucun document trouvé.
                         </td>
                       </tr>
@@ -576,10 +743,12 @@ function DocumentsTab() {
                   </tbody>
                 </table>
               </div>
-              {/* Action Button */}
               <div className="mt-8 flex justify-end">
                 <button
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => {
+                    setDocToEdit(null);
+                    setIsModalOpen(true);
+                  }}
                   className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
                 >
                   <PlusIcon className="h-5 w-5" />
@@ -590,21 +759,76 @@ function DocumentsTab() {
           </motion.div>
         </div>
       </motion.section>
+
+      {/* Preview Modal for a document */}
+      <AnimatePresence>
+        {previewDoc && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-lg p-4 max-w-3xl w-full relative"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Prévisualisation du document</h3>
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Fermer
+                </button>
+              </div>
+              {previewDoc.filePath ? (
+                <iframe
+                  src={previewDoc.filePath}
+                  title="Document Preview"
+                  className="w-full h-96 border"
+                />
+              ) : (
+                <p>Aucun document à afficher.</p>
+              )}
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    if (!previewDoc) return;
+                    fetch(`/api/documents/${previewDoc.id}`, { method: "DELETE" })
+                      .then((res) => {
+                        if (!res.ok) throw new Error("Erreur lors de la suppression du document");
+                        setDownloadableDocs((prev) => prev.filter((d) => d.id !== previewDoc.id));
+                        setTransmittableDocs((prev) => prev.filter((d) => d.id !== previewDoc.id));
+                        setPreviewDoc(null);
+                      })
+                      .catch((err) => console.error("Erreur lors de la suppression :", err));
+                  }}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
 
 // ------------------------
-// Composant Principal
+// Main Component: ProjectDetailPage
 // ------------------------
+
 export default function ProjectDetailPage() {
+  
   const { id } = useParams();
   const [dossier, setDossier] = useState<Dossier | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Mode édition global.
   const [isEditing, setIsEditing] = useState(false);
-  // État du formulaire local pour les champs modifiables.
   const [formData, setFormData] = useState<DossierFormData>({
     client: "",
     projet: "",
@@ -626,31 +850,33 @@ export default function ProjectDetailPage() {
       circuitChauffageFonctionnel: "",
     },
   });
-  // Liste des utilisateurs pour le dropdown "Équipe Assignée".
   const [userList, setUserList] = useState<User[]>([]);
-  // État pour la sélection de l'onglet : "info" ou "documents"
   const [activeTab, setActiveTab] = useState<"info" | "documents">("info");
-  // État pour les fichiers sélectionnés dans l'onglet Documents.
-  // const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  // État pour savoir si le dropzone est actif (drag over).
-  // const [isDragActive, setIsDragActive] = useState(false);
-  // Référence pour le champ input de fichier.
-  // const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+  // const { tab } = router.query;
 
-  // Fonction pour extraire l'étape actuelle depuis dossier.etape (on suppose que le numéro de l'étape est au début)
   const getCurrentStep = (etape: string): number => {
     const match = etape.match(/^(\d+)/);
     return match ? Number(match[1]) : 1;
   };
 
-  // Récupération des données du dossier.
+  useEffect(() => {
+    if (searchParams.get("tab") === "documents") {
+      setActiveTab("documents");
+      // Allow the component to render the documents tab before scrolling
+      setTimeout(() => {
+        const documentsSection = document.getElementById("documents");
+        documentsSection?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (id) {
       fetch(`/api/dossiers/${id}`)
         .then((res) => res.json())
         .then((data) => {
           setDossier(data);
-          // Initialiser les données du formulaire avec le dossier récupéré.
           setFormData({
             client: data.client,
             projet: data.projet,
@@ -685,7 +911,6 @@ export default function ProjectDetailPage() {
     }
   }, [id]);
 
-  // Récupération de la liste des utilisateurs pour "Équipe Assignée".
   useEffect(() => {
     fetch("/api/users")
       .then((res) => res.json())
@@ -695,7 +920,6 @@ export default function ProjectDetailPage() {
       );
   }, []);
 
-  // Gestion des changements pour les champs de premier niveau.
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -703,7 +927,6 @@ export default function ProjectDetailPage() {
     setFormData((prev: DossierFormData) => ({ ...prev, [name]: value }));
   };
 
-  // Gestion des changements pour les champs imbriqués (Logement et Travaux).
   const handleNestedInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     section: "informationLogement" | "informationTravaux"
@@ -715,7 +938,6 @@ export default function ProjectDetailPage() {
     }));
   };
 
-  // Sauvegarder les modifications via une requête PUT.
   const handleSave = () => {
     fetch(`/api/dossiers/${dossier?._id}`, {
       method: "PUT",
@@ -732,7 +954,6 @@ export default function ProjectDetailPage() {
       );
   };
 
-  // Annuler l'édition et réinitialiser les données du formulaire.
   const handleCancel = () => {
     if (dossier) {
       setFormData({
@@ -764,40 +985,6 @@ export default function ProjectDetailPage() {
     setIsEditing(false);
   };
 
-  // ------------------------
-  // Gestion du Dropzone pour Documents
-  // ------------------------
-  // const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-  //   e.preventDefault();
-  //   setIsDragActive(true);
-  // };
-
-  // const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-  //   e.preventDefault();
-  //   setIsDragActive(false);
-  // };
-
-  // const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-  //   e.preventDefault();
-  //   setIsDragActive(false);
-  //   if (e.dataTransfer.files) {
-  //     setSelectedFiles(Array.from(e.dataTransfer.files));
-  //   }
-  // };
-
-  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (e.target.files) {
-  //     setSelectedFiles(Array.from(e.target.files));
-  //   }
-  // };
-
-  // const handleUpload = () => {
-  //   // Placeholder : ici vous intégrerez la logique de téléversement des fichiers vers votre API.
-  //   console.log("Téléversement des fichiers :", selectedFiles);
-  //   // Après téléversement, vous pouvez réinitialiser la sélection.
-  //   setSelectedFiles([]);
-  // };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-white">
@@ -814,14 +1001,13 @@ export default function ProjectDetailPage() {
   }
 
   const currentStep = getCurrentStep(dossier.etape);
-  const firstLetter = dossier.client ? dossier.client.charAt(0).toUpperCase() : '';
+  const firstLetter = dossier.client ? dossier.client.charAt(0).toUpperCase() : "";
 
   return (
     <div className="flex h-screen bg-white">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header user={{ name: "Administrateur", avatar: "/admin-avatar.png" }} />
         <main className="flex-1 overflow-y-auto p-8 space-y-8 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
-          {/* Bouton Retour */}
           <div className="mb-6">
             <Link
               href="/dashboard/admin/projects"
@@ -841,40 +1027,31 @@ export default function ProjectDetailPage() {
             </Link>
           </div>
 
-          {/* En-tête */}
           <header className="relative bg-white">
             <div className="">
               <motion.div
                 initial={{ opacity: 0, y: 50, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 1.2, ease: 'easeOut' }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
                 className="relative bg-white rounded-3xl shadow-2xl p-10 md:flex md:items-center md:justify-between"
               >
-                {/* Client Details */}
                 <div className="flex flex-col">
-                  <motion.h1
-                    whileHover={{ scale: 1.02 }}
-                    className="text-3xl font-bold text-gray-900"
-                  >
+                  <motion.h1 whileHover={{ scale: 1.02 }} className="text-3xl font-bold text-gray-900">
                     Projet pour {dossier.client}
                   </motion.h1>
                   <div className="mt-4 space-y-3">
                     <motion.div whileHover={{ x: 5 }} className="flex items-center text-gray-700">
                       <EnvelopeIcon className="w-6 h-6 mr-3" />
-                      <span className="text-lg">
-                        {dossier.clientEmail || 'client@example.com'}
-                      </span>
+                      <span className="text-lg">{dossier.clientEmail || "client@example.com"}</span>
                     </motion.div>
                     <motion.div whileHover={{ x: 5 }} className="flex items-center text-gray-700">
                       <PhoneIcon className="w-6 h-6 mr-3" />
-                      <span className="text-lg">
-                        {dossier.clientPhone || '+1 (555) 555-5555'}
-                      </span>
+                      <span className="text-lg">{dossier.clientPhone || "+1 (555) 555-5555"}</span>
                     </motion.div>
                     <motion.div whileHover={{ x: 5 }} className="flex items-center text-gray-700">
                       <MapPinIcon className="w-6 h-6 mr-3" />
                       <span className="text-lg">
-                        {dossier.clientAddress || '123 Main St, City, Country'}
+                        {dossier.clientAddress || "123 Main St, City, Country"}
                       </span>
                     </motion.div>
                   </div>
@@ -882,7 +1059,6 @@ export default function ProjectDetailPage() {
                     <span className="text-sm text-gray-500">Dossier {dossier.numero}</span>
                   </div>
                 </div>
-                {/* Client Avatar with Fallback */}
                 <div className="relative z-10 mt-8 md:mt-0 flex-shrink-0">
                   <motion.div
                     whileHover={{ scale: 1.05, rotate: 3 }}
@@ -906,17 +1082,13 @@ export default function ProjectDetailPage() {
             </div>
           </header>
 
-          {/* Step Progress */}
           <StepProgress currentStep={currentStep} />
 
-          {/* En-tête des onglets */}
           <div className="flex border-b border-gray-300 mb-4">
             <button
               onClick={() => setActiveTab("info")}
               className={`px-4 py-2 -mb-px font-semibold ${
-                activeTab === "info"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-blue-500"
+                activeTab === "info" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500 hover:text-blue-500"
               }`}
             >
               Cartes d&apos;information
@@ -924,16 +1096,13 @@ export default function ProjectDetailPage() {
             <button
               onClick={() => setActiveTab("documents")}
               className={`px-4 py-2 -mb-px font-semibold ${
-                activeTab === "documents"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-blue-500"
+                activeTab === "documents" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500 hover:text-blue-500"
               }`}
             >
               Documents
             </button>
           </div>
 
-          {/* Bouton d'édition global (affiché uniquement pour l'onglet "Cartes d'information") */}
           {activeTab === "info" && (
             <div className="flex justify-end mb-4">
               <button
@@ -945,11 +1114,7 @@ export default function ProjectDetailPage() {
             </div>
           )}
 
-          {/* Contenu de l'onglet */}
           {activeTab === "info" ? (
-            // ------------------------
-            // Cartes d'information
-            // ------------------------
             <div className="space-y-8">
               {/* Informations Générales */}
               <motion.section
@@ -962,9 +1127,7 @@ export default function ProjectDetailPage() {
                   <div className="flex items-center justify-center bg-blue-500 text-white rounded-full w-10 h-10 mr-4">
                     <ClipboardDocumentCheckIcon className="w-5 h-5" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-700">
-                    Informations Générales
-                  </h2>
+                  <h2 className="text-2xl font-bold text-gray-700">Informations Générales</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -1115,9 +1278,7 @@ export default function ProjectDetailPage() {
                     <div className="flex items-center justify-center bg-green-500 text-white rounded-full w-10 h-10 mr-4">
                       <HomeIcon className="w-5 h-5" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-700">
-                      Informations Logement
-                    </h2>
+                    <h2 className="text-2xl font-bold text-gray-700">Informations Logement</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <p className="text-gray-700">
@@ -1192,9 +1353,7 @@ export default function ProjectDetailPage() {
                     <div className="flex items-center justify-center bg-purple-500 text-white rounded-full w-10 h-10 mr-4">
                       <BriefcaseIcon className="w-5 h-5" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-700">
-                      Informations Travaux
-                    </h2>
+                    <h2 className="text-2xl font-bold text-gray-700">Informations Travaux</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <p className="text-gray-700">
@@ -1268,9 +1427,7 @@ export default function ProjectDetailPage() {
                   <div className="flex items-center justify-center bg-indigo-500 text-white rounded-full w-10 h-10 mr-4">
                     <InformationCircleIcon className="w-5 h-5" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-700">
-                    Détails Supplémentaires
-                  </h2>
+                  <h2 className="text-2xl font-bold text-gray-700">Détails Supplémentaires</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {dossier.contactId && (
@@ -1284,7 +1441,6 @@ export default function ProjectDetailPage() {
                 </div>
               </motion.section>
 
-              {/* Boutons Sauvegarder / Annuler (affichés uniquement en mode édition) */}
               {isEditing && (
                 <div className="mt-4 flex justify-end space-x-4">
                   <button
@@ -1303,10 +1459,10 @@ export default function ProjectDetailPage() {
               )}
             </div>
           ) : (
-            // ------------------------
-            // Contenu de l'onglet Documents
-            // ------------------------
-            <DocumentsTab />
+            <div id="documents">
+              <DocumentsTab contactId={dossier.contactId || ""} />
+            </div>
+            
           )}
         </main>
       </div>
