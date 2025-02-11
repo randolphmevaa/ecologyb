@@ -1064,32 +1064,185 @@ export default function ProjectDetailPage() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header user={{ name: "Administrateur", avatar: "/admin-avatar.png" }} />
         <main className="flex-1 overflow-y-auto p-8 space-y-8 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
-          <div className="mb-6">
-            <Link
-              href="/dashboard/admin/projects"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
-            >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+        
+        <div className="relative">
+          {/* Shape 1 - Top Left (faster animation: 4s) */}
+          <svg
+            className="absolute left-0 top-0 w-72 h-72 opacity-50 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            <path fill="#bfddf9">
+              <animate
+                attributeName="d"
+                dur="4s"
+                repeatCount="indefinite"
+                values="
+                  M430,280Q370,310,340,360Q310,410,260,430Q210,450,170,410Q130,370,110,320Q90,270,120,230Q150,190,200,180Q250,170,310,180Q370,190,410,230Q450,270,430,280Z;
+                  M420,290Q360,320,330,370Q300,420,260,410Q220,400,190,360Q160,320,150,270Q140,220,170,190Q200,160,250,150Q300,140,350,160Q400,180,420,210Q440,240,420,290Z;
+                  M430,280Q370,310,340,360Q310,410,260,430Q210,450,170,410Q130,370,110,320Q90,270,120,230Q150,190,200,180Q250,170,310,180Q370,190,410,230Q450,270,430,280Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* Animated Morphing Blob Background (faster animation: 5s) */}
+          <svg
+            className="absolute inset-0 w-full h-full z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            <path fill="#bfddf9">
+              <animate
+                attributeName="d"
+                dur="5s"
+                repeatCount="indefinite"
+                values="
+                  M428.5,283.5Q371,317,338,367.5Q305,418,258.5,428.5Q212,439,166,412Q120,385,97.5,337.5Q75,290,86.5,240Q98,190,131,150.5Q164,111,214,97.5Q264,84,313.5,87Q363,90,406,123.5Q449,157,428.5,283.5Z;
+                  M421.5,293.5Q371,337,327,379.5Q283,422,239.5,403Q196,384,160,363.5Q124,343,99.5,299Q75,255,86.5,205.5Q98,156,134,121.5Q170,87,221,90Q272,93,314.5,103.5Q357,114,407,153.5Q457,193,421.5,293.5Z;
+                  M428.5,283.5Q371,317,338,367.5Q305,418,258.5,428.5Q212,439,166,412Q120,385,97.5,337.5Q75,290,86.5,240Q98,190,131,150.5Q164,111,214,97.5Q264,84,313.5,87Q363,90,406,123.5Q449,157,428.5,283.5Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* Shape 4 - Bottom Right (faster animation: 4s) */}
+          <svg
+            className="absolute right-0 bottom-0 w-80 h-80 opacity-40 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            <path fill="#d2fcb2">
+              <animate
+                attributeName="d"
+                dur="4s"
+                repeatCount="indefinite"
+                values="
+                  M420,280Q380,320,340,360Q300,400,260,360Q220,320,180,280Q220,240,260,200Q300,160,340,200Q380,240,420,280Z;
+                  M430,290Q390,330,350,370Q310,410,270,370Q230,330,190,290Q230,250,270,210Q310,170,350,210Q390,250,430,290Z;
+                  M420,280Q380,320,340,360Q300,400,260,360Q220,320,180,280Q220,240,260,200Q300,160,340,200Q380,240,420,280Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* New Shape 2 - Top Right (improved: longer movement, faster: 4s) */}
+          <svg
+            className="absolute right-0 top-0 w-64 h-64 opacity-40 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            <path fill="#ffcccb">
+              <animate
+                attributeName="d"
+                dur="4s"
+                repeatCount="indefinite"
+                values="
+                  M400,80 Q440,140,380,220 Q320,300,280,220 Q240,140,280,80 Q320,20,380,60 Q440,100,400,80Z;
+                  M410,90 Q450,150,390,230 Q330,310,290,230 Q250,150,290,90 Q330,30,390,70 Q450,110,410,90Z;
+                  M400,80 Q440,140,380,220 Q320,300,280,220 Q240,140,280,80 Q320,20,380,60 Q440,100,400,80Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* New Shape 3 - Bottom Left (improved: longer movement, faster: 5s) */}
+          {/* <svg
+            className="absolute left-0 bottom-0 w-64 h-64 opacity-40 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            <path fill="#90ee90">
+              <animate
+                attributeName="d"
+                dur="5s"
+                repeatCount="indefinite"
+                values="
+                  M80,420 Q130,380,180,440 Q230,500,180,520 Q130,540,80,500 Q30,460,50,420 Q70,380,80,420Z;
+                  M90,430 Q140,390,190,450 Q240,510,190,530 Q140,550,90,510 Q40,470,60,430 Q80,390,90,430Z;
+                  M80,420 Q130,380,180,440 Q230,500,180,520 Q130,540,80,500 Q30,460,50,420 Q70,380,80,420Z
+                "
+              />
+            </path>
+          </svg> */}
+
+          {/* New Shape 5 - Center Top (improved: longer movement, faster: 6s) */}
+          <svg
+            className="absolute top-0 left-1/2 transform -translate-x-1/2 w-48 h-48 opacity-30 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            <path fill="#add8e6">
+              <animate
+                attributeName="d"
+                dur="6s"
+                repeatCount="indefinite"
+                values="
+                  M240,40 Q300,110,240,180 Q180,250,120,180 Q60,110,120,40 Q180,-30,240,40Z;
+                  M250,50 Q310,120,250,190 Q190,260,130,190 Q70,120,130,50 Q190,-20,250,50Z;
+                  M240,40 Q300,110,240,180 Q180,250,120,180 Q60,110,120,40 Q180,-30,240,40Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* New Shape 6 - Center Bottom (improved: longer movement, faster: 6s) */}
+          <svg
+            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-48 h-48 opacity-30 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            <path fill="#d8bfd8">
+              <animate
+                attributeName="d"
+                dur="6s"
+                repeatCount="indefinite"
+                values="
+                  M240,440 Q300,390,240,340 Q180,290,120,340 Q60,390,120,440 Q180,490,240,440Z;
+                  M250,450 Q310,400,250,350 Q190,300,130,350 Q70,400,130,450 Q190,500,250,450Z;
+                  M240,440 Q300,390,240,340 Q180,290,120,340 Q60,390,120,440 Q180,490,240,440Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* Content */}
+          <div className="relative z-10">
+            <div className="mb-6">
+              <Link
+                href="/dashboard/admin/projects"
+                className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-              Retour à la liste des projets
-            </Link>
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Retour à la liste des projets
+              </Link>
+            </div>
+
+            {/* UpdatedHeader with modified background */}
+            <UpdatedHeader dossier={dossier} firstLetter={firstLetter} />
+
+            <StepProgress
+              currentStep={getCurrentStep(dossier.etape)}
+              onStepClick={handleStepClick}
+            />
           </div>
-
-          {/* Remplacement de l'ancien header par le nouveau composant UpdatedHeader */}
-          <UpdatedHeader dossier={dossier} firstLetter={firstLetter} />
-
-          <StepProgress
-            currentStep={getCurrentStep(dossier.etape)}
-            onStepClick={handleStepClick}
-          />
+        </div>
 
           <div className="flex border-b border-gray-300 mb-4">
             <button

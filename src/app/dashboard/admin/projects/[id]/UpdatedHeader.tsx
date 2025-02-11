@@ -43,12 +43,12 @@ export default function UpdatedHeader({ dossier }: UpdatedHeaderProps) {
   const initiales = dossier.client ? getInitiales(dossier.client) : "";
 
   return (
-    <header className="relative bg-gradient-to-br from-gray-50 to-white">
+    <header className="relative bg-white bg-opacity-60">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl shadow-gray-200/60 p-8 md:grid md:grid-cols-3 md:items-start gap-8 border border-gray-100"
+        className="relative bg-white/20 backdrop-blur-md rounded-2xl shadow-2xl shadow-gray-200/60 p-8 md:grid md:grid-cols-3 md:items-start gap-8 border border-gray-100"
       >
         {/* Colonne de gauche – Informations du client */}
         <div className="space-y-6">
