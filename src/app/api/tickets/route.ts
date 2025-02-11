@@ -6,18 +6,27 @@ import clientPromise from "@/lib/mongodb";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const contactId = searchParams.get("contactId");
-    
+    const contactIdParam = searchParams.get("contactId");
+
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    const query = contactId ? { contactId } : {};
-    const tickets = await db.collection("tickets").find(query).toArray();
+    let query = {};
+    if (contactIdParam) {
+      // Attempt to convert the contactId to a number.
+      const numericContactId = parseInt(contactIdParam, 10);
+      // If the conversion is successful (not NaN), use the number.
+      if (!isNaN(numericContactId)) {
+        query = { contactId: numericContactId };
+      } else {
+        // Otherwise, use the original string value.
+        query = { contactId: contactIdParam };
+      }
+    }
 
+    const tickets = await db.collection("tickets").find(query).toArray();
     return NextResponse.json(tickets);
   } catch (error) {
-    // Either remove the parameter (catch { ... }) 
-    // or use it (for logging or debugging):
     console.error("Error in GET /api/tickets:", error);
     return NextResponse.error();
   }

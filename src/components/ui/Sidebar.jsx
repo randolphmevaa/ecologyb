@@ -38,7 +38,15 @@ export function Sidebar({ role }) {
     }
     return 'Accueil';
   });
-  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Initialize isCollapsed from localStorage (or default to false)
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('isCollapsed') === 'true';
+    }
+    return false;
+  });
+
   const [hoveredItem, setHoveredItem] = useState(null);
   const hoverTimeout = useRef(null);
   const sidebarRef = useRef(null);
@@ -365,7 +373,11 @@ export function Sidebar({ role }) {
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={() => {
+          const newState = !isCollapsed;
+          setIsCollapsed(newState);
+          localStorage.setItem('isCollapsed', newState);
+        }}
         className={cn(
           "absolute -right-3.5 top-6 z-20 rounded-full p-2 bg-white",
           "border border-gray-200 hover:border-primary",

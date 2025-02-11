@@ -345,11 +345,11 @@ export default function RelatedTab({ contactId }: RelatedTabProps) {
       setLoading(true);
       try {
         const [orgRes, dosRes, docRes, tickRes, commRes] = await Promise.all([
-          fetch(`/api/organizations?id=${contactId}`),
+          fetch(`/api/organizations?contactId=${contactId}`),
           fetch(`/api/dossiers?contactId=${contactId}`),
           fetch(`/api/documents?contactId=${contactId}`),
-          fetch(`/api/tickets?id=${contactId}`),
-          fetch(`/api/commentaires?id=${contactId}`),
+          fetch(`/api/tickets?contactId=${contactId}`),
+          fetch(`/api/commentaires?contactId=${contactId}`),
         ]);
 
         const [orgData, dosData, docData, tickData, commData] =

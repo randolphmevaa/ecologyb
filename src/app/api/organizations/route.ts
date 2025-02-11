@@ -1,14 +1,32 @@
 // /app/api/organizations/route.ts
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const filter: { [key: string]: string | number | ObjectId } = {};
+
+    // Convert contactId to a number if it exists
+    const contactId = searchParams.get("contactId");
+    if (contactId) {
+      filter.contactId = parseInt(contactId, 10); // or Number(contactId)
+    }
+
+    // If an objectId is provided, convert it to a MongoDB ObjectId and add it to the filter.
+    const objectId = searchParams.get("objectId");
+    if (objectId) {
+      filter._id = new ObjectId(objectId);
+    }
+
     const client = await clientPromise;
     const db = client.db("yourdbname");
-    const organizations = await db.collection("organizations").find({}).toArray();
+    const organizations = await db.collection("organizations").find(filter).toArray();
+
     return NextResponse.json(organizations);
-  } catch {
+  } catch (error) {
+    console.error("Error fetching organizations:", error);
     return NextResponse.error();
   }
 }

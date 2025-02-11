@@ -61,30 +61,42 @@ export async function DELETE(
 // PUT: Update a single dossier by ID
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> } // note: params is a promise
 ) {
+  // Await the params before using them
   const { id } = await params;
   const updatedData = await request.json();
+
+  // Remove the _id field if present (MongoDB _id is immutable)
+  if (updatedData._id) {
+    delete updatedData._id;
+  }
 
   try {
     const client = await clientPromise;
     const db = client.db("yourdbname");
-    const result = await db.collection("dossiers").updateOne(
-      { $or: [{ id: id }, { id: parseInt(id) }] },
-      { $set: updatedData }
-    );
+
+    // Build the filter using ObjectId if valid
+    const filter = ObjectId.isValid(id)
+      ? { _id: new ObjectId(id) }
+      : { id: id };
+
+    // Update the dossier
+    const result = await db.collection("dossiers").updateOne(filter, {
+      $set: updatedData,
+    });
 
     if (result.matchedCount === 0) {
       return NextResponse.json({ error: "No dossier found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Dossier updated successfully" });
+    // Return the updated dossier document so the client gets the new values
+    const updatedDossier = await db.collection("dossiers").findOne(filter);
+    return NextResponse.json(updatedDossier);
   } catch (err: unknown) {
-    // Narrow the type
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
-    // Fallback for non-Error objects
     return NextResponse.json({ error: "Unknown error" }, { status: 500 });
   }
 }

@@ -1,20 +1,30 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
-// GET: Retrieve all commentaires (optionally filtered by contactId)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const contactId = searchParams.get("contactId");
+    const contactIdParam = searchParams.get("contactId");
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    const query = contactId ? { contactId } : {};
+    let query = {};
+    if (contactIdParam) {
+      // Convert the contactId to a number.
+      const numericContactId = parseInt(contactIdParam, 10);
+      // If the conversion is successful, use the numeric value.
+      if (!isNaN(numericContactId)) {
+        query = { contactId: numericContactId };
+      } else {
+        // Fallback if conversion fails (if it contains non-numeric characters).
+        query = { contactId: contactIdParam };
+      }
+    }
+    
     const commentaires = await db.collection("commentaires").find(query).toArray();
     return NextResponse.json(commentaires);
   } catch (error: unknown) {
     console.error(error);
-    // Or remove the parameter completely if you don't want to handle/log it.
     return NextResponse.error();
   }
 }

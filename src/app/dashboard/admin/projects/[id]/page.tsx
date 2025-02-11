@@ -6,10 +6,11 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import UpdatedHeader from "./UpdatedHeader";
 import {
-  EnvelopeIcon,
-  PhoneIcon,
-  MapPinIcon,
+  // EnvelopeIcon,
+  // PhoneIcon,
+  // MapPinIcon,
   ClipboardDocumentCheckIcon,
   HomeIcon,
   BriefcaseIcon,
@@ -101,6 +102,7 @@ type Dossier = {
 
 type StepProgressProps = {
   currentStep: number;
+  onStepClick: (step: number) => void;
 };
 
 // ------------------------
@@ -343,7 +345,7 @@ const AddDocumentForm = ({
 // Component: StepProgress
 // ------------------------
 
-function StepProgress({ currentStep }: StepProgressProps) {
+function StepProgress({ currentStep, onStepClick }: StepProgressProps) {
   const steps = [
     "Prise de contact",
     "En attente des documents",
@@ -354,9 +356,11 @@ function StepProgress({ currentStep }: StepProgressProps) {
     "Dossier clôturé",
   ];
 
+  // Calculate the progress percentage based on the current step.
   const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
+  // Tooltip animation variants.
   const tooltipVariants = {
     hidden: { opacity: 0, y: 10, scale: 0.95 },
     visible: { opacity: 1, y: 0, scale: 1 },
@@ -368,22 +372,28 @@ function StepProgress({ currentStep }: StepProgressProps) {
       aria-valuenow={currentStep}
       aria-valuemin={1}
       aria-valuemax={steps.length}
-      className="relative px-4 py-8"
+      className="relative px-6 py-10"
     >
       <div className="relative flex items-center justify-between">
-        <div className="absolute top-1/2 left-0 w-full h-2 bg-gray-200 rounded-full transform -translate-y-1/2 overflow-hidden">
-          <motion.div
-            className="h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-40"
-            animate={{ x: ["-100%", "100%"] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          />
-        </div>
+        {/* Background Track */}
+        <div className="absolute top-1/2 left-0 w-full h-6 bg-gradient-to-r from-gray-300 to-gray-400 rounded-full transform -translate-y-1/2 shadow-inner" />
+
+        {/* Subtle Shimmer Effect */}
         <motion.div
-          className="absolute top-1/2 left-0 h-2 bg-gradient-to-r from-blue-400 via-blue-500 to-green-500 rounded-full transform -translate-y-1/2"
+          className="absolute top-1/2 left-0 w-full h-6 bg-white opacity-20 rounded-full transform -translate-y-1/2"
+          animate={{ x: ["-100%", "100%"] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        />
+
+        {/* Animated Progress Fill */}
+        <motion.div
+          className="absolute top-1/2 left-0 h-6 bg-gradient-to-r from-blue-500 via-blue-600 to-green-500 rounded-full transform -translate-y-1/2 shadow-md"
           initial={{ width: 0 }}
           animate={{ width: `${progressPercent}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
         />
+
+        {/* Step Indicators */}
         {steps.map((step, index) => {
           const stepNumber = index + 1;
           const isCompleted = stepNumber < currentStep;
@@ -392,15 +402,16 @@ function StepProgress({ currentStep }: StepProgressProps) {
           return (
             <div
               key={stepNumber}
-              className="flex flex-col items-center relative"
+              className="flex flex-col items-center relative cursor-pointer"
+              onClick={() => onStepClick(stepNumber)}
               onMouseEnter={() => setHoveredStep(stepNumber)}
               onMouseLeave={() => setHoveredStep(null)}
             >
               <motion.div
-                whileHover={{ scale: 1.2 }}
+                whileHover={{ scale: 1.3 }}
                 whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                className={`relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-4 transition-colors duration-200 ${
+                transition={{ type: "spring", stiffness: 600, damping: 30 }}
+                className={`relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-4 transition-colors duration-300 shadow-xl ${
                   isCompleted
                     ? "bg-green-500 border-green-500"
                     : isCurrent
@@ -408,10 +419,11 @@ function StepProgress({ currentStep }: StepProgressProps) {
                     : "bg-white border-gray-300"
                 }`}
               >
+                {/* Pulsing effect for the current step */}
                 {isCurrent && (
                   <motion.div
                     className="absolute inset-0 rounded-full border border-blue-300"
-                    animate={{ scale: [1, 1.5, 1] }}
+                    animate={{ scale: [1, 1.7, 1] }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
                   />
                 )}
@@ -434,16 +446,18 @@ function StepProgress({ currentStep }: StepProgressProps) {
                   </span>
                 )}
               </motion.div>
+              {/* Step Label */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 + index * 0.1 }}
+                transition={{ delay: 0.25 + index * 0.1 }}
                 className={`mt-2 text-center text-xs font-medium ${
                   isCurrent ? "text-blue-600" : isCompleted ? "text-green-600" : "text-gray-500"
                 }`}
               >
                 {step}
               </motion.div>
+              {/* Tooltip on Hover */}
               <AnimatePresence>
                 {hoveredStep === stepNumber && (
                   <motion.div
@@ -452,7 +466,7 @@ function StepProgress({ currentStep }: StepProgressProps) {
                     animate="visible"
                     exit="hidden"
                     transition={{ duration: 0.2 }}
-                    className="absolute -top-20 flex flex-col items-center z-10"
+                    className="absolute -top-16 flex flex-col items-center z-10"
                   >
                     <div className="bg-black text-white text-xs px-3 py-1 rounded-md shadow-md">
                       {step}
@@ -829,6 +843,7 @@ export default function ProjectDetailPage() {
   const [dossier, setDossier] = useState<Dossier | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [chatMessageCount ] = useState(3);
   const [formData, setFormData] = useState<DossierFormData>({
     client: "",
     projet: "",
@@ -851,14 +866,19 @@ export default function ProjectDetailPage() {
     },
   });
   const [userList, setUserList] = useState<User[]>([]);
-  const [activeTab, setActiveTab] = useState<"info" | "documents">("info");
+  const [activeTab, setActiveTab] = useState<
+  "info" | "documents" | "photo" | "chat" | "sav"
+>("info");
   const searchParams = useSearchParams();
   // const { tab } = router.query;
 
-  const getCurrentStep = (etape: string): number => {
+  const getCurrentStep = (etape?: string): number => {
+    // If etape is undefined or empty, default to step 1.
+    if (!etape) return 1;
+  
     const match = etape.match(/^(\d+)/);
     return match ? Number(match[1]) : 1;
-  };
+  };  
 
   useEffect(() => {
     if (searchParams.get("tab") === "documents") {
@@ -985,6 +1005,42 @@ export default function ProjectDetailPage() {
     setIsEditing(false);
   };
 
+  const handleStepClick = async (clickedStep: number) => {
+    // Define the array of steps (should match the one used in StepProgress)
+    const steps = [
+      "Prise de contact",
+      "En attente des documents",
+      "Instruction du dossier",
+      "Dossier Accepter",
+      "Installation",
+      "Contrôle",
+      "Dossier clôturé",
+    ];
+    
+    // Build the new etape string using the clicked step
+    const newEtape = `${clickedStep} ${steps[clickedStep - 1]}`;
+    
+    try {
+      // Prepare the updated dossier object (here we update only the etape field)
+      const updatedDossierPayload = { ...dossier, etape: newEtape };
+  
+      // Send the PUT request to update the dossier on the server.
+      const res = await fetch(`/api/dossiers/${dossier?._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedDossierPayload),
+      });
+      if (!res.ok) throw new Error("Erreur lors de la mise à jour du dossier");
+      
+      // Update the local state with the new dossier data (including the updated etape)
+      const updatedData = await res.json();
+      setDossier(updatedData);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour :", error);
+      // Optionally, you could display an error notification here.
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-white">
@@ -1000,9 +1056,9 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const currentStep = getCurrentStep(dossier.etape);
+  // const currentStep = getCurrentStep(dossier.etape);
   const firstLetter = dossier.client ? dossier.client.charAt(0).toUpperCase() : "";
-
+  
   return (
     <div className="flex h-screen bg-white">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -1027,68 +1083,21 @@ export default function ProjectDetailPage() {
             </Link>
           </div>
 
-          <header className="relative bg-white">
-            <div className="">
-              <motion.div
-                initial={{ opacity: 0, y: 50, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
-                className="relative bg-white rounded-3xl shadow-2xl p-10 md:flex md:items-center md:justify-between"
-              >
-                <div className="flex flex-col">
-                  <motion.h1 whileHover={{ scale: 1.02 }} className="text-3xl font-bold text-gray-900">
-                    Projet pour {dossier.client}
-                  </motion.h1>
-                  <div className="mt-4 space-y-3">
-                    <motion.div whileHover={{ x: 5 }} className="flex items-center text-gray-700">
-                      <EnvelopeIcon className="w-6 h-6 mr-3" />
-                      <span className="text-lg">{dossier.clientEmail || "client@example.com"}</span>
-                    </motion.div>
-                    <motion.div whileHover={{ x: 5 }} className="flex items-center text-gray-700">
-                      <PhoneIcon className="w-6 h-6 mr-3" />
-                      <span className="text-lg">{dossier.clientPhone || "+1 (555) 555-5555"}</span>
-                    </motion.div>
-                    <motion.div whileHover={{ x: 5 }} className="flex items-center text-gray-700">
-                      <MapPinIcon className="w-6 h-6 mr-3" />
-                      <span className="text-lg">
-                        {dossier.clientAddress || "123 Main St, City, Country"}
-                      </span>
-                    </motion.div>
-                  </div>
-                  <div className="mt-4">
-                    <span className="text-sm text-gray-500">Dossier {dossier.numero}</span>
-                  </div>
-                </div>
-                <div className="relative z-10 mt-8 md:mt-0 flex-shrink-0">
-                  <motion.div
-                    whileHover={{ scale: 1.05, rotate: 3 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative w-32 h-32"
-                  >
-                    {dossier.clientAvatar ? (
-                      <img
-                        src={dossier.clientAvatar}
-                        alt="Client Avatar"
-                        className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
-                      />
-                    ) : (
-                      <div className="w-32 h-32 flex items-center justify-center rounded-full bg-gray-200 border-4 border-white shadow-md">
-                        <span className="text-4xl font-bold text-gray-600">{firstLetter}</span>
-                      </div>
-                    )}
-                  </motion.div>
-                </div>
-              </motion.div>
-            </div>
-          </header>
+          {/* Remplacement de l'ancien header par le nouveau composant UpdatedHeader */}
+          <UpdatedHeader dossier={dossier} firstLetter={firstLetter} />
 
-          <StepProgress currentStep={currentStep} />
+          <StepProgress
+            currentStep={getCurrentStep(dossier.etape)}
+            onStepClick={handleStepClick}
+          />
 
           <div className="flex border-b border-gray-300 mb-4">
             <button
               onClick={() => setActiveTab("info")}
               className={`px-4 py-2 -mb-px font-semibold ${
-                activeTab === "info" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500 hover:text-blue-500"
+                activeTab === "info"
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-500 hover:text-blue-500"
               }`}
             >
               Cartes d&apos;information
@@ -1096,10 +1105,47 @@ export default function ProjectDetailPage() {
             <button
               onClick={() => setActiveTab("documents")}
               className={`px-4 py-2 -mb-px font-semibold ${
-                activeTab === "documents" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500 hover:text-blue-500"
+                activeTab === "documents"
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-500 hover:text-blue-500"
               }`}
             >
               Documents
+            </button>
+            <button
+              onClick={() => setActiveTab("photo")}
+              className={`px-4 py-2 -mb-px font-semibold ${
+                activeTab === "photo"
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-500 hover:text-blue-500"
+              }`}
+            >
+              Photo d&apos;installation
+            </button>
+            <button
+              onClick={() => setActiveTab("chat")}
+              className={`relative px-4 py-2 -mb-px font-semibold ${
+                activeTab === "chat"
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-500 hover:text-blue-500"
+              }`}
+            >
+              Chat
+              {chatMessageCount > 0 && (
+                <span className="absolute top-0 right-0 -mt-1 -mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white">
+                  {chatMessageCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("sav")}
+              className={`px-4 py-2 -mb-px font-semibold ${
+                activeTab === "sav"
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-500 hover:text-blue-500"
+              }`}
+            >
+              S.A.V.
             </button>
           </div>
 
@@ -1114,7 +1160,7 @@ export default function ProjectDetailPage() {
             </div>
           )}
 
-          {activeTab === "info" ? (
+          {activeTab === "info" && (
             <div className="space-y-8">
               {/* Informations Générales */}
               <motion.section
@@ -1458,12 +1504,38 @@ export default function ProjectDetailPage() {
                 </div>
               )}
             </div>
-          ) : (
+          )}
+
+          {activeTab === "documents" && (
             <div id="documents">
               <DocumentsTab contactId={dossier.contactId || ""} />
             </div>
-            
           )}
+
+          {activeTab === "photo" && (
+            <div id="photo">
+              <p className="p-6 text-center text-gray-700">
+                Photo d&apos;installation content goes here.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "chat" && (
+            <div id="chat">
+              <p className="p-6 text-center text-gray-700">
+                Chat content goes here.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "sav" && (
+            <div id="sav">
+              <p className="p-6 text-center text-gray-700">
+                Sav content goes here.
+              </p>
+            </div>
+          )}
+
         </main>
       </div>
     </div>
