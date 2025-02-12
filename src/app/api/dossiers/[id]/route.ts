@@ -31,7 +31,6 @@ export async function GET(
   }
 }
 
-
 // DELETE: Remove a single dossier by ID
 export async function DELETE(
   _request: Request,
@@ -41,7 +40,11 @@ export async function DELETE(
   try {
     const client = await clientPromise;
     const db = client.db("yourdbname");
-    const result = await db.collection("dossiers").deleteOne({ id: parseInt(id) });
+
+    // Delete using the _id as ObjectId.
+    const result = await db
+      .collection("dossiers")
+      .deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: "No dossier found" }, { status: 404 });
@@ -49,11 +52,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Dossier deleted successfully" });
   } catch (err: unknown) {
-    // Narrow the type
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
-    // Fallback for non-Error objects
     return NextResponse.json({ error: "Unknown error" }, { status: 500 });
   }
 }

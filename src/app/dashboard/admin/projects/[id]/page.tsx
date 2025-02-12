@@ -7,21 +7,26 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import UpdatedHeader from "./UpdatedHeader";
-// import TabsUI from "./TabsUI";
+import InfoTab from "./InfoTab";
+import PhotoTab from "./PhotoTab";
+import ChatTab from "./ChatTab";
+import SavTab from "./SavTab";
+
 import {
   // EnvelopeIcon,
   // PhoneIcon,
   // MapPinIcon,
-  ClipboardDocumentCheckIcon,
-  HomeIcon,
-  BriefcaseIcon,
-  InformationCircleIcon,
+  // ClipboardDocumentCheckIcon,
+  // HomeIcon,
+  // BriefcaseIcon,
+  // InformationCircleIcon,
   DocumentTextIcon,
   CloudArrowDownIcon,
   XMarkIcon,
   ArrowUpTrayIcon,
   PlusIcon,
-  CloudIcon, // For the file upload area
+  CloudIcon,
+  MagnifyingGlassIcon, // For the file upload area
 } from "@heroicons/react/24/outline";
 import { Header } from "@/components/Header";
 import PremiumTabs from "./TabsUI";
@@ -511,15 +516,15 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
   const [searchDownload, setSearchDownload] = useState("");
   const [searchTransmit, setSearchTransmit] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // If docToEdit is set, then we are editing that document (prefilled form).
   const [docToEdit, setDocToEdit] = useState<DocumentData | null>(null);
   const [previewDoc, setPreviewDoc] = useState<DocumentData | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (contactId) {
+      setLoading(true);
       fetch(`/api/documents?contactId=${contactId}`)
         .then((res) => res.json())
-        // Specify that data is an array of DocumentApiResponse
         .then((data: DocumentApiResponse[]) => {
           const mappedDocs: DocumentData[] = data.map((doc) => ({
             id: doc._id,
@@ -532,8 +537,12 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
           const transmittable = mappedDocs.filter((doc) => doc.status === "Manquant");
           setDownloadableDocs(downloadable);
           setTransmittableDocs(transmittable);
+          setLoading(false);
         })
-        .catch((err) => console.error("Error fetching documents:", err));
+        .catch((err) => {
+          console.error("Error fetching documents:", err);
+          setLoading(false);
+        });
     }
   }, [contactId]);
 
@@ -548,13 +557,11 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
     setPreviewDoc(doc);
   };
 
-  // When clicking the row-level "Ajouter" button, open the modal for editing.
   const handleAjouterDocTransmettre = (doc: DocumentData): void => {
     setDocToEdit(doc);
     setIsModalOpen(true);
   };
 
-  // Callback after a document is saved (either updated or added).
   const handleDocumentSaved = (savedDoc: DocumentData) => {
     if (docToEdit) {
       // Update an existing document.
@@ -574,11 +581,12 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
       }
     }
     setDocToEdit(null);
+    setIsModalOpen(false);
   };
 
   return (
     <>
-      {/* Modal for adding/editing a document */}
+      {/* Add/Edit Document Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -588,19 +596,20 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-2xl p-6 w-full max-w-md relative"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl relative"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3 }}
             >
               <button
                 onClick={() => {
                   setIsModalOpen(false);
                   setDocToEdit(null);
                 }}
-                className="absolute top-4 right-4"
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
               >
-                <XMarkIcon className="h-6 w-6 text-gray-600 hover:text-gray-800" />
+                <XMarkIcon className="h-6 w-6" />
               </button>
               <AddDocumentForm
                 onClose={() => {
@@ -612,10 +621,13 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
                   docToEdit
                     ? {
                         id: docToEdit.id,
-                        // Use "autre" if the document type is not one of the predefined ones.
-                        docType: predefinedTypes.includes(docToEdit.type) ? docToEdit.type : "autre",
-                        customDocType: predefinedTypes.includes(docToEdit.type) ? "" : docToEdit.type,
-                        solution: "", // Optionally prefill the solution if available.
+                        docType: predefinedTypes.includes(docToEdit.type)
+                          ? docToEdit.type
+                          : "autre",
+                        customDocType: predefinedTypes.includes(docToEdit.type)
+                          ? ""
+                          : docToEdit.type,
+                        solution: "",
                         status: docToEdit.status,
                       }
                     : undefined
@@ -631,133 +643,153 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
-        className="space-y-10"
+        className="space-y-10 px-4 py-6"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Documents à télécharger */}
+          {/* Documents to Download */}
           <motion.div
-            className="bg-white rounded-2xl shadow-xl overflow-hidden transition-transform duration-300 hover:scale-105"
-            whileHover={{ scale: 1.02 }}
+            className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300"
           >
             <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-4 flex items-center gap-3">
               <CloudArrowDownIcon className="h-10 w-10 text-white" />
               <h2 className="text-2xl font-bold text-white">Documents à télécharger</h2>
             </div>
             <div className="p-6">
-              <div className="mb-6">
+              <div className="relative mb-6">
+                <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
                   value={searchDownload}
                   onChange={(e) => setSearchDownload(e.target.value)}
                   placeholder="Rechercher..."
-                  className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white sticky top-0">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredDownloadableDocs.map((doc) => (
-                      <motion.tr
-                        key={doc.id}
-                        whileHover={{ backgroundColor: "#f0f4f8" }}
-                        transition={{ duration: 0.2 }}
-                        className="transition-colors duration-200"
-                      >
-                        <td className="px-4 py-3 text-sm text-gray-700">{doc.type}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{doc.date}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{doc.status}</td>
-                        <td className="px-4 py-3">
-                          <button
-                            onClick={() => handleVisualiser(doc)}
-                            className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                          >
-                            <DocumentTextIcon className="h-5 w-5" />
-                            Visualiser
-                          </button>
-                        </td>
-                      </motion.tr>
-                    ))}
-                    {filteredDownloadableDocs.length === 0 && (
+                {loading ? (
+                  <div className="flex justify-center items-center h-40">
+                    <motion.div
+                      className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                    />
+                  </div>
+                ) : (
+                  <table className="min-w-full">
+                    <thead className="bg-blue-500 text-white sticky top-0">
                       <tr>
-                        <td colSpan={4} className="px-4 py-3 text-sm text-center text-gray-500">
-                          Aucun document trouvé.
-                        </td>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredDownloadableDocs.map((doc) => (
+                        <motion.tr
+                          key={doc.id}
+                          whileHover={{ backgroundColor: "#f0f4f8" }}
+                          transition={{ duration: 0.2 }}
+                          className="transition-colors duration-200"
+                        >
+                          <td className="px-4 py-3 text-sm text-gray-700">{doc.type}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{doc.date}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{doc.status}</td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => handleVisualiser(doc)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                            >
+                              <DocumentTextIcon className="h-5 w-5" />
+                              Visualiser
+                            </button>
+                          </td>
+                        </motion.tr>
+                      ))}
+                      {filteredDownloadableDocs.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-3 text-center text-gray-500">
+                            Aucun document trouvé.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </motion.div>
 
-          {/* Documents à transmettre */}
+          {/* Documents to Transmit */}
           <motion.div
-            className="bg-white rounded-2xl shadow-xl overflow-hidden transition-transform duration-300 hover:scale-105 flex flex-col"
-            whileHover={{ scale: 1.02 }}
+            className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300 flex flex-col"
           >
             <div className="bg-gradient-to-r from-green-500 to-teal-500 px-6 py-4 flex items-center gap-3">
               <ArrowUpTrayIcon className="h-10 w-10 text-white" />
               <h2 className="text-2xl font-bold text-white">Documents à transmettre</h2>
             </div>
             <div className="flex flex-col flex-grow p-6">
-              <div className="mb-6">
+              <div className="relative mb-6">
+                <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
                   value={searchTransmit}
                   onChange={(e) => setSearchTransmit(e.target.value)}
                   placeholder="Rechercher..."
-                  className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+                  className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
               <div className="overflow-x-auto flex-grow">
-                <table className="min-w-full">
-                  <thead className="bg-gradient-to-r from-green-500 to-teal-500 text-white sticky top-0">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredTransmittableDocs.map((doc) => (
-                      <motion.tr
-                        key={doc.id}
-                        whileHover={{ backgroundColor: "#f0f4f8" }}
-                        transition={{ duration: 0.2 }}
-                        className="transition-colors duration-200"
-                      >
-                        <td className="px-4 py-3 text-sm text-gray-700">{doc.type}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{doc.date}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{doc.status}</td>
-                        <td className="px-4 py-3">
-                          <button
-                            onClick={() => handleAjouterDocTransmettre(doc)}
-                            className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-green-700"
-                          >
-                            <PlusIcon className="h-5 w-5" />
-                            Ajouter
-                          </button>
-                        </td>
-                      </motion.tr>
-                    ))}
-                    {filteredTransmittableDocs.length === 0 && (
+                {loading ? (
+                  <div className="flex justify-center items-center h-40">
+                    <motion.div
+                      className="w-8 h-8 border-4 border-green-500 border-dashed rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                    />
+                  </div>
+                ) : (
+                  <table className="min-w-full">
+                    <thead className="bg-green-500 text-white sticky top-0">
                       <tr>
-                        <td colSpan={4} className="px-4 py-3 text-sm text-center text-gray-500">
-                          Aucun document trouvé.
-                        </td>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredTransmittableDocs.map((doc) => (
+                        <motion.tr
+                          key={doc.id}
+                          whileHover={{ backgroundColor: "#f0f4f8" }}
+                          transition={{ duration: 0.2 }}
+                          className="transition-colors duration-200"
+                        >
+                          <td className="px-4 py-3 text-sm text-gray-700">{doc.type}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{doc.date}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{doc.status}</td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => handleAjouterDocTransmettre(doc)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                            >
+                              <PlusIcon className="h-5 w-5" />
+                              Ajouter
+                            </button>
+                          </td>
+                        </motion.tr>
+                      ))}
+                      {filteredTransmittableDocs.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-3 text-center text-gray-500">
+                            Aucun document trouvé.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
               </div>
               <div className="mt-8 flex justify-end">
                 <button
@@ -765,10 +797,10 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
                     setDocToEdit(null);
                     setIsModalOpen(true);
                   }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
                 >
                   <PlusIcon className="h-5 w-5" />
-                  Ajouter un document (devis, facture, avis d&apos;imposition, autre etc.)
+                  Ajouter un document (devis, facture, avis d&apos;imposition, autre, etc.)
                 </button>
               </div>
             </div>
@@ -776,7 +808,7 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
         </div>
       </motion.section>
 
-      {/* Preview Modal for a document */}
+      {/* Preview Modal */}
       <AnimatePresence>
         {previewDoc && (
           <motion.div
@@ -786,10 +818,11 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-lg p-4 max-w-3xl w-full relative"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
+              className="bg-white rounded-lg p-4 max-w-3xl w-full relative shadow-2xl"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3 }}
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold">Prévisualisation du document</h3>
@@ -804,7 +837,7 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
                 <iframe
                   src={previewDoc.filePath}
                   title="Document Preview"
-                  className="w-full h-96 border"
+                  className="w-full h-96 border rounded-md"
                 />
               ) : (
                 <p>Aucun document à afficher.</p>
@@ -822,7 +855,7 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
                       })
                       .catch((err) => console.error("Erreur lors de la suppression :", err));
                   }}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                 >
                   Supprimer
                 </button>
@@ -950,7 +983,7 @@ export default function ProjectDetailPage() {
   };
 
   const handleNestedInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     section: "informationLogement" | "informationTravaux"
   ) => {
     const { name, value } = e.target;
@@ -958,7 +991,7 @@ export default function ProjectDetailPage() {
       ...prev,
       [section]: { ...prev[section], [name]: value },
     }));
-  };
+  };  
 
   const handleSave = () => {
     fetch(`/api/dossiers/${dossier?._id}`, {
@@ -1249,360 +1282,19 @@ export default function ProjectDetailPage() {
         <PremiumTabs activeTab={activeTab} setActiveTab={setActiveTab} chatMessageCount={chatMessageCount} />
 
           {activeTab === "info" && (
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                {isEditing ? "Annuler" : "Modifier"}
-              </button>
-            </div>
-          )}
-
-          {activeTab === "info" && (
-            <div className="space-y-8">
-              {/* Informations Générales */}
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="relative bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 transform transition duration-300 hover:scale-105 hover:shadow-2xl"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center justify-center bg-blue-500 text-white rounded-full w-10 h-10 mr-4">
-                    <ClipboardDocumentCheckIcon className="w-5 h-5" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-700">Informations Générales</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Client :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="client"
-                          value={formData.client}
-                          onChange={handleInputChange}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.client
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Projet :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="projet"
-                          value={formData.projet}
-                          onChange={handleInputChange}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.projet
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Solution :</span>{" "}
-                      {isEditing ? (
-                        <select
-                          name="solution"
-                          value={formData.solution}
-                          onChange={handleInputChange}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        >
-                          <option value="Pompes a chaleur">Pompes à chaleur</option>
-                          <option value="Chauffe-eau solaire individuel">
-                            Chauffe-eau solaire individuel
-                          </option>
-                          <option value="Chauffe-eau thermodynamique">
-                            Chauffe-eau thermodynamique
-                          </option>
-                          <option value="Système Solaire Combiné">
-                            Système Solaire Combiné
-                          </option>
-                        </select>
-                      ) : (
-                        dossier.solution
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Étape :</span>{" "}
-                      {isEditing ? (
-                        <select
-                          name="etape"
-                          value={formData.etape}
-                          onChange={handleInputChange}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        >
-                          <option value="1Prise de contact">1 Prise de contact</option>
-                          <option value="2En attente des documents">
-                            2 En attente des documents
-                          </option>
-                          <option value="3Instruction du dossier">
-                            3 Instruction du dossier
-                          </option>
-                          <option value="4Dossier Accepter">4 Dossier Accepter</option>
-                          <option value="5Installation">5 Installation</option>
-                          <option value="6Controle">6 Contrôle</option>
-                          <option value="7Dossier cloturer">
-                            7 Dossier clôturé
-                          </option>
-                        </select>
-                      ) : (
-                        dossier.etape
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Valeur :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          name="valeur"
-                          value={formData.valeur}
-                          onChange={handleInputChange}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        `${dossier.valeur} €`
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Équipe Assignée :</span>{" "}
-                      {isEditing ? (
-                        <select
-                          name="assignedTeam"
-                          value={formData.assignedTeam}
-                          onChange={handleInputChange}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        >
-                          <option value="">Sélectionnez une équipe</option>
-                          {userList.map((user) => (
-                            <option key={user.email} value={user.email}>
-                              {user.email} ({user.role})
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        dossier.assignedTeam || "Non assignée"
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Notes</h3>
-                  {isEditing ? (
-                    <textarea
-                      name="notes"
-                      value={formData.notes}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded"
-                      rows={4}
-                    />
-                  ) : (
-                    dossier.notes && (
-                      <p className="text-gray-700 whitespace-pre-line">{dossier.notes}</p>
-                    )
-                  )}
-                </div>
-              </motion.section>
-
-              {/* Informations Logement */}
-              {dossier.informationLogement && (
-                <motion.section
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  className="relative bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500 transform transition duration-300 hover:scale-105 hover:shadow-2xl"
-                >
-                  <div className="flex items-center mb-4">
-                    <div className="flex items-center justify-center bg-green-500 text-white rounded-full w-10 h-10 mr-4">
-                      <HomeIcon className="w-5 h-5" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-700">Informations Logement</h2>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Type de logement :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="typeDeLogement"
-                          value={formData.informationLogement?.typeDeLogement || ""}
-                          onChange={(e) => handleNestedInputChange(e, "informationLogement")}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.informationLogement.typeDeLogement
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Surface Habitable :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="surfaceHabitable"
-                          value={formData.informationLogement?.surfaceHabitable || ""}
-                          onChange={(e) => handleNestedInputChange(e, "informationLogement")}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.informationLogement.surfaceHabitable
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Année de Construction :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="anneeConstruction"
-                          value={formData.informationLogement?.anneeConstruction || ""}
-                          onChange={(e) => handleNestedInputChange(e, "informationLogement")}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.informationLogement.anneeConstruction
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Système de Chauffage :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="systemeChauffage"
-                          value={formData.informationLogement?.systemeChauffage || ""}
-                          onChange={(e) => handleNestedInputChange(e, "informationLogement")}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.informationLogement.systemeChauffage
-                      )}
-                    </p>
-                  </div>
-                </motion.section>
-              )}
-
-              {/* Informations Travaux */}
-              {dossier.informationTravaux && (
-                <motion.section
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
-                  className="relative bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 transform transition duration-300 hover:scale-105 hover:shadow-2xl"
-                >
-                  <div className="flex items-center mb-4">
-                    <div className="flex items-center justify-center bg-purple-500 text-white rounded-full w-10 h-10 mr-4">
-                      <BriefcaseIcon className="w-5 h-5" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-700">Informations Travaux</h2>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Type de Travaux :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="typeTravaux"
-                          value={formData.informationTravaux?.typeTravaux || ""}
-                          onChange={(e) => handleNestedInputChange(e, "informationTravaux")}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.informationTravaux.typeTravaux
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Type d&apos;Utilisation :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="typeUtilisation"
-                          value={formData.informationTravaux?.typeUtilisation || ""}
-                          onChange={(e) => handleNestedInputChange(e, "informationTravaux")}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.informationTravaux.typeUtilisation
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Surface Chauffée :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="surfaceChauffee"
-                          value={formData.informationTravaux?.surfaceChauffee || ""}
-                          onChange={(e) => handleNestedInputChange(e, "informationTravaux")}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.informationTravaux.surfaceChauffee
-                      )}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">Circuit Chauffage Fonctionnel :</span>{" "}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="circuitChauffageFonctionnel"
-                          value={formData.informationTravaux?.circuitChauffageFonctionnel || ""}
-                          onChange={(e) => handleNestedInputChange(e, "informationTravaux")}
-                          className="mt-1 p-2 border border-gray-300 rounded w-full"
-                        />
-                      ) : (
-                        dossier.informationTravaux.circuitChauffageFonctionnel
-                      )}
-                    </p>
-                  </div>
-                </motion.section>
-              )}
-
-              {/* Détails Supplémentaires */}
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-                className="relative bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500 transform transition duration-300 hover:scale-105 hover:shadow-2xl"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center justify-center bg-indigo-500 text-white rounded-full w-10 h-10 mr-4">
-                    <InformationCircleIcon className="w-5 h-5" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-700">Détails Supplémentaires</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {dossier.contactId && (
-                    <p className="text-gray-700">
-                      <span className="font-semibold">ID Contact :</span> {dossier.contactId}
-                    </p>
-                  )}
-                  <p className="text-gray-700">
-                    <span className="font-semibold">ID Dossier :</span> {dossier._id}
-                  </p>
-                </div>
-              </motion.section>
-
-              {isEditing && (
-                <div className="mt-4 flex justify-end space-x-4">
-                  <button
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                  >
-                    Sauvegarder
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              )}
-            </div>
+            <div id="info">
+              <InfoTab
+                dossier={dossier}
+                formData={formData}
+                isEditing={isEditing}
+                setIsEditing={setIsEditing}
+                handleInputChange={handleInputChange}
+                handleNestedInputChange={handleNestedInputChange}
+                userList={userList}
+                handleSave={handleSave}
+                handleCancel={handleCancel}
+              />
+          </div>
           )}
 
           {activeTab === "documents" && (
@@ -1613,25 +1305,19 @@ export default function ProjectDetailPage() {
 
           {activeTab === "photo" && (
             <div id="photo">
-              <p className="p-6 text-center text-gray-700">
-                Photo d&apos;installation content goes here.
-              </p>
+              <PhotoTab contactId={dossier.contactId || ""} />
             </div>
           )}
 
           {activeTab === "chat" && (
-            <div id="chat">
-              <p className="p-6 text-center text-gray-700">
-                Chat content goes here.
-              </p>
+            <div id="chat" className="h-full">
+              <ChatTab />
             </div>
           )}
 
           {activeTab === "sav" && (
-            <div id="sav">
-              <p className="p-6 text-center text-gray-700">
-                Sav content goes here.
-              </p>
+            <div id="sav" className="h-full">
+              <SavTab />
             </div>
           )}
 
