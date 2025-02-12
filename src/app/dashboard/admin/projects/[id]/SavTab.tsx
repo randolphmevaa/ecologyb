@@ -1,63 +1,76 @@
 // SavTab.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ClockIcon,
-  PlusIcon,
-  // ExclamationCircleIcon,
-  // CheckCircleIcon,
-} from "@heroicons/react/24/outline";
+import { ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
 
+interface SavTabProps {
+  contactId: string | number;
+}
+
+// This interface matches the API response
+interface ApiTicket {
+  _id: string;
+  ticket: string;
+  "problème": string;
+  customer: string;
+  statut: string;
+  priority: string;
+  description: string;
+  solution: string;
+  assignedTechnician: string;
+  dates: {
+    created: string;
+    updated: string;
+    resolution: string;
+  };
+  contactId: string;
+}
+
+// This is our internal Ticket interface used by the UI.
+// (We map the API fields into the properties below.)
 interface Ticket {
-  id: number;
-  titre: string;
-  categorie: string;
-  status: "Ouvert" | "En cours" | "Fermé";
-  dateCreation: string;
-  derniereMiseAJour: string;
+  id: string;
+  titre: string; // from API "problème"
+  categorie: string; // here we use the customer name (adjust as needed)
+  status: string; // from API "statut" (we’ll capitalize it)
+  dateCreation: string; // from API dates.created
+  derniereMiseAJour: string; // from API dates.updated
   description: string;
 }
 
-const sampleTickets: Ticket[] = [
-  {
-    id: 1,
-    titre: "Problème avec la livraison",
-    categorie: "Livraison",
-    status: "Ouvert",
-    dateCreation: "10/02/2025",
-    derniereMiseAJour: "11/02/2025",
-    description:
-      "Je n'ai pas encore reçu mon colis et il est en retard. Merci de vérifier ce problème dès que possible.",
-  },
-  {
-    id: 2,
-    titre: "Produit défectueux",
-    categorie: "Produit",
-    status: "En cours",
-    dateCreation: "08/02/2025",
-    derniereMiseAJour: "12/02/2025",
-    description:
-      "Le produit reçu présente des défauts majeurs, je souhaite un échange ou un remboursement.",
-  },
-  {
-    id: 3,
-    titre: "Erreur de facturation",
-    categorie: "Facturation",
-    status: "Fermé",
-    dateCreation: "25/01/2025",
-    derniereMiseAJour: "01/02/2025",
-    description:
-      "Il y a une erreur sur ma facture concernant le montant facturé. Merci de corriger ce problème.",
-  },
-];
-
-const SavTab: React.FC = () => {
-  const [tickets] = useState<Ticket[]>(sampleTickets);
-  const [ticketSelectionne, setTicketSelectionne] = useState<Ticket | null>(
-    null
-  );
+const SavTab: React.FC<SavTabProps> = ({ contactId }) => {
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ticketSelectionne, setTicketSelectionne] = useState<Ticket | null>(null);
   const [recherche, setRecherche] = useState("");
 
+  useEffect(() => {
+    // Convert contactId to a string in case it is a number.
+    const contactIdStr = contactId.toString();
+
+    // Fetch real data filtered by contactId from GET /api/tickets?contactId=${contactId}
+    fetch(`/api/tickets?contactId=${contactIdStr}`)
+      .then((res) => res.json())
+      .then((data: ApiTicket[]) => {
+        // Transform the API data into our internal Ticket shape
+        const transformedTickets: Ticket[] = data.map((apiTicket) => ({
+          id: apiTicket._id,
+          titre: apiTicket["problème"], // using the "problème" field as title
+          categorie: apiTicket.customer, // or consider using another field like apiTicket.priority
+          status:
+            apiTicket.statut.charAt(0).toUpperCase() +
+            apiTicket.statut.slice(1), // capitalize the first letter (e.g., "ouvert" -> "Ouvert")
+          dateCreation: new Date(apiTicket.dates.created).toLocaleDateString(),
+          derniereMiseAJour: new Date(apiTicket.dates.updated).toLocaleDateString(),
+          description: apiTicket.description,
+        }));
+        setTickets(transformedTickets);
+      })
+      .catch((error) => {
+        console.error("Error fetching tickets:", error);
+      });
+  }, [contactId]);
+
+  // Filter tickets based on the search query (matching title or category)
   const ticketsFiltres = tickets.filter(
     (ticket) =>
       ticket.titre.toLowerCase().includes(recherche.toLowerCase()) ||
@@ -66,7 +79,7 @@ const SavTab: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
-      {/* En-tête */}
+      {/* Header */}
       <div className="p-6 bg-white shadow">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">
@@ -88,9 +101,9 @@ const SavTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenu en deux panneaux */}
+      {/* Two-panel layout */}
       <div className="flex flex-grow overflow-hidden">
-        {/* Liste des tickets (panneau gauche) */}
+        {/* Left panel – Ticket list */}
         <div className="w-1/3 border-r border-gray-200 overflow-y-auto p-6 bg-white">
           {ticketsFiltres.length === 0 && (
             <p className="text-center text-gray-500">Aucun ticket trouvé.</p>
@@ -111,21 +124,21 @@ const SavTab: React.FC = () => {
                   </h2>
                   <span
                     className={`text-xs font-medium px-2 py-1 rounded-full 
-                    ${
-                      ticket.status === "Ouvert"
-                        ? "bg-yellow-100 text-yellow-600"
-                        : ""
-                    }
-                    ${
-                      ticket.status === "En cours"
-                        ? "bg-blue-100 text-blue-600"
-                        : ""
-                    }
-                    ${
-                      ticket.status === "Fermé"
-                        ? "bg-green-100 text-green-600"
-                        : ""
-                    }`}
+                      ${
+                        ticket.status === "Ouvert"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : ""
+                      }
+                      ${
+                        ticket.status === "En cours"
+                          ? "bg-blue-100 text-blue-600"
+                          : ""
+                      }
+                      ${
+                        ticket.status === "Fermé"
+                          ? "bg-green-100 text-green-600"
+                          : ""
+                      }`}
                   >
                     {ticket.status}
                   </span>
@@ -140,7 +153,7 @@ const SavTab: React.FC = () => {
           </ul>
         </div>
 
-        {/* Détails du ticket (panneau droit) */}
+        {/* Right panel – Ticket details */}
         <div className="flex-grow p-6 overflow-y-auto">
           {ticketSelectionne ? (
             <AnimatePresence>
@@ -157,21 +170,21 @@ const SavTab: React.FC = () => {
                 <div className="mb-4 flex items-center gap-2">
                   <span
                     className={`text-sm font-medium px-2 py-1 rounded-full 
-                    ${
-                      ticketSelectionne.status === "Ouvert"
-                        ? "bg-yellow-100 text-yellow-600"
-                        : ""
-                    }
-                    ${
-                      ticketSelectionne.status === "En cours"
-                        ? "bg-blue-100 text-blue-600"
-                        : ""
-                    }
-                    ${
-                      ticketSelectionne.status === "Fermé"
-                        ? "bg-green-100 text-green-600"
-                        : ""
-                    }`}
+                      ${
+                        ticketSelectionne.status === "Ouvert"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : ""
+                      }
+                      ${
+                        ticketSelectionne.status === "En cours"
+                          ? "bg-blue-100 text-blue-600"
+                          : ""
+                      }
+                      ${
+                        ticketSelectionne.status === "Fermé"
+                          ? "bg-green-100 text-green-600"
+                          : ""
+                      }`}
                   >
                     {ticketSelectionne.status}
                   </span>
@@ -190,7 +203,9 @@ const SavTab: React.FC = () => {
                   </p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-gray-700">{ticketSelectionne.description}</p>
+                  <p className="text-gray-700">
+                    {ticketSelectionne.description}
+                  </p>
                 </div>
               </motion.div>
             </AnimatePresence>

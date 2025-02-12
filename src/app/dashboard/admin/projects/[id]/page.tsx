@@ -1092,7 +1092,7 @@ export default function ProjectDetailPage() {
   }
 
   // const currentStep = getCurrentStep(dossier.etape);
-  const firstLetter = dossier.client ? dossier.client.charAt(0).toUpperCase() : "";
+  // const firstLetter = dossier.client ? dossier.client.charAt(0).toUpperCase() : "";
   
   return (
     <div className="flex h-screen bg-white">
@@ -1270,7 +1270,7 @@ export default function ProjectDetailPage() {
             </div>
 
             {/* UpdatedHeader with modified background */}
-            <UpdatedHeader dossier={dossier} firstLetter={firstLetter} />
+            <UpdatedHeader contactId={dossier.contactId || ""} />
 
             <StepProgress
               currentStep={getCurrentStep(dossier.etape)}
@@ -1317,7 +1317,7 @@ export default function ProjectDetailPage() {
 
           {activeTab === "sav" && (
             <div id="sav" className="h-full">
-              <SavTab />
+              <SavTab contactId={dossier.contactId || ""}/>
             </div>
           )}
 

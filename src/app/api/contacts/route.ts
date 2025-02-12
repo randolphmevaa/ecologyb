@@ -176,36 +176,44 @@ L'équipe Ecology'b`,
 
 export async function POST(request: Request) {
   try {
-    // Extract email, role, firstName, lastName, and phone from the request body
-    const { email, role, firstName, lastName, phone } = await request.json();
+    const data = await request.json();
 
-    if (!email || !role) {
+    if (!data.email || !data.role) {
       return NextResponse.json(
         { success: false, message: "Email et rôle sont requis." },
         { status: 400 }
       );
     }
 
-    // This endpoint accepts only the role "Client / Customer (Client Portal)"
-    if (role !== "Client / Customer (Client Portal)") {
+    if (data.role !== "Client / Customer (Client Portal)") {
       return NextResponse.json(
         { success: false, message: "Rôle non autorisé pour cet endpoint." },
         { status: 400 }
       );
     }
 
-    // Generate a temporary password
     const tempPassword = generateTemporaryPassword();
-
-    // Generate a unique ID for the contact
+    const hashedPassword = await hash(tempPassword, 10);
     const newContactId = crypto.randomUUID();
 
-    // Connect to MongoDB
+    // Supprimer les champs potentiellement transmis par le client
+    delete data.id;
+    delete data.password;
+    delete data.plainPassword;
+
+    // Construire le document en incluant toutes les données supplémentaires et le mot de passe en clair
+    const newContact = {
+      ...data,
+      id: newContactId,
+      password: hashedPassword,       // stocké pour vérification/authentification
+      plainPassword: tempPassword,      // stocké pour être affiché via GET (non recommandé)
+      createdAt: new Date(),
+    };
+
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    // Check if a contact already exists with this email
-    const existingContact = await db.collection("contacts").findOne({ email });
+    const existingContact = await db.collection("contacts").findOne({ email: newContact.email });
     if (existingContact) {
       return NextResponse.json(
         { success: false, message: "Un contact existe déjà avec cet email." },
@@ -213,25 +221,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash the temporary password
-    const hashedPassword = await hash(tempPassword, 10);
-
-    // Insert the new contact into the "contacts" collection with all provided fields
-    const newContact = {
-      id: newContactId,
-      email,
-      password: hashedPassword,
-      role,
-      firstName,
-      lastName,
-      phone,
-      createdAt: new Date(),
-    };
-
     await db.collection("contacts").insertOne(newContact);
-
-    // Send the welcome email with the temporary password
-    await sendGreetingEmail(email, tempPassword);
+    await sendGreetingEmail(newContact.email, tempPassword);
 
     return NextResponse.json(
       {
@@ -242,14 +233,9 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error: unknown) {
-    // Narrow the type to Error if possible
-    const message =
-      error instanceof Error ? error.message : "An unknown error occurred.";
-    console.error("Error fetching activities:", error);
-    return NextResponse.json(
-      { success: false, message },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Une erreur inconnue est survenue.";
+    console.error("Erreur lors de la création du contact:", error);
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }
 
@@ -263,25 +249,29 @@ export async function GET(request: Request) {
 
     let query = {};
     if (idParam) {
-      // If idParam contains only digits, match both string and numeric representations.
       if (/^\d+$/.test(idParam)) {
         query = { $or: [{ id: idParam }, { id: Number(idParam) }] };
       } else {
-        // Otherwise, treat it as a string (e.g. a GUID)
         query = { id: idParam };
       }
     }
 
     const contacts = await db.collection("contacts").find(query).toArray();
-    return NextResponse.json(contacts);
+
+    // Pour chaque contact, on remplace le champ 'password' par 'plainPassword'
+    const modifiedContacts = contacts.map((contact) => {
+      if (contact.plainPassword) {
+        contact.password = contact.plainPassword;
+      }
+      // Optionnel : supprimer le champ 'plainPassword' si vous ne voulez pas le dupliquer
+      delete contact.plainPassword;
+      return contact;
+    });
+
+    return NextResponse.json(modifiedContacts);
   } catch (error: unknown) {
-    // Narrow the type to Error if possible
-    const message =
-      error instanceof Error ? error.message : "An unknown error occurred.";
-    console.error("Error fetching activities:", error);
-    return NextResponse.json(
-      { success: false, message },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Une erreur inconnue est survenue.";
+    console.error("Erreur lors de la récupération des contacts:", error);
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

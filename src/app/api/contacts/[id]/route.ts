@@ -47,6 +47,43 @@ export async function DELETE(
   }
 }
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  
+  try {
+    // Parse the JSON body for update data
+    const updateData = await request.json();
+
+    const client = await clientPromise;
+    const db = client.db("yourdbname");
+
+    // Update the document where the field "id" matches the provided id.
+    const result = await db.collection("contacts").updateOne(
+      { id: id },
+      { $set: updateData }
+    );
+
+    if (result.modifiedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: "Aucun contact mis à jour." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, message: "Contact mis à jour avec succès." },
+      { status: 200 }
+    );
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Une erreur inconnue est survenue.";
+    return NextResponse.json({ success: false, message }, { status: 500 });
+  }
+}
+
 // PUT: Update a single contact by id
 export async function PUT(
   request: Request,
