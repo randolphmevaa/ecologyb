@@ -346,9 +346,24 @@ export default function AddContactDossierPage() {
   // RENDER
   // ====================
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header user={{ name: "Administrateur", avatar: "/admin-avatar.png" }} />
+    <div className="flex h-screen bg-white">
+      {/* Sidebar (currently a placeholder; add content as needed) */}
       <motion.div
+        className="relative border-r border-[#bfddf9]/30 bg-white"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Sidebar content can be added here */}
+      </motion.div>
+
+      {/* Main container */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Header user={{ name: "Administrateur", avatar: "/admin-avatar.png" }} />
+
+        <main className="flex-1 overflow-y-auto p-8 space-y-10 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
+
+        <motion.div
         className="flex items-center justify-center p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -1457,6 +1472,12 @@ export default function AddContactDossierPage() {
           )}
         </div>
       </motion.div>
+
+        </main>
+
+      </div>
+
+      
     </div>
   );
 }
