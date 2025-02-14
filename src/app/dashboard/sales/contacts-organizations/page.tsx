@@ -101,7 +101,7 @@ export default function SalesContactsOrganizations() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl font-bold text-gray-800">Contacts & Organisations</h1>
+          <h1 className="text-4xl font-bold text-gray-800">Clients & Organisations</h1>
           <p className="mt-4 text-lg text-gray-700">
             Retrouvez vos contacts clés et partenaires stratégiques pour nos solutions énergétiques spécialisées.
           </p>

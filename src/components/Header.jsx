@@ -29,7 +29,11 @@ import {
   CodeBracketIcon,
 } from "@heroicons/react/24/outline";
 
-export function Header({ user }) {
+import AddTicketForm from "./AddTicketForm";
+import AddDossierForm from "./AddDossierForm"; // based on your AddDossierForm snippet; update as needed
+import AddCommentForm from "./AddCommentForm";
+
+export function Header({ user, contactId = "123"  }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
@@ -44,7 +48,7 @@ export function Header({ user }) {
       { name: "Accueil", href: "/dashboard/sales", icon: HomeIcon },
       { name: "Leads", href: "/dashboard/sales/leads", icon: SparklesIcon },
       { name: "Opportunités", href: "/dashboard/sales/opportunities", icon: BriefcaseIcon },
-      { name: "Contacts & Organisations", href: "/dashboard/sales/contacts-organizations", icon: UserCircleIcon },
+      { name: "Clients & Organisations", href: "/dashboard/sales/contacts-organizations", icon: UserCircleIcon },
       { name: "Chat", href: "/dashboard/sales/emails", icon: EnvelopeIcon },
       { name: "Agenda", href: "/dashboard/sales/calendar", icon: CalendarIcon },
     ];
@@ -53,7 +57,7 @@ export function Header({ user }) {
       { name: "Accueil", href: "/dashboard/pm", icon: HomeIcon },
       { name: "Projets", href: "/dashboard/pm/projects", icon: FolderIcon },
       { name: "Tâches", href: "/dashboard/pm/tasks", icon: ClipboardDocumentCheckIcon },
-      { name: "Contacts & Organisations", href: "/dashboard/pm/contacts-organizations", icon: UserCircleIcon },
+      { name: "Clients & Organisations", href: "/dashboard/pm/contacts-organizations", icon: UserCircleIcon },
       { name: "Agenda", href: "/dashboard/pm/calendar", icon: CalendarIcon },
       { name: "Chat", href: "/dashboard/pm/emails", icon: EnvelopeIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/pm/documents", icon: DocumentIcon },
@@ -70,7 +74,7 @@ export function Header({ user }) {
     navigation = [
       { name: "Accueil", href: "/dashboard/support", icon: HomeIcon },
       { name: "Support & Tickets", href: "/dashboard/support/tickets", icon: LifebuoyIcon },
-      { name: "Contacts & Organisations", href: "/dashboard/support/contacts-organizations", icon: UserCircleIcon },
+      { name: "Clients & Organisations", href: "/dashboard/support/contacts-organizations", icon: UserCircleIcon },
       { name: "Chat", href: "/dashboard/support/emails", icon: EnvelopeIcon },
       { name: "Agenda", href: "/dashboard/support/calendar", icon: CalendarIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/support/documents", icon: DocumentIcon },
@@ -94,7 +98,7 @@ export function Header({ user }) {
         icon: BriefcaseIcon,
         children: [
           { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
-          { name: "Contacts & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
+          { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
           { name: "Leads", href: "/dashboard/admin/leads", icon: SparklesIcon, badge: 12 },
           { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
@@ -156,7 +160,34 @@ export function Header({ user }) {
     }
   };
 
+  // State for showing modals
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState(null); // "ticket", "document", "commentaire"
+
+  // Function to handle creation actions
+  const handleCreate = (type) => {
+    // For actions that require modals, set the modal type and show the modal.
+    if (type === "ticket" || type === "document" || type === "commentaire") {
+      setModalType(type);
+      setShowModal(true);
+    } else {
+      // For routing actions:
+      if (type === "client" || type === "dossier") {
+        router.push("/dashboard/admin/contacts-organizations/add-contact");
+      } else if (type === "lead") {
+        router.push("/dashboard/admin/leads");
+      }
+    }
+  };
+
+  // Handler to close any open modal
+  const closeModal = () => {
+    setShowModal(false);
+    setModalType(null);
+  };
+
   return (
+    <>
     <header className="bg-white/90 backdrop-blur-lg border-b border-gray-100 shadow-sm z-10">
       <div className="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left Section – Logo & Search */}
@@ -276,14 +307,15 @@ export function Header({ user }) {
         <div className="flex items-center gap-3">
           {/* Solid Create Button */}
           <Menu as="div" className="relative">
-            <motion.button
+            <Menu.Button
+              as={motion.button}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="flex items-center gap-2 bg-[#213f5b] text-white px-4 py-2 rounded-xl text-sm font-medium shadow-lg hover:bg-[#213f5b]/90 transition-all"
             >
               <PlusIcon className="h-5 w-5" />
               <span className="hidden lg:inline">Créer</span>
-            </motion.button>
+            </Menu.Button>
 
             <Transition
               as={Fragment}
@@ -294,23 +326,92 @@ export function Header({ user }) {
               leaveFrom="transform opacity-1 scale-100"
               leaveTo="transform opacity-0 scale-95"
             >
-              <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-2xl border border-gray-100 focus:outline-none p-2 space-y-1">
-                {["Tableau", "Rapport", "Utilisateur", "Projet"].map((item) => (
-                  <Menu.Item key={item}>
+              <Menu.Items className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl bg-white shadow-2xl border border-gray-100 focus:outline-none p-2 space-y-1">
+                  <Menu.Item>
                     {({ active }) => (
                       <button
+                        onClick={() => handleCreate("client")}
                         className={cn(
                           "w-full px-4 py-2.5 text-left rounded-lg text-sm flex items-center gap-3",
                           active ? "bg-primary/10 text-primary" : "text-gray-700"
                         )}
                       >
-                        <PlusIcon className="h-4 w-4 opacity-70" />
-                        {item}
+                        <UserCircleIcon className="h-4 w-4 opacity-70" />
+                        Créer un client
                       </button>
                     )}
                   </Menu.Item>
-                ))}
-              </Menu.Items>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={() => handleCreate("lead")}
+                        className={cn(
+                          "w-full px-4 py-2.5 text-left rounded-lg text-sm flex items-center gap-3",
+                          active ? "bg-primary/10 text-primary" : "text-gray-700"
+                        )}
+                      >
+                        <SparklesIcon className="h-4 w-4 opacity-70" />
+                        Créer un lead
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={() => handleCreate("dossier")}
+                        className={cn(
+                          "w-full px-4 py-2.5 text-left rounded-lg text-sm flex items-center gap-3",
+                          active ? "bg-primary/10 text-primary" : "text-gray-700"
+                        )}
+                      >
+                        <FolderIcon className="h-4 w-4 opacity-70" />
+                        Créer un dossier
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={() => handleCreate("ticket")}
+                        className={cn(
+                          "w-full px-4 py-2.5 text-left rounded-lg text-sm flex items-center gap-3",
+                          active ? "bg-primary/10 text-primary" : "text-gray-700"
+                        )}
+                      >
+                        <EnvelopeIcon className="h-4 w-4 opacity-70" />
+                        Créer un ticket S.A.V
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={() => handleCreate("document")}
+                        className={cn(
+                          "w-full px-4 py-2.5 text-left rounded-lg text-sm flex items-center gap-3",
+                          active ? "bg-primary/10 text-primary" : "text-gray-700"
+                        )}
+                      >
+                        <DocumentIcon className="h-4 w-4 opacity-70" />
+                        Ajouter un document
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={() => handleCreate("commentaire")}
+                        className={cn(
+                          "w-full px-4 py-2.5 text-left rounded-lg text-sm flex items-center gap-3",
+                          active ? "bg-primary/10 text-primary" : "text-gray-700"
+                        )}
+                      >
+                        <ClipboardDocumentCheckIcon className="h-4 w-4 opacity-70" />
+                        Ajouter un commentaire
+                      </button>
+                    )}
+                  </Menu.Item>
+                </Menu.Items>
             </Transition>
           </Menu>
 
@@ -441,5 +542,17 @@ export function Header({ user }) {
         </div>
       </div>
     </header>
+
+{showModal && modalType === "ticket" && (
+  <AddTicketForm contactId={contactId} onClose={closeModal} />
+)}
+{showModal && modalType === "document" && (
+  <AddDossierForm contactId={contactId} onClose={closeModal} />
+)}
+{showModal && modalType === "commentaire" && (
+  <AddCommentForm contactId={contactId} onClose={closeModal} />
+)}
+</>
+    
   );
 }

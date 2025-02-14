@@ -181,7 +181,7 @@ export default function ContactTable() {
               className="bg-[#213f5b] border-[#213f5b] transition-transform transform hover:scale-105"
               onClick={() => router.push("/dashboard/admin/contacts-organizations/add-contact")}
             >
-              Ajouter un contact
+              Ajouter un client
             </Button>
 
             {/* AnimatePresence will handle mounting/unmounting the modal */}

@@ -50,7 +50,7 @@ export default function ContactsPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            Contacts & Organisations
+            Clients & Organisations
           </motion.h1>
           <div className="grid grid-cols-1 gap-10">
             <ContactTable />
