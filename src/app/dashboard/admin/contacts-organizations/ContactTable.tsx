@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -46,6 +47,7 @@ export default function ContactTable() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [selectedActionsContact, setSelectedActionsContact] = useState<Contact | null>(null);
+  const router = useRouter();
 
   // Multiple row selection state (using string IDs)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -176,8 +178,8 @@ export default function ContactTable() {
             </Button>
             <Button
               variant="primary"
-              className="transition-transform transform hover:scale-105"
-              onClick={() => setShowAddContactModal(true)}
+              className="bg-[#213f5b] border-[#213f5b] transition-transform transform hover:scale-105"
+              onClick={() => router.push("/dashboard/admin/contacts-organizations/add-contact")}
             >
               Ajouter un contact
             </Button>

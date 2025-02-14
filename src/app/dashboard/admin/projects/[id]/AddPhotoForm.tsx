@@ -1,14 +1,14 @@
-// AddPhotoForm.tsx
 "use client";
 
 import React, { useState } from "react";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 
-interface PhotoData {
+export interface PhotoData {
   id: string;
   url: string;
   date: string;
   caption?: string;
+  phase?: string; // "before" or "after"
 }
 
 interface AddPhotoFormProps {
@@ -32,7 +32,10 @@ const AddPhotoForm: React.FC<AddPhotoFormProps> = ({
 }) => {
   // If editing, prefill the caption. Otherwise, start with an empty string.
   const [caption, setCaption] = useState(initialData?.caption || "");
+  // New “phase” field: default to whatever was in initialData, or "before".
+  const [phase, setPhase] = useState(initialData?.phase || "before");
   const [file, setFile] = useState<File | null>(null);
+  
   // Format the current date in French (day/month/year)
   const currentDate = new Date().toLocaleDateString("fr-FR");
 
@@ -47,9 +50,9 @@ const AddPhotoForm: React.FC<AddPhotoFormProps> = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // When adding a new photo, a file is required.
+    // Validation: make sure we have the necessary data
     if (!caption || !contactId || (!initialData && !file)) {
-      alert("Veuillez remplir tous les champs obligatoires.");
+      alert("Veuillez remplir tous les champs obligatoires (légende et fichier).");
       return;
     }
 
@@ -58,6 +61,7 @@ const AddPhotoForm: React.FC<AddPhotoFormProps> = ({
     formData.append("caption", caption);
     formData.append("date", currentDate);
     formData.append("contactId", contactId);
+    formData.append("phase", phase);
     if (file) {
       formData.append("file", file);
     }
@@ -72,6 +76,7 @@ const AddPhotoForm: React.FC<AddPhotoFormProps> = ({
         body: formData,
       });
       if (!res.ok) throw new Error("Erreur lors du téléversement de la photo");
+
       const savedPhoto: PhotoData = await res.json();
       onPhotoSaved(savedPhoto);
       onClose(); // Close the modal on success.
@@ -90,7 +95,7 @@ const AddPhotoForm: React.FC<AddPhotoFormProps> = ({
       {/* File Upload Area */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Photo
+          Photo <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <input
@@ -114,10 +119,10 @@ const AddPhotoForm: React.FC<AddPhotoFormProps> = ({
             )}
           </label>
         </div>
-        {/* When adding a new photo, file is required */}
+        {/* If new photo (no initialData) and no file selected, show hint */}
         {!file && !initialData && (
           <p className="mt-1 text-xs text-gray-500">
-            Vous pouvez enregistrer cette photo et téléverser le fichier ultérieurement.
+            Un fichier est requis pour l&apos;ajout d&apos;une nouvelle photo.
           </p>
         )}
       </div>
@@ -133,6 +138,23 @@ const AddPhotoForm: React.FC<AddPhotoFormProps> = ({
           disabled
           className="w-full border border-gray-300 rounded-md px-4 py-2 bg-gray-100"
         />
+      </div>
+
+      {/* Before/After Dropdown */}
+      <div className="mb-4">
+        <label htmlFor="photo-phase" className="block text-sm font-medium text-gray-700 mb-2">
+          Phase <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="photo-phase"
+          value={phase}
+          onChange={(e) => setPhase(e.target.value)}
+          className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          required
+        >
+          <option value="before">Avant installation</option>
+          <option value="after">Après installation</option>
+        </select>
       </div>
 
       {/* Caption */}

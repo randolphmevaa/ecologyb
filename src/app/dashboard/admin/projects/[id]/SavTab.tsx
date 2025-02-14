@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
+import AddTicketForm from "../../contacts-organizations/components/AddTicketForm";
 
 interface SavTabProps {
   contactId: string | number;
@@ -42,6 +43,7 @@ const SavTab: React.FC<SavTabProps> = ({ contactId }) => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketSelectionne, setTicketSelectionne] = useState<Ticket | null>(null);
   const [recherche, setRecherche] = useState("");
+  const [showAddTicketForm, setShowAddTicketForm] = useState(false);
 
   useEffect(() => {
     // Convert contactId to a string in case it is a number.
@@ -55,10 +57,10 @@ const SavTab: React.FC<SavTabProps> = ({ contactId }) => {
         const transformedTickets: Ticket[] = data.map((apiTicket) => ({
           id: apiTicket._id,
           titre: apiTicket["problème"], // using the "problème" field as title
-          categorie: apiTicket.customer, // or consider using another field like apiTicket.priority
+          categorie: apiTicket.customer,
           status:
             apiTicket.statut.charAt(0).toUpperCase() +
-            apiTicket.statut.slice(1), // capitalize the first letter (e.g., "ouvert" -> "Ouvert")
+            apiTicket.statut.slice(1), // capitalize first letter (e.g., "ouvert" -> "Ouvert")
           dateCreation: new Date(apiTicket.dates.created).toLocaleDateString(),
           derniereMiseAJour: new Date(apiTicket.dates.updated).toLocaleDateString(),
           description: apiTicket.description,
@@ -85,7 +87,10 @@ const SavTab: React.FC<SavTabProps> = ({ contactId }) => {
           <h1 className="text-2xl font-bold text-gray-800">
             Service Après-Vente
           </h1>
-          <button className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <button
+            onClick={() => setShowAddTicketForm(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+          >
             <PlusIcon className="w-5 h-5" />
             Nouveau Ticket
           </button>
@@ -218,6 +223,14 @@ const SavTab: React.FC<SavTabProps> = ({ contactId }) => {
           )}
         </div>
       </div>
+
+      {/* Conditionally render the AddTicketForm modal */}
+      {showAddTicketForm && (
+        <AddTicketForm
+          contactId={contactId.toString()}
+          onClose={() => setShowAddTicketForm(false)}
+        />
+      )}
     </div>
   );
 };

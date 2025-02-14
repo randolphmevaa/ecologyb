@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  XMarkIcon,
-  PhotoIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
-import AddPhotoForm from "./AddPhotoForm";
+import { XMarkIcon, PhotoIcon, PlusIcon } from "@heroicons/react/24/outline";
+import AddPhotoForm, { PhotoData } from "./AddPhotoForm";
 import Spinner from "./Spinner";
 
 interface PhotoTabProps {
@@ -17,13 +13,7 @@ interface PhotoApiResponse {
   url: string;
   date: string;
   caption?: string;
-}
-
-export interface PhotoData {
-  id: string;
-  url: string;
-  date: string;
-  caption?: string;
+  phase?: string; // "before" or "after"
 }
 
 function PhotoTab({ contactId }: PhotoTabProps) {
@@ -46,6 +36,7 @@ function PhotoTab({ contactId }: PhotoTabProps) {
             url: photo.url,
             date: photo.date,
             caption: photo.caption,
+            phase: photo.phase,
           }));
           setPhotos(mappedPhotos);
           setError("");
@@ -58,10 +49,14 @@ function PhotoTab({ contactId }: PhotoTabProps) {
     }
   }, [contactId]);
 
-  const filteredPhotos = photos.filter((photo) =>
-    photo.caption?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    photo.date.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredPhotos = photos.filter((photo) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      (photo.caption?.toLowerCase().includes(query)) ||
+      photo.date.toLowerCase().includes(query) ||
+      photo.phase?.toLowerCase().includes(query)
+    );
+  });
 
   const handlePhotoSaved = (savedPhoto: PhotoData) => {
     if (photoToEdit) {
@@ -101,7 +96,7 @@ function PhotoTab({ contactId }: PhotoTabProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher par date ou légende..."
+              placeholder="Rechercher par date, légende ou phase (avant/après)..."
               className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
             <button
@@ -121,6 +116,7 @@ function PhotoTab({ contactId }: PhotoTabProps) {
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Aperçu</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Phase</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Légende</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
                 </tr>
@@ -141,7 +137,12 @@ function PhotoTab({ contactId }: PhotoTabProps) {
                           className="h-12 w-12 object-cover rounded"
                         />
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{photo.date}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {photo.date}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {photo.phase === "before" ? "Avant" : "Après"}
+                      </td>
                       <td className="px-4 py-3 text-sm text-gray-700">
                         {photo.caption || "—"}
                       </td>
@@ -158,7 +159,7 @@ function PhotoTab({ contactId }: PhotoTabProps) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-4 py-3 text-center text-gray-500">
+                    <td colSpan={5} className="px-4 py-3 text-center text-gray-500">
                       Aucune photo trouvée.
                     </td>
                   </tr>

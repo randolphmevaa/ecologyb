@@ -1,24 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ClipboardDocumentCheckIcon,
   HomeIcon,
   BriefcaseIcon,
   ClockIcon,
-  BuildingOffice2Icon,
+  UserCircleIcon,
   LightBulbIcon,
   SunIcon,
   FireIcon,
   PaintBrushIcon,
   ExclamationTriangleIcon,
   ChevronDownIcon,
+  PencilIcon,
+  CurrencyRupeeIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 
 // ------------------------------------------------------
-// Type Definitions (adjust as needed)
+// Type Definitions
 // ------------------------------------------------------
 
 export interface Dossier {
@@ -34,8 +36,8 @@ export interface Dossier {
     surfaceHabitable: string;
     anneeConstruction: string;
     systemeChauffage: string;
-    profil?: string; // Added to fix error
-    nombrePersonnes?: string; // Added if needed
+    profil?: string;
+    nombrePersonnes?: string;
   };
   informationTravaux?: {
     typeTravaux: string;
@@ -60,8 +62,8 @@ export interface DossierFormData {
     surfaceHabitable: string;
     anneeConstruction: string;
     systemeChauffage: string;
-    profil?: string; // Added to fix error
-    nombrePersonnes?: string; // Added if needed
+    profil?: string;
+    nombrePersonnes?: string;
   };
   informationTravaux?: {
     typeTravaux: string;
@@ -71,15 +73,15 @@ export interface DossierFormData {
   };
 }
 
-// New interface for contact data
+// Contact data interface
 export interface Contact {
   _id?: string;
   name?: string;
   email?: string;
   phone?: string;
   organization?: string;
-  organizationPhone?: string;    // Added to fix error
-  organizationAddress?: string;  // Added to fix error
+  organizationPhone?: string;
+  organizationAddress?: string;
   role?: string;
   titre?: string;
   tags?: string[];
@@ -108,13 +110,23 @@ export interface Contact {
   imageUrl?: string;
 }
 
-// Define a type for weather data to fix errors with weather.icon etc.
-interface WeatherData {
-  icon: string;
-  condition: string;
-  temp: number;
+// Weather data type
+// interface WeatherData {
+//   icon: string;
+//   condition: string;
+//   temp: number;
+// }
+
+// User type
+interface User {
+  email: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
 }
 
+// Props for InfoTab
 interface InfoTabProps {
   dossier: Dossier;
   formData: DossierFormData;
@@ -125,19 +137,167 @@ interface InfoTabProps {
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) => void;
-  // Updated the type of event to include HTMLSelectElement
   handleNestedInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     section: "informationLogement" | "informationTravaux"
   ) => void;
-  userList: { email: string; role: string }[];
+  userList: User[];
   handleSave: () => void;
   handleCancel: () => void;
-  contact?: Contact; // Marked as optional
+  contact?: Contact;
 }
 
 // ------------------------------------------------------
-// Component
+// EditableField Component
+// ------------------------------------------------------
+
+interface EditableFieldProps {
+  label: string;
+  value: string | number;
+  onChange: (val: string) => void;
+  icon?: React.ElementType;
+  inputType?: string; // "text" | "number" | "select" ...
+  options?: { label: string; value: string }[];
+  readOnly?: boolean;
+  onAddNew?: () => void;
+}
+
+const EditableField: React.FC<EditableFieldProps> = ({
+  label,
+  value,
+  onChange,
+  icon: Icon,
+  inputType = "text",
+  options,
+  readOnly = false,
+  onAddNew,
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(String(value ?? ""));
+
+  const handleClick = () => {
+    if (!readOnly) {
+      setEditing(true);
+    }
+  };
+
+  return (
+    <div className="group flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors">
+      {Icon && (
+        <Icon className="h-5 w-5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+      )}
+      <div className="flex-1 min-w-0">
+        <label className="block text-sm font-medium text-gray-500 mb-1">
+          {label}
+        </label>
+        {editing && !readOnly ? (
+          inputType === "select" && options ? (
+            <div className="relative">
+              <select
+                value={tempValue}
+                onChange={(e) => {
+                  if (e.target.value === "__add_new__") {
+                    onAddNew?.();
+                    setEditing(false);
+                  } else {
+                    setTempValue(e.target.value);
+                  }
+                }}
+                onBlur={() => {
+                  setEditing(false);
+                  onChange(tempValue);
+                }}
+                className="w-full border-b-2 border-blue-500 focus:outline-none bg-transparent py-1 pr-8 appearance-none"
+              >
+                {options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIcon className="h-4 w-4 absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+          ) : (
+            <input
+              type={inputType}
+              value={tempValue}
+              onChange={(e) => setTempValue(e.target.value)}
+              onBlur={() => {
+                setEditing(false);
+                onChange(tempValue);
+              }}
+              className="w-full border-b-2 border-blue-500 focus:outline-none bg-transparent py-1"
+              autoFocus
+            />
+          )
+        ) : (
+          <div
+            onClick={handleClick}
+            className={`cursor-pointer truncate text-gray-900 ${
+              readOnly ? "pointer-events-none" : ""
+            }`}
+          >
+            {value !== undefined && value !== null && value !== ""
+              ? String(value)
+              : <span className="text-gray-400 italic">Non défini</span>}
+          </div>
+        )}
+      </div>
+      {!readOnly && (
+        <PencilIcon
+          className="h-4 w-4 text-gray-400 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={() => setEditing(true)}
+        />
+      )}
+    </div>
+  );
+};
+
+// ------------------------------------------------------
+// AccordionSection Component
+// ------------------------------------------------------
+const AccordionSection = ({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon?: React.ElementType;
+  children: React.ReactNode;
+}) => {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="border-b border-gray-200">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full text-left py-3 px-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className="h-5 w-5 text-gray-500" />}
+          <span className="font-semibold text-gray-700">{title}</span>
+        </div>
+        <motion.span animate={{ rotate: open ? 0 : 180 }} className="text-gray-500">
+          ▼
+        </motion.span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="p-4 space-y-4">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// ------------------------------------------------------
+// InfoTab Component (Updated with EditableFields)
 // ------------------------------------------------------
 const InfoTab: React.FC<InfoTabProps> = ({
   dossier,
@@ -145,25 +305,561 @@ const InfoTab: React.FC<InfoTabProps> = ({
   handleInputChange,
   handleNestedInputChange,
   userList,
-  // handleSave,
-  // handleCancel,
-  contact,
+  contact: contactProp,
 }) => {
   const [saveStatus] = useState("Sauvegardé");
-  // Set the weather state with the proper type
-  const [weather ] = useState<WeatherData | null>(null);
-  const [weatherLoading] = useState(false);
-  const [weatherError] = useState<string | null>(null);
+  const [weather, setWeather] = useState<{
+      temp: number;
+      condition: string;
+      icon: string;
+    } | null>(null);
+    const [weatherLoading, setWeatherLoading] = useState(false);
+    const [weatherError, setWeatherError] = useState<string | null>(null);
 
-  // Helper function to determine MaPrimeRenov badge color based on RFR
-  const getMaPrimeRenovColor = (rfr: string | undefined) => {
-    const value = parseInt(rfr || "0", 10);
-    if (isNaN(value)) return "bg-gray-500";
-    if (value < 50000) return "bg-green-500";
-    else if (value < 100000) return "bg-yellow-500";
-    else return "bg-red-500";
+  const [contact, setContact] = useState<Contact | null>(contactProp ?? null);
+  // const [contactLoading, setContactLoading] = useState(false);
+  // const [contactError, setContactError] = useState<string | null>(null);
+
+  const rfrValue = Number(contact?.rfr ?? 0);
+
+  // Update a contact field locally and via API
+  const updateContactField = async (field: string, value: string | boolean) => {
+    if (!contact || !contact._id) return;
+    // 1) update local state
+    setContact((prev) => (prev ? { ...prev, [field]: value } : null));
+
+    // 2) update the server
+    try {
+      const res = await fetch(`/api/contacts/${dossier.contactId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("Update failed", data);
+        // Optional: revert local state if needed
+      } else {
+        console.log("Update successful", data);
+      }
+    } catch (err) {
+      console.error("Error updating contact", err);
+      // Optional: revert local state if needed
+    }
   };
 
+  const DEPARTMENT_COORDINATES: { [key: string]: { lat: number; lon: number } } = {
+      // Metropolitan France
+      "01": { lat: 46.2055, lon: 5.2257 },   // Ain (Bourg-en-Bresse)
+      "02": { lat: 49.8942, lon: 3.0589 },   // Aisne (Laon)
+      "03": { lat: 46.5655, lon: 3.3363 },   // Allier (Moulins)
+      "04": { lat: 44.0925, lon: 6.2379 },   // Alpes-de-Haute-Provence (Digne-les-Bains)
+      "05": { lat: 44.5581, lon: 6.0824 },   // Hautes-Alpes (Gap)
+      "06": { lat: 43.6961, lon: 7.2719 },   // Alpes-Maritimes (Nice)
+      "07": { lat: 44.5167, lon: 4.6667 },   // Ardèche (Privas)
+      "08": { lat: 49.7667, lon: 4.7167 },   // Ardennes (Charleville-Mézières)
+      "09": { lat: 42.9833, lon: 1.6167 },   // Ariège (Foix)
+      "10": { lat: 48.3000, lon: 4.0833 },   // Aube (Troyes)
+      "11": { lat: 43.1852, lon: 2.3544 },   // Aude (Carcassonne)
+      "12": { lat: 44.5167, lon: 2.1667 },   // Aveyron (Rodez)
+      "13": { lat: 43.2964, lon: 5.3700 },   // Bouches-du-Rhône (Marseille)
+      "14": { lat: 49.1833, lon: -0.3500 },  // Calvados (Caen)
+      "15": { lat: 44.9283, lon: 2.4417 },   // Cantal (Aurillac)
+      "16": { lat: 45.6500, lon: 0.1500 },   // Charente (Angoulême)
+      "17": { lat: 45.9333, lon: -0.9667 },  // Charente-Maritime (La Rochelle)
+      "18": { lat: 47.0833, lon: 2.4000 },   // Cher (Bourges)
+      "19": { lat: 45.1467, lon: 1.5333 },   // Corrèze (Tulle)
+      "2A": { lat: 41.9264, lon: 8.7369 },   // Corse-du-Sud (Ajaccio)
+      "2B": { lat: 42.7019, lon: 9.4500 },   // Haute-Corse (Bastia)
+      "21": { lat: 47.3167, lon: 5.0167 },   // Côte-d'Or (Dijon)
+      "22": { lat: 48.5136, lon: -2.7653 },  // Côtes-d'Armor (Saint-Brieuc)
+      "23": { lat: 46.1167, lon: 1.8667 },   // Creuse (Guéret)
+      "24": { lat: 45.1833, lon: 0.7167 },   // Dordogne (Périgueux)
+      "25": { lat: 47.2381, lon: 6.0244 },   // Doubs (Besançon)
+      "26": { lat: 44.9333, lon: 4.8833 },   // Drôme (Valence)
+      "27": { lat: 49.0236, lon: 1.1506 },   // Eure (Évreux)
+      "28": { lat: 48.4444, lon: 1.4889 },   // Eure-et-Loir (Chartres)
+      "29": { lat: 48.3833, lon: -4.4833 },  // Finistère (Quimper)
+      "30": { lat: 43.8369, lon: 4.3600 },   // Gard (Nîmes)
+      "31": { lat: 43.6043, lon: 1.4436 },   // Haute-Garonne (Toulouse)
+      "32": { lat: 43.6489, lon: 0.5853 },   // Gers (Auch)
+      "33": { lat: 44.8378, lon: -0.5792 },  // Gironde (Bordeaux)
+      "34": { lat: 43.6108, lon: 3.8764 },   // Hérault (Montpellier)
+      "35": { lat: 48.1147, lon: -1.6794 },  // Ille-et-Vilaine (Rennes)
+      "36": { lat: 46.8094, lon: 1.6914 },   // Indre (Châteauroux)
+      "37": { lat: 47.3936, lon: 0.6892 },   // Indre-et-Loire (Tours)
+      "38": { lat: 45.1885, lon: 5.7245 },   // Isère (Grenoble)
+      "39": { lat: 46.6753, lon: 5.5553 },   // Jura (Lons-le-Saunier)
+      "40": { lat: 43.8914, lon: -0.5017 },  // Landes (Mont-de-Marsan)
+      "41": { lat: 47.5931, lon: 1.3358 },   // Loir-et-Cher (Blois)
+      "42": { lat: 45.4333, lon: 4.3833 },   // Loire (Saint-Étienne)
+      "43": { lat: 45.0425, lon: 3.8853 },   // Haute-Loire (Le Puy-en-Velay)
+      "44": { lat: 47.2173, lon: -1.5534 },  // Loire-Atlantique (Nantes)
+      "45": { lat: 47.9000, lon: 2.0833 },   // Loiret (Orléans)
+      "46": { lat: 44.4489, lon: 1.4406 },   // Lot (Cahors)
+      "47": { lat: 44.2000, lon: 0.6167 },   // Lot-et-Garonne (Agen)
+      "48": { lat: 44.5167, lon: 3.5000 },   // Lozère (Mende)
+      "49": { lat: 47.4667, lon: -0.5500 },  // Maine-et-Loire (Angers)
+      "50": { lat: 49.1167, lon: -1.0833 },  // Manche (Saint-Lô)
+      "51": { lat: 49.2533, lon: 4.0289 },   // Marne (Châlons-en-Champagne)
+      "52": { lat: 48.1000, lon: 5.1333 },   // Haute-Marne (Chaumont)
+      "53": { lat: 48.0667, lon: -0.7667 },  // Mayenne (Laval)
+      "54": { lat: 48.6833, lon: 6.1833 },   // Meurthe-et-Moselle (Nancy)
+      "55": { lat: 48.9558, lon: 5.3847 },   // Meuse (Bar-le-Duc)
+      "56": { lat: 47.6667, lon: -2.7500 },  // Morbihan (Vannes)
+      "57": { lat: 49.1194, lon: 6.1758 },   // Moselle (Metz)
+      "58": { lat: 47.0000, lon: 3.3333 },   // Nièvre (Nevers)
+      "59": { lat: 50.6667, lon: 3.0667 },   // Nord (Lille)
+      "60": { lat: 49.4000, lon: 2.0833 },   // Oise (Beauvais)
+      "61": { lat: 48.4333, lon: 0.0833 },   // Orne (Alençon)
+      "62": { lat: 50.7264, lon: 1.6139 },   // Pas-de-Calais (Arras)
+      "63": { lat: 45.7831, lon: 3.0825 },   // Puy-de-Dôme (Clermont-Ferrand)
+      "64": { lat: 43.2950, lon: -0.3708 },  // Pyrénées-Atlantiques (Pau)
+      "65": { lat: 43.2333, lon: 0.0667 },   // Hautes-Pyrénées (Tarbes)
+      "66": { lat: 42.7011, lon: 2.8958 },   // Pyrénées-Orientales (Perpignan)
+      "67": { lat: 48.5833, lon: 7.7500 },   // Bas-Rhin (Strasbourg)
+      "68": { lat: 47.7500, lon: 7.3333 },   // Haut-Rhin (Colmar)
+      "69": { lat: 45.7589, lon: 4.8414 },   // Rhône (Lyon)
+      "70": { lat: 47.6333, lon: 6.1500 },   // Haute-Saône (Vesoul)
+      "71": { lat: 46.7833, lon: 4.8500 },   // Saône-et-Loire (Mâcon)
+      "72": { lat: 47.9833, lon: 0.2000 },   // Sarthe (Le Mans)
+      "73": { lat: 45.5667, lon: 5.9167 },   // Savoie (Chambéry)
+      "74": { lat: 46.0500, lon: 6.5833 },   // Haute-Savoie (Annecy)
+      "75": { lat: 48.8566, lon: 2.3522 },   // Paris (Paris)
+      "76": { lat: 49.4431, lon: 1.0993 },   // Seine-Maritime (Rouen)
+      "77": { lat: 48.5392, lon: 2.6533 },   // Seine-et-Marne (Melun)
+      "78": { lat: 48.8014, lon: 2.1305 },   // Yvelines (Versailles)
+      "79": { lat: 46.6667, lon: -0.3667 },  // Deux-Sèvres (Niort)
+      "80": { lat: 49.8958, lon: 2.3000 },   // Somme (Amiens)
+      "81": { lat: 43.9281, lon: 2.1475 },   // Tarn (Albi)
+      "82": { lat: 44.0000, lon: 1.3333 },   // Tarn-et-Garonne (Montauban)
+      "83": { lat: 43.3000, lon: 6.1500 },   // Var (Toulon)
+      "84": { lat: 43.9500, lon: 4.8000 },   // Vaucluse (Avignon)
+      "85": { lat: 46.6667, lon: -1.4333 },  // Vendée (La Roche-sur-Yon)
+      "86": { lat: 46.5833, lon: 0.3333 },   // Vienne (Poitiers)
+      "87": { lat: 45.8333, lon: 1.2500 },   // Haute-Vienne (Limoges)
+      "88": { lat: 48.2000, lon: 6.4500 },   // Vosges (Épinal)
+      "89": { lat: 47.8000, lon: 3.5667 },   // Yonne (Auxerre)
+      "90": { lat: 47.6333, lon: 6.8667 },   // Territoire de Belfort (Belfort)
+      "91": { lat: 48.6328, lon: 2.4407 },   // Essonne (Évry)
+      "92": { lat: 48.8924, lon: 2.2153 },   // Hauts-de-Seine (Nanterre)
+      "93": { lat: 48.9102, lon: 2.4390 },   // Seine-Saint-Denis (Bobigny)
+      "94": { lat: 48.7904, lon: 2.4556 },   // Val-de-Marne (Créteil)
+      "95": { lat: 49.0389, lon: 2.0775 },   // Val-d'Oise (Cergy)
+    
+      // Overseas departments
+      "971": { lat: 16.2500, lon: -61.5833 }, // Guadeloupe (Basse-Terre)
+      "972": { lat: 14.6000, lon: -61.0833 }, // Martinique (Fort-de-France)
+      "973": { lat: 4.9372, lon: -52.3260 },  // Guyane (Cayenne)
+      "974": { lat: -20.8789, lon: 55.4481 }, // La Réunion (Saint-Denis)
+      "976": { lat: -12.7870, lon: 45.2750 }  // Mayotte (Mamoudzou)
+    };
+
+    // Department list (code + short name) in an array
+const DEPARTMENT_OPTIONS = [
+  { value: "01", label: "Ain" },
+  { value: "02", label: "Aisne" },
+  { value: "03", label: "Allier" },
+  { value: "04", label: "Alpes-de-Haute-Provence" },
+  { value: "05", label: "Hautes-Alpes" },
+  { value: "06", label: "Alpes-Maritimes" },
+  { value: "07", label: "Ardèche" },
+  { value: "08", label: "Ardennes" },
+  { value: "09", label: "Ariège" },
+  { value: "10", label: "Aube" },
+  { value: "11", label: "Aude" },
+  { value: "12", label: "Aveyron" },
+  { value: "13", label: "Bouches-du-Rhône" },
+  { value: "14", label: "Calvados" },
+  { value: "15", label: "Cantal" },
+  { value: "16", label: "Charente" },
+  { value: "17", label: "Charente-Maritime" },
+  { value: "18", label: "Cher" },
+  { value: "19", label: "Corrèze" },
+  { value: "2A", label: "Corse-du-Sud" },
+  { value: "2B", label: "Haute-Corse" },
+  { value: "21", label: "Côte-d'Or" },
+  { value: "22", label: "Côtes-d'Armor" },
+  { value: "23", label: "Creuse" },
+  { value: "24", label: "Dordogne" },
+  { value: "25", label: "Doubs" },
+  { value: "26", label: "Drôme" },
+  { value: "27", label: "Eure" },
+  { value: "28", label: "Eure-et-Loir" },
+  { value: "29", label: "Finistère" },
+  { value: "30", label: "Gard" },
+  { value: "31", label: "Haute-Garonne" },
+  { value: "32", label: "Gers" },
+  { value: "33", label: "Gironde" },
+  { value: "34", label: "Hérault" },
+  { value: "35", label: "Ille-et-Vilaine" },
+  { value: "36", label: "Indre" },
+  { value: "37", label: "Indre-et-Loire" },
+  { value: "38", label: "Isère" },
+  { value: "39", label: "Jura" },
+  { value: "40", label: "Landes" },
+  { value: "41", label: "Loir-et-Cher" },
+  { value: "42", label: "Loire" },
+  { value: "43", label: "Haute-Loire" },
+  { value: "44", label: "Loire-Atlantique" },
+  { value: "45", label: "Loiret" },
+  { value: "46", label: "Lot" },
+  { value: "47", label: "Lot-et-Garonne" },
+  { value: "48", label: "Lozère" },
+  { value: "49", label: "Maine-et-Loire" },
+  { value: "50", label: "Manche" },
+  { value: "51", label: "Marne" },
+  { value: "52", label: "Haute-Marne" },
+  { value: "53", label: "Mayenne" },
+  { value: "54", label: "Meurthe-et-Moselle" },
+  { value: "55", label: "Meuse" },
+  { value: "56", label: "Morbihan" },
+  { value: "57", label: "Moselle" },
+  { value: "58", label: "Nièvre" },
+  { value: "59", label: "Nord" },
+  { value: "60", label: "Oise" },
+  { value: "61", label: "Orne" },
+  { value: "62", label: "Pas-de-Calais" },
+  { value: "63", label: "Puy-de-Dôme" },
+  { value: "64", label: "Pyrénées-Atlantiques" },
+  { value: "65", label: "Hautes-Pyrénées" },
+  { value: "66", label: "Pyrénées-Orientales" },
+  { value: "67", label: "Bas-Rhin" },
+  { value: "68", label: "Haut-Rhin" },
+  { value: "69", label: "Rhône" },
+  { value: "70", label: "Haute-Saône" },
+  { value: "71", label: "Saône-et-Loire" },
+  { value: "72", label: "Sarthe" },
+  { value: "73", label: "Savoie" },
+  { value: "74", label: "Haute-Savoie" },
+  { value: "75", label: "Paris" },
+  { value: "76", label: "Seine-Maritime" },
+  { value: "77", label: "Seine-et-Marne" },
+  { value: "78", label: "Yvelines" },
+  { value: "79", label: "Deux-Sèvres" },
+  { value: "80", label: "Somme" },
+  { value: "81", label: "Tarn" },
+  { value: "82", label: "Tarn-et-Garonne" },
+  { value: "83", label: "Var" },
+  { value: "84", label: "Vaucluse" },
+  { value: "85", label: "Vendée" },
+  { value: "86", label: "Vienne" },
+  { value: "87", label: "Haute-Vienne" },
+  { value: "88", label: "Vosges" },
+  { value: "89", label: "Yonne" },
+  { value: "90", label: "Territoire de Belfort" },
+  { value: "91", label: "Essonne" },
+  { value: "92", label: "Hauts-de-Seine" },
+  { value: "93", label: "Seine-Saint-Denis" },
+  { value: "94", label: "Val-de-Marne" },
+  { value: "95", label: "Val-d'Oise" },
+  // Overseas:
+  { value: "971", label: "Guadeloupe" },
+  { value: "972", label: "Martinique" },
+  { value: "973", label: "Guyane" },
+  { value: "974", label: "La Réunion" },
+  { value: "976", label: "Mayotte" },
+];
+
+  
+    const WEATHER_CODES: { [key: number]: { label: string, icon: string } } = {
+      0: { label: "Ciel dégagé", icon: "/weather-icons/0.svg" },
+      1: { label: "Principalement clair", icon: "/weather-icons/partly-cloudy-day.svg" },
+      2: { label: "Partiellement nuageux", icon: "/weather-icons/partly-cloudy-day.svg" },
+      3: { label: "Couvert", icon: "/weather-icons/overcast.svg" },
+      45: { label: "Brouillard", icon: "/weather-icons/fog-day.svg" },
+      48: { label: "Brouillard givrant", icon: "/weather-icons/fog.svg" },
+      51: { label: "Bruine légère", icon: "/weather-icons/51.svg" },
+      53: { label: "Bruine modérée", icon: "/weather-icons/51.svg" },
+      55: { label: "Bruine dense", icon: "/weather-icons/51.svg" },
+      61: { label: "Pluie légère", icon: "/weather-icons/61.svg" },
+      63: { label: "Pluie modérée", icon: "/weather-icons/61.svg" },
+      65: { label: "Pluie forte", icon: "/weather-icons/61.svg" },
+      71: { label: "Neige légère", icon: "/weather-icons/71.svg" },
+      73: { label: "Neige modérée", icon: "/weather-icons/71.svg" },
+      75: { label: "Neige forte", icon: "/weather-icons/71.svg" },
+      77: { label: "Grêle", icon: "/weather-icons/71.svg" },
+      80: { label: "Averses légères", icon: "/weather-icons/80.svg" },
+      81: { label: "Averses modérées", icon: "/weather-icons/80.svg" },
+      82: { label: "Averses violentes", icon: "/weather-icons/80.svg" },
+      85: { label: "Averses de neige", icon: "/weather-icons/85.svg" },
+      86: { label: "Tempête de neige", icon: "/weather-icons/85.svg" },
+      95: { label: "Orage", icon: "/weather-icons/95.svg" },
+      96: { label: "Orage avec grêle", icon: "/weather-icons/95.svg" },
+      99: { label: "Orage violent", icon: "/weather-icons/95.svg" },
+    };
+  
+    useEffect(() => {
+        const fetchWeather = async () => {
+          if (!contact?.department) return;
+          
+          try {
+            setWeatherLoading(true);
+            setWeatherError(null);
+            
+            const coords = DEPARTMENT_COORDINATES[contact.department] || DEPARTMENT_COORDINATES["75"];
+            
+            const response = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,weather_code&timezone=Europe%2FParis`
+            );
+      
+            if (!response.ok) throw new Error("Échec de la récupération météo");
+            
+            const data = await response.json();
+            const weatherCode = data.current.weather_code;
+            
+            setWeather({
+              temp: Math.round(data.current.temperature_2m),
+              condition: WEATHER_CODES[weatherCode]?.label || "Conditions inconnues",
+              icon: WEATHER_CODES[weatherCode]?.icon || "/weather-icons/default.svg"
+            });
+          } catch (err) {
+            console.error("Erreur météo:", err);
+            setWeatherError("Météo non disponible");
+          } finally {
+            setWeatherLoading(false);
+          }
+        };
+      
+        if (contact) fetchWeather();
+      }, [contact]);
+
+  // Helper to update top-level fields via handleInputChange
+  const handleEditableFieldChange = async (fieldName: string, value: string) => {
+    // 1) Update local state
+    handleInputChange({
+      target: { name: fieldName, value },
+    } as React.ChangeEvent<HTMLInputElement>);
+
+    // 2) PATCH the single changed field to server
+    try {
+      const res = await fetch(`/api/dossiers/${dossier._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [fieldName]: value }),
+      });
+      if (!res.ok) {
+        console.error("Failed to patch field:", fieldName);
+      }
+    } catch (err) {
+      console.error("Patch error:", err);
+    }
+  };
+
+  // Helper to update nested fields (informationLogement / informationTravaux)
+  const handleNestedEditableFieldChange = async (
+    section: "informationLogement" | "informationTravaux",
+    fieldName: string,
+    value: string
+  ) => {
+    // 1) Update local state
+    handleNestedInputChange(
+      {
+        target: { name: fieldName, value },
+      } as React.ChangeEvent<HTMLInputElement>,
+      section
+    );
+
+    // 2) Build new partial object for PATCH
+    // For example, if user updates "typeDeLogement",
+    // then we send { informationLogement: { ...existing, typeDeLogement: newVal } }
+    const oldSectionData = dossier[section] || {};
+    const newSectionData = {
+      ...oldSectionData,
+      [fieldName]: value,
+    };
+
+    try {
+      const res = await fetch(`/api/dossiers/${dossier._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          [section]: newSectionData,
+        }),
+      });
+      if (!res.ok) {
+        console.error(`Failed to patch nested field: ${section}.${fieldName}`);
+      }
+    } catch (error) {
+      console.error("Nested patch error:", error);
+    }
+  };
+
+  // Helper function for MaPrimeRenov badge color
+  // const getMaPrimeRenovColor = (rfr: string | undefined) => {
+  //   const value = parseInt(rfr || "0", 10);
+  //   if (isNaN(value)) return "bg-gray-500";
+  //   if (value < 50000) return "bg-green-500";
+  //   else if (value < 100000) return "bg-yellow-500";
+  //   else return "bg-red-500";
+  // };
+
+  const calculateMaprimeLevel = (rfr: number): string => {
+    if (!rfr) return "Non défini";
+    if (rfr < 20000) return "Bleu";
+    if (rfr < 35000) return "Jaune";
+    return "Violet";
+  };
+  
+  const getMaprimeColor = (rfr: number): string => {
+    const level = calculateMaprimeLevel(rfr);
+    switch (level) {
+      case "Bleu":
+        return "bg-blue-100 text-blue-800";
+      case "Jaune":
+        return "bg-yellow-100 text-yellow-800";
+      case "Violet":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+  
+
+  // Get assigned team email and matching user
+  const assignedTeamEmail = dossier.assignedTeam
+    ? dossier.assignedTeam.split(" (")[0]
+    : "";
+  const assignedUser = userList.find((user) => user.email === assignedTeamEmail);
+
+  // Update assigned team via PATCH request (only needed if you still want it to happen automatically)
+  const handleAssignedTeamChange = async (val: string) => {
+    // First, update local formData
+    handleEditableFieldChange("assignedTeam", val);
+
+    // Then, call your API to persist
+    try {
+      const res = await fetch(`/api/dossiers/${dossier._id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          assignedTeam: val,
+        }),
+      });
+      if (!res.ok) {
+        console.error("Failed to update assignedTeam");
+      }
+    } catch (error) {
+      console.error("Error updating assignedTeam:", error);
+    }
+  };
+
+  // Pre-build some select options
+  const solutionOptions = [
+    { label: "Sélectionnez une solution", value: "" },
+    { label: "Pompes à chaleur", value: "Pompes a chaleur" },
+    { label: "Chauffe-eau solaire individuel", value: "Chauffe-eau solaire individuel" },
+    { label: "Chauffe-eau thermodynamique", value: "Chauffe-eau thermodynamique" },
+    { label: "Système Solaire Combiné", value: "Système Solaire Combiné" },
+  ];
+
+  const etapeOptions = [
+    { label: "1 – Prise de contact", value: "1Prise de contact" },
+    { label: "2 – En attente des documents", value: "2En attente des documents" },
+    { label: "3 – Instruction du dossier", value: "3Instruction du dossier" },
+    { label: "4 – Dossier accepté", value: "4Dossier Accepter" },
+    { label: "5 – Installation", value: "5Installation" },
+    { label: "6 – Contrôle", value: "6Controle" },
+    { label: "7 – Dossier clôturé", value: "7Dossier cloturer" },
+  ];
+
+  const assignedTeamOptions = [
+    { label: "Sélectionnez une équipe", value: "" },
+    ...userList.map((user) => {
+      // Translate user.role to French if needed
+      const roleTranslations: { [key: string]: string } = {
+        "Sales Representative / Account Executive":
+          "Représentant commercial / Directeur de compte",
+        "Project / Installation Manager":
+          "Responsable de projet / Gestionnaire d'installation",
+        "Technician / Installer": "Technicien / Installateur",
+        "Customer Support / Service Representative":
+          "Support client / Représentant du service",
+        "Client / Customer (Client Portal)":
+          "Client / Consommateur (Portail client)",
+        "Super Admin": "Super Admin",
+      };
+      const roleLabel = roleTranslations[user.role] || user.role;
+
+      return {
+        label: `${user.email} (${roleLabel})`,
+        value: user.email,
+      };
+    }),
+  ];
+
+  // Create a dictionary of English -> French translations
+const ROLE_TRANSLATIONS: Record<string, string> = {
+  "Sales Representative / Account Executive": "Représentant commercial / Directeur de compte",
+  "Project / Installation Manager": "Responsable de projet / Gestionnaire d'installation",
+  "Technician / Installer": "Technicien / Installateur",
+  "Customer Support / Service Representative": "Support client / Représentant du service",
+  "Client / Customer (Client Portal)": "Client / Consommateur (Portail client)",
+  "Super Admin": "Super Admin"
+};
+
+function getRoleInFrench(role: string | undefined) {
+  if (!role) return "";
+  return ROLE_TRANSLATIONS[role] ?? role; 
+  // ^ If `role` is missing in the dictionary, fallback to the original value
+}
+
+  // For "informationLogement"
+  const typeDeLogementOptions = [
+    { label: "Sélectionnez un type", value: "" },
+    { label: "Maison", value: "maison" },
+    { label: "Appartement", value: "appartement" },
+    { label: "Autre", value: "autre" },
+  ];
+
+  const chauffageOptions = [
+    { label: "Sélectionnez un type de chauffage", value: "" },
+    { label: "Gaz", value: "gaz" },
+    { label: "Bois", value: "bois" },
+    { label: "Électrique", value: "electrique" },
+    { label: "Autre", value: "autre" },
+  ];
+
+  const profilOptions = [
+    { label: "Sélectionnez un profil", value: "" },
+    { label: "Propriétaire", value: "proprietaire" },
+    { label: "Occupant", value: "occupant" },
+    { label: "Bailleur", value: "bailleur" },
+    { label: "SCI", value: "SCI" },
+  ];
+
+  // For "informationTravaux"
+  const typeTravauxOptions = [
+    { label: "Sélectionnez un type de travaux", value: "" },
+    { label: "Rénovation", value: "renovation" },
+    { label: "Extension", value: "extension" },
+    { label: "Installation", value: "installation" },
+    { label: "Autre", value: "autre" },
+  ];
+
+  useEffect(() => {
+    if (!dossier.contactId) return;
+    if (contact && contact._id === dossier.contactId) return; 
+  
+    const fetchContactById = async () => {
+      try {
+        const res = await fetch(`/api/contacts/${dossier.contactId}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch contact ${dossier.contactId}`);
+        }
+        const data = await res.json();
+        setContact(data);
+      } catch (err: unknown) {
+        console.error("Error fetching contact:", err);
+      }
+    };
+  
+    fetchContactById();
+  }, [dossier.contactId]);
+  
+  
   return (
     <div className="flex gap-8">
       {/* Left Column: Main Sections */}
@@ -185,362 +881,218 @@ const InfoTab: React.FC<InfoTabProps> = ({
                 Détails Généraux
               </h2>
             </div>
-            {contact?.imageUrl && (
+            {/* {contact?.imageUrl && (
               <img
                 src={contact.imageUrl}
                 alt={contact?.name || "Profile"}
                 className="w-20 h-20 rounded-full object-cover border-2 border-blue-600 shadow-lg"
               />
-            )}
+            )} */}
           </div>
-  
+
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left Column */}
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Client
-              </label>
-              <input
-                type="text"
-                name="client"
-                value={formData.client}
-                onChange={handleInputChange}
-                placeholder="Nom du client"
-                className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all duration-200"
-              />
-  
-              <label className="block text-sm font-medium text-gray-600 mt-6 mb-2">
-                Projet
-              </label>
-              <input
-                type="text"
-                name="projet"
-                value={formData.projet}
-                onChange={handleInputChange}
-                placeholder="Nom du projet"
-                className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all duration-200"
-              />
-  
-              <label className="block text-sm font-medium text-gray-600 mt-6 mb-2">
-                Solution proposée
-              </label>
-              <select
-                name="solution"
-                value={formData.solution}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all duration-200"
-              >
-                <option value="">Sélectionnez une solution</option>
-                <option value="Pompes a chaleur">Pompes à chaleur</option>
-                <option value="Chauffe-eau solaire individuel">
-                  Chauffe-eau solaire individuel
-                </option>
-                <option value="Chauffe-eau thermodynamique">
-                  Chauffe-eau thermodynamique
-                </option>
-                <option value="Système Solaire Combiné">
-                  Système Solaire Combiné
-                </option>
-              </select>
-            </div>
-  
+            <EditableField
+              label="Client"
+              value={formData.client}
+              onChange={(val) => handleEditableFieldChange("client", val)}
+              icon={UserCircleIcon}
+              inputType="text"
+            />
+
+            <EditableField
+              label="Projet"
+              value={formData.projet}
+              onChange={(val) => handleEditableFieldChange("projet", val)}
+              icon={BriefcaseIcon}
+              inputType="text"
+            />
+
+            <EditableField
+              label="Solution proposée"
+              value={formData.solution}
+              onChange={(val) => handleEditableFieldChange("solution", val)}
+              icon={LightBulbIcon}
+              inputType="select"
+              options={solutionOptions}
+            />
+
             {/* Right Column */}
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Phase du projet
-              </label>
-              <select
-                name="etape"
-                value={formData.etape}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all duration-200"
-              >
-                <option value="1Prise de contact">1 – Prise de contact</option>
-                <option value="2En attente des documents">
-                  2 – En attente des documents
-                </option>
-                <option value="3Instruction du dossier">
-                  3 – Instruction du dossier
-                </option>
-                <option value="4Dossier Accepter">4 – Dossier accepté</option>
-                <option value="5Installation">5 – Installation</option>
-                <option value="6Controle">6 – Contrôle</option>
-                <option value="7Dossier cloturer">
-                  7 – Dossier clôturé
-                </option>
-              </select>
-  
-              <label className="block text-sm font-medium text-gray-600 mt-6 mb-2">
-                Budget (en €)
-              </label>
-              <input
-                type="number"
-                name="valeur"
-                value={formData.valeur}
-                onChange={handleInputChange}
-                placeholder="Ex: 15000"
-                className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all duration-200"
-              />
-  
-              <label className="block text-sm font-medium text-gray-600 mt-6 mb-2">
-                Équipe assignée
-              </label>
-              <select
-                name="assignedTeam"
-                value={formData.assignedTeam}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all duration-200"
-              >
-                <option value="">Sélectionnez une équipe</option>
-                {userList.map((user) => (
-                  <option key={user.email} value={user.email}>
-                    {user.email} ({user.role})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-  
-          {/* Comments */}
-          <div className="mt-8">
-            <label className="block text-sm font-medium text-gray-600 mb-2">
-              Commentaires
-            </label>
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleInputChange}
-              placeholder="Vos remarques..."
-              rows={4}
-              className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all duration-200"
+            <EditableField
+              label="Phase du projet"
+              value={formData.etape}
+              onChange={(val) => handleEditableFieldChange("etape", val)}
+              icon={ClockIcon}
+              inputType="select"
+              options={etapeOptions}
+            />
+
+            <EditableField
+              label="Budget (en €)"
+              value={formData.valeur}
+              onChange={(val) => handleEditableFieldChange("valeur", val)}
+              icon={ClipboardDocumentCheckIcon}
+              inputType="number"
+            />
+
+            <EditableField
+              label="Utilisateur assignée"
+              value={formData.assignedTeam}
+              onChange={handleAssignedTeamChange} // calls handleEditableFieldChange + patch request
+              icon={UserCircleIcon}
+              inputType="select"
+              options={assignedTeamOptions}
             />
           </div>
-  
-          {/* Dropdown Sections */}
-          <div className="mt-12 space-y-8">
-            {/* Nom et Occupation */}
-            <motion.details
-              whileHover={{ scale: 1.01 }}
-              className="group bg-gradient-to-r from-blue-50 to-blue-100 p-5 rounded-lg border border-blue-200 shadow-sm transition-all duration-300 hover:shadow-lg"
-            >
-              <summary className="flex items-center justify-between font-semibold text-blue-800 cursor-pointer list-none">
-                <span>Nom et Occupation</span>
-                <ChevronDownIcon className="w-6 h-6 text-blue-500 transition-transform duration-300 group-open:rotate-180" />
-              </summary>
-              <div className="mt-4 grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm text-gray-600">Nom</label>
-                  <input
-                    type="text"
-                    value={contact?.name || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">Titre</label>
-                  <input
-                    type="text"
-                    value={contact?.titre || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
+
+          {/* Commentaires (as a simple text input -- if you need multiline, adapt EditableField) */}
+          <EditableField
+            label="Commentaires"
+            value={formData.notes}
+            onChange={(val) => handleEditableFieldChange("notes", val)}
+            icon={PencilIcon}
+            inputType="text"
+          />
+
+          {/* Accordion Sections for additional contact info */}
+          <div className="mt-8 space-y-8">
+            <AccordionSection title="Nom et Occupation" icon={UserCircleIcon}>
+              <div className="grid grid-cols-2 gap-6">
+                <EditableField
+                  label="Nom"
+                  value={contact?.name ?? ""}
+                  onChange={(val) => updateContactField("name", val)}
+                  icon={UserCircleIcon}
+                />
+                <EditableField
+                  label="Titre"
+                  value={contact?.titre ?? ""}
+                  onChange={(val) => updateContactField("titre", val)}
+                  icon={BriefcaseIcon}
+                />
               </div>
-            </motion.details>
-  
-            {/* Coordonnées */}
-            <motion.details
-              whileHover={{ scale: 1.01 }}
-              className="group bg-gradient-to-r from-blue-50 to-blue-100 p-5 rounded-lg border border-blue-200 shadow-sm transition-all duration-300 hover:shadow-lg"
-            >
-              <summary className="flex items-center justify-between font-semibold text-blue-800 cursor-pointer list-none">
-                <span>Coordonnées</span>
-                <ChevronDownIcon className="w-6 h-6 text-blue-500 transition-transform duration-300 group-open:rotate-180" />
-              </summary>
-              <div className="mt-4 grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm text-gray-600">Email</label>
-                  <input
-                    type="text"
-                    value={contact?.email || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
+            </AccordionSection>
+
+            <AccordionSection title="Coordonnées" icon={UserCircleIcon}>
+              <div className="grid grid-cols-2 gap-6">
+                <EditableField
+                  label="Email"
+                  value={contact?.email ?? ""}
+                  onChange={(val) => updateContactField("email", val)}
+                  icon={UserCircleIcon}
+                />
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                  <ExclamationTriangleIcon className="h-5 w-5 text-gray-400" />
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Email désinscrit
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={contact?.emailOptedOut || false}
+                      onChange={(e) =>
+                        updateContactField("emailOptedOut", e.target.checked)
+                      }
+                      className="h-4 w-4 text-blue-600"
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <label className="block text-sm text-gray-600">
-                    Email désinscrit
-                  </label>
-                  <input
-                    type="checkbox"
-                    checked={contact?.emailOptedOut || false}
-                    readOnly
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">
-                    Téléphone
-                  </label>
-                  <input
-                    type="text"
-                    value={contact?.phone || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">
-                    Téléphone domicile
-                  </label>
-                  <input
-                    type="text"
-                    value={contact?.homePhone || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">Mobile</label>
-                  <input
-                    type="text"
-                    value={contact?.mobilePhone || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">
-                    Autre téléphone
-                  </label>
-                  <input
-                    type="text"
-                    value={contact?.otherPhone || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">
-                    Téléphone assistant
-                  </label>
-                  <input
-                    type="text"
-                    value={contact?.assistantPhone || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
+                <EditableField
+                  label="Téléphone"
+                  value={contact?.phone ?? ""}
+                  onChange={(val) => updateContactField("phone", val)}
+                />
+                <EditableField
+                  label="Téléphone domicile"
+                  value={contact?.homePhone ?? ""}
+                  onChange={(val) => updateContactField("homePhone", val)}
+                />
+                <EditableField
+                  label="Mobile"
+                  value={contact?.mobilePhone ?? ""}
+                  onChange={(val) => updateContactField("mobilePhone", val)}
+                />
+                <EditableField
+                  label="Autre téléphone"
+                  value={contact?.otherPhone ?? ""}
+                  onChange={(val) => updateContactField("otherPhone", val)}
+                />
+                <EditableField
+                  label="Téléphone assistant"
+                  value={contact?.assistantPhone ?? ""}
+                  onChange={(val) => updateContactField("assistantPhone", val)}
+                />
               </div>
-            </motion.details>
-  
-            {/* Localisation */}
-            <motion.details
-              whileHover={{ scale: 1.01 }}
-              className="group bg-gradient-to-r from-blue-50 to-blue-100 p-5 rounded-lg border border-blue-200 shadow-sm transition-all duration-300 hover:shadow-lg"
-            >
-              <summary className="flex items-center justify-between font-semibold text-blue-800 cursor-pointer list-none">
-                <span>Localisation</span>
-                <ChevronDownIcon className="w-6 h-6 text-blue-500 transition-transform duration-300 group-open:rotate-180" />
-              </summary>
-              <div className="mt-4 grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm text-gray-600">
-                    Département
-                  </label>
-                  <input
-                    type="text"
-                    value={contact?.department || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">
-                    Adresse mailing
-                  </label>
-                  <input
-                    type="text"
-                    value={contact?.mailingAddress || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm text-gray-600">
-                    Autre adresse
-                  </label>
-                  <input
-                    type="text"
-                    value={contact?.otherAddress || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
+            </AccordionSection>
+
+            <AccordionSection title="Localisation" icon={HomeIcon}>
+              <div className="grid grid-cols-2 gap-6">
+              <EditableField
+                label="Département"
+                value={contact?.department ?? ""}
+                onChange={(val) => updateContactField("department", val)}
+                icon={HomeIcon}
+                inputType="select"
+                options={DEPARTMENT_OPTIONS}
+              />
+
+                <EditableField
+                  label="Adresse postale"
+                  value={contact?.mailingAddress ?? ""}
+                  onChange={(val) => updateContactField("mailingAddress", val)}
+                />
+                <EditableField
+                  label="Autre adresse"
+                  value={contact?.otherAddress ?? ""}
+                  onChange={(val) => updateContactField("otherAddress", val)}
+                />
               </div>
-            </motion.details>
-  
-            {/* Informations Énergétiques */}
-            <motion.details
-              whileHover={{ scale: 1.01 }}
-              className="group bg-gradient-to-r from-blue-50 to-blue-100 p-5 rounded-lg border border-blue-200 shadow-sm transition-all duration-300 hover:shadow-lg"
-            >
-              <summary className="flex items-center justify-between font-semibold text-blue-800 cursor-pointer list-none">
-                <span>Informations Énergétiques</span>
-                <ChevronDownIcon className="w-6 h-6 text-blue-500 transition-transform duration-300 group-open:rotate-180" />
-              </summary>
-              <div className="mt-4 grid grid-cols-2 gap-6">
+            </AccordionSection>
+
+            <AccordionSection title="Informations Énergétiques" icon={LightBulbIcon}>
+              <div className="grid grid-cols-2 gap-6">
+                <EditableField
+                  label="RFR"
+                  value={contact?.rfr ?? ""}
+                  onChange={(val) => updateContactField("rfr", val)}
+                  icon={CurrencyRupeeIcon} // or any icon
+                />
+
                 <div>
-                  <label className="block text-sm text-gray-600">RFR</label>
-                  <input
-                    type="text"
-                    value={contact?.rfr || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">
+                  <label className="block text-sm text-gray-500 mb-1">
                     MaPrimeRenov
                   </label>
                   <span
-                    className={`w-full inline-block px-3 py-2 rounded-md text-white ${getMaPrimeRenovColor(
-                      contact?.rfr
+                    className={`inline-block px-3 py-1 rounded-md text-xs font-medium ${getMaprimeColor(
+                      rfrValue
                     )}`}
                   >
-                    {contact?.rfr ? "Eligible" : "Non éligible"}
+                    {calculateMaprimeLevel(rfrValue)}
                   </span>
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-600">
-                    Zone climatique
-                  </label>
-                  <input
-                    type="text"
-                    value={contact?.climateZone || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
+
+                <EditableField
+                  label="Zone climatique"
+                  value={contact?.climateZone ?? ""}
+                  onChange={(val) => updateContactField("climateZone", val)}
+                  icon={SunIcon}
+                />
+                <EditableField
+                    label="Type de chauffage"
+                    value={contact?.heatingType ?? ""}
+                    onChange={(val) => updateContactField("heatingType", val)}
+                    icon={FireIcon}
+                    inputType="select"
+                    options={chauffageOptions}
                   />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">
-                    Type de chauffage
-                  </label>
-                  <input
-                    type="text"
-                    value={contact?.heatingType || ""}
-                    readOnly
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white"
-                  />
-                </div>
               </div>
-            </motion.details>
+            </AccordionSection>
+
           </div>
         </motion.section>
-  
-        {/* --- Logement Section (Updated with New Fields) --- */}
+
+        {/* --- Logement Section --- */}
         {dossier.informationLogement && (
           <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -548,7 +1100,6 @@ const InfoTab: React.FC<InfoTabProps> = ({
             transition={{ delay: 0.15, duration: 0.6 }}
             className="relative bg-white rounded-2xl p-10 border border-green-100"
           >
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
               <div className="flex items-center">
                 <div className="flex items-center justify-center bg-gradient-to-r from-green-700 to-green-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
@@ -559,121 +1110,74 @@ const InfoTab: React.FC<InfoTabProps> = ({
                 </h2>
               </div>
             </div>
-            {/* Form Fields */}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Type (dropdown) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Type
-                </label>
-                <select
-                  name="typeDeLogement"
-                  value={formData.informationLogement?.typeDeLogement || ""}
-                  onChange={(e) =>
-                    handleNestedInputChange(e, "informationLogement")
-                  }
-                  className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-green-500 focus:ring focus:ring-green-200 transition-all duration-200"
-                >
-                  <option value="">Sélectionnez un type</option>
-                  <option value="maison">Maison</option>
-                  <option value="appartement">Appartement</option>
-                  <option value="autre">Autre</option>
-                </select>
-              </div>
-              {/* Surface (m²) as number */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Surface (m²)
-                </label>
-                <input
-                  type="number"
-                  name="surfaceHabitable"
-                  value={formData.informationLogement?.surfaceHabitable || ""}
-                  onChange={(e) =>
-                    handleNestedInputChange(e, "informationLogement")
-                  }
-                  placeholder="Ex: 85"
-                  className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-green-500 focus:ring focus:ring-green-200 transition-all duration-200"
-                />
-              </div>
-              {/* Année de construction as number */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Année de construction
-                </label>
-                <input
-                  type="number"
-                  name="anneeConstruction"
-                  value={formData.informationLogement?.anneeConstruction || ""}
-                  onChange={(e) =>
-                    handleNestedInputChange(e, "informationLogement")
-                  }
-                  placeholder="Ex: 1995"
-                  className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-green-500 focus:ring focus:ring-green-200 transition-all duration-200"
-                />
-              </div>
-              {/* Chauffage (dropdown) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Chauffage
-                </label>
-                <select
-                  name="systemeChauffage"
-                  value={formData.informationLogement?.systemeChauffage || ""}
-                  onChange={(e) =>
-                    handleNestedInputChange(e, "informationLogement")
-                  }
-                  className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-green-500 focus:ring focus:ring-green-200 transition-all duration-200"
-                >
-                  <option value="">
-                    Sélectionnez un type de chauffage
-                  </option>
-                  <option value="gaz">Gaz</option>
-                  <option value="bois">Bois</option>
-                  <option value="electrique">Électrique</option>
-                  <option value="autre">Autre</option>
-                </select>
-              </div>
-              {/* Nombre de personnes au foyer */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Nombre de personnes au foyer
-                </label>
-                <input
-                  type="number"
-                  name="nombrePersonnes"
-                  value={formData.informationLogement?.nombrePersonnes || ""}
-                  onChange={(e) =>
-                    handleNestedInputChange(e, "informationLogement")
-                  }
-                  placeholder="Ex: 4"
-                  className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-green-500 focus:ring focus:ring-green-200 transition-all duration-200"
-                />
-              </div>
-              {/* Profil (dropdown) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Profil
-                </label>
-                <select
-                  name="profil"
-                  value={formData.informationLogement?.profil || ""}
-                  onChange={(e) =>
-                    handleNestedInputChange(e, "informationLogement")
-                  }
-                  className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-green-500 focus:ring focus:ring-green-200 transition-all duration-200"
-                >
-                  <option value="">Sélectionnez un profil</option>
-                  <option value="proprietaire">Propriétaire</option>
-                  <option value="occupant">Occupant</option>
-                  <option value="bailleur">Bailleur</option>
-                  <option value="SCI">SCI</option>
-                </select>
-              </div>
+              <EditableField
+                label="Type"
+                value={formData.informationLogement?.typeDeLogement || ""}
+                onChange={(val) =>
+                  handleNestedEditableFieldChange("informationLogement", "typeDeLogement", val)
+                }
+                icon={HomeIcon}
+                inputType="select"
+                options={typeDeLogementOptions}
+              />
+
+              <EditableField
+                label="Surface (m²)"
+                value={formData.informationLogement?.surfaceHabitable || ""}
+                onChange={(val) =>
+                  handleNestedEditableFieldChange("informationLogement", "surfaceHabitable", val)
+                }
+                icon={HomeIcon}
+                inputType="number"
+              />
+
+              <EditableField
+                label="Année de construction"
+                value={formData.informationLogement?.anneeConstruction || ""}
+                onChange={(val) =>
+                  handleNestedEditableFieldChange("informationLogement", "anneeConstruction", val)
+                }
+                icon={HomeIcon}
+                inputType="number"
+              />
+
+              {/* <EditableField
+                label="Chauffage"
+                value={formData.informationLogement?.systemeChauffage || ""}
+                onChange={(val) =>
+                  handleNestedEditableFieldChange("informationLogement", "systemeChauffage", val)
+                }
+                icon={FireIcon}
+                inputType="select"
+                options={chauffageOptions}
+              /> */}
+
+              <EditableField
+                label="Nombre de personnes au foyer"
+                value={formData.informationLogement?.nombrePersonnes || ""}
+                onChange={(val) =>
+                  handleNestedEditableFieldChange("informationLogement", "nombrePersonnes", val)
+                }
+                icon={UserCircleIcon}
+                inputType="number"
+              />
+
+              <EditableField
+                label="Profil"
+                value={formData.informationLogement?.profil || ""}
+                onChange={(val) =>
+                  handleNestedEditableFieldChange("informationLogement", "profil", val)
+                }
+                icon={UserCircleIcon}
+                inputType="select"
+                options={profilOptions}
+              />
             </div>
           </motion.section>
         )}
-  
+
         {/* --- Travaux Section --- */}
         {dossier.informationTravaux && (
           <motion.section
@@ -682,7 +1186,6 @@ const InfoTab: React.FC<InfoTabProps> = ({
             transition={{ delay: 0.2, duration: 0.6 }}
             className="relative bg-white rounded-2xl p-10 border border-purple-100"
           >
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
               <div className="flex items-center">
                 <div className="flex items-center justify-center bg-gradient-to-r from-purple-700 to-purple-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
@@ -693,54 +1196,36 @@ const InfoTab: React.FC<InfoTabProps> = ({
                 </h2>
               </div>
             </div>
-            {/* Form Fields */}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Type de travaux (dropdown) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Type de travaux
-                </label>
-                <select
-                  name="typeTravaux"
-                  value={formData.informationTravaux?.typeTravaux || ""}
-                  onChange={(e) =>
-                    handleNestedInputChange(e, "informationTravaux")
-                  }
-                  className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-purple-500 focus:ring focus:ring-purple-200 transition-all duration-200"
-                >
-                  <option value="">Sélectionnez un type de travaux</option>
-                  <option value="renovation">Rénovation</option>
-                  <option value="extension">Extension</option>
-                  <option value="installation">Installation</option>
-                  <option value="autre">Autre</option>
-                </select>
-              </div>
-              {/* Surface chauffée (m²) as number */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Surface chauffée (m²)
-                </label>
-                <input
-                  type="number"
-                  name="surfaceChauffee"
-                  value={formData.informationTravaux?.surfaceChauffee || ""}
-                  onChange={(e) =>
-                    handleNestedInputChange(e, "informationTravaux")
-                  }
-                  placeholder="Ex: 60"
-                  className="w-full px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-purple-500 focus:ring focus:ring-purple-200 transition-all duration-200"
-                />
-              </div>
+              <EditableField
+                label="Type de travaux"
+                value={formData.informationTravaux?.typeTravaux || ""}
+                onChange={(val) =>
+                  handleNestedEditableFieldChange("informationTravaux", "typeTravaux", val)
+                }
+                icon={BriefcaseIcon}
+                inputType="select"
+                options={typeTravauxOptions}
+              />
+
+              {/* <EditableField
+                label="Surface chauffée (m²)"
+                value={formData.informationTravaux?.surfaceChauffee || ""}
+                onChange={(val) =>
+                  handleNestedEditableFieldChange("informationTravaux", "surfaceChauffee", val)
+                }
+                icon={HomeIcon}
+                inputType="number"
+              /> */}
             </div>
           </motion.section>
         )}
-  
-        {/* --- Auto-Save Status --- */}
-        <div className="text-right text-xs text-gray-500 italic">
-          {saveStatus}
-        </div>
+
+        {/* Auto-Save Status */}
+        <div className="text-right text-xs text-gray-500 italic">{saveStatus}</div>
       </div>
-  
+
       {/* Right Column: Additional Info Boxes */}
       <div className="w-80 space-y-6 sticky top-10">
         {/* Heure Locale */}
@@ -751,9 +1236,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
           <div className="flex items-center gap-4">
             <ClockIcon className="h-12 w-12 text-green-600" />
             <div>
-              <h3 className="font-semibold text-green-800 text-lg">
-                Heure Locale
-              </h3>
+              <h3 className="font-semibold text-green-800 text-lg">Heure Locale</h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-green-900">
                   {new Date().toLocaleTimeString("fr-FR", {
@@ -765,32 +1248,40 @@ const InfoTab: React.FC<InfoTabProps> = ({
             </div>
           </div>
         </motion.div>
-  
-        {/* Infos Organisation */}
+
+        {/* Infos Organisation (Assigned User) */}
         <motion.div
           whileHover={{ scale: 1.02 }}
           className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
         >
           <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-            <BuildingOffice2Icon className="h-6 w-6 text-gray-600" />
+            <UserCircleIcon className="h-6 w-6 text-gray-600" />
             Chargé de compte
           </h3>
           <div className="space-y-2">
             <p className="text-sm">
               <span className="font-medium">Nom:</span>{" "}
-              {contact?.organization ?? "N/A"}
+              {assignedUser
+                ? `${assignedUser.firstName} ${assignedUser.lastName}`
+                : "N/A"}
             </p>
             <p className="text-sm">
               <span className="font-medium">Téléphone:</span>{" "}
-              {contact?.organizationPhone || "N/A"}
+              {assignedUser?.phone || "N/A"}
             </p>
             <p className="text-sm">
-              <span className="font-medium">Adresse:</span>{" "}
-              {contact?.organizationAddress || "N/A"}
+              <span className="font-medium">Email:</span>{" "}
+              {assignedUser?.email || "N/A"}
+            </p>
+            <p className="text-sm">
+              <span className="font-medium">Rôle:</span>{" "}
+              {assignedUser?.role
+                ? getRoleInFrench(assignedUser.role)
+                : "N/A"}
             </p>
           </div>
         </motion.div>
-  
+
         {/* Synthèse Énergétique */}
         <motion.div
           whileHover={{ scale: 1.02 }}
@@ -820,17 +1311,15 @@ const InfoTab: React.FC<InfoTabProps> = ({
               <div>
                 <p className="text-sm text-gray-500">MaPrimeRénov</p>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getMaPrimeRenovColor(
-                    contact?.rfr
-                  )}`}
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${getMaprimeColor(rfrValue)}`}
                 >
-                  {contact?.rfr ? "Eligible" : "Non éligible"}
+                  {calculateMaprimeLevel(rfrValue)}
                 </span>
               </div>
             </div>
           </div>
         </motion.div>
-  
+
         {/* Météo Locale */}
         <motion.div
           whileHover={{ scale: 1.02 }}
@@ -838,6 +1327,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
         >
           <div className="flex items-center gap-4">
             {weatherLoading ? (
+              // Loading skeleton
               <div className="animate-pulse flex items-center gap-4">
                 <div className="h-12 w-12 bg-gray-200 rounded-full" />
                 <div className="space-y-2">
@@ -846,11 +1336,13 @@ const InfoTab: React.FC<InfoTabProps> = ({
                 </div>
               </div>
             ) : weatherError ? (
+              // Error display
               <div className="text-red-500 text-sm flex items-center gap-2">
                 <ExclamationTriangleIcon className="h-5 w-5" />
                 {weatherError}
               </div>
             ) : weather ? (
+              // Weather data
               <>
                 {weather.icon && (
                   <Image
@@ -883,10 +1375,10 @@ const InfoTab: React.FC<InfoTabProps> = ({
             ) : null}
           </div>
         </motion.div>
+
       </div>
     </div>
-  );  
-  
+  );
 };
 
 export default InfoTab;

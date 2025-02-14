@@ -76,6 +76,9 @@ interface DocumentApiResponse {
 interface User {
   email: string;
   role: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
 }
 
 type Dossier = {
@@ -716,6 +719,23 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
                     </tbody>
                   </table>
                 )}
+              </div>
+
+              {/* 
+                Here's the new button to add documents directly 
+                to the “Documents à télécharger” list
+              */}
+              <div className="mt-8 flex justify-end">
+                <button
+                  onClick={() => {
+                    setDocToEdit(null);
+                    setIsModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  Ajouter un document (devis, facture, etc.)
+                </button>
               </div>
             </div>
           </motion.div>

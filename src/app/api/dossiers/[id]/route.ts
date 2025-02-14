@@ -101,3 +101,40 @@ export async function PUT(
     return NextResponse.json({ error: "Unknown error" }, { status: 500 });
   }
 }
+
+// PATCH: Update a single dossier by ID
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  try {
+    const client = await clientPromise;
+    const db = client.db("yourdbname");
+
+    // Parse the JSON body of the incoming request:
+    const body = await request.json();
+
+    // Create a copy of the body and remove the _id field:
+    const updateFields = { ...body };
+    delete updateFields._id;
+
+    // Perform the update using the _id from the URL path
+    const result = await db.collection("dossiers").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateFields }
+    );
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: "Dossier not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Dossier updated successfully" });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 500 });
+  }
+}
