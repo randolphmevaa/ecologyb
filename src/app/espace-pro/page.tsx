@@ -5,59 +5,59 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Head from "next/head";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from 'next/link';
 
-// Mappe les rôles aux chemins de redirection appropriés
+// Define allowed roles and their dashboard paths
 const roleToPath: Record<string, string> = {
   "Sales Representative / Account Executive": "/dashboard/sales",
   "Project / Installation Manager": "/dashboard/pm",
   "Technician / Installer": "/dashboard/technician",
   "Customer Support / Service Representative": "/dashboard/support",
-  "Client / Customer (Client Portal)": "/client/dashboard",
   "Super Admin": "/dashboard/admin",
 };
 
-export default function Home() {
+export default function ProLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // State for "Mot de passe oublié" flow
+  // State for forgot password flow
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetMessage, setResetMessage] = useState("");
 
   // --- SLIDER SETUP FOR LEFT PANEL ---
-  // Define three slides with illustration, title and description.
   const slides = [
     {
       image:
-        "https://images.blush.design/8b20777ff46a2fdeed929f4ed34239ce?w=920&auto=compress&cs=srgb",
-      title: "Planification Stratégique",
+        "https://images.blush.design/cbd169d1b1cdd330c49c3de4b3a6419b?w=920&auto=compress&cs=srgb",
+      title: "Gestion de Clients Efficace",
       description:
-        "Organisez et planifiez vos projets énergétiques avec précision.",
+        "Organisez et gérez vos clients en toute simplicité grâce à une interface dédiée.",
     },
     {
       image:
-        "https://images.blush.design/4c8f50e7179ced438982fe46d508003f?w=920&auto=compress&cs=srgb",
-      title: "Suivi en Temps Réel",
+        "https://images.blush.design/b4cde6b173a7719b63c170a6a9f58ee0?w=920&auto=compress&cs=srgb",
+      title: "Analyse & Suivi des Performances",
       description:
-        "Surveillez l'avancement de vos projets en temps réel pour une réactivité optimale.",
+        "Obtenez des insights précis pour optimiser la relation client et booster vos performances.",
     },
     {
       image:
-        "https://images.blush.design/b7b5556dfd73e6ba84f27df079cc65f8?w=920&auto=compress&cs=srgb",
-      title: "Optimisation & Rapport",
+        "https://images.blush.design/03baaa2b408e762c09f0dfff68ff8311?w=920&auto=compress&cs=srgb",
+      title: "Communication & Collaboration",
       description:
-        "Analysez et optimisez vos opérations pour une performance maximale.",
+        "Facilitez la collaboration entre vos équipes et améliorez l'engagement de vos clients.",
     },
   ];
+
   const [currentSlide, setCurrentSlide] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000); // Change slide every 5 seconds
+    }, 5000);
     return () => clearInterval(interval);
   }, [slides.length]);
 
@@ -68,12 +68,14 @@ export default function Home() {
     exit: { opacity: 0, x: -50 },
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Handle the Pro login form submission
+  const handleProLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
 
     try {
+      // Use /api/login endpoint
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,23 +88,33 @@ export default function Home() {
         return;
       }
 
-      // Check if the user's role is allowed for this page
+      // Retrieve the role from the API response
       const userRole = data.role;
-      if (userRole !== "Client / Customer (Client Portal)") {
+      // Allowed professional roles
+      const allowedRoles = [
+        "Sales Representative / Account Executive",
+        "Project / Installation Manager",
+        "Technician / Installer",
+        "Customer Support / Service Representative",
+        "Super Admin",
+      ];
+
+      // Check if the user's role is one of the allowed roles
+      if (!allowedRoles.includes(userRole)) {
         setErrorMessage(
-          "Cette page de connexion est réservée aux clients. Veuillez utiliser le portail approprié."
+          "Cette page de connexion est réservée aux professionnels. Veuillez utiliser le portail approprié."
         );
         return;
       }
 
-      // Save client info and role in localStorage
-      const clientInfo = {
+      // Save the pro info and role in localStorage
+      const proInfo = {
         email,
         role: userRole,
       };
-      localStorage.setItem("clientInfo", JSON.stringify(clientInfo));
+      localStorage.setItem("proInfo", JSON.stringify(proInfo));
 
-      // Redirect to the appropriate dashboard
+      // Redirect to the dashboard based on the role
       const dashboardPath = roleToPath[userRole];
       if (dashboardPath) {
         router.push(dashboardPath);
@@ -120,17 +132,15 @@ export default function Home() {
   // Handle the reset password form submission
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here, you can add an API call to send the reset email.
-    // For now, we simulate it with a message.
-    setResetMessage(
-      "Un lien pour réinitialiser votre mot de passe a été envoyé."
-    );
+    // Here you can add your API call to send the reset email.
+    // For demonstration, we simply simulate it:
+    setResetMessage("Un lien pour réinitialiser votre mot de passe a été envoyé.");
   };
 
   // SEO & Meta Information
-  const title = "Connexion | Ecology'B CRM";
+  const titleText = "Connexion Pro | Ecology'B CRM";
   const description =
-    "Accédez à votre espace sécurisé pour gérer vos activités CRM chez Ecology'B. Veuillez saisir vos identifiants pour vous connecter.";
+    "Connectez-vous à votre espace professionnel sécurisé et optimisé pour une gestion de haut niveau.";
   const siteUrl = "https://www.your-domain.com"; // Replace with your production domain
   const logoUrl =
     "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/661ecd30546087aec351f605_Design%20sans%20titre%20(8).png";
@@ -138,34 +148,34 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>{title}</title>
+        <title>{titleText}</title>
         <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
-        <link rel="canonical" href={siteUrl + "/login"} />
+        <link rel="canonical" href={siteUrl + "/espace-pro"} />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={siteUrl + "/login"} />
-        <meta property="og:title" content={title} />
+        <meta property="og:url" content={siteUrl + "/espace-pro"} />
+        <meta property="og:title" content={titleText} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={logoUrl} />
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content={siteUrl + "/login"} />
-        <meta property="twitter:title" content={title} />
+        <meta property="twitter:url" content={siteUrl + "/espace-pro"} />
+        <meta property="twitter:title" content={titleText} />
         <meta property="twitter:description" content={description} />
         <meta property="twitter:image" content={logoUrl} />
       </Head>
 
       <div className="min-h-screen flex bg-[#ffffff]">
-        {/* Panneau gauche – Slider d'information client (visible sur grand écran) */}
+        {/* Left Panel – Slider (visible on larger screens) */}
         <div
           className="hidden lg:flex relative flex-col w-1/2 p-8 lg:p-12 justify-center overflow-hidden"
           style={{
             background:
-              "linear-gradient(45deg, #ffffff, #bfddf9, #d2fcb2)",
+              "linear-gradient(45deg, rgb(191, 221, 249), rgba(191, 221, 249, 0.18), #ffffff)",
             backgroundSize: "400% 400%",
             animation: "gradientAnimation 4s ease infinite",
           }}
@@ -193,26 +203,26 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="relative z-10 max-w-lg mx-auto text-center"
             >
-              <div className="mb-4 flex justify-center">
+              <div className="mb-8 flex justify-center">
                 <Image
                   src={slides[currentSlide].image}
                   alt={slides[currentSlide].title}
-                  width={600}
-                  height={600}
+                  width={410}
+                  height={410}
                   className="object-contain"
                 />
               </div>
-              <h3 className="text-2xl font-bold text-[#213f5b] mb-2">
+              <h3 className="text-2xl font-bold text-[#000000] mb-2">
                 {slides[currentSlide].title}
               </h3>
-              <p className="text-lg text-[#213f5b]">
+              <p className="text-lg text-[#000000]">
                 {slides[currentSlide].description}
               </p>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Panneau droit – Formulaire de connexion with an animated morphing blob background */}
+        {/* Right Panel – Pro Login Form with animated background */}
         <div className="relative flex flex-1 items-center justify-center p-4 lg:p-6">
           {/* Animated SVG shapes */}
           <svg
@@ -221,7 +231,7 @@ export default function Home() {
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
           >
-            <path fill="#bfddf9">
+            <path fill="#213f5b">
               <animate
                 attributeName="d"
                 dur="8s"
@@ -299,16 +309,17 @@ export default function Home() {
                     className="object-contain"
                   />
                 </div>
+
                 {!showReset ? (
                   <>
                     <h1 className="text-3xl font-bold text-center text-[#213f5b] mb-2">
-                      Bonjour !
+                      Bienvenue sur l&apos;Espace Pro !
                     </h1>
                     <p className="text-center text-sm text-[#213f5b] mb-4">
-                      Connectez-vous à votre espace sécurisé.
+                      Connectez-vous à votre espace professionnel sécurisé.
                     </p>
-                    <form onSubmit={handleLogin} className="space-y-4">
-                      {/* Champ Email */}
+                    <form onSubmit={handleProLogin} className="space-y-4">
+                      {/* Email Field */}
                       <div>
                         <label
                           htmlFor="email"
@@ -327,7 +338,7 @@ export default function Home() {
                         />
                       </div>
 
-                      {/* Champ Mot de passe */}
+                      {/* Password Field */}
                       <div>
                         <label
                           htmlFor="password"
@@ -349,22 +360,22 @@ export default function Home() {
                             className="text-sm text-[#213f5b] hover:underline cursor-pointer"
                             onClick={() => {
                               setShowReset(true);
-                              setResetEmail(email);
+                              setResetEmail(email); // Optionally pre-fill with current email
                             }}
                           >
-                            Mot de passe oublié
+                            Mot de passe oublié ?
                           </span>
                         </div>
                       </div>
 
-                      {/* Message d'erreur */}
+                      {/* Error Message */}
                       {errorMessage && (
                         <div className="text-center text-red-600 text-sm font-medium">
                           {errorMessage}
                         </div>
                       )}
 
-                      {/* Bouton de connexion */}
+                      {/* Login Button */}
                       <button
                         type="submit"
                         disabled={isLoading}
@@ -385,13 +396,14 @@ export default function Home() {
                     </form>
                   </>
                 ) : (
-                  // "Mot de passe oublié" Step
+                  // Forgot Password Step
                   <form onSubmit={handleResetPassword} className="space-y-4">
                     <h1 className="text-3xl font-bold text-center text-[#213f5b] mb-2">
                       Réinitialiser le mot de passe
                     </h1>
                     <p className="text-center text-sm text-[#213f5b] mb-4">
-                      Entrez votre adresse e-mail pour recevoir un lien de réinitialisation.
+                      Entrez votre adresse e-mail pour recevoir un lien de
+                      réinitialisation.
                     </p>
                     <div>
                       <label
@@ -431,31 +443,30 @@ export default function Home() {
                   </form>
                 )}
 
-                {/* Lien vers l'Espace Pro */}
+                {/* Link to Client Login */}
                 <div className="mt-4 text-center">
-                  <span className="text-sm text-[#213f5b]">
-                    Vous êtes un professionnel ?
-                  </span>
-                  <a
-                    href="/espace-pro"
-                    className="ml-2 inline-flex items-center text-sm font-semibold text-[#213f5b] hover:underline"
-                  >
-                    Je me connecte sur l&apos;Espace Pro
+                <p className="text-sm text-[#213f5b]">Vous êtes un client ?</p>
+                <Link
+                    href="/"
+                    className="mt-1 inline-flex items-center text-sm font-semibold text-[#213f5b] hover:underline"
+                >
+                    Je me connecte sur l&apos;Espace client
                     <svg
-                      className="ml-1 h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    className="ml-1 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                     >
-                      <path
+                    <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
                         d="M9 5l7 7-7 7"
-                      />
+                    />
                     </svg>
-                  </a>
+                </Link>
                 </div>
+
               </motion.div>
             </AnimatePresence>
 

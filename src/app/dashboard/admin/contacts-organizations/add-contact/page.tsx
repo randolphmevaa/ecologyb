@@ -393,7 +393,7 @@ export default function AddContactDossierPage() {
                       : "text-gray-500"
                   }`}
                 >
-                  Contact
+                  Client
                 </button>
                 <button
                   onClick={() => setActiveTab("dossier")}
