@@ -9,7 +9,7 @@ import {
   Cog6ToothIcon,
   UserCircleIcon,
   EllipsisVerticalIcon,
-  ChevronDownIcon,
+  // ChevronDownIcon,
   DocumentArrowDownIcon,
   ShieldCheckIcon,
   KeyIcon,
@@ -75,14 +75,14 @@ const roleTranslations: Record<RoleKey, string> = {
 };
 
 /* --- Permissions par rôle en français --- */
-const permissions: Record<RoleKey, string[]> = {
-  "Sales Representative / Account Executive": ["accès_complet", "gestion_des_utilisateurs", "facturation", "journaux_d'audit"],
-  "Project / Installation Manager": ["prospection", "opportunités", "contacts", "calendrier"],
-  "Technician / Installer": ["projets", "tâches", "documents", "rapports"],
-  "Customer Support / Service Representative": ["tickets", "base_de_connaissances", "communication_client", "sla"],
-  "Super Admin": ["accès_complet", "gestion_des_utilisateurs", "facturation", "journaux_d'audit"],
-  "Client / Customer (Client Portal)": ["suivi_de_projet", "facturation", "support", "documents"],
-};
+// const permissions: Record<RoleKey, string[]> = {
+//   "Sales Representative / Account Executive": ["accès_complet", "gestion_des_utilisateurs", "facturation", "journaux_d'audit"],
+//   "Project / Installation Manager": ["prospection", "opportunités", "contacts", "calendrier"],
+//   "Technician / Installer": ["projets", "tâches", "documents", "rapports"],
+//   "Customer Support / Service Representative": ["tickets", "base_de_connaissances", "communication_client", "sla"],
+//   "Super Admin": ["accès_complet", "gestion_des_utilisateurs", "facturation", "journaux_d'audit"],
+//   "Client / Customer (Client Portal)": ["suivi_de_projet", "facturation", "support", "documents"],
+// };
 
 /* --- Configuration par défaut si le rôle n'est pas reconnu --- */
 const defaultRoleConfig = { color: "#6b7280", icon: UserCircleIcon };
@@ -123,9 +123,9 @@ export default function AdministrationPage() {
   // Filtrage des utilisateurs selon le terme de recherche
   const filteredUsers = users.filter(
     (user) =>
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      (user.email ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.role ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+  );  
 
   // Fonction pour mettre à jour le rôle (et l'email) d'un utilisateur
   const handleRoleChange = async (userId: string, email: string, newRole: string) => {
@@ -133,7 +133,7 @@ export default function AdministrationPage() {
       const res = await fetch(`/api/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role: newRole }), // envoyer l'email et le rôle en anglais
+        body: JSON.stringify({ email, role: newRole }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -141,11 +141,25 @@ export default function AdministrationPage() {
       }
       const updatedUser: IUser = await res.json();
       setUsers((prev) => prev.map((u) => (u._id === userId ? updatedUser : u)));
+  
+      // Log the activity after a successful role change
+      await fetch("/api/activity-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Modification de rôle utilisateur",
+          details: `Changement de rôle pour ${email} vers ${newRole}`,
+          user: "admin@entreprise.com", // Replace with the actual admin user info if available
+        }),
+      });
+  
+      // Optionally, refresh the page or update the UI further
+      window.location.reload();
     } catch (error) {
       console.error(error);
       alert("La mise à jour du rôle a échoué");
     }
-  };
+  };  
 
   return (
     <div className="flex h-screen bg-white">
@@ -337,7 +351,7 @@ export default function AdministrationPage() {
               animate={{ x: 0, opacity: 1 }}
             >
               {/* Permissions des Rôles */}
-              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20">
+              {/* <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20">
                 <h3 className="font-semibold text-lg mb-4 text-[#1a365d] flex items-center gap-2">
                   <KeyIcon className="h-6 w-6 text-[#8b5cf6]" />
                   Permissions des Rôles
@@ -382,7 +396,7 @@ export default function AdministrationPage() {
                     );
                   })}
                 </div>
-              </div>
+              </div> */}
 
               {/* Paramètres de Sécurité */}
               <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20">
@@ -493,5 +507,4 @@ export default function AdministrationPage() {
       )}
     </div>
   );
-  
 }

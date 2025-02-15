@@ -2,18 +2,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { hash } from "bcryptjs"; // Import bcryptjs for hashing
 
-// PATCH: Mise à jour d'un utilisateur existant (ex: modification de l'email, du rôle, du prénom, du nom et du téléphone)
+interface UserUpdateData {
+  email: string;
+  role: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  password?: string;
+  realPassword?: string;
+}
+
+// PATCH: Mise à jour d'un utilisateur existant (ex: modification de l'email, du rôle, du prénom, du nom, du téléphone et du mot de passe)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Await the promise to get the actual params object.
+  // Await the params object before accessing its properties
   const { id } = await params;
 
   try {
-    // Extract the additional fields along with email and role
-    const { email, role, firstName, lastName, phone } = await request.json();
+    const body = await request.json();
+    console.log("PATCH request body:", body);
+
+    // Destructure newPassword (instead of password) if that's what you're sending
+    const { email, role, firstName, lastName, phone, newPassword } = body;
 
     // Verify that email and role are provided
     if (!email || !role) {
@@ -31,6 +45,7 @@ export async function PATCH(
       "Customer Support / Service Representative",
       "Super Admin",
     ];
+
     if (!allowedRoles.includes(role)) {
       return NextResponse.json(
         { success: false, message: "Rôle non autorisé pour cet endpoint." },
@@ -38,14 +53,37 @@ export async function PATCH(
       );
     }
 
-    // Connect to MongoDB and update the user
+    // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    // Update the user with the new fields
+    // Prepare the update object for non-password fields using a proper type
+    const updateData: UserUpdateData = { email, role, firstName, lastName, phone };
+
+    // If a new password is provided, unset the old one and set the new hashed password,
+    // and update the realPassword field with the plain text value.
+    if (newPassword && newPassword.trim() !== "") {
+      // Optionally, unset the old password field (if you want to be explicit)
+      await db.collection("users").updateOne(
+        { _id: new ObjectId(id) },
+        { $unset: { password: "" } }
+      );
+
+      // Hash the new password and add it to the update object.
+      const hashedPassword = await hash(newPassword, 10);
+      updateData.password = hashedPassword;
+      // Also update the realPassword field with the plain text new password.
+      updateData.realPassword = newPassword;
+
+      console.log("Password updated. New hashed password:", hashedPassword);
+    } else {
+      console.log("No new password provided; skipping password update.");
+    }
+
+    // Update the user in the database
     const result = await db.collection("users").updateOne(
       { _id: new ObjectId(id) },
-      { $set: { email, role, firstName, lastName, phone } }
+      { $set: updateData }
     );
 
     if (result.matchedCount === 0) {
@@ -56,9 +94,7 @@ export async function PATCH(
     }
 
     // Retrieve the updated user
-    const updatedUser = await db
-      .collection("users")
-      .findOne({ _id: new ObjectId(id) });
+    const updatedUser = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     return NextResponse.json(
       { success: true, user: updatedUser },
@@ -80,7 +116,6 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Await the params promise to extract the actual parameter value.
   const { id } = await params;
 
   try {
@@ -88,9 +123,7 @@ export async function DELETE(
     const db = client.db("yourdbname");
 
     // Delete the user by converting the id string to an ObjectId.
-    const result = await db
-      .collection("users")
-      .deleteOne({ _id: new ObjectId(id) });
+    const result = await db.collection("users").deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
       return NextResponse.json(
@@ -104,7 +137,6 @@ export async function DELETE(
       message: "Utilisateur supprimé avec succès.",
     });
   } catch (error: unknown) {
-    // Narrow the type to Error if possible.
     const message =
       error instanceof Error ? error.message : "An unknown error occurred.";
     console.error("Error deleting user:", error);

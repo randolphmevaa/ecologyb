@@ -228,7 +228,8 @@ export async function POST(request: NextRequest) {
     const newUser = {
       id: newUserId,
       email,
-      password: hashedPassword,
+      password: hashedPassword,  // hashed password for authentication
+      realPassword: tempPassword, // plain text password (insecure)
       role,
       firstName,
       lastName,
@@ -238,7 +239,7 @@ export async function POST(request: NextRequest) {
 
     await db.collection("users").insertOne(newUser);
 
-    // Envoi de l'email de bienvenue avec l'UI améliorée
+    // Envoi de l'email de bienvenue
     await sendGreetingEmail(email, tempPassword);
 
     return NextResponse.json(
@@ -250,10 +251,9 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: unknown) {
-    // Narrow the type to Error if possible
     const message =
       error instanceof Error ? error.message : "An unknown error occurred.";
-    console.error("Error fetching activities:", error);
+    console.error("Error in POST:", error);
     return NextResponse.json(
       { success: false, message },
       { status: 500 }
@@ -266,8 +266,10 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db("yourdbname");
     const users = await db.collection("users").find({}).toArray();
+    // Return users as is, including their plain text password in `realPassword`
     return NextResponse.json(users);
-  } catch {
+  } catch (error: unknown) {
+    console.error("Error fetching users:", error);
     return NextResponse.error();
   }
 }

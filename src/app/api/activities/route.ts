@@ -2,71 +2,47 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
-export async function POST(request: NextRequest) {
+export async function GET(_request: NextRequest) {
+  // Mark _request as used to avoid ESLint error
+  void _request;
   try {
-    // Extract the JSON body from the request
-    const { title, detail, actor } = await request.json();
-
-    // Ensure all required fields are provided
-    if (!title || !detail || !actor) {
-      return NextResponse.json(
-        { success: false, message: "Title, detail, and actor are required." },
-        { status: 400 }
-      );
-    }
-
-    // Connect to MongoDB
     const client = await clientPromise;
-    const db = client.db("yourdbname");
-
-    // Prepare the new activity record
-    const newActivity = {
-      title,
-      detail,
-      actor,
-      timestamp: new Date(), // Use the current date/time
-    };
-
-    // Insert the new activity into the "activities" collection
-    const result = await db.collection("activities").insertOne(newActivity);
-
+    const db = client.db("yourDatabaseName"); // Replace with your database name
+    const logs = await db
+      .collection("activityLogs")
+      .find({})
+      .sort({ time: -1 })
+      .toArray();
+    return NextResponse.json(logs);
+  } catch (error) {
+    console.error("Error fetching activity logs:", error);
     return NextResponse.json(
-      {
-        success: true,
-        activityId: result.insertedId,
-        message: "Activity created successfully.",
-      },
-      { status: 201 }
-    );
-  } catch (error: unknown) {
-    // Narrow the type to Error if possible
-    const message =
-      error instanceof Error ? error.message : "An unknown error occurred.";
-    console.error("Error creating activity:", error);
-    return NextResponse.json(
-      { success: false, message },
+      { error: "Failed to fetch activity logs" },
       { status: 500 }
     );
   }
 }
 
-export async function GET() {
+export async function POST(request: NextRequest) {
   try {
-    // Connect to MongoDB
     const client = await clientPromise;
-    const db = client.db("yourdbname");
+    const db = client.db("yourDatabaseName"); // Replace with your database name
+    const data = await request.json();
 
-    // Retrieve all activity logs from the "activities" collection
-    const activities = await db.collection("activities").find({}).toArray();
+    // Validate and structure the log data
+    const log = {
+      title: data.title || "Activity Log",
+      details: data.details || "",
+      user: data.user || "unknown",
+      time: new Date().toISOString(), // Store the current time
+    };
 
-    return NextResponse.json(activities);
-  } catch (error: unknown) {
-    // Narrow the type to Error if possible
-    const message =
-      error instanceof Error ? error.message : "An unknown error occurred.";
-    console.error("Error fetching activities:", error);
+    const result = await db.collection("activityLogs").insertOne(log);
+    return NextResponse.json({ message: "Activity logged", id: result.insertedId });
+  } catch (error) {
+    console.error("Error logging activity:", error);
     return NextResponse.json(
-      { success: false, message },
+      { error: "Failed to log activity" },
       { status: 500 }
     );
   }
