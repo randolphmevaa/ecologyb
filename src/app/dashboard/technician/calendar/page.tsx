@@ -100,7 +100,7 @@ export default function TechnicianCalendarDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50">
       {/* Common Header */}
-      <Header user={{ name: "Technician", avatar: "/technician-avatar.png" }} />
+      <Header />
 
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}

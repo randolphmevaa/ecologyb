@@ -1,3 +1,5 @@
+// /app/api/contacts/route.ts
+
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { hash } from "bcryptjs";
@@ -16,7 +18,7 @@ function generateTemporaryPassword(length = 8): string {
   return password;
 }
 
-// Helper function to generate an HTML email template en français pour les contacts
+// Helper function to generate an HTML email template in French
 function generateEmailTemplate(tempPassword: string): string {
   return `
     <!DOCTYPE html>
@@ -25,90 +27,21 @@ function generateEmailTemplate(tempPassword: string): string {
         <meta charset="UTF-8">
         <title>Bienvenue sur Ecology'b CRM - Espace Client</title>
         <style>
-          body {
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
-          }
-          .wrapper {
-            width: 100%;
-            table-layout: fixed;
-            background-color: #f4f4f4;
-            padding: 40px 0;
-          }
-          .main {
-            background-color: #ffffff;
-            margin: 0 auto;
-            width: 100%;
-            max-width: 600px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-          }
-          .header {
-            background: #00ba7c;
-            padding: 20px;
-            text-align: center;
-          }
-          .header img {
-            max-width: 100px;
-          }
-          .header h1 {
-            color: #ffffff;
-            margin: 10px 0 0;
-            font-size: 28px;
-          }
-          .content {
-            padding: 30px;
-          }
-          .content h2 {
-            color: #333333;
-            font-size: 24px;
-            margin-bottom: 20px;
-          }
-          .content p {
-            color: #666666;
-            font-size: 16px;
-            line-height: 1.5;
-            margin-bottom: 20px;
-          }
-          .temp-password {
-            font-size: 18px;
-            color: #00ba7c;
-            font-weight: bold;
-          }
-          .cta {
-            display: inline-block;
-            text-decoration: none;
-            background-color: #00ba7c;
-            color: #ffffff;
-            padding: 12px 24px;
-            border-radius: 4px;
-            font-weight: bold;
-          }
-          .solutions {
-            background-color: #e8f5e9;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-          }
-          .solutions h3 {
-            margin-top: 0;
-            font-size: 18px;
-            color: #333;
-          }
-          .solutions ul {
-            margin: 0;
-            padding-left: 20px;
-          }
-          .footer {
-            background-color: #f0f0f0;
-            padding: 20px;
-            text-align: center;
-            font-size: 14px;
-            color: #999999;
-          }
+          body { margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif; }
+          .wrapper { width: 100%; table-layout: fixed; background-color: #f4f4f4; padding: 40px 0; }
+          .main { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 600px; border-radius: 8px; overflow: hidden; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); }
+          .header { background: #00ba7c; padding: 20px; text-align: center; }
+          .header img { max-width: 100px; }
+          .header h1 { color: #ffffff; margin: 10px 0 0; font-size: 28px; }
+          .content { padding: 30px; }
+          .content h2 { color: #333333; font-size: 24px; margin-bottom: 20px; }
+          .content p { color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px; }
+          .temp-password { font-size: 18px; color: #00ba7c; font-weight: bold; }
+          .cta { display: inline-block; text-decoration: none; background-color: #00ba7c; color: #ffffff; padding: 12px 24px; border-radius: 4px; font-weight: bold; }
+          .solutions { background-color: #e8f5e9; padding: 15px; border-radius: 4px; margin-top: 20px; }
+          .solutions h3 { margin-top: 0; font-size: 18px; color: #333; }
+          .solutions ul { margin: 0; padding-left: 20px; }
+          .footer { background-color: #f0f0f0; padding: 20px; text-align: center; font-size: 14px; color: #999999; }
         </style>
       </head>
       <body>
@@ -152,12 +85,12 @@ function generateEmailTemplate(tempPassword: string): string {
   `;
 }
 
-// Helper function to send a greeting email via SendGrid with an improved UI for contacts
+// Helper function to send a greeting email via SendGrid
 async function sendGreetingEmail(email: string, tempPassword: string) {
   const htmlContent = generateEmailTemplate(tempPassword);
   const msg = {
     to: email,
-    from: "noreply@uberplan.fr", // Assurez-vous que cette adresse est vérifiée dans SendGrid
+    from: "noreply@uberplan.fr",
     subject: "Bienvenue sur Ecology'b CRM - Espace Client !",
     text: `Bonjour,
 
@@ -176,7 +109,9 @@ L'équipe Ecology'b`,
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    // Parse form data instead of JSON
+    const formData = await request.formData();
+    const data = Object.fromEntries(formData.entries()) as Record<string, string>;
 
     if (!data.email || !data.role) {
       return NextResponse.json(
@@ -185,28 +120,40 @@ export async function POST(request: Request) {
       );
     }
 
-    if (data.role !== "Client / Customer (Client Portal)") {
+    // Ensure role is always "Client / Customer (Client Portal)"
+    data.role = "Client / Customer (Client Portal)";
+
+    const tempPassword = generateTemporaryPassword();
+    const hashedPassword = await hash(tempPassword, 10);
+
+    // Instead of generating a new contact ID here,
+    // use the contactId provided by the frontend.
+    if (!data.contactId) {
       return NextResponse.json(
-        { success: false, message: "Rôle non autorisé pour cet endpoint." },
+        { success: false, message: "contactId is required from the frontend." },
         { status: 400 }
       );
     }
 
-    const tempPassword = generateTemporaryPassword();
-    const hashedPassword = await hash(tempPassword, 10);
-    const newContactId = crypto.randomUUID();
-
-    // Supprimer les champs potentiellement transmis par le client
+    // Remove fields that should not be trusted
     delete data.id;
     delete data.password;
     delete data.plainPassword;
 
-    // Construire le document en incluant toutes les données supplémentaires et le mot de passe en clair
-    const newContact = {
+    // Explicitly type newContact so that it includes email
+    const newContact: {
+      id: string;
+      email: string;
+      password: string;
+      plainPassword: string;
+      createdAt: Date;
+      [key: string]: unknown;
+    } = {
       ...data,
-      id: newContactId,
-      password: hashedPassword,       // stocké pour vérification/authentification
-      plainPassword: tempPassword,      // stocké pour être affiché via GET (non recommandé)
+      id: data.contactId, // Use the provided contactId
+      email: data.email, // Ensure email is present
+      password: hashedPassword,
+      plainPassword: tempPassword,
       createdAt: new Date(),
     };
 
@@ -227,7 +174,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        contactId: newContactId,
+        contactId: newContact.id,
         message: "Contact créé avec succès et email envoyé.",
       },
       { status: 201 }
@@ -258,12 +205,10 @@ export async function GET(request: Request) {
 
     const contacts = await db.collection("contacts").find(query).toArray();
 
-    // Pour chaque contact, on remplace le champ 'password' par 'plainPassword'
     const modifiedContacts = contacts.map((contact) => {
       if (contact.plainPassword) {
         contact.password = contact.plainPassword;
       }
-      // Optionnel : supprimer le champ 'plainPassword' si vous ne voulez pas le dupliquer
       delete contact.plainPassword;
       return contact;
     });

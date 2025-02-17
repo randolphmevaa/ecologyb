@@ -56,6 +56,24 @@ export function Sidebar({ role }) {
   // Used for items with dropdown children (only in the default/admin case)
   const [openDropdowns, setOpenDropdowns] = useState({});
 
+  // New state for profile info from localStorage
+  const [profileInfo, setProfileInfo] = useState({ email: '', role: '' });
+
+  // Load profile info from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedProInfo = localStorage.getItem('proInfo');
+      if (storedProInfo) {
+        try {
+          const parsedProInfo = JSON.parse(storedProInfo);
+          setProfileInfo(parsedProInfo);
+        } catch (error) {
+          console.error('Error parsing proInfo from localStorage', error);
+        }
+      }
+    }
+  }, []);
+
   // Define role-based navigation arrays
   let navigation = [];
   if (role === "Sales Representative / Account Executive") {
@@ -216,7 +234,7 @@ export function Sidebar({ role }) {
               "flex items-center gap-x-3 rounded-xl p-3 cursor-pointer",
               "relative z-10 transition-colors duration-200",
               isActive 
-                ? "bg-gradient-to-r from-primary/10 to-primary/5 shadow-inner"
+                ? "bg-gray-800 shadow-inner"
                 : "hover:bg-primary/5"
             )}
           >
@@ -271,7 +289,7 @@ export function Sidebar({ role }) {
               "flex items-center gap-x-3 rounded-xl p-3",
               "relative z-10 transition-colors duration-200",
               isActive 
-                ? "bg-gradient-to-r from-primary/10 to-primary/5 shadow-inner"
+                ? "bg-gray-800 shadow-inner"
                 : "hover:bg-primary/5"
             )}
           >
@@ -413,7 +431,13 @@ export function Sidebar({ role }) {
             )}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <span className="text-lg font-semibold text-primary">AD</span>
+            <span className="text-lg font-semibold text-primary">
+              {profileInfo.role === "Super Admin"
+                ? "SA"
+                : profileInfo.email
+                  ? profileInfo.email.charAt(0).toUpperCase()
+                  : "U"}
+            </span>
           </motion.div>
 
           <AnimatePresence initial={false}>
@@ -424,8 +448,14 @@ export function Sidebar({ role }) {
                 exit={{ opacity: 0, x: -20 }}
                 className="flex-1 truncate"
               >
-                <p className="text-sm font-semibold text-gray-900 truncate">Administrateur Principal</p>
-                <p className="text-xs text-gray-500 truncate">admin@entreprise.com</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {profileInfo.role === "Super Admin"
+                    ? "Administrateur Principal"
+                    : profileInfo.role || "Utilisateur"}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {profileInfo.email || "email@example.com"}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>

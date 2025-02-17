@@ -12,14 +12,18 @@ import { LockClosedIcon } from "@heroicons/react/24/solid";
 // Define the contact interface based on your API response.
 interface Contact {
   _id: string;
-  name: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone: string;
   mailingAddress?: string;
   imageUrl?: string;
-  password?: string;
+  password?: string; // Plain-text password
   maprEmail?: string;
   mprPassword?: string;
+  mpremail?: string; // Fallback for maprEmail
+  mprpassword?: string; // Fallback for mprPassword
   maprNumero?: string;
   // add any other fields if needed
 }
@@ -29,11 +33,11 @@ interface UpdatedHeaderProps {
   contactId: string;
 }
 
-// Helper function to get initials from the contact's name.
+// Helper function to get initials from any given name string.
 function getInitiales(nom: string): string {
   if (!nom) return "";
-  const parties = nom.split(" ").filter((part) => part.length > 0);
-  return parties
+  const parts = nom.split(" ").filter((part) => part.length > 0);
+  return parts
     .map((part) => part.charAt(0))
     .join("")
     .toUpperCase()
@@ -65,9 +69,28 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
     return <div>Loading...</div>;
   }
 
+  // Compute the full name. If contact.name is missing, use firstName and lastName.
+  const fullName =
+    contact.name ||
+    `${contact.firstName || ""} ${contact.lastName || ""}`.trim();
+
+  // Get initials from firstName and lastName if available, else from fullName.
+  const initials =
+    contact.firstName && contact.lastName
+      ? `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`.toUpperCase()
+      : getInitiales(fullName);
+
+  // Fallback for Ma Prime Renov email and password.
+  const mprEmail =
+    contact.maprEmail || contact.mpremail || "maprimerenov@exemple.com";
+  const mprPassword =
+    contact.mprPassword || contact.mprpassword || "test123";
+
+  // For client access, use the real (plain-text) password if available.
+  const realPassword = contact.password || "test123";
+
   // Map the contact fields to the ones you need.
   const adresse = contact.mailingAddress || "60 Rue François 1er, 75008 Paris";
-  const initiales = getInitiales(contact.name);
 
   // Function to simulate sending "Accès client" details.
   const handleSendClientAccess = () => {
@@ -111,7 +134,7 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
                   Profil du client
                 </span>
                 <h1 className="text-3xl font-light text-gray-900">
-                  {contact.name}
+                  {fullName}
                   <span className="ml-2 text-blue-600 text-xl align-top">®</span>
                 </h1>
               </motion.div>
@@ -139,7 +162,9 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
               {/* Section: Accès client */}
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-500">Accès client</span>
+                  <span className="text-sm font-medium text-gray-500">
+                    Accès client
+                  </span>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => setShowUIPassword(!showUIPassword)}
@@ -164,10 +189,10 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
                 <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2.5 rounded-lg">
                   <LockClosedIcon className="w-5 h-5 text-gray-600" />
                   <span className="font-mono">
-                    {showUIPassword ? contact.password || "test123" : "••••••••"}
+                    {showUIPassword ? realPassword : "••••••••"}
                   </span>
                 </div>
-                {/* Premium styled button to send "Accès client" */}
+                {/* Button to send "Accès client" */}
                 <button
                   onClick={handleSendClientAccess}
                   className="mt-2 inline-flex items-center px-3 py-1.5 border border-blue-200 text-xs font-semibold text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-150"
@@ -197,19 +222,21 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
                 </div>
                 {/* Ma Prime Renov Email */}
                 <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2.5 rounded-lg">
-                  <img src="/Group 9.svg" alt="Logo Ma Prime Renov" className="w-5 h-5" />
-                  <span className="font-mono">
-                    {contact.maprEmail || "maprimerenov@exemple.com"}
-                  </span>
+                  <img
+                    src="/Group 9.svg"
+                    alt="Logo Ma Prime Renov"
+                    className="w-5 h-5"
+                  />
+                  <span className="font-mono">{mprEmail}</span>
                 </div>
                 {/* Ma Prime Renov Password */}
                 <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2.5 rounded-lg">
                   <LockClosedIcon className="w-5 h-5 text-gray-600" />
                   <span className="font-mono">
-                    {showMPRPassword ? contact.mprPassword || "test123" : "••••••••"}
+                    {showMPRPassword ? mprPassword : "••••••••"}
                   </span>
                 </div>
-                {/* Premium styled button to send "Accès Ma Prime Renov" */}
+                {/* Button to send "Accès Ma Prime Renov" */}
                 <button
                   onClick={handleSendMPRAccess}
                   className="mt-2 inline-flex items-center px-3 py-1.5 border border-green-200 text-xs font-semibold text-green-600 bg-green-50 rounded-full hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-300 transition duration-150"
@@ -254,9 +281,12 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
               </div>
             </div>
 
-            {/* Avatar Section – Now aligned at the top */}
+            {/* Avatar Section */}
             <div className="flex flex-col items-center md:items-start">
-              <motion.div whileHover={{ scale: 1.02 }} className="relative group">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="relative group"
+              >
                 <div className="absolute inset-0 rounded-full transform transition-all group-hover:scale-105 group-hover:bg-gradient-to-r from-blue-200/30 to-purple-200/30" />
                 {contact.imageUrl ? (
                   <img
@@ -266,7 +296,9 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
                   />
                 ) : (
                   <div className="w-32 h-32 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-purple-100 border-4 border-white shadow-xl">
-                    <span className="text-2xl font-bold text-gray-700">{initiales}</span>
+                    <span className="text-2xl font-bold text-gray-700">
+                      {initials}
+                    </span>
                   </div>
                 )}
                 <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-sm" />

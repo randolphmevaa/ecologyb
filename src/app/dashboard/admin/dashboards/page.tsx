@@ -189,7 +189,7 @@ export default function DashboardsPage() {
 
       {/* Zone de contenu principale */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header user={{ name: "Administrateur", avatar: "/admin-avatar.png" }} />
+      <Header />
         <main className="flex-1 overflow-y-auto p-8 space-y-10 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/10">
           <div className="flex flex-col sm:flex-row items-center justify-between">
             <div className="mb-6 sm:mb-0">

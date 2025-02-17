@@ -25,7 +25,7 @@ export default function ClientContacts() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-green-50">
       {/* Consistent Header */}
-      <Header user={{ name: "Client", avatar: "/client-avatar.png" }} />
+      <Header />
 
       <main className="max-w-5xl mx-auto p-6">
         {/* Hero Section */}

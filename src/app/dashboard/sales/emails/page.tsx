@@ -65,7 +65,7 @@ export default function SalesEmailsDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
       {/* Import the common Header for consistent navigation */}
-      <Header user={{ name: "Account Executive", avatar: "/sales-avatar.png" }} />
+      <Header />
 
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}

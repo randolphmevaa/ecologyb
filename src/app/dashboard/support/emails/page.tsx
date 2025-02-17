@@ -59,7 +59,7 @@ export default function SupportEmailsDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50">
       {/* Consistent Header */}
-      <Header user={{ name: "Support Rep", avatar: "/support-avatar.png" }} />
+      <Header />
 
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}
@@ -108,7 +108,7 @@ export default function SupportEmailsDashboard() {
           {filteredEmails.map((email) => (
             <motion.div
               key={email.id}
-              className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow"
+              className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.01 }}

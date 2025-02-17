@@ -81,7 +81,7 @@ export default function ContactsOrganizationsDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-green-50">
       {/* Common header */}
-      <Header user={{ name: "Support Rep", avatar: "/support-avatar.png" }} />
+      <Header />
 
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}
@@ -141,7 +141,7 @@ export default function ContactsOrganizationsDashboard() {
             {filteredContacts.map((contact) => (
               <motion.div
                 key={contact.id}
-                className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow flex flex-col"
+                className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10 flex flex-col"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.02 }}
@@ -194,7 +194,7 @@ export default function ContactsOrganizationsDashboard() {
             {filteredOrganizations.map((org) => (
               <motion.div
                 key={org.id}
-                className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow flex flex-col"
+                className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10 flex flex-col"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.02 }}

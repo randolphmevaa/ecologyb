@@ -102,7 +102,7 @@ export default function ClientBilling() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Import the Header component for consistent navigation */}
-      <Header user={{ name: "Client", avatar: "/client-avatar.png" }} />
+      <Header />
 
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}
@@ -125,7 +125,7 @@ export default function ClientBilling() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <motion.div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow">
+          <motion.div className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10">
             <div className="flex items-center">
               <CurrencyDollarIcon className="h-10 w-10 text-green-600" />
               <div className="ml-4">
@@ -136,7 +136,7 @@ export default function ClientBilling() {
               </div>
             </div>
           </motion.div>
-          <motion.div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow">
+          <motion.div className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10">
             <div className="flex items-center">
               <CreditCardIcon className="h-10 w-10 text-green-600" />
               <div className="ml-4">
@@ -147,7 +147,7 @@ export default function ClientBilling() {
               </div>
             </div>
           </motion.div>
-          <motion.div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow">
+          <motion.div className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10">
             <div className="flex items-center">
               <CalendarIcon className="h-10 w-10 text-green-600" />
               <div className="ml-4">

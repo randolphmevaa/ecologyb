@@ -1,176 +1,300 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import Select, { MultiValue } from "react-select";
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/Header";
 
+// ----------------------
+// Updated Interfaces
+// ----------------------
+
+interface Comment {
+  text: string;
+  timestamp: string;
+}
+
 interface Contact {
-  prefix: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  role: string;
-  titre: string;
-  tags: string;
-  suivi: boolean;
-  emailOptedOut: boolean;
-  homePhone: string;
-  mobilePhone: string;
-  otherPhone: string;
-  assistantPhone: string;
-  assistantName: string;
-  fax: string;
-  linkedIn: string;
-  facebook: string;
-  twitter: string;
-  mailingAddress: string;
-  otherAddress: string;
-  dateToRemember: string;
-  dateOfBirth: string;
-  description: string;
-  department: string;
-  climateZone: string;
-  heatingType: string;
-  rfr: string;
   imageUrl: File | null;
-  secteur: string;
-  maprEmail: string;
-  maprNumero: string;
-  mprPassword: string;
+  lastName: string;
+  firstName: string;
+  dateOfBirth: string;
+  mailingAddress: string;
+  phone: string;
+  email: string;
+  role: string; // Always "Client / Customer (Client Portal)"
+  numeroDossier: string;
+  department: string;
+  gestionnaireSuivi: string;
+  comments: Comment[];
 }
 
 interface Dossier {
-  client: string;
-  projet: string;
-  solution: string;
-  etape: string;
-  valeur: string;
-  assignedTeam: string;
-  notes: string;
   informationLogement: {
-    typeDeLogement: string;
-    surfaceHabitable: string;
-    anneeConstruction: string;
     systemeChauffage: string;
+    surfaceHabitable: string;
+    typeCompteurElectrique: string;
+    projetPropose: string[];
+    anneeConstruction: string;
+    typeLogement: string;
+    profileLogement: string;
   };
-  informationTravaux: {
-    typeTravaux: string;
-    typeUtilisation: string;
-    surfaceChauffee: string;
-    circuitChauffageFonctionnel: string;
+  informationAides: {
+    numeroDossierMPR: string;
+    nombrePersonne: string;
+    codePostale: string;
+    zoneClimatique: string;
+    rfr: string;
+    mprColor: string;
+    compteMPRExistant: boolean;
+    mpremail: string;
+    mprpassword: string;
+    eligible: boolean;
   };
+  phaseProjet: string;
+  typeTravaux: string;
   contactId: string;
 }
 
-interface Team {
-  id: string;
-  name: string;
+// For user dropdown from /api/users
+interface User {
+  _id: string;
+  email: string;
+  role: string;
+  firstName: string | null;
+  lastName: string | null;
 }
+
+// Define an interface for address suggestions returned by the API
+interface AddressSuggestion {
+  properties: {
+    label: string;
+    id?: string;
+    context: string;
+    postcode: string;
+  };
+}
+
+// Define an interface for the contact payload we send to the API
+interface ContactPayload extends Contact {
+  maprNumero: string;
+  mpremail: string;
+  mprpassword: string;
+  climateZone: string;
+  rfr: string;
+  eligible: boolean;
+  contactId: string;
+}
+
+// Options for "Projet proposé" multi-select
+const projetOptions = [
+  { value: "Pompes a chaleur", label: "Pompes a chaleur" },
+  { value: "Chauffe-eau solaire individuel", label: "Chauffe-eau solaire individuel" },
+  { value: "Chauffe-eau thermodynamique", label: "Chauffe-eau thermodynamique" },
+  { value: "Système Solaire Combiné", label: "Système Solaire Combiné" },
+];
+
+// Options for "Type de logement"
+const typeLogementOptions = [
+  { value: "Maison", label: "Maison" },
+  { value: "Appartement", label: "Appartement" },
+  { value: "Autre", label: "Autre" },
+];
+
+// Options for "Profil" dropdown (for logement)
+const profileLogementOptions = [
+  { value: "Locataire", label: "Locataire" },
+  { value: "Bailleur", label: "Bailleur" },
+  { value: "Propriétaire", label: "Propriétaire" },
+  { value: "SCI", label: "SCI" },
+];
+
+// Options for "Type de travaux" in "Le projet"
+const travauxOptions = [
+  { value: "Rénovation", label: "Rénovation" },
+  { value: "Extension", label: "Extension" },
+  { value: "Installation", label: "Installation" },
+  { value: "Autre", label: "Autre" },
+];
+
+// Options for "Phase du projet"
+const phaseProjetOptions = [
+  { value: "1 Prise de contact", label: "1 Prise de contact" },
+  { value: "2 En attente des documents", label: "2 En attente des documents" },
+  { value: "3 Instruction du dossier", label: "3 Instruction du dossier" },
+  { value: "4 Dossier Accepter", label: "4 Dossier Accepter" },
+  { value: "5 Installation", label: "5 Installation" },
+  { value: "6 Contrôle", label: "6 Contrôle" },
+  { value: "7 Dossier clôturé", label: "7 Dossier clôturé" },
+];
+
+// ----------------------
+// Component
+// ----------------------
 
 export default function AddContactDossierPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("contact");
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState("client");
+  const tabs = [
+    { key: "client", label: "Information client" },
+    { key: "habitation", label: "Information de l'habitation" },
+    { key: "aides", label: "Information des aides" },
+    { key: "projet", label: "Le projet" },
+  ];
+
+  // ----------------------
+  // State definitions
+  // ----------------------
   const [contact, setContact] = useState<Contact>({
-    prefix: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    role: "",
-    titre: "",
-    tags: "",
-    suivi: false,
-    emailOptedOut: false,
-    homePhone: "",
-    mobilePhone: "",
-    otherPhone: "",
-    assistantPhone: "",
-    assistantName: "",
-    fax: "",
-    linkedIn: "",
-    facebook: "",
-    twitter: "",
-    mailingAddress: "",
-    otherAddress: "",
-    dateToRemember: "",
-    dateOfBirth: "",
-    description: "",
-    department: "",
-    climateZone: "",
-    heatingType: "",
-    rfr: "",
     imageUrl: null,
-    secteur: "",
-    maprEmail: "",
-    maprNumero: "",
-    mprPassword: "",
+    lastName: "",
+    firstName: "",
+    dateOfBirth: "",
+    mailingAddress: "",
+    phone: "",
+    email: "",
+    role: "Client / Customer (Client Portal)",
+    numeroDossier: "",
+    department: "",
+    gestionnaireSuivi: "",
+    comments: [],
   });
-
-  const [contactErrors, setContactErrors] = useState<
-    Partial<Record<keyof Contact, string>>
-  >({});
+  const [contactErrors, setContactErrors] = useState<Partial<Record<keyof Contact, string>>>({});
 
   const [dossier, setDossier] = useState<Dossier>({
-    client: "",
-    projet: "",
-    solution: "",
-    etape: "",
-    valeur: "",
-    assignedTeam: "",
-    notes: "",
     informationLogement: {
-      typeDeLogement: "",
-      surfaceHabitable: "",
-      anneeConstruction: "",
       systemeChauffage: "",
+      surfaceHabitable: "",
+      typeCompteurElectrique: "",
+      projetPropose: [],
+      anneeConstruction: "",
+      typeLogement: "",
+      profileLogement: "",
     },
-    informationTravaux: {
-      typeTravaux: "",
-      typeUtilisation: "",
-      surfaceChauffee: "",
-      circuitChauffageFonctionnel: "",
+    informationAides: {
+      numeroDossierMPR: "",
+      nombrePersonne: "",
+      codePostale: "",
+      zoneClimatique: "",
+      rfr: "",
+      mprColor: "",
+      compteMPRExistant: false,
+      mpremail: "",
+      mprpassword: "",
+      eligible: false,
     },
+    phaseProjet: "",
+    typeTravaux: "",
     contactId: "",
   });
+  const [dossierErrors, setDossierErrors] = useState<{ [key: string]: string }>({});
 
-  const [dossierErrors, setDossierErrors] = useState<
-    Partial<Record<keyof Dossier, string>>
-  >({});
+  // New state variable to preview the created contactId
+  const [createdContactId, setCreatedContactId] = useState("");
 
-  // ====================
-  // CONTACT FORM STATE
-  // ====================
-  const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // ----- FIXED: Specify a type instead of any ----- //
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
-  // ====================
-  // DOSSIER FORM STATE
-  // ====================
-  const [dossierSubmitting, setDossierSubmitting] = useState(false);
-
-  // ====================
-  // FETCH TEAMS FOR ASSIGNED TEAM DROPDOWN
-  // ====================
-  const [teams, setTeams] = useState<Team[]>([]);
+  // ----------------------
+  // Effects
+  // ----------------------
+  // Generate a unique contactId on component mount
   useEffect(() => {
-    async function fetchTeams() {
-      try {
-        const res = await fetch("/api/users");
-        const data: Team[] = await res.json();
-        setTeams(data);
-      } catch (error) {
-        console.error("Error fetching teams:", error);
-      }
-    }
-    fetchTeams();
+    const generatedId = crypto.randomUUID();
+    setCreatedContactId(generatedId);
+    setDossier((prev) => ({ ...prev, contactId: generatedId }));
   }, []);
 
-  // ====================
-  // CLOSE PAGE ON ESCAPE
-  // ====================
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const res = await fetch("/api/users");
+        const data: User[] = await res.json();
+        setUsers(data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    }
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    setContact((prev) => ({ ...prev, numeroDossier: `ECO-${year}-${randomNum}` }));
+  }, []);
+
+  useEffect(() => {
+    const rfrValue = parseFloat(dossier.informationAides.rfr);
+    const eligible = !isNaN(rfrValue) && rfrValue >= 30000;
+    setDossier((prev) => ({
+      ...prev,
+      informationAides: { ...prev.informationAides, eligible },
+    }));
+  }, [dossier.informationAides.rfr]);
+
+  // Auto-set mprColor in French based on nombrePersonne and rfr
+  useEffect(() => {
+    const num = parseInt(dossier.informationAides.nombrePersonne);
+    const rfrValue = parseFloat(dossier.informationAides.rfr);
+    if (!isNaN(num) && !isNaN(rfrValue)) {
+      const color = num >= 3 && rfrValue >= 30000 ? "vert" : "rouge";
+      setDossier((prev) => ({
+        ...prev,
+        informationAides: { ...prev.informationAides, mprColor: color },
+      }));
+    }
+  }, [dossier.informationAides.nombrePersonne, dossier.informationAides.rfr]);
+
+  // Address Autocomplete
+  const handleAddressChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setContact({ ...contact, mailingAddress: query });
+    if (query.length > 3) {
+      try {
+        const res = await fetch(
+          `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=5`
+        );
+        const data = await res.json();
+        setAddressSuggestions(data.features);
+      } catch (error) {
+        console.error("Error fetching address suggestions:", error);
+      }
+    } else {
+      setAddressSuggestions([]);
+    }
+  };
+
+  // ----- FIXED: Specify parameter type instead of any ----- //
+  const selectAddressSuggestion = (suggestion: AddressSuggestion) => {
+    const label = suggestion.properties.label;
+    const context = suggestion.properties.context;
+    let department = "";
+    if (context) {
+      department = context.split(",")[0];
+    }
+    const postcode = suggestion.properties.postcode || "";
+    // Map department to zone climatique (example logic)
+    let zoneClimatique = "";
+    if (department === "75") zoneClimatique = "H1";
+    else if (department === "77") zoneClimatique = "H2";
+    else if (department === "78") zoneClimatique = "H3";
+    else zoneClimatique = "H1";
+    setContact({ ...contact, mailingAddress: label, department });
+    setDossier((prev) => ({
+      ...prev,
+      informationAides: { ...prev.informationAides, codePostale: postcode, zoneClimatique },
+    }));
+    setAddressSuggestions([]);
+  };
+
+  // Close on Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") router.back();
@@ -179,31 +303,11 @@ export default function AddContactDossierPage() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [router]);
 
-  // ====================
-  // VALIDATION FUNCTIONS
-  // ====================
-  const validateContactField = (
-    field: keyof Contact,
-    value: Contact[typeof field]
-  ): string => {
-    const optionalFields: (keyof Contact)[] = [
-      "assistantName",
-      "fax",
-      "twitter",
-      "otherAddress",
-      "imageUrl",
-    ];
-    if (!value && !optionalFields.includes(field)) {
-      return "Ce champ est requis";
-    }
-    if (
-      field === "email" &&
-      value &&
-      typeof value === "string" &&
-      !/^\S+@\S+\.\S+$/.test(value)
-    ) {
+  // Validation functions
+  const validateContactField = (field: keyof Contact, value: Contact[typeof field]): string => {
+    if (!value && field !== "imageUrl") return "Ce champ est requis";
+    if (field === "email" && value && typeof value === "string" && !/^\S+@\S+\.\S+$/.test(value))
       return "Veuillez entrer un email valide";
-    }
     return "";
   };
 
@@ -212,24 +316,23 @@ export default function AddContactDossierPage() {
     setContactErrors((prev) => ({ ...prev, [field]: error }));
   };
 
-  const validateDossierField = (
-    field: keyof Dossier,
-    value: Dossier[typeof field]
-  ): string => {
-    if (!value) {
-      return "Ce champ est requis";
+  // Comment Handling
+  const [commentInput, setCommentInput] = useState("");
+  const addComment = () => {
+    if (commentInput.trim() !== "") {
+      const newComment: Comment = {
+        text: commentInput.trim(),
+        timestamp: new Date().toLocaleString(),
+      };
+      setContact((prev) => ({
+        ...prev,
+        comments: [...prev.comments, newComment],
+      }));
+      setCommentInput("");
     }
-    return "";
   };
 
-  const handleDossierBlur = (field: keyof Dossier, value: Dossier[typeof field]) => {
-    const error = validateDossierField(field, value);
-    setDossierErrors((prev) => ({ ...prev, [field]: error }));
-  };
-
-  // ====================
-  // IMAGE UPLOAD (DRAG & DROP)
-  // ====================
+  // Image Upload
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -237,757 +340,215 @@ export default function AddContactDossierPage() {
       setContact({ ...contact, imageUrl: e.dataTransfer.files[0] });
     }
   };
-  const handleImageDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
+  const handleImageDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
 
-  // ====================
-  // SUBMIT HANDLERS
-  // ====================
-  const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Unified Submit Handler
+  const handleUnifiedSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Validate required contact fields
-    const fieldsToValidate: (keyof Contact)[] = [
-      "prefix",
-      "firstName",
+    // Validate Contact fields
+    const contactRequiredFields: (keyof Contact)[] = [
       "lastName",
-      "email",
-      "phone",
-      "role",
-      "titre",
-      "tags",
+      "firstName",
+      "dateOfBirth",
       "mailingAddress",
+      "phone",
+      "email",
+      "department",
+      "gestionnaireSuivi",
     ];
-    const newErrors: Partial<Record<keyof Contact, string>> = {};
-    fieldsToValidate.forEach((field) => {
+    const newContactErrors: Partial<Record<keyof Contact, string>> = {};
+    contactRequiredFields.forEach((field) => {
       const error = validateContactField(field, contact[field]);
-      if (error) {
-        newErrors[field] = error;
+      if (error) newContactErrors[field] = error;
+    });
+    setContactErrors(newContactErrors);
+
+    // Validate Dossier fields
+    const newDossierErrors: { [key: string]: string } = {};
+    const logementFields: (keyof Dossier["informationLogement"])[] = [
+      "systemeChauffage",
+      "surfaceHabitable",
+      "typeCompteurElectrique",
+      "projetPropose",
+      "anneeConstruction",
+      "typeLogement",
+      "profileLogement",
+    ];
+    logementFields.forEach((field) => {
+      if (field === "projetPropose") {
+        if (!dossier.informationLogement.projetPropose || dossier.informationLogement.projetPropose.length === 0)
+          newDossierErrors[`informationLogement.${field}`] = "Ce champ est requis";
+      } else if (!dossier.informationLogement[field]) {
+        newDossierErrors[`informationLogement.${field}`] = "Ce champ est requis";
       }
     });
-    if (Object.keys(newErrors).length > 0) {
-      setContactErrors(newErrors);
-      return;
+    const aidesFields: (keyof Dossier["informationAides"])[] = [
+      "numeroDossierMPR",
+      "nombrePersonne",
+      "codePostale",
+      "zoneClimatique",
+      "rfr",
+      "mprColor",
+    ];
+    aidesFields.forEach((field) => {
+      if (!dossier.informationAides[field])
+        newDossierErrors[`informationAides.${field}`] = "Ce champ est requis";
+    });
+    if (dossier.informationAides.compteMPRExistant) {
+      if (!dossier.informationAides.mpremail) newDossierErrors["informationAides.mpremail"] = "Ce champ est requis";
+      if (!dossier.informationAides.mprpassword) newDossierErrors["informationAides.mprpassword"] = "Ce champ est requis";
     }
-
-    setContactSubmitting(true);
-
-    // Prepare FormData so we can handle file uploads (if an image was provided)
-    const formData = new FormData();
-    Object.entries(contact).forEach(([key, value]) => {
-      if (key === "tags") {
-        // Convert comma-separated tags into an array
-        formData.append(key, JSON.stringify((value as string).split(",").map((t: string) => t.trim())));
-      } else if (key === "imageUrl" && value) {
-        formData.append(key, value as File);
-      } else {
-        formData.append(key, value as string | Blob);
-      }
+    const projetFields: (keyof Pick<Dossier, "phaseProjet" | "typeTravaux">)[] = ["phaseProjet", "typeTravaux"];
+    projetFields.forEach((field) => {
+      if (!dossier[field]) newDossierErrors[field] = "Ce champ est requis";
     });
+    setDossierErrors(newDossierErrors);
+
+    if (Object.keys(newContactErrors).length > 0 || Object.keys(newDossierErrors).length > 0) return;
+
+    setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/contacts", {
+      // Build payload for API/contacts with the generated contactId
+      const contactPayload: ContactPayload = {
+        ...contact,
+        role: "Client / Customer (Client Portal)",
+        maprNumero: dossier.informationAides.numeroDossierMPR,
+        mpremail: dossier.informationAides.mpremail,
+        mprpassword: dossier.informationAides.mprpassword,
+        climateZone: dossier.informationAides.zoneClimatique,
+        rfr: dossier.informationAides.rfr,
+        eligible: dossier.informationAides.eligible,
+        contactId: createdContactId, // Include the generated ID
+      };
+
+      const formData = new FormData();
+      Object.entries(contactPayload).forEach(([key, value]) => {
+        if (key === "imageUrl" && value) formData.append(key, value as File);
+        else if (key === "comments") formData.append(key, JSON.stringify(value));
+        else formData.append(key, value as string | Blob);
+      });
+
+      // Post to API/contacts
+      await fetch("/api/contacts", {
         method: "POST",
         body: formData,
       });
-      const data = await response.json();
-      console.log("Contact created:", data);
-      setContactSubmitting(false);
-      router.back();
-    } catch (error) {
-      console.error("Error submitting contact form:", error);
-      setContactSubmitting(false);
-    }
-  };
 
-  const handleDossierSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+      // Build payload for API/dossiers
+      const dossierPayload = {
+        contactId: createdContactId,
+        numero: contact.numeroDossier,
+        assignedTeam: contact.gestionnaireSuivi,
+        projet: dossier.informationLogement.systemeChauffage,
+        surfaceChauffee: dossier.informationLogement.surfaceHabitable,
+        typeCompteurElectrique: dossier.informationLogement.typeCompteurElectrique,
+        solution: dossier.informationLogement.projetPropose.join(", "),
+        anneeConstruction: dossier.informationLogement.anneeConstruction,
+        typeDeLogement: dossier.informationLogement.typeLogement,
+        profil: dossier.informationLogement.profileLogement,
+        nombrePersonne: dossier.informationAides.nombrePersonne,
+        codePostal: dossier.informationAides.codePostale,
+        mprColor: dossier.informationAides.mprColor,
+        etape: dossier.phaseProjet,
+        typeTravaux: dossier.typeTravaux,
+      };
 
-    // Validate required dossier fields
-    const fieldsToValidate: (keyof Dossier)[] = [
-      "client",
-      "projet",
-      "solution",
-      "etape",
-      "valeur",
-      "assignedTeam",
-    ];
-    const newErrors: Partial<Record<keyof Dossier, string>> = {};
-    fieldsToValidate.forEach((field) => {
-      const error = validateDossierField(field, dossier[field]);
-      if (error) {
-        newErrors[field] = error;
-      }
-    });
-    if (Object.keys(newErrors).length > 0) {
-      setDossierErrors(newErrors);
-      return;
-    }
-
-    setDossierSubmitting(true);
-    try {
-      const response = await fetch("/api/dossiers", {
+      await fetch("/api/dossiers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dossier),
+        body: JSON.stringify(dossierPayload),
       });
-      const data = await response.json();
-      console.log("Dossier created:", data);
-      setDossierSubmitting(false);
+
+      // Post each comment to API/commentaires
+      for (const comment of contact.comments) {
+        const commentairePayload = {
+          contactId: createdContactId,
+          auteur: `${contact.firstName} ${contact.lastName}`.trim(),
+          date: comment.timestamp,
+          commentaire: comment.text,
+          linkedTo: contact.numeroDossier,
+        };
+        await fetch("/api/commentaires", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(commentairePayload),
+        });
+      }
+
+      setIsSubmitting(false);
       router.back();
     } catch (error) {
-      console.error("Error submitting dossier form:", error);
-      setDossierSubmitting(false);
+      console.error("Error submitting unified form:", error);
+      setIsSubmitting(false);
     }
   };
 
-  // ====================
-  // RENDER
-  // ====================
+  // Navigation for tab buttons
+  const currentTabIndex = tabs.findIndex((tab) => tab.key === activeTab);
+  const goToNextTab = () => {
+    if (currentTabIndex < tabs.length - 1) setActiveTab(tabs[currentTabIndex + 1].key);
+  };
+  const goToPreviousTab = () => {
+    if (currentTabIndex > 0) setActiveTab(tabs[currentTabIndex - 1].key);
+  };
+
+  // Prepare react-select value for "Projet proposé"
+  const projetSelectValue = projetOptions.filter((option) =>
+    dossier.informationLogement.projetPropose.includes(option.value)
+  );
+
   return (
-    <div className="flex h-screen bg-white">
-      {/* Sidebar (currently a placeholder; add content as needed) */}
-      <motion.div
-        className="relative border-r border-[#bfddf9]/30 bg-white"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Sidebar content can be added here */}
-      </motion.div>
-
-      {/* Main container */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header user={{ name: "Administrateur", avatar: "/admin-avatar.png" }} />
-
-        <main className="flex-1 overflow-y-auto p-8 space-y-10 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
-
-        {/* Page Title */}
-        <header className="mb-8">
+    <div className="flex h-screen bg-gray-50">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto p-8">
+          <header className="mb-8">
             <motion.h1
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-3xl lg:text-4xl font-extrabold text-[#1a365d]"
+              className="text-4xl font-extrabold text-gray-800"
             >
               Ajouter un client
             </motion.h1>
           </header>
-
-          {/* Wrap main content in a grid */}
-          <div className="">
-          <motion.div
-            className="flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div className="w-full">
-              {/* Tab Navigation */}
-              <div className="mb-6 flex space-x-4 border-b">
+          <div className="mb-6">
+            <div className="flex space-x-8 relative border-b border-gray-300">
+              {tabs.map((tab) => (
                 <button
-                  onClick={() => setActiveTab("contact")}
-                  className={`pb-2 ${
-                    activeTab === "contact"
-                      ? "border-b-2 border-indigo-500 text-indigo-500"
-                      : "text-gray-500"
-                  }`}
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className="relative pb-2 text-lg font-semibold transition-colors duration-200 ease-in-out text-gray-600 hover:text-indigo-600 focus:outline-none"
                 >
-                  Client
+                  {tab.label}
+                  {activeTab === tab.key && (
+                    <motion.div layoutId="underline" className="absolute left-0 right-0 -bottom-1 h-1 bg-indigo-600 rounded" />
+                  )}
                 </button>
-                <button
-                  onClick={() => setActiveTab("dossier")}
-                  className={`pb-2 ${
-                    activeTab === "dossier"
-                      ? "border-b-2 border-indigo-500 text-indigo-500"
-                      : "text-gray-500"
-                  }`}
-                >
-                  Dossier
-                </button>
-              </div>
-
-              {activeTab === "contact" ? (
-                <form onSubmit={handleContactSubmit} noValidate>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Prefix */}
+              ))}
+            </div>
+          </div>
+          <form onSubmit={handleUnifiedSubmit} noValidate>
+            <AnimatePresence>
+              {/* INFORMATION CLIENT TAB */}
+              {activeTab === "client" && (
+                <motion.div key="client" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white p-6 rounded-lg shadow-lg mb-8">
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Photo de profil */}
                     <div>
-                      <label htmlFor="prefix" className="block text-sm font-medium text-gray-700">
-                        Préfixe
-                      </label>
-                      <select
-                        id="prefix"
-                        value={contact.prefix}
-                        onChange={(e) =>
-                          setContact({ ...contact, prefix: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("prefix", e.target.value)
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      >
-                        <option value="">Sélectionnez</option>
-                        <option value="Mr">Mr</option>
-                        <option value="Mme">Mme</option>
-                        <option value="Mlle">Mlle</option>
-                      </select>
-                      {contactErrors.prefix && (
-                        <p className="text-red-500 text-xs mt-1">{contactErrors.prefix}</p>
-                      )}
-                    </div>
-                    {/* First Name */}
-                    <div>
-                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                        Prénom
-                      </label>
-                      <input
-                        type="text"
-                        id="firstName"
-                        value={contact.firstName}
-                        onChange={(e) =>
-                          setContact({ ...contact, firstName: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("firstName", e.target.value)
-                        }
-                        placeholder="Entrez le prénom"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {contactErrors.firstName && (
-                        <p className="text-red-500 text-xs mt-1">{contactErrors.firstName}</p>
-                      )}
-                    </div>
-                    {/* Last Name */}
-                    <div>
-                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                        Nom
-                      </label>
-                      <input
-                        type="text"
-                        id="lastName"
-                        value={contact.lastName}
-                        onChange={(e) =>
-                          setContact({ ...contact, lastName: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("lastName", e.target.value)
-                        }
-                        placeholder="Entrez le nom"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {contactErrors.lastName && (
-                        <p className="text-red-500 text-xs mt-1">{contactErrors.lastName}</p>
-                      )}
-                    </div>
-                    {/* Email */}
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        value={contact.email}
-                        onChange={(e) =>
-                          setContact({ ...contact, email: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("email", e.target.value)
-                        }
-                        placeholder="Entrez l'email"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {contactErrors.email && (
-                        <p className="text-red-500 text-xs mt-1">{contactErrors.email}</p>
-                      )}
-                    </div>
-                    {/* Phone */}
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                        Téléphone
-                      </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        value={contact.phone}
-                        onChange={(e) =>
-                          setContact({ ...contact, phone: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("phone", e.target.value)
-                        }
-                        placeholder="Entrez le numéro de téléphone"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {contactErrors.phone && (
-                        <p className="text-red-500 text-xs mt-1">{contactErrors.phone}</p>
-                      )}
-                    </div>
-                    {/* Role */}
-                    <div>
-                      <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                        Rôle
-                      </label>
-                      <select
-                        id="role"
-                        value={contact.role}
-                        onChange={(e) =>
-                          setContact({ ...contact, role: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("role", e.target.value)
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      >
-                        <option value="">Sélectionnez un rôle</option>
-                        <option value="Sales Representative / Account Executive">
-                          Représentant commercial / Chargé de compte
-                        </option>
-                        <option value="Project / Installation Manager">
-                          Chef de projet / Responsable installation
-                        </option>
-                        <option value="Technician / Installer">Technicien / Installateur</option>
-                        <option value="Customer Support / Service Representative">
-                          Support client / Représentant du service
-                        </option>
-                        <option value="Client / Customer (Client Portal)">Client (portail client)</option>
-                        <option value="Super Admin">Super administrateur</option>
-                      </select>
-                      {contactErrors.role && (
-                        <p className="text-red-500 text-xs mt-1">{contactErrors.role}</p>
-                      )}
-                    </div>
-                    {/* Titre */}
-                    <div>
-                      <label htmlFor="titre" className="block text-sm font-medium text-gray-700">
-                        Titre
-                      </label>
-                      <input
-                        type="text"
-                        id="titre"
-                        value={contact.titre}
-                        onChange={(e) =>
-                          setContact({ ...contact, titre: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("titre", e.target.value)
-                        }
-                        placeholder="Entrez le titre"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {contactErrors.titre && (
-                        <p className="text-red-500 text-xs mt-1">{contactErrors.titre}</p>
-                      )}
-                    </div>
-                    {/* Tags */}
-                    <div>
-                      <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
-                        Tags (séparés par des virgules)
-                      </label>
-                      <input
-                        type="text"
-                        id="tags"
-                        value={contact.tags}
-                        onChange={(e) =>
-                          setContact({ ...contact, tags: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("tags", e.target.value)
-                        }
-                        placeholder="Conseil, Stratégie"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {contactErrors.tags && (
-                        <p className="text-red-500 text-xs mt-1">{contactErrors.tags}</p>
-                      )}
-                    </div>
-                    {/* Suivi */}
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="suivi"
-                        checked={contact.suivi}
-                        onChange={(e) =>
-                          setContact({ ...contact, suivi: e.target.checked })
-                        }
-                      />
-                      <label htmlFor="suivi" className="text-sm text-gray-700">
-                        Suivi
-                      </label>
-                    </div>
-                    {/* Email Opted Out */}
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="emailOptedOut"
-                        checked={contact.emailOptedOut}
-                        onChange={(e) =>
-                          setContact({ ...contact, emailOptedOut: e.target.checked })
-                        }
-                      />
-                      <label htmlFor="emailOptedOut" className="text-sm text-gray-700">
-                        Email Opted Out
-                      </label>
-                    </div>
-                    {/* Home Phone */}
-                    <div>
-                      <label htmlFor="homePhone" className="block text-sm font-medium text-gray-700">
-                        Téléphone domicile
-                      </label>
-                      <input
-                        type="text"
-                        id="homePhone"
-                        value={contact.homePhone}
-                        onChange={(e) =>
-                          setContact({ ...contact, homePhone: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("homePhone", e.target.value)
-                        }
-                        placeholder="Entrez le téléphone domicile"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Mobile Phone */}
-                    <div>
-                      <label htmlFor="mobilePhone" className="block text-sm font-medium text-gray-700">
-                        Mobile
-                      </label>
-                      <input
-                        type="text"
-                        id="mobilePhone"
-                        value={contact.mobilePhone}
-                        onChange={(e) =>
-                          setContact({ ...contact, mobilePhone: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("mobilePhone", e.target.value)
-                        }
-                        placeholder="Entrez le mobile"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Other Phone */}
-                    <div>
-                      <label htmlFor="otherPhone" className="block text-sm font-medium text-gray-700">
-                        Autre téléphone
-                      </label>
-                      <input
-                        type="text"
-                        id="otherPhone"
-                        value={contact.otherPhone}
-                        onChange={(e) =>
-                          setContact({ ...contact, otherPhone: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("otherPhone", e.target.value)
-                        }
-                        placeholder="Entrez un autre téléphone"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Assistant Phone */}
-                    <div>
-                      <label htmlFor="assistantPhone" className="block text-sm font-medium text-gray-700">
-                        Téléphone assistant
-                      </label>
-                      <input
-                        type="text"
-                        id="assistantPhone"
-                        value={contact.assistantPhone}
-                        onChange={(e) =>
-                          setContact({ ...contact, assistantPhone: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("assistantPhone", e.target.value)
-                        }
-                        placeholder="Entrez le téléphone de l'assistant"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Assistant Name */}
-                    <div>
-                      <label htmlFor="assistantName" className="block text-sm font-medium text-gray-700">
-                        Nom de l&apos;assistant
-                      </label>
-                      <input
-                        type="text"
-                        id="assistantName"
-                        value={contact.assistantName}
-                        onChange={(e) =>
-                          setContact({ ...contact, assistantName: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("assistantName", e.target.value)
-                        }
-                        placeholder="Entrez le nom de l'assistant"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Fax */}
-                    <div>
-                      <label htmlFor="fax" className="block text-sm font-medium text-gray-700">
-                        Fax
-                      </label>
-                      <input
-                        type="text"
-                        id="fax"
-                        value={contact.fax}
-                        onChange={(e) =>
-                          setContact({ ...contact, fax: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("fax", e.target.value)
-                        }
-                        placeholder="Entrez le fax"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* LinkedIn */}
-                    <div>
-                      <label htmlFor="linkedIn" className="block text-sm font-medium text-gray-700">
-                        LinkedIn
-                      </label>
-                      <input
-                        type="text"
-                        id="linkedIn"
-                        value={contact.linkedIn}
-                        onChange={(e) =>
-                          setContact({ ...contact, linkedIn: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("linkedIn", e.target.value)
-                        }
-                        placeholder="linkedin.com/in/..."
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Facebook */}
-                    <div>
-                      <label htmlFor="facebook" className="block text-sm font-medium text-gray-700">
-                        Facebook
-                      </label>
-                      <input
-                        type="text"
-                        id="facebook"
-                        value={contact.facebook}
-                        onChange={(e) =>
-                          setContact({ ...contact, facebook: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("facebook", e.target.value)
-                        }
-                        placeholder="facebook.com/..."
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Twitter */}
-                    <div>
-                      <label htmlFor="twitter" className="block text-sm font-medium text-gray-700">
-                        Twitter
-                      </label>
-                      <input
-                        type="text"
-                        id="twitter"
-                        value={contact.twitter}
-                        onChange={(e) =>
-                          setContact({ ...contact, twitter: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("twitter", e.target.value)
-                        }
-                        placeholder="twitter.com/..."
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Mailing Address */}
-                    <div>
-                      <label htmlFor="mailingAddress" className="block text-sm font-medium text-gray-700">
-                        Adresse postale
-                      </label>
-                      <input
-                        type="text"
-                        id="mailingAddress"
-                        value={contact.mailingAddress}
-                        onChange={(e) =>
-                          setContact({ ...contact, mailingAddress: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("mailingAddress", e.target.value)
-                        }
-                        placeholder="Entrez l'adresse postale"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {contactErrors.mailingAddress && (
-                        <p className="text-red-500 text-xs mt-1">{contactErrors.mailingAddress}</p>
-                      )}
-                    </div>
-                    {/* Other Address */}
-                    <div>
-                      <label htmlFor="otherAddress" className="block text-sm font-medium text-gray-700">
-                        Autre adresse
-                      </label>
-                      <input
-                        type="text"
-                        id="otherAddress"
-                        value={contact.otherAddress}
-                        onChange={(e) =>
-                          setContact({ ...contact, otherAddress: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("otherAddress", e.target.value)
-                        }
-                        placeholder="Entrez une autre adresse"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Date to Remember */}
-                    <div>
-                      <label htmlFor="dateToRemember" className="block text-sm font-medium text-gray-700">
-                        Date à retenir
-                      </label>
-                      <input
-                        type="date"
-                        id="dateToRemember"
-                        value={contact.dateToRemember}
-                        onChange={(e) =>
-                          setContact({ ...contact, dateToRemember: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("dateToRemember", e.target.value)
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Date of Birth */}
-                    <div>
-                      <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
-                        Date de naissance
-                      </label>
-                      <input
-                        type="date"
-                        id="dateOfBirth"
-                        value={contact.dateOfBirth}
-                        onChange={(e) =>
-                          setContact({ ...contact, dateOfBirth: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("dateOfBirth", e.target.value)
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Description */}
-                    <div className="md:col-span-2">
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                        Description
-                      </label>
-                      <textarea
-                        id="description"
-                        value={contact.description}
-                        onChange={(e) =>
-                          setContact({ ...contact, description: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("description", e.target.value)
-                        }
-                        placeholder="Entrez la description"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Department */}
-                    <div>
-                      <label htmlFor="department" className="block text-sm font-medium text-gray-700">
-                        Département
-                      </label>
-                      <input
-                        type="text"
-                        id="department"
-                        value={contact.department}
-                        onChange={(e) =>
-                          setContact({ ...contact, department: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("department", e.target.value)
-                        }
-                        placeholder="Entrez le département"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Climate Zone */}
-                    <div>
-                      <label htmlFor="climateZone" className="block text-sm font-medium text-gray-700">
-                        Zone climatique
-                      </label>
-                      <input
-                        type="text"
-                        id="climateZone"
-                        value={contact.climateZone}
-                        onChange={(e) =>
-                          setContact({ ...contact, climateZone: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("climateZone", e.target.value)
-                        }
-                        placeholder="Entrez la zone climatique"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Heating Type */}
-                    <div>
-                      <label htmlFor="heatingType" className="block text-sm font-medium text-gray-700">
-                        Type de chauffage
-                      </label>
-                      <input
-                        type="text"
-                        id="heatingType"
-                        value={contact.heatingType}
-                        onChange={(e) =>
-                          setContact({ ...contact, heatingType: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("heatingType", e.target.value)
-                        }
-                        placeholder="Entrez le type de chauffage"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* RFR */}
-                    <div>
-                      <label htmlFor="rfr" className="block text-sm font-medium text-gray-700">
-                        RFR
-                      </label>
-                      <input
-                        type="text"
-                        id="rfr"
-                        value={contact.rfr}
-                        onChange={(e) =>
-                          setContact({ ...contact, rfr: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("rfr", e.target.value)
-                        }
-                        placeholder="Entrez le RFR"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                    </div>
-                    {/* Image Upload */}
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">Image (facultatif)</label>
+                      <label className="block text-sm font-medium text-gray-700">Photo de profil (facultatif)</label>
                       <div
                         onDrop={handleImageDrop}
                         onDragOver={handleImageDragOver}
-                        onClick={() => {
-                          if (fileInputRef.current) {
-                            fileInputRef.current.click();
-                          }
-                        }}
-                        className="mt-1 flex items-center justify-center border-2 border-dashed border-gray-300 p-4 rounded-md cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="mt-2 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:bg-gray-50 transition-colors"
                       >
                         {contact.imageUrl ? (
-                          <p>{contact.imageUrl.name}</p>
+                          <p className="text-gray-600">{contact.imageUrl.name}</p>
                         ) : (
-                          <p>Glissez-déposez une image ou cliquez pour sélectionner</p>
+                          <p className="text-gray-500">Glissez-déposez ou cliquez pour sélectionner</p>
                         )}
                         <input
                           type="file"
@@ -1002,498 +563,315 @@ export default function AddContactDossierPage() {
                         />
                       </div>
                     </div>
-                    {/* Secteur */}
-                    <div>
-                      <label htmlFor="secteur" className="block text-sm font-medium text-gray-700">
-                        Secteur
-                      </label>
-                      <input
-                        type="text"
-                        id="secteur"
-                        value={contact.secteur}
-                        onChange={(e) =>
-                          setContact({ ...contact, secteur: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("secteur", e.target.value)
-                        }
-                        placeholder="Entrez le secteur"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
+                    {/* Nom & Prénom */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Nom</label>
+                        <input type="text" id="lastName" value={contact.lastName} onChange={(e) => setContact({ ...contact, lastName: e.target.value })} onBlur={(e) => handleContactBlur("lastName", e.target.value)} placeholder="Entrez le nom" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        {contactErrors.lastName && <p className="mt-1 text-xs text-red-500">{contactErrors.lastName}</p>}
+                      </div>
+                      <div>
+                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Prénom</label>
+                        <input type="text" id="firstName" value={contact.firstName} onChange={(e) => setContact({ ...contact, firstName: e.target.value })} onBlur={(e) => handleContactBlur("firstName", e.target.value)} placeholder="Entrez le prénom" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        {contactErrors.firstName && <p className="mt-1 text-xs text-red-500">{contactErrors.firstName}</p>}
+                      </div>
                     </div>
-                    {/* MAPR Email */}
+                    {/* Date de naissance */}
                     <div>
-                      <label htmlFor="maprEmail" className="block text-sm font-medium text-gray-700">
-                        MAPR Email
-                      </label>
-                      <input
-                        type="text"
-                        id="maprEmail"
-                        value={contact.maprEmail}
-                        onChange={(e) =>
-                          setContact({ ...contact, maprEmail: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("maprEmail", e.target.value)
-                        }
-                        placeholder="Entrez le MAPR Email"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
+                      <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">Date de naissance</label>
+                      <input type="date" id="dateOfBirth" value={contact.dateOfBirth} onChange={(e) => setContact({ ...contact, dateOfBirth: e.target.value })} onBlur={(e) => handleContactBlur("dateOfBirth", e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {contactErrors.dateOfBirth && <p className="mt-1 text-xs text-red-500">{contactErrors.dateOfBirth}</p>}
                     </div>
-                    {/* MAPR Numero */}
-                    <div>
-                      <label htmlFor="maprNumero" className="block text-sm font-medium text-gray-700">
-                        MAPR Numero
-                      </label>
-                      <input
-                        type="text"
-                        id="maprNumero"
-                        value={contact.maprNumero}
-                        onChange={(e) =>
-                          setContact({ ...contact, maprNumero: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("maprNumero", e.target.value)
-                        }
-                        placeholder="Entrez le MAPR Numero"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
+                    {/* Adresse */}
+                    <div className="relative">
+                      <label htmlFor="mailingAddress" className="block text-sm font-medium text-gray-700">Adresse</label>
+                      <input type="text" id="mailingAddress" value={contact.mailingAddress} onChange={handleAddressChange} placeholder="Entrez l'adresse" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {addressSuggestions.length > 0 && (
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
+                          {addressSuggestions.map((suggestion) => (
+                            <li key={suggestion.properties.id || suggestion.properties.label} onClick={() => selectAddressSuggestion(suggestion)} className="cursor-pointer px-3 py-2 hover:bg-indigo-100">
+                              {suggestion.properties.label}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                    {/* MPR Password */}
+                    {/* Téléphone */}
                     <div>
-                      <label htmlFor="mprPassword" className="block text-sm font-medium text-gray-700">
-                        MPR Password
-                      </label>
-                      <input
-                        type="text"
-                        id="mprPassword"
-                        value={contact.mprPassword}
-                        onChange={(e) =>
-                          setContact({ ...contact, mprPassword: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleContactBlur("mprPassword", e.target.value)
-                        }
-                        placeholder="Entrez le MPR Password"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
+                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Téléphone</label>
+                      <input type="tel" id="phone" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} onBlur={(e) => handleContactBlur("phone", e.target.value)} placeholder="Entrez le numéro de téléphone" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {contactErrors.phone && <p className="mt-1 text-xs text-red-500">{contactErrors.phone}</p>}
+                    </div>
+                    {/* Email */}
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                      <input type="email" id="email" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} onBlur={(e) => handleContactBlur("email", e.target.value)} placeholder="Entrez l'email" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {contactErrors.email && <p className="mt-1 text-xs text-red-500">{contactErrors.email}</p>}
+                    </div>
+                    {/* Numéro de dossier (read-only) */}
+                    <div>
+                      <label htmlFor="numeroDossier" className="block text-sm font-medium text-gray-700">Numéro de dossier</label>
+                      <input type="text" id="numeroDossier" value={contact.numeroDossier} readOnly className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2" />
+                    </div>
+                    {/* Département (read-only) */}
+                    <div>
+                      <label htmlFor="department" className="block text-sm font-medium text-gray-700">Département</label>
+                      <input type="text" id="department" value={contact.department} readOnly className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2" />
+                    </div>
+                    {/* Preview Contact ID (read-only) */}
+                    <div>
+                      <label htmlFor="contactId" className="block text-sm font-medium text-gray-700">Contact ID</label>
+                      <input type="text" id="contactId" value={createdContactId} readOnly className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2" />
+                    </div>
+                    {/* Gestionnaire de suivi */}
+                    <div>
+                      <label htmlFor="gestionnaireSuivi" className="block text-sm font-medium text-gray-700">Gestionnaire de suivi</label>
+                      <select id="gestionnaireSuivi" value={contact.gestionnaireSuivi} onChange={(e) => setContact({ ...contact, gestionnaireSuivi: e.target.value })} onBlur={(e) => handleContactBlur("gestionnaireSuivi", e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Sélectionnez un gestionnaire</option>
+                        {users.map((user) => {
+                          const name = user.firstName || user.lastName
+                            ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
+                            : user.email;
+                          return <option key={user._id} value={user._id}>{name} {user.role ? `(${user.role})` : ""}</option>;
+                        })}
+                      </select>
+                      {contactErrors.gestionnaireSuivi && <p className="mt-1 text-xs text-red-500">{contactErrors.gestionnaireSuivi}</p>}
+                    </div>
+                    {/* Commentaires */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700">Commentaires</label>
+                      <div className="border border-gray-300 rounded-lg p-4 h-40 overflow-y-auto bg-blue-50">
+                        {contact.comments.map((comment, index) => (
+                          <div key={index} className="mb-2">
+                            <div className="bg-white rounded-lg p-2 shadow-sm">
+                              <p className="text-sm text-gray-800">{comment.text}</p>
+                              <span className="block text-xs text-gray-500 text-right">{comment.timestamp}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2 flex">
+                        <input type="text" value={commentInput} onChange={(e) => setCommentInput(e.target.value)} placeholder="Ajouter un commentaire..." className="flex-1 rounded-l-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        <Button type="button" variant="primary" onClick={addComment}>Ajouter</Button>
+                      </div>
                     </div>
                   </div>
-                  {/* Action Buttons */}
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <Button variant="outline" onClick={() => router.back()} disabled={contactSubmitting}>
-                      Annuler
-                    </Button>
-                    <Button type="submit" variant="primary" disabled={contactSubmitting}>
-                      {contactSubmitting ? (
-                        <svg
-                          className="animate-spin h-5 w-5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                          ></path>
-                        </svg>
-                      ) : (
-                        "Ajouter Contact"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <form onSubmit={handleDossierSubmit} noValidate>
-                  <div className="grid grid-cols-1 gap-4">
-                    {/* Client */}
+                </motion.div>
+              )}
+
+              {/* INFORMATION DE L'HABITATION TAB */}
+              {activeTab === "habitation" && (
+                <motion.div key="habitation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white p-6 rounded-lg shadow-lg mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Système de chauffage */}
                     <div>
-                      <label htmlFor="client" className="block text-sm font-medium text-gray-700">
-                        Client
-                      </label>
-                      <input
-                        type="text"
-                        id="client"
-                        value={dossier.client}
-                        onChange={(e) =>
-                          setDossier({ ...dossier, client: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleDossierBlur("client", e.target.value)
-                        }
-                        placeholder="Nom du client"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {dossierErrors.client && (
-                        <p className="text-red-500 text-xs mt-1">{dossierErrors.client}</p>
-                      )}
+                      <label htmlFor="systemeChauffage" className="block text-sm font-medium text-gray-700">Système de chauffage</label>
+                      <input type="text" id="systemeChauffage" value={dossier.informationLogement.systemeChauffage} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, systemeChauffage: e.target.value } })} placeholder="Ex: Chaudière gaz, pompe à chaleur..." className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {dossierErrors["informationLogement.systemeChauffage"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.systemeChauffage"]}</p>}
                     </div>
-                    {/* Projet */}
+                    {/* Surface habitable */}
                     <div>
-                      <label htmlFor="projet" className="block text-sm font-medium text-gray-700">
-                        Projet
-                      </label>
-                      <input
-                        type="text"
-                        id="projet"
-                        value={dossier.projet}
-                        onChange={(e) =>
-                          setDossier({ ...dossier, projet: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleDossierBlur("projet", e.target.value)
-                        }
-                        placeholder="Nom du projet"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {dossierErrors.projet && (
-                        <p className="text-red-500 text-xs mt-1">{dossierErrors.projet}</p>
-                      )}
+                      <label htmlFor="surfaceHabitable" className="block text-sm font-medium text-gray-700">Surface habitable (m²)</label>
+                      <input type="number" id="surfaceHabitable" value={dossier.informationLogement.surfaceHabitable} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, surfaceHabitable: e.target.value } })} placeholder="Ex: 180" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {dossierErrors["informationLogement.surfaceHabitable"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.surfaceHabitable"]}</p>}
                     </div>
-                    {/* Solution */}
+                    {/* Type de compteur électrique */}
                     <div>
-                      <label htmlFor="solution" className="block text-sm font-medium text-gray-700">
-                        Solution
-                      </label>
-                      <select
-                        id="solution"
-                        value={dossier.solution}
-                        onChange={(e) =>
-                          setDossier({ ...dossier, solution: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleDossierBlur("solution", e.target.value)
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      >
-                        <option value="">Sélectionnez une solution</option>
-                        <option value="Pompes a chaleur">Pompes a chaleur</option>
-                        <option value="Chauffe-eau solaire individuel">Chauffe-eau solaire individuel</option>
-                        <option value="Chauffe-eau thermodynamique">Chauffe-eau thermodynamique</option>
-                        <option value="Système Solaire Combiné">Système Solaire Combiné</option>
+                      <label htmlFor="typeCompteurElectrique" className="block text-sm font-medium text-gray-700">Type de compteur électrique</label>
+                      <select id="typeCompteurElectrique" value={dossier.informationLogement.typeCompteurElectrique} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, typeCompteurElectrique: e.target.value } })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Sélectionnez</option>
+                        <option value="Monophasé">Monophasé</option>
+                        <option value="Biphasé">Biphasé</option>
+                        <option value="Triphasé">Triphasé</option>
                       </select>
-                      {dossierErrors.solution && (
-                        <p className="text-red-500 text-xs mt-1">{dossierErrors.solution}</p>
-                      )}
+                      {dossierErrors["informationLogement.typeCompteurElectrique"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.typeCompteurElectrique"]}</p>}
                     </div>
-                    {/* Étape */}
+                    {/* Projet proposé (Multi-select) */}
                     <div>
-                      <label htmlFor="etape" className="block text-sm font-medium text-gray-700">
-                        Étape
-                      </label>
-                      <select
-                        id="etape"
-                        value={dossier.etape}
-                        onChange={(e) =>
-                          setDossier({ ...dossier, etape: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleDossierBlur("etape", e.target.value)
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      >
-                        <option value="">Sélectionnez une étape</option>
-                        <option value="1Prise de contact">1 – Prise de contact</option>
-                        <option value="2En attente des documents">2 – En attente des documents</option>
-                        <option value="3Instruction du dossier">3 – Instruction du dossier</option>
-                        <option value="4Dossier Accepter">4 – Dossier accepté</option>
-                        <option value="5Installation">5 – Installation</option>
-                        <option value="6Controle">6 – Contrôle</option>
-                        <option value="7Dossier cloturer">7 – Dossier clôturé</option>
-                      </select>
-                      {dossierErrors.etape && (
-                        <p className="text-red-500 text-xs mt-1">{dossierErrors.etape}</p>
-                      )}
-                    </div>
-                    {/* Valeur */}
-                    <div>
-                      <label htmlFor="valeur" className="block text-sm font-medium text-gray-700">
-                        Valeur
-                      </label>
-                      <input
-                        type="number"
-                        id="valeur"
-                        value={dossier.valeur}
-                        onChange={(e) =>
-                          setDossier({ ...dossier, valeur: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleDossierBlur("valeur", e.target.value)
-                        }
-                        placeholder="Entrez la valeur"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
+                      <label htmlFor="projetPropose" className="block text-sm font-medium text-gray-700">Projet proposé</label>
+                      <Select
+                        isMulti
+                        options={projetOptions}
+                        value={projetSelectValue}
+                        onChange={(
+                          selectedOptions: MultiValue<{ value: string; label: string }>
+                        ) => {
+                          const values = selectedOptions ? selectedOptions.map((option) => option.value) : [];
+                          setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, projetPropose: values } });
+                        }}
+                        placeholder="Sélectionnez..."
+                        className="mt-1"
                       />
-                      {dossierErrors.valeur && (
-                        <p className="text-red-500 text-xs mt-1">{dossierErrors.valeur}</p>
-                      )}
+                      {dossierErrors["informationLogement.projetPropose"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.projetPropose"]}</p>}
                     </div>
-                    {/* Assigned Team */}
+                    {/* Année de construction */}
                     <div>
-                      <label htmlFor="assignedTeam" className="block text-sm font-medium text-gray-700">
-                        Équipe assignée
-                      </label>
-                      <select
-                        id="assignedTeam"
-                        value={dossier.assignedTeam}
-                        onChange={(e) =>
-                          setDossier({ ...dossier, assignedTeam: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleDossierBlur("assignedTeam", e.target.value)
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      >
-                        <option value="">Sélectionnez une équipe</option>
-                        {teams.map((team) => (
-                          <option key={team.id} value={team.id}>
-                            {team.name}
+                      <label htmlFor="anneeConstruction" className="block text-sm font-medium text-gray-700">Année de construction</label>
+                      <input type="number" id="anneeConstruction" value={dossier.informationLogement.anneeConstruction} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, anneeConstruction: e.target.value } })} placeholder="Ex: 1998" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {dossierErrors["informationLogement.anneeConstruction"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.anneeConstruction"]}</p>}
+                    </div>
+                    {/* Type de logement */}
+                    <div>
+                      <label htmlFor="typeLogement" className="block text-sm font-medium text-gray-700">Type de logement</label>
+                      <select id="typeLogement" value={dossier.informationLogement.typeLogement} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, typeLogement: e.target.value } })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Sélectionnez</option>
+                        {typeLogementOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
                           </option>
                         ))}
                       </select>
-                      {dossierErrors.assignedTeam && (
-                        <p className="text-red-500 text-xs mt-1">{dossierErrors.assignedTeam}</p>
-                      )}
+                      {dossierErrors["informationLogement.typeLogement"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.typeLogement"]}</p>}
                     </div>
-                    {/* Notes */}
+                    {/* Profil */}
                     <div>
-                      <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                        Notes
-                      </label>
-                      <textarea
-                        id="notes"
-                        value={dossier.notes}
-                        onChange={(e) =>
-                          setDossier({ ...dossier, notes: e.target.value })
-                        }
-                        onBlur={(e) =>
-                          handleDossierBlur("notes", e.target.value)
-                        }
-                        placeholder="Entrez des notes"
-                        className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                      />
-                      {dossierErrors.notes && (
-                        <p className="text-red-500 text-xs mt-1">{dossierErrors.notes}</p>
+                      <label htmlFor="profileLogement" className="block text-sm font-medium text-gray-700">Profil</label>
+                      <select id="profileLogement" value={dossier.informationLogement.profileLogement} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, profileLogement: e.target.value } })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Sélectionnez</option>
+                        {profileLogementOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      {dossierErrors["informationLogement.profileLogement"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.profileLogement"]}</p>}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* INFORMATION DES AIDES TAB */}
+              {activeTab === "aides" && (
+                <motion.div key="aides" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white p-6 rounded-lg shadow-lg mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Numéro de dossier MPR */}
+                    <div>
+                      <label htmlFor="numeroDossierMPR" className="block text-sm font-medium text-gray-700">Numéro de dossier MPR</label>
+                      <input type="text" id="numeroDossierMPR" value={dossier.informationAides.numeroDossierMPR} onChange={(e) => setDossier({ ...dossier, informationAides: { ...dossier.informationAides, numeroDossierMPR: e.target.value } })} placeholder="Entrez le numéro MPR" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {dossierErrors["informationAides.numeroDossierMPR"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.numeroDossierMPR"]}</p>}
+                    </div>
+                    {/* Compte MPR existant ? */}
+                    <div className="flex items-center space-x-3">
+                      <input type="checkbox" id="compteMPRExistant" checked={dossier.informationAides.compteMPRExistant} onChange={(e) => setDossier({ ...dossier, informationAides: { ...dossier.informationAides, compteMPRExistant: e.target.checked } })} className="h-5 w-5 text-indigo-600 focus:ring-indigo-500" />
+                      <label htmlFor="compteMPRExistant" className="text-sm font-medium text-gray-700">Compte MPR existant ?</label>
+                    </div>
+                    {/* Conditionally show MPR Access fields */}
+                    {dossier.informationAides.compteMPRExistant && (
+                      <>
+                        <div>
+                          <label htmlFor="mpremail" className="block text-sm font-medium text-gray-700">Accès Ma Prime Renov - Email</label>
+                          <input type="email" id="mpremail" value={dossier.informationAides.mpremail} onChange={(e) => setDossier({ ...dossier, informationAides: { ...dossier.informationAides, mpremail: e.target.value } })} placeholder="Entrez l'email d'accès" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                          {dossierErrors["informationAides.mpremail"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mpremail"]}</p>}
+                        </div>
+                        <div>
+                          <label htmlFor="mprpassword" className="block text-sm font-medium text-gray-700">Accès Ma Prime Renov - Mot de passe</label>
+                          <input type="password" id="mprpassword" value={dossier.informationAides.mprpassword} onChange={(e) => setDossier({ ...dossier, informationAides: { ...dossier.informationAides, mprpassword: e.target.value } })} placeholder="Entrez le mot de passe" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                          {dossierErrors["informationAides.mprpassword"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mprpassword"]}</p>}
+                        </div>
+                      </>
+                    )}
+                    {/* Nombre de personne */}
+                    <div>
+                      <label htmlFor="nombrePersonne" className="block text-sm font-medium text-gray-700">Nombre de personne</label>
+                      <input type="number" id="nombrePersonne" value={dossier.informationAides.nombrePersonne} onChange={(e) => setDossier({ ...dossier, informationAides: { ...dossier.informationAides, nombrePersonne: e.target.value } })} placeholder="Ex: 4" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {dossierErrors["informationAides.nombrePersonne"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.nombrePersonne"]}</p>}
+                    </div>
+                    {/* Code postal (read-only) */}
+                    <div>
+                      <label htmlFor="codePostale" className="block text-sm font-medium text-gray-700">Code postal</label>
+                      <input type="text" id="codePostale" value={dossier.informationAides.codePostale} readOnly className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2" />
+                    </div>
+                    {/* Zone climatique (read-only) */}
+                    <div>
+                      <label htmlFor="zoneClimatique" className="block text-sm font-medium text-gray-700">Zone climatique</label>
+                      <input type="text" id="zoneClimatique" value={dossier.informationAides.zoneClimatique} readOnly className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2" />
+                      {dossierErrors["informationAides.zoneClimatique"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.zoneClimatique"]}</p>}
+                    </div>
+                    {/* Revenue Fiscal de Référence */}
+                    <div>
+                      <label htmlFor="rfr" className="block text-sm font-medium text-gray-700">Revenue Fiscal de Référence</label>
+                      <input type="text" id="rfr" value={dossier.informationAides.rfr} onChange={(e) => setDossier({ ...dossier, informationAides: { ...dossier.informationAides, rfr: e.target.value } })} placeholder="Entrez le RFR" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {dossierErrors["informationAides.rfr"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.rfr"]}</p>}
+                    </div>
+                    {/* MPR Color (read-only with visual indicator) */}
+                    <div>
+                      <label htmlFor="mprColor" className="block text-sm font-medium text-gray-700">Ma Prime Renov Couleur</label>
+                      <div className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2">
+                        <span className={`font-semibold ${dossier.informationAides.mprColor === "vert" ? "text-green-700" : "text-red-700"}`}>
+                          {dossier.informationAides.mprColor}
+                        </span>
+                      </div>
+                      {dossierErrors["informationAides.mprColor"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mprColor"]}</p>}
+                    </div>
+                    {/* Eligible Badge */}
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm font-medium text-gray-700">Eligible :</span>
+                      {dossier.informationAides.eligible ? (
+                        <span className="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">Eligible</span>
+                      ) : (
+                        <span className="px-2 py-1 rounded bg-red-100 text-red-700 text-xs font-semibold">Non Eligible</span>
                       )}
                     </div>
-                    {/* Information Logement */}
-                    <fieldset className="border p-4">
-                      <legend className="text-lg font-medium text-gray-700">Information Logement</legend>
-                      {/* Type de Logement */}
-                      <div>
-                        <label htmlFor="typeDeLogement" className="block text-sm font-medium text-gray-700">
-                          Type de Logement
-                        </label>
-                        <select
-                          id="typeDeLogement"
-                          value={dossier.informationLogement.typeDeLogement}
-                          onChange={(e) =>
-                            setDossier({
-                              ...dossier,
-                              informationLogement: { ...dossier.informationLogement, typeDeLogement: e.target.value },
-                            })
-                          }
-                          className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                        >
-                          <option value="">Sélectionnez un type</option>
-                          <option value="maison">Maison</option>
-                          <option value="appartement">Appartement</option>
-                          <option value="autre">Autre</option>
-                        </select>
-                      </div>
-                      {/* Surface Habitable */}
-                      <div>
-                        <label htmlFor="surfaceHabitable" className="block text-sm font-medium text-gray-700">
-                          Surface Habitable
-                        </label>
-                        <input
-                          type="number"
-                          id="surfaceHabitable"
-                          value={dossier.informationLogement.surfaceHabitable}
-                          onChange={(e) =>
-                            setDossier({
-                              ...dossier,
-                              informationLogement: { ...dossier.informationLogement, surfaceHabitable: e.target.value },
-                            })
-                          }
-                          placeholder="Ex: 180"
-                          className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                        />
-                      </div>
-                      {/* Année Construction */}
-                      <div>
-                        <label htmlFor="anneeConstruction" className="block text-sm font-medium text-gray-700">
-                          Année de Construction
-                        </label>
-                        <input
-                          type="number"
-                          id="anneeConstruction"
-                          value={dossier.informationLogement.anneeConstruction}
-                          onChange={(e) =>
-                            setDossier({
-                              ...dossier,
-                              informationLogement: { ...dossier.informationLogement, anneeConstruction: e.target.value },
-                            })
-                          }
-                          placeholder="Ex: 1978"
-                          className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                        />
-                      </div>
-                      {/* Système Chauffage */}
-                      <div>
-                        <label htmlFor="systemeChauffage" className="block text-sm font-medium text-gray-700">
-                          Système de Chauffage
-                        </label>
-                        <input
-                          type="text"
-                          id="systemeChauffage"
-                          value={dossier.informationLogement.systemeChauffage}
-                          onChange={(e) =>
-                            setDossier({
-                              ...dossier,
-                              informationLogement: { ...dossier.informationLogement, systemeChauffage: e.target.value },
-                            })
-                          }
-                          placeholder="Entrez le système de chauffage"
-                          className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                        />
-                      </div>
-                    </fieldset>
-                    {/* Information Travaux */}
-                    <fieldset className="border p-4">
-                      <legend className="text-lg font-medium text-gray-700">Information Travaux</legend>
-                      {/* Type Travaux */}
-                      <div>
-                        <label htmlFor="typeTravaux" className="block text-sm font-medium text-gray-700">
-                          Type de Travaux
-                        </label>
-                        <input
-                          type="text"
-                          id="typeTravaux"
-                          value={dossier.informationTravaux.typeTravaux}
-                          onChange={(e) =>
-                            setDossier({
-                              ...dossier,
-                              informationTravaux: { ...dossier.informationTravaux, typeTravaux: e.target.value },
-                            })
-                          }
-                          placeholder="Entrez le type de travaux"
-                          className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                        />
-                      </div>
-                      {/* Type Utilisation */}
-                      <div>
-                        <label htmlFor="typeUtilisation" className="block text-sm font-medium text-gray-700">
-                          Type d&apos;Utilisation
-                        </label>
-                        <input
-                          type="text"
-                          id="typeUtilisation"
-                          value={dossier.informationTravaux.typeUtilisation}
-                          onChange={(e) =>
-                            setDossier({
-                              ...dossier,
-                              informationTravaux: { ...dossier.informationTravaux, typeUtilisation: e.target.value },
-                            })
-                          }
-                          placeholder="Entrez le type d'utilisation"
-                          className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                        />
-                      </div>
-                      {/* Surface Chauffée */}
-                      <div>
-                        <label htmlFor="surfaceChauffee" className="block text-sm font-medium text-gray-700">
-                          Surface Chauffée
-                        </label>
-                        <input
-                          type="number"
-                          id="surfaceChauffee"
-                          value={dossier.informationTravaux.surfaceChauffee}
-                          onChange={(e) =>
-                            setDossier({
-                              ...dossier,
-                              informationTravaux: { ...dossier.informationTravaux, surfaceChauffee: e.target.value },
-                            })
-                          }
-                          placeholder="Ex: 180"
-                          className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                        />
-                      </div>
-                      {/* Circuit Chauffage Fonctionnel */}
-                      <div>
-                        <label htmlFor="circuitChauffageFonctionnel" className="block text-sm font-medium text-gray-700">
-                          Circuit Chauffage Fonctionnel
-                        </label>
-                        <select
-                          id="circuitChauffageFonctionnel"
-                          value={dossier.informationTravaux.circuitChauffageFonctionnel}
-                          onChange={(e) =>
-                            setDossier({
-                              ...dossier,
-                              informationTravaux: { ...dossier.informationTravaux, circuitChauffageFonctionnel: e.target.value },
-                            })
-                          }
-                          className="mt-1 block w-full rounded-md border-gray-300 p-2"
-                        >
-                          <option value="">Sélectionnez</option>
-                          <option value="Oui">Oui</option>
-                          <option value="Non">Non</option>
-                        </select>
-                      </div>
-                    </fieldset>
                   </div>
-                  {/* Action Buttons */}
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <Button variant="outline" onClick={() => router.back()} disabled={dossierSubmitting}>
-                      Annuler
-                    </Button>
-                    <Button type="submit" variant="primary" disabled={dossierSubmitting}>
-                      {dossierSubmitting ? (
-                        <svg
-                          className="animate-spin h-5 w-5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                          ></path>
-                        </svg>
-                      ) : (
-                        "Ajouter Dossier"
-                      )}
-                    </Button>
+                </motion.div>
+              )}
+
+              {/* LE PROJET TAB */}
+              {activeTab === "projet" && (
+                <motion.div key="projet" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white p-6 rounded-lg shadow-lg mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Phase du projet */}
+                    <div>
+                      <label htmlFor="phaseProjet" className="block text-sm font-medium text-gray-700">Phase du projet</label>
+                      <select id="phaseProjet" value={dossier.phaseProjet} onChange={(e) => setDossier({ ...dossier, phaseProjet: e.target.value })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Sélectionnez</option>
+                        {phaseProjetOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {dossierErrors.phaseProjet && <p className="mt-1 text-xs text-red-500">{dossierErrors.phaseProjet}</p>}
+                    </div>
+                    {/* Type de travaux (dropdown) */}
+                    <div>
+                      <label htmlFor="typeTravaux" className="block text-sm font-medium text-gray-700">Type de travaux</label>
+                      <select id="typeTravaux" value={dossier.typeTravaux} onChange={(e) => setDossier({ ...dossier, typeTravaux: e.target.value })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Sélectionnez</option>
+                        {travauxOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {dossierErrors.typeTravaux && <p className="mt-1 text-xs text-red-500">{dossierErrors.typeTravaux}</p>}
+                    </div>
                   </div>
-                </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Final Action Buttons */}
+            <div className="mt-8 flex justify-end space-x-4">
+              {currentTabIndex > 0 && <Button variant="outline" onClick={goToPreviousTab} disabled={isSubmitting}>Précédent</Button>}
+              {activeTab !== "projet" ? (
+                <Button variant="primary" onClick={goToNextTab} disabled={isSubmitting}>Suivant</Button>
+              ) : (
+                <Button type="submit" variant="primary" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                  ) : (
+                    "Envoyer"
+                  )}
+                </Button>
               )}
             </div>
-          </motion.div>
-
-          </div>
-
+          </form>
         </main>
-
       </div>
-
-      
     </div>
   );
 }

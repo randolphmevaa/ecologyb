@@ -100,7 +100,7 @@ export default function SupportCalendarDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50">
       {/* Common Header */}
-      <Header user={{ name: "Support Rep", avatar: "/support-avatar.png" }} />
+      <Header />
 
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}

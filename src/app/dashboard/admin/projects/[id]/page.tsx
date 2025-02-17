@@ -51,6 +51,7 @@ interface DossierFormData {
   valeur: string;
   assignedTeam: string;
   notes: string;
+  nombrePersonnes: string;
   informationLogement: {
     typeDeLogement: string;
     surfaceHabitable: string;
@@ -82,6 +83,7 @@ interface User {
 }
 
 type Dossier = {
+  nombrePersonnes: string;
   _id: string;
   numero: string;
   client: string;
@@ -907,6 +909,7 @@ export default function ProjectDetailPage() {
     valeur: "",
     assignedTeam: "",
     notes: "",
+    nombrePersonnes: "",
     informationLogement: {
       typeDeLogement: "",
       surfaceHabitable: "",
@@ -960,6 +963,7 @@ export default function ProjectDetailPage() {
             valeur: data.valeur,
             assignedTeam: data.assignedTeam || "",
             notes: data.notes || "",
+            nombrePersonnes: data.nombrePersonnes,
             informationLogement: data.informationLogement
               ? { ...data.informationLogement }
               : {
@@ -1039,6 +1043,7 @@ export default function ProjectDetailPage() {
         valeur: dossier.valeur,
         assignedTeam: dossier.assignedTeam || "",
         notes: dossier.notes || "",
+        nombrePersonnes: dossier?.nombrePersonnes,
         informationLogement: dossier.informationLogement
           ? { ...dossier.informationLogement }
           : {
@@ -1117,7 +1122,7 @@ export default function ProjectDetailPage() {
   return (
     <div className="flex h-screen bg-white">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header user={{ name: "Administrateur", avatar: "/admin-avatar.png" }} />
+        <Header />
         <main className="flex-1 overflow-y-auto p-8 space-y-8 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
         
         <div className="relative">

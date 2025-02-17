@@ -1,6 +1,8 @@
+// app/dashboard/support/layout.tsx
 import React, { ReactNode } from "react";
 import { Sidebar } from "@/components/ui/Sidebar";
 import type { Metadata } from "next";
+import ProtectedPage from "@/components/ProtectedPage";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -38,10 +40,15 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  // Only allow users with the Customer Support role.
+  const allowedRoles = ["Customer Support / Service Representative"];
+
   return (
-    <div className="flex">
-      <Sidebar role="Customer Support / Service Representative" />
-      <main className="flex-1">{children}</main>
-    </div>
+    <ProtectedPage allowedRoles={allowedRoles}>
+      <div className="flex">
+        <Sidebar role="Customer Support / Service Representative" />
+        <main className="flex-1">{children}</main>
+      </div>
+    </ProtectedPage>
   );
 }

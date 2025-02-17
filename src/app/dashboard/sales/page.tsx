@@ -97,7 +97,7 @@ export default function SalesDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-pink-50">
       {/* Common Header */}
-      <Header user={{ name: "Account Executive", avatar: "/sales-avatar.png" }} />
+      <Header />
 
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}
@@ -125,7 +125,7 @@ export default function SalesDashboard() {
           {stats.map((stat) => (
             <motion.div
               key={stat.name}
-              className="bg-white/90 backdrop-blur-md border border-pink-200 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300"
+              className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10"
               whileHover={{ scale: 1.02 }}
             >
               <div className="flex items-center">
@@ -148,7 +148,7 @@ export default function SalesDashboard() {
 
         {/* Upcoming Opportunities Snapshot */}
         <motion.div
-          className="bg-white/90 backdrop-blur-md border border-pink-200 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 mb-10"
+          className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10 mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.02 }}
@@ -166,7 +166,7 @@ export default function SalesDashboard() {
 
         {/* Pipeline Overview */}
         <motion.div
-          className="bg-white/90 backdrop-blur-md border border-pink-200 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 mb-10"
+          className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10 mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.02 }}
@@ -192,7 +192,7 @@ export default function SalesDashboard() {
 
         {/* Recent Leads Table */}
         <motion.div
-          className="bg-white/90 backdrop-blur-md border border-pink-200 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300"
+          className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.02 }}
@@ -233,7 +233,7 @@ export default function SalesDashboard() {
 
         {/* Top Performing Regions */}
         <motion.div
-          className="bg-white/90 backdrop-blur-md border border-pink-200 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 mt-10"
+          className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10 mt-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.02 }}

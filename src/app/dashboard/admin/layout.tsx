@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { Sidebar } from "@/components/ui/Sidebar";
+import ProtectedPage from "@/components/ProtectedPage";
 import type { Metadata } from "next";
 
 interface DashboardLayoutProps {
@@ -38,11 +39,16 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  // Define the allowed roles for accessing the admin layout
+  const allowedRolesForAdmin = ["Admin", "Super Admin"];
+
   return (
-    <div className="flex">
-      {/* The Admin role is passed to the Sidebar */}
-      <Sidebar role="admin" />
-      <main className="flex-1">{children}</main>
-    </div>
+    <ProtectedPage allowedRoles={allowedRolesForAdmin}>
+      <div className="flex">
+        {/* The Admin role is passed to the Sidebar */}
+        <Sidebar role="admin" />
+        <main className="flex-1">{children}</main>
+      </div>
+    </ProtectedPage>
   );
 }

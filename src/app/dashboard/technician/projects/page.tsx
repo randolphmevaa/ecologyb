@@ -57,7 +57,7 @@ export default function TechnicianProjects() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50">
       {/* Common Header */}
-      <Header user={{ name: "Technician", avatar: "/technician-avatar.png" }} />
+      <Header />
 
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}
@@ -106,7 +106,7 @@ export default function TechnicianProjects() {
           {filteredProjects.map((project) => (
             <motion.div
               key={project.id}
-              className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow flex flex-col"
+              className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10 flex flex-col"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}

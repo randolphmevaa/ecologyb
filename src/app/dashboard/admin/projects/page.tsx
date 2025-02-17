@@ -175,7 +175,7 @@ export default function ProjectsPage() {
 
       {/* Main container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header user={{ name: "Administrateur", avatar: "/admin-avatar.png" }} />
+        <Header />
 
         <main className="flex-1 overflow-y-auto p-8 space-y-10 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
           {/* Page Title */}

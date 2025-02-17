@@ -40,7 +40,7 @@ export default function ClientDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50">
       {/* Import the Header component for a consistent top navigation */}
-      <Header user={{ name: "Client", avatar: "/client-avatar.png" }} />
+      <Header />
 
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}
@@ -78,7 +78,7 @@ export default function ClientDashboard() {
             return (
               <motion.div
                 key={solution.name}
-                className="bg-white/70 backdrop-blur-lg border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow"
+                className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10"
                 variants={{
                   hidden: { opacity: 0, y: 20 },
                   visible: { opacity: 1, y: 0 },

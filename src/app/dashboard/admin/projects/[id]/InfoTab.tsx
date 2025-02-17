@@ -1,21 +1,27 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ClipboardDocumentCheckIcon,
   HomeIcon,
-  BriefcaseIcon,
+  // BriefcaseIcon,
   ClockIcon,
   UserCircleIcon,
   LightBulbIcon,
   SunIcon,
   FireIcon,
   PaintBrushIcon,
+  // LightBulbIcon,
   ExclamationTriangleIcon,
   ChevronDownIcon,
+  CalendarIcon,
+  PhoneIcon,
+  MapIcon,
+  IdentificationIcon,
   PencilIcon,
-  CurrencyRupeeIcon,
+  // CurrencyRupeeIcon,
+  LockClosedIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 
@@ -24,6 +30,7 @@ import Image from "next/image";
 // ------------------------------------------------------
 
 export interface Dossier {
+  numero: string;
   client: string;
   projet: string;
   solution: string;
@@ -50,6 +57,7 @@ export interface Dossier {
 }
 
 export interface DossierFormData {
+  nombrePersonnes: string;
   client: string;
   projet: string;
   solution: string;
@@ -57,6 +65,17 @@ export interface DossierFormData {
   valeur: string;
   assignedTeam: string;
   notes: string;
+  numero?: string;
+  surfaceChauffee?: string;
+  compteurElectrique?: string;
+  anneeConstruction?: string;
+  typeDeLogement?: string;
+  profil?: string;
+  typeTravaux?: string;
+  mprColor?: string;
+  codePostal?: string;
+  // New field for API/COMMENTAIRES:
+  commentaire?: string;
   informationLogement?: {
     typeDeLogement: string;
     surfaceHabitable: string;
@@ -71,6 +90,15 @@ export interface DossierFormData {
     surfaceChauffee: string;
     circuitChauffageFonctionnel: string;
   };
+}
+
+// A type for comment data
+export interface CommentData {
+  _id?: string;
+  commentaire?: string;
+  auteur?: string;
+  date?: string;
+  linkedTo?: string;
 }
 
 // Contact data interface
@@ -98,6 +126,8 @@ export interface Contact {
   assistantName?: string;
   fax?: string;
   linkedIn?: string;
+  firstName?: string;
+  lastName?: string;
   facebook?: string;
   twitter?: string;
   mailingAddress?: string;
@@ -108,6 +138,10 @@ export interface Contact {
   department?: string;
   climateZone?: string;
   imageUrl?: string;
+  maprNumero?: string;     // Numéro de dossier MPR
+  maprEmail?: string;      // Accès Ma Prime Renov - Email
+  mprPassword?: string;    // Accès Ma Prime Renov - Mot de passe    // Zone climatique          // Revenue Fiscal de Référence
+  eligible?: string;
 }
 
 // Weather data type
@@ -130,6 +164,7 @@ interface User {
 interface InfoTabProps {
   dossier: Dossier;
   formData: DossierFormData;
+  commentData?: CommentData;
   isEditing: boolean;
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
   handleInputChange: (
@@ -256,45 +291,45 @@ const EditableField: React.FC<EditableFieldProps> = ({
 // ------------------------------------------------------
 // AccordionSection Component
 // ------------------------------------------------------
-const AccordionSection = ({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  icon?: React.ElementType;
-  children: React.ReactNode;
-}) => {
-  const [open, setOpen] = useState(true);
-  return (
-    <div className="border-b border-gray-200">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full text-left py-3 px-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className="h-5 w-5 text-gray-500" />}
-          <span className="font-semibold text-gray-700">{title}</span>
-        </div>
-        <motion.span animate={{ rotate: open ? 0 : 180 }} className="text-gray-500">
-          ▼
-        </motion.span>
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="p-4 space-y-4">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
+// const AccordionSection = ({
+//   title,
+//   icon: Icon,
+//   children,
+// }: {
+//   title: string;
+//   icon?: React.ElementType;
+//   children: React.ReactNode;
+// }) => {
+//   const [open, setOpen] = useState(true);
+//   return (
+//     <div className="border-b border-gray-200">
+//       <button
+//         onClick={() => setOpen(!open)}
+//         className="w-full text-left py-3 px-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
+//       >
+//         <div className="flex items-center gap-2">
+//           {Icon && <Icon className="h-5 w-5 text-gray-500" />}
+//           <span className="font-semibold text-gray-700">{title}</span>
+//         </div>
+//         <motion.span animate={{ rotate: open ? 0 : 180 }} className="text-gray-500">
+//           ▼
+//         </motion.span>
+//       </button>
+//       <AnimatePresence>
+//         {open && (
+//           <motion.div
+//             initial={{ opacity: 0, height: 0 }}
+//             animate={{ opacity: 1, height: "auto" }}
+//             exit={{ opacity: 0, height: 0 }}
+//             className="overflow-hidden"
+//           >
+//             <div className="p-4 space-y-4">{children}</div>
+//           </motion.div>
+//         )}
+//       </AnimatePresence>
+//     </div>
+//   );
+// };
 
 // ------------------------------------------------------
 // InfoTab Component (Updated with EditableFields)
@@ -302,12 +337,13 @@ const AccordionSection = ({
 const InfoTab: React.FC<InfoTabProps> = ({
   dossier,
   formData,
-  handleInputChange,
-  handleNestedInputChange,
+  // handleInputChange,
+  // handleNestedInputChange,
   userList,
   contact: contactProp,
+  commentData,
 }) => {
-  const [saveStatus] = useState("Sauvegardé");
+  // const [saveStatus] = useState("Sauvegardé");
   const [weather, setWeather] = useState<{
       temp: number;
       condition: string;
@@ -323,30 +359,30 @@ const InfoTab: React.FC<InfoTabProps> = ({
   const rfrValue = Number(contact?.rfr ?? 0);
 
   // Update a contact field locally and via API
-  const updateContactField = async (field: string, value: string | boolean) => {
-    if (!contact || !contact._id) return;
-    // 1) update local state
-    setContact((prev) => (prev ? { ...prev, [field]: value } : null));
+  // const updateContactField = async (field: string, value: string | boolean) => {
+  //   if (!contact || !contact._id) return;
+  //   // 1) update local state
+  //   setContact((prev) => (prev ? { ...prev, [field]: value } : null));
 
-    // 2) update the server
-    try {
-      const res = await fetch(`/api/contacts/${dossier.contactId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        console.error("Update failed", data);
-        // Optional: revert local state if needed
-      } else {
-        console.log("Update successful", data);
-      }
-    } catch (err) {
-      console.error("Error updating contact", err);
-      // Optional: revert local state if needed
-    }
-  };
+  //   // 2) update the server
+  //   try {
+  //     const res = await fetch(`/api/contacts/${dossier.contactId}`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ [field]: value }),
+  //     });
+  //     const data = await res.json();
+  //     if (!res.ok) {
+  //       console.error("Update failed", data);
+  //       // Optional: revert local state if needed
+  //     } else {
+  //       console.log("Update successful", data);
+  //     }
+  //   } catch (err) {
+  //     console.error("Error updating contact", err);
+  //     // Optional: revert local state if needed
+  //   }
+  // };
 
   const DEPARTMENT_COORDINATES: { [key: string]: { lat: number; lon: number } } = {
       // Metropolitan France
@@ -625,65 +661,65 @@ const DEPARTMENT_OPTIONS = [
       }, [contact]);
 
   // Helper to update top-level fields via handleInputChange
-  const handleEditableFieldChange = async (fieldName: string, value: string) => {
-    // 1) Update local state
-    handleInputChange({
-      target: { name: fieldName, value },
-    } as React.ChangeEvent<HTMLInputElement>);
+  // const handleEditableFieldChange = async (fieldName: string, value: string) => {
+  //   // 1) Update local state
+  //   handleInputChange({
+  //     target: { name: fieldName, value },
+  //   } as React.ChangeEvent<HTMLInputElement>);
 
-    // 2) PATCH the single changed field to server
-    try {
-      const res = await fetch(`/api/dossiers/${dossier._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [fieldName]: value }),
-      });
-      if (!res.ok) {
-        console.error("Failed to patch field:", fieldName);
-      }
-    } catch (err) {
-      console.error("Patch error:", err);
-    }
-  };
+  //   // 2) PATCH the single changed field to server
+  //   try {
+  //     const res = await fetch(`/api/dossiers/${dossier._id}`, {
+  //       method: "PATCH",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ [fieldName]: value }),
+  //     });
+  //     if (!res.ok) {
+  //       console.error("Failed to patch field:", fieldName);
+  //     }
+  //   } catch (err) {
+  //     console.error("Patch error:", err);
+  //   }
+  // };
 
   // Helper to update nested fields (informationLogement / informationTravaux)
-  const handleNestedEditableFieldChange = async (
-    section: "informationLogement" | "informationTravaux",
-    fieldName: string,
-    value: string
-  ) => {
-    // 1) Update local state
-    handleNestedInputChange(
-      {
-        target: { name: fieldName, value },
-      } as React.ChangeEvent<HTMLInputElement>,
-      section
-    );
+  // const handleNestedEditableFieldChange = async (
+  //   section: "informationLogement" | "informationTravaux",
+  //   fieldName: string,
+  //   value: string
+  // ) => {
+  //   // 1) Update local state
+  //   handleNestedInputChange(
+  //     {
+  //       target: { name: fieldName, value },
+  //     } as React.ChangeEvent<HTMLInputElement>,
+  //     section
+  //   );
 
-    // 2) Build new partial object for PATCH
-    // For example, if user updates "typeDeLogement",
-    // then we send { informationLogement: { ...existing, typeDeLogement: newVal } }
-    const oldSectionData = dossier[section] || {};
-    const newSectionData = {
-      ...oldSectionData,
-      [fieldName]: value,
-    };
+  //   // 2) Build new partial object for PATCH
+  //   // For example, if user updates "typeDeLogement",
+  //   // then we send { informationLogement: { ...existing, typeDeLogement: newVal } }
+  //   const oldSectionData = dossier[section] || {};
+  //   const newSectionData = {
+  //     ...oldSectionData,
+  //     [fieldName]: value,
+  //   };
 
-    try {
-      const res = await fetch(`/api/dossiers/${dossier._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          [section]: newSectionData,
-        }),
-      });
-      if (!res.ok) {
-        console.error(`Failed to patch nested field: ${section}.${fieldName}`);
-      }
-    } catch (error) {
-      console.error("Nested patch error:", error);
-    }
-  };
+  //   try {
+  //     const res = await fetch(`/api/dossiers/${dossier._id}`, {
+  //       method: "PATCH",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         [section]: newSectionData,
+  //       }),
+  //     });
+  //     if (!res.ok) {
+  //       console.error(`Failed to patch nested field: ${section}.${fieldName}`);
+  //     }
+  //   } catch (error) {
+  //     console.error("Nested patch error:", error);
+  //   }
+  // };
 
   // Helper function for MaPrimeRenov badge color
   // const getMaPrimeRenovColor = (rfr: string | undefined) => {
@@ -723,47 +759,47 @@ const DEPARTMENT_OPTIONS = [
   const assignedUser = userList.find((user) => user.email === assignedTeamEmail);
 
   // Update assigned team via PATCH request (only needed if you still want it to happen automatically)
-  const handleAssignedTeamChange = async (val: string) => {
-    // First, update local formData
-    handleEditableFieldChange("assignedTeam", val);
+  // const handleAssignedTeamChange = async (val: string) => {
+  //   // First, update local formData
+  //   handleEditableFieldChange("assignedTeam", val);
 
-    // Then, call your API to persist
-    try {
-      const res = await fetch(`/api/dossiers/${dossier._id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          assignedTeam: val,
-        }),
-      });
-      if (!res.ok) {
-        console.error("Failed to update assignedTeam");
-      }
-    } catch (error) {
-      console.error("Error updating assignedTeam:", error);
-    }
-  };
+  //   // Then, call your API to persist
+  //   try {
+  //     const res = await fetch(`/api/dossiers/${dossier._id}`, {
+  //       method: "PATCH",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         assignedTeam: val,
+  //       }),
+  //     });
+  //     if (!res.ok) {
+  //       console.error("Failed to update assignedTeam");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating assignedTeam:", error);
+  //   }
+  // };
 
   // Pre-build some select options
-  const solutionOptions = [
-    { label: "Sélectionnez une solution", value: "" },
-    { label: "Pompes à chaleur", value: "Pompes a chaleur" },
-    { label: "Chauffe-eau solaire individuel", value: "Chauffe-eau solaire individuel" },
-    { label: "Chauffe-eau thermodynamique", value: "Chauffe-eau thermodynamique" },
-    { label: "Système Solaire Combiné", value: "Système Solaire Combiné" },
-  ];
+  // const solutionOptions = [
+  //   { label: "Sélectionnez une solution", value: "" },
+  //   { label: "Pompes à chaleur", value: "Pompes a chaleur" },
+  //   { label: "Chauffe-eau solaire individuel", value: "Chauffe-eau solaire individuel" },
+  //   { label: "Chauffe-eau thermodynamique", value: "Chauffe-eau thermodynamique" },
+  //   { label: "Système Solaire Combiné", value: "Système Solaire Combiné" },
+  // ];
 
-  const etapeOptions = [
-    { label: "1 – Prise de contact", value: "1Prise de contact" },
-    { label: "2 – En attente des documents", value: "2En attente des documents" },
-    { label: "3 – Instruction du dossier", value: "3Instruction du dossier" },
-    { label: "4 – Dossier accepté", value: "4Dossier Accepter" },
-    { label: "5 – Installation", value: "5Installation" },
-    { label: "6 – Contrôle", value: "6Controle" },
-    { label: "7 – Dossier clôturé", value: "7Dossier cloturer" },
-  ];
+  // const etapeOptions = [
+  //   { label: "1 – Prise de contact", value: "1Prise de contact" },
+  //   { label: "2 – En attente des documents", value: "2En attente des documents" },
+  //   { label: "3 – Instruction du dossier", value: "3Instruction du dossier" },
+  //   { label: "4 – Dossier accepté", value: "4Dossier Accepter" },
+  //   { label: "5 – Installation", value: "5Installation" },
+  //   { label: "6 – Contrôle", value: "6Controle" },
+  //   { label: "7 – Dossier clôturé", value: "7Dossier cloturer" },
+  // ];
 
   const assignedTeamOptions = [
     { label: "Sélectionnez une équipe", value: "" },
@@ -807,37 +843,37 @@ function getRoleInFrench(role: string | undefined) {
 }
 
   // For "informationLogement"
-  const typeDeLogementOptions = [
-    { label: "Sélectionnez un type", value: "" },
-    { label: "Maison", value: "maison" },
-    { label: "Appartement", value: "appartement" },
-    { label: "Autre", value: "autre" },
-  ];
+  // const typeDeLogementOptions = [
+  //   { label: "Sélectionnez un type", value: "" },
+  //   { label: "Maison", value: "maison" },
+  //   { label: "Appartement", value: "appartement" },
+  //   { label: "Autre", value: "autre" },
+  // ];
 
-  const chauffageOptions = [
-    { label: "Sélectionnez un type de chauffage", value: "" },
-    { label: "Gaz", value: "gaz" },
-    { label: "Bois", value: "bois" },
-    { label: "Électrique", value: "electrique" },
-    { label: "Autre", value: "autre" },
-  ];
+  // const chauffageOptions = [
+  //   { label: "Sélectionnez un type de chauffage", value: "" },
+  //   { label: "Gaz", value: "gaz" },
+  //   { label: "Bois", value: "bois" },
+  //   { label: "Électrique", value: "electrique" },
+  //   { label: "Autre", value: "autre" },
+  // ];
 
-  const profilOptions = [
-    { label: "Sélectionnez un profil", value: "" },
-    { label: "Propriétaire", value: "proprietaire" },
-    { label: "Occupant", value: "occupant" },
-    { label: "Bailleur", value: "bailleur" },
-    { label: "SCI", value: "SCI" },
-  ];
+  // const profilOptions = [
+  //   { label: "Sélectionnez un profil", value: "" },
+  //   { label: "Propriétaire", value: "proprietaire" },
+  //   { label: "Occupant", value: "occupant" },
+  //   { label: "Bailleur", value: "bailleur" },
+  //   { label: "SCI", value: "SCI" },
+  // ];
 
-  // For "informationTravaux"
-  const typeTravauxOptions = [
-    { label: "Sélectionnez un type de travaux", value: "" },
-    { label: "Rénovation", value: "renovation" },
-    { label: "Extension", value: "extension" },
-    { label: "Installation", value: "installation" },
-    { label: "Autre", value: "autre" },
-  ];
+  // // For "informationTravaux"
+  // const typeTravauxOptions = [
+  //   { label: "Sélectionnez un type de travaux", value: "" },
+  //   { label: "Rénovation", value: "renovation" },
+  //   { label: "Extension", value: "extension" },
+  //   { label: "Installation", value: "installation" },
+  //   { label: "Autre", value: "autre" },
+  // ];
 
   useEffect(() => {
     if (!dossier.contactId) return;
@@ -864,366 +900,336 @@ function getRoleInFrench(role: string | undefined) {
     <div className="flex gap-8">
       {/* Left Column: Main Sections */}
       <div className="flex-1 space-y-10">
-        {/* --- Détails Généraux --- */}
+        {/* --- Information du client --- */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.6 }}
-          className="relative bg-white rounded-2xl p-10 border border-blue-100"
+          className="bg-white rounded-2xl p-10 border border-blue-100"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
             <div className="flex items-center">
               <div className="flex items-center justify-center bg-gradient-to-r from-blue-700 to-blue-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
-                <ClipboardDocumentCheckIcon className="w-10 h-10" />
+                <UserCircleIcon className="w-10 h-10" />
               </div>
               <h2 className="text-3xl font-extrabold text-gray-800">
-                Détails Généraux
+                Information du client
               </h2>
             </div>
-            {/* {contact?.imageUrl && (
-              <img
-                src={contact.imageUrl}
-                alt={contact?.name || "Profile"}
-                className="w-20 h-20 rounded-full object-cover border-2 border-blue-600 shadow-lg"
-              />
-            )} */}
           </div>
 
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Column */}
             <EditableField
-              label="Client"
-              value={formData.client}
-              onChange={(val) => handleEditableFieldChange("client", val)}
+              label="Photo de profil (facultatif)"
+              value={contact?.imageUrl || ""}
+              onChange={() => {}}
               icon={UserCircleIcon}
               inputType="text"
+              readOnly={true}
             />
-
             <EditableField
-              label="Projet"
-              value={formData.projet}
-              onChange={(val) => handleEditableFieldChange("projet", val)}
-              icon={BriefcaseIcon}
+              label="Nom"
+              value={contact?.firstName || ""}
+              onChange={() => {}}
+              icon={UserCircleIcon}
               inputType="text"
+              readOnly={true}
             />
-
             <EditableField
-              label="Solution proposée"
-              value={formData.solution}
-              onChange={(val) => handleEditableFieldChange("solution", val)}
-              icon={LightBulbIcon}
-              inputType="select"
-              options={solutionOptions}
+              label="Prénom"
+              value={contact?.lastName || ""}
+              onChange={() => {}}
+              icon={UserCircleIcon}
+              inputType="text"
+              readOnly={true}
             />
-
-            {/* Right Column */}
             <EditableField
-              label="Phase du projet"
-              value={formData.etape}
-              onChange={(val) => handleEditableFieldChange("etape", val)}
-              icon={ClockIcon}
-              inputType="select"
-              options={etapeOptions}
+              label="Date de naissance"
+              value={contact?.dateOfBirth || ""}
+              onChange={() => {}}
+              icon={CalendarIcon}
+              inputType="date"
+              readOnly={true}
             />
-
             <EditableField
-              label="Budget (en €)"
-              value={formData.valeur}
-              onChange={(val) => handleEditableFieldChange("valeur", val)}
+              label="Adresse"
+              value={contact?.mailingAddress || ""}
+              onChange={() => {}}
+              icon={HomeIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Téléphone"
+              value={contact?.phone || ""}
+              onChange={() => {}}
+              icon={PhoneIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Email"
+              value={contact?.email || ""}
+              onChange={() => {}}
+              icon={MapIcon}
+              inputType="email"
+              readOnly={true}
+            />
+            <EditableField
+              label="Numéro de dossier"
+              value={dossier?.numero || ""}
+              onChange={() => {}}
               icon={ClipboardDocumentCheckIcon}
-              inputType="number"
+              inputType="text"
+              readOnly={true}
             />
-
             <EditableField
-              label="Utilisateur assignée"
-              value={formData.assignedTeam}
-              onChange={handleAssignedTeamChange} // calls handleEditableFieldChange + patch request
+              label="Département"
+              value={contact?.department || ""}
+              onChange={() => {}}
+              icon={HomeIcon}
+              inputType="select"
+              options={DEPARTMENT_OPTIONS}
+              readOnly={true}
+            />
+            <EditableField
+              label="Contact ID"
+              value={contact?._id || ""}
+              onChange={() => {}}
+              icon={IdentificationIcon}
+              readOnly={true}
+            />
+            <EditableField
+              label="Gestionnaire de suivi"
+              value={formData.assignedTeam || ""}
+              onChange={() => {}}
               icon={UserCircleIcon}
               inputType="select"
               options={assignedTeamOptions}
+              readOnly={true}
             />
-          </div>
-
-          {/* Commentaires (as a simple text input -- if you need multiline, adapt EditableField) */}
-          <EditableField
-            label="Commentaires"
-            value={formData.notes}
-            onChange={(val) => handleEditableFieldChange("notes", val)}
-            icon={PencilIcon}
-            inputType="text"
-          />
-
-          {/* Accordion Sections for additional contact info */}
-          <div className="mt-8 space-y-8">
-            <AccordionSection title="Nom et Occupation" icon={UserCircleIcon}>
-              <div className="grid grid-cols-2 gap-6">
-                <EditableField
-                  label="Nom"
-                  value={contact?.name ?? ""}
-                  onChange={(val) => updateContactField("name", val)}
-                  icon={UserCircleIcon}
-                />
-                <EditableField
-                  label="Titre"
-                  value={contact?.titre ?? ""}
-                  onChange={(val) => updateContactField("titre", val)}
-                  icon={BriefcaseIcon}
-                />
-              </div>
-            </AccordionSection>
-
-            <AccordionSection title="Coordonnées" icon={UserCircleIcon}>
-              <div className="grid grid-cols-2 gap-6">
-                <EditableField
-                  label="Email"
-                  value={contact?.email ?? ""}
-                  onChange={(val) => updateContactField("email", val)}
-                  icon={UserCircleIcon}
-                />
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                  <ExclamationTriangleIcon className="h-5 w-5 text-gray-400" />
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
-                      Email désinscrit
-                    </label>
-                    <input
-                      type="checkbox"
-                      checked={contact?.emailOptedOut || false}
-                      onChange={(e) =>
-                        updateContactField("emailOptedOut", e.target.checked)
-                      }
-                      className="h-4 w-4 text-blue-600"
-                    />
-                  </div>
-                </div>
-                <EditableField
-                  label="Téléphone"
-                  value={contact?.phone ?? ""}
-                  onChange={(val) => updateContactField("phone", val)}
-                />
-                <EditableField
-                  label="Téléphone domicile"
-                  value={contact?.homePhone ?? ""}
-                  onChange={(val) => updateContactField("homePhone", val)}
-                />
-                <EditableField
-                  label="Mobile"
-                  value={contact?.mobilePhone ?? ""}
-                  onChange={(val) => updateContactField("mobilePhone", val)}
-                />
-                <EditableField
-                  label="Autre téléphone"
-                  value={contact?.otherPhone ?? ""}
-                  onChange={(val) => updateContactField("otherPhone", val)}
-                />
-                <EditableField
-                  label="Téléphone assistant"
-                  value={contact?.assistantPhone ?? ""}
-                  onChange={(val) => updateContactField("assistantPhone", val)}
-                />
-              </div>
-            </AccordionSection>
-
-            <AccordionSection title="Localisation" icon={HomeIcon}>
-              <div className="grid grid-cols-2 gap-6">
-              <EditableField
-                label="Département"
-                value={contact?.department ?? ""}
-                onChange={(val) => updateContactField("department", val)}
-                icon={HomeIcon}
-                inputType="select"
-                options={DEPARTMENT_OPTIONS}
-              />
-
-                <EditableField
-                  label="Adresse postale"
-                  value={contact?.mailingAddress ?? ""}
-                  onChange={(val) => updateContactField("mailingAddress", val)}
-                />
-                <EditableField
-                  label="Autre adresse"
-                  value={contact?.otherAddress ?? ""}
-                  onChange={(val) => updateContactField("otherAddress", val)}
-                />
-              </div>
-            </AccordionSection>
-
-            <AccordionSection title="Informations Énergétiques" icon={LightBulbIcon}>
-              <div className="grid grid-cols-2 gap-6">
-                <EditableField
-                  label="RFR"
-                  value={contact?.rfr ?? ""}
-                  onChange={(val) => updateContactField("rfr", val)}
-                  icon={CurrencyRupeeIcon} // or any icon
-                />
-
-                <div>
-                  <label className="block text-sm text-gray-500 mb-1">
-                    MaPrimeRenov
-                  </label>
-                  <span
-                    className={`inline-block px-3 py-1 rounded-md text-xs font-medium ${getMaprimeColor(
-                      rfrValue
-                    )}`}
-                  >
-                    {calculateMaprimeLevel(rfrValue)}
-                  </span>
-                </div>
-
-                <EditableField
-                  label="Zone climatique"
-                  value={contact?.climateZone ?? ""}
-                  onChange={(val) => updateContactField("climateZone", val)}
-                  icon={SunIcon}
-                />
-                <EditableField
-                    label="Type de chauffage"
-                    value={contact?.heatingType ?? ""}
-                    onChange={(val) => updateContactField("heatingType", val)}
-                    icon={FireIcon}
-                    inputType="select"
-                    options={chauffageOptions}
-                  />
-              </div>
-            </AccordionSection>
+            <EditableField
+              label="Commentaires"
+              value={commentData?.commentaire || ""}
+              onChange={() => {}}
+              icon={PencilIcon}
+              inputType="textarea"
+              readOnly={true}
+            />
 
           </div>
         </motion.section>
 
-        {/* --- Logement Section --- */}
-        {dossier.informationLogement && (
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.6 }}
-            className="relative bg-white rounded-2xl p-10 border border-green-100"
-          >
-            <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center bg-gradient-to-r from-green-700 to-green-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
-                  <HomeIcon className="w-10 h-10" />
-                </div>
-                <h2 className="text-3xl font-extrabold text-gray-800">
-                  Logement
-                </h2>
+        {/* --- Information de l'habitation --- */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.6 }}
+          className="bg-white rounded-2xl p-10 border border-green-100"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center bg-gradient-to-r from-green-700 to-green-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
+                <FireIcon className="w-10 h-10" />
               </div>
+              <h2 className="text-3xl font-extrabold text-gray-800">
+                Information de l&apos;habitation
+              </h2>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <EditableField
-                label="Type"
-                value={formData.informationLogement?.typeDeLogement || ""}
-                onChange={(val) =>
-                  handleNestedEditableFieldChange("informationLogement", "typeDeLogement", val)
-                }
-                icon={HomeIcon}
-                inputType="select"
-                options={typeDeLogementOptions}
-              />
+          {/* Form Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <EditableField
+              label="Système de chauffage"
+              value={formData.projet || ""}
+              onChange={() => {}}
+              icon={FireIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Surface habitable (m²)"
+              value={formData.surfaceChauffee || ""}
+              onChange={() => {}}
+              icon={HomeIcon}
+              inputType="number"
+              readOnly={true}
+            />
+            <EditableField
+              label="Type de compteur électrique"
+              value={formData.compteurElectrique || ""}
+              onChange={() => {}}
+              icon={LightBulbIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Projet proposé"
+              value={formData.solution || ""}
+              onChange={() => {}}
+              icon={MapIcon}
+              inputType="select"
+              readOnly={true}
+            />
+            <EditableField
+              label="Année de construction"
+              value={formData.anneeConstruction || ""}
+              onChange={() => {}}
+              icon={CalendarIcon}
+              inputType="number"
+              readOnly={true}
+            />
+            <EditableField
+              label="Type de logement"
+              value={formData.typeDeLogement || ""}
+              onChange={() => {}}
+              icon={HomeIcon}
+              inputType="select"
+              readOnly={true}
+            />
+            <EditableField
+              label="Profil"
+              value={formData.profil || ""}
+              onChange={() => {}}
+              icon={UserCircleIcon}
+              inputType="text"
+              readOnly={true}
+            />
+          </div>
+        </motion.section>
 
-              <EditableField
-                label="Surface (m²)"
-                value={formData.informationLogement?.surfaceHabitable || ""}
-                onChange={(val) =>
-                  handleNestedEditableFieldChange("informationLogement", "surfaceHabitable", val)
-                }
-                icon={HomeIcon}
-                inputType="number"
-              />
-
-              <EditableField
-                label="Année de construction"
-                value={formData.informationLogement?.anneeConstruction || ""}
-                onChange={(val) =>
-                  handleNestedEditableFieldChange("informationLogement", "anneeConstruction", val)
-                }
-                icon={HomeIcon}
-                inputType="number"
-              />
-
-              {/* <EditableField
-                label="Chauffage"
-                value={formData.informationLogement?.systemeChauffage || ""}
-                onChange={(val) =>
-                  handleNestedEditableFieldChange("informationLogement", "systemeChauffage", val)
-                }
-                icon={FireIcon}
-                inputType="select"
-                options={chauffageOptions}
-              /> */}
-
-              <EditableField
-                label="Nombre de personnes au foyer"
-                value={formData.informationLogement?.nombrePersonnes || ""}
-                onChange={(val) =>
-                  handleNestedEditableFieldChange("informationLogement", "nombrePersonnes", val)
-                }
-                icon={UserCircleIcon}
-                inputType="number"
-              />
-
-              <EditableField
-                label="Profil"
-                value={formData.informationLogement?.profil || ""}
-                onChange={(val) =>
-                  handleNestedEditableFieldChange("informationLogement", "profil", val)
-                }
-                icon={UserCircleIcon}
-                inputType="select"
-                options={profilOptions}
-              />
-            </div>
-          </motion.section>
-        )}
-
-        {/* --- Travaux Section --- */}
-        {dossier.informationTravaux && (
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="relative bg-white rounded-2xl p-10 border border-purple-100"
-          >
-            <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center bg-gradient-to-r from-purple-700 to-purple-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
-                  <BriefcaseIcon className="w-10 h-10" />
-                </div>
-                <h2 className="text-3xl font-extrabold text-gray-800">
-                  Travaux
-                </h2>
+        {/* --- Information des aides --- */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="bg-white rounded-2xl p-10 border border-yellow-100"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center bg-gradient-to-r from-yellow-700 to-yellow-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
+                <ClipboardDocumentCheckIcon className="w-10 h-10" />
               </div>
+              <h2 className="text-3xl font-extrabold text-gray-800">
+                Information des aides
+              </h2>
             </div>
+          </div>
+          {/* Aides Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <EditableField
+              label="Numéro de dossier MPR"
+              value={contact?.maprNumero || ""}
+              onChange={() => {}}
+              icon={ClipboardDocumentCheckIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Accès Ma Prime Renov - Email"
+              value={contact?.maprEmail || ""}
+              onChange={() => {}}
+              icon={MapIcon}
+              inputType="email"
+              readOnly={true}
+            />
+            <EditableField
+              label="Accès Ma Prime Renov - Mot de passe"
+              value={contact?.mprPassword || ""}
+              onChange={() => {}}
+              icon={LockClosedIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Nombre de personne"
+              value={formData.nombrePersonnes || ""}
+              onChange={() => {}}
+              icon={UserCircleIcon}
+              inputType="number"
+              readOnly={true}
+            />
+            <EditableField
+              label="Code postal"
+              value={formData.codePostal || ""}
+              onChange={() => {}}
+              icon={HomeIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Zone climatique"
+              value={contact?.climateZone || ""}
+              onChange={() => {}}
+              icon={CalendarIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Ma Prime Renov Couleur"
+              value={formData.mprColor || ""}
+              onChange={() => {}}
+              icon={PencilIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Eligible"
+              value={contact?.eligible || ""}
+              onChange={() => {}}
+              icon={IdentificationIcon}
+              inputType="text"
+              readOnly={true}
+            />
+          </div>
+        </motion.section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <EditableField
-                label="Type de travaux"
-                value={formData.informationTravaux?.typeTravaux || ""}
-                onChange={(val) =>
-                  handleNestedEditableFieldChange("informationTravaux", "typeTravaux", val)
-                }
-                icon={BriefcaseIcon}
-                inputType="select"
-                options={typeTravauxOptions}
-              />
-
-              {/* <EditableField
-                label="Surface chauffée (m²)"
-                value={formData.informationTravaux?.surfaceChauffee || ""}
-                onChange={(val) =>
-                  handleNestedEditableFieldChange("informationTravaux", "surfaceChauffee", val)
-                }
-                icon={HomeIcon}
-                inputType="number"
-              /> */}
+        {/* Le projet */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.6 }}
+          className="bg-white rounded-2xl p-10 border border-purple-100"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center bg-gradient-to-r from-purple-700 to-purple-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
+                <ClipboardDocumentCheckIcon className="w-10 h-10" />
+              </div>
+              <h2 className="text-3xl font-extrabold text-gray-800">
+                Le projet
+              </h2>
             </div>
-          </motion.section>
-        )}
+          </div>
+          {/* Projet Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <EditableField
+              label="Phase du projet"
+              value={formData.etape || ""}
+              onChange={() => {}}
+              icon={CalendarIcon}
+              inputType="select"
+              readOnly={true}
+            />
+            <EditableField
+              label="Type de travaux"
+              value={formData.typeTravaux || ""}
+              onChange={() => {}}
+              icon={PencilIcon}
+              inputType="select"
+              readOnly={true}
+            />
+          </div>
+        </motion.section>
 
         {/* Auto-Save Status */}
-        <div className="text-right text-xs text-gray-500 italic">{saveStatus}</div>
+        {/* <div className="text-right text-xs text-gray-500 italic">{saveStatus}</div> */}
       </div>
 
       {/* Right Column: Additional Info Boxes */}

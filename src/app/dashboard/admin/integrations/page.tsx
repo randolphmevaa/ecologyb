@@ -57,7 +57,7 @@ export default function IntegrationsPage() {
   return (
     <div className="flex h-screen bg-white">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header user={{ name: "Administrateur", avatar: "/admin-avatar.png" }} />
+        <Header />
         <main className="flex-1 overflow-y-auto p-8 space-y-8 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
           <div className="flex flex-col sm:flex-row items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-[#1a365d]">Intégrations / API</h1>
