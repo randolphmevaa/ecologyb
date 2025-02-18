@@ -43,10 +43,22 @@ type Dossier = {
   contactId?: string;
 };
 
+type Contact = {
+  _id: string;
+  createdAt: string;
+  firstName: string;
+  lastName: string;
+  mailingAddress: string;
+  // …other properties if needed
+};
+
 export default function ProjectsPage() {
   // Data and loading
   const [projects, setProjects] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // State to store fetched contacts (mapping contactId => contact data)
+  const [contacts, setContacts] = useState<{ [id: string]: Contact }>({});
 
   // Filtering & Sorting
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -60,7 +72,7 @@ export default function ProjectsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
 
-  // Fetch projects (wrapped in a function so we can refresh)
+  // Fetch projects
   const fetchProjects = () => {
     setLoading(true);
     fetch("/api/dossiers")
@@ -79,13 +91,30 @@ export default function ProjectsPage() {
     fetchProjects();
   }, []);
 
+  // When projects change, fetch their contact data if a contactId is available.
+  useEffect(() => {
+    projects.forEach((project) => {
+      if (project.contactId && !contacts[project.contactId]) {
+        fetch(`/api/contacts/${project.contactId}`)
+          .then((res) => res.json())
+          .then((data: Contact) => {
+            setContacts((prev) => ({ ...prev, [project.contactId as string]: data }));
+          })
+          .catch((error) => {
+            console.error("Erreur lors de la récupération du contact :", error);
+          });
+      }
+    });
+  }, [projects, contacts]);
+
   // Filtering logic
   const filteredProjects = projects.filter((project) => {
     const query = searchQuery.toLowerCase();
     const matchesSearch =
-      (project.client || "").toLowerCase().includes(query) ||
-      (project.projet || "").toLowerCase().includes(query) ||
-      (project.numero || "").toLowerCase().includes(query);
+  String(project.client ?? "").toLowerCase().includes(query) ||
+  String(project.projet ?? "").toLowerCase().includes(query) ||
+  String(project.numero ?? "").toLowerCase().includes(query);
+
     const matchesSolution = solutionFilter
       ? (project.solution || "").toLowerCase() === solutionFilter.toLowerCase()
       : true;
@@ -100,15 +129,25 @@ export default function ProjectsPage() {
     let aValue: string | number;
     let bValue: string | number;
 
+    // Here, if a contact exists, we use its createdAt, firstName/lastName or mailingAddress.
     if (sortField === "createdAt") {
-      aValue = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      bValue = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const aContact = a.contactId ? contacts[a.contactId] : null;
+      const bContact = b.contactId ? contacts[b.contactId] : null;
+      aValue = aContact ? new Date(aContact.createdAt).getTime() : a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      bValue = bContact ? new Date(bContact.createdAt).getTime() : b.createdAt ? new Date(b.createdAt).getTime() : 0;
     } else if (sortField === "client") {
-      aValue = (a.client || "").toLowerCase();
-      bValue = (b.client || "").toLowerCase();
+      const aContact = a.contactId ? contacts[a.contactId] : null;
+      const bContact = b.contactId ? contacts[b.contactId] : null;
+      // Combine firstName and lastName if contact exists
+      const aName = aContact ? `${aContact.firstName} ${aContact.lastName}` : (a.client || "");
+      const bName = bContact ? `${bContact.firstName} ${bContact.lastName}` : (b.client || "");
+      aValue = aName.toLowerCase();
+      bValue = bName.toLowerCase();
     } else if (sortField === "location") {
-      aValue = (a.informationLogement?.typeDeLogement || "").toLowerCase();
-      bValue = (b.informationLogement?.typeDeLogement || "").toLowerCase();
+      const aContact = a.contactId ? contacts[a.contactId] : null;
+      const bContact = b.contactId ? contacts[b.contactId] : null;
+      aValue = aContact ? (aContact.mailingAddress || "").toLowerCase() : (a.informationLogement?.typeDeLogement || "").toLowerCase();
+      bValue = bContact ? (bContact.mailingAddress || "").toLowerCase() : (b.informationLogement?.typeDeLogement || "").toLowerCase();
     } else if (sortField === "etape") {
       aValue = (a.etape || "").toLowerCase();
       bValue = (b.etape || "").toLowerCase();
@@ -366,67 +405,80 @@ export default function ProjectsPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {paginatedProjects.map((project) => (
-                    <motion.tr
-                      key={project._id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="hover:bg-gray-50 cursor-pointer"
-                    >
-                      {/* Date */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {project.createdAt
-                          ? new Date(project.createdAt).toLocaleDateString()
-                          : "N/A"}
-                      </td>
-                      {/* Nom (Client & Projet) */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{project.client}</div>
-                        <div className="text-sm text-gray-500">{project.projet}</div>
-                      </td>
-                      {/* Location */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {project.informationLogement?.typeDeLogement || "N/A"}
-                      </td>
-                      {/* Statut */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            !project.etape
-                              ? "bg-gray-200 text-gray-800"
-                              : project.etape.startsWith("1")
-                              ? "bg-gray-200 text-gray-800"
-                              : project.etape.startsWith("2")
-                              ? "bg-blue-200 text-blue-800"
-                              : project.etape.startsWith("3")
-                              ? "bg-yellow-200 text-yellow-800"
-                              : project.etape.startsWith("4")
-                              ? "bg-green-200 text-green-800"
-                              : project.etape.startsWith("5")
-                              ? "bg-purple-200 text-purple-800"
-                              : project.etape.startsWith("6")
-                              ? "bg-orange-200 text-orange-800"
-                              : project.etape.startsWith("7")
-                              ? "bg-red-200 text-red-800"
-                              : "bg-gray-200 text-gray-800"
-                          }`}
-                        >
-                          {project.etape || "N/A"}
-                        </span>
-                      </td>
-                      {/* Action */}
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Link
-                          href={`/dashboard/admin/projects/${project._id}`}
-                          className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow transition"
-                        >
-                          Voir le détail
-                          <ArrowRightIcon className="w-4 h-4 ml-2" />
-                        </Link>
-                      </td>
-                    </motion.tr>
-                  ))}
+                  {paginatedProjects.map((project) => {
+                    // If a contact was fetched for this project, use its data:
+                    const contact = project.contactId ? contacts[project.contactId] : null;
+
+                    return (
+                      <motion.tr
+                        key={project._id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="hover:bg-gray-50 cursor-pointer"
+                      >
+                        {/* Date */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {contact
+                            ? new Date(contact.createdAt).toLocaleDateString()
+                            : project.createdAt
+                            ? new Date(project.createdAt).toLocaleDateString()
+                            : "N/A"}
+                        </td>
+                        {/* Nom (Client & Projet) */}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {contact
+                              ? `${contact.firstName} ${contact.lastName}`
+                              : project.client}
+                          </div>
+                          <div className="text-sm text-gray-500">{project.numero}</div>
+                        </td>
+                        {/* Location */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {contact
+                            ? contact.mailingAddress
+                            : project.informationLogement?.typeDeLogement || "N/A"}
+                        </td>
+                        {/* Statut */}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              !project.etape
+                                ? "bg-gray-200 text-gray-800"
+                                : project.etape.startsWith("1")
+                                ? "bg-gray-200 text-gray-800"
+                                : project.etape.startsWith("2")
+                                ? "bg-blue-200 text-blue-800"
+                                : project.etape.startsWith("3")
+                                ? "bg-yellow-200 text-yellow-800"
+                                : project.etape.startsWith("4")
+                                ? "bg-green-200 text-green-800"
+                                : project.etape.startsWith("5")
+                                ? "bg-purple-200 text-purple-800"
+                                : project.etape.startsWith("6")
+                                ? "bg-orange-200 text-orange-800"
+                                : project.etape.startsWith("7")
+                                ? "bg-red-200 text-red-800"
+                                : "bg-gray-200 text-gray-800"
+                            }`}
+                          >
+                            {project.etape || "N/A"}
+                          </span>
+                        </td>
+                        {/* Action */}
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <Link
+                            href={`/dashboard/admin/projects/${project._id}`}
+                            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow transition"
+                          >
+                            Voir le détail
+                            <ArrowRightIcon className="w-4 h-4 ml-2" />
+                          </Link>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

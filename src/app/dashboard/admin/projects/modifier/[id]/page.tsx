@@ -16,23 +16,40 @@ interface Comment {
   timestamp: string;
 }
 
+interface CommentAPI {
+  _id: string;
+  contactId: string;
+  auteur: string;
+  date: string;
+  commentaire: string;
+  linkedTo: string;
+}
+
 export interface Contact {
-    contactId: string; // <-- Added this line
-    imageUrl: File | null;
-    lastName: string;
-    firstName: string;
-    dateOfBirth: string;
-    mailingAddress: string;
-    phone: string;
-    email: string;
-    role: string; // Always "Client / Customer (Client Portal)"
-    numeroDossier: string;
-    department: string;
-    gestionnaireSuivi: string;
-    comments: Comment[];
-  }
+  eligible: boolean;
+  rfr: string;
+  climateZone: string;
+  mprpassword: string;
+  mpremail: string;
+  maprNumero: string;
+  contactId: string;
+  imageUrl: File | null;
+  lastName: string;
+  firstName: string;
+  dateOfBirth: string;
+  mailingAddress: string;
+  phone: string;
+  email: string;
+  role: string;
+  numeroDossier: string;
+  department: string;
+  gestionnaireSuivi: string;
+  comments: Comment[];
+}
+
 
 export interface Dossier {
+  numero: string; // <-- Add this line
   informationLogement: {
     systemeChauffage: string[];
     surfaceHabitable: string;
@@ -144,18 +161,25 @@ const chauffageOptions = [
 export default function EditContactDossierPage() {
   const router = useRouter();
   const { id } = useParams(); // dynamic route parameter
+  const [comments, setComments] = useState<Comment[]>([]);
 
   // ----------------------
   // State definitions
   // ----------------------
 
   const [contact, setContact] = useState<Contact>({
+    eligible: false, // now a boolean
+    rfr: "",
+    climateZone: "",
+    mprpassword: "",
+    mpremail: "",
+    maprNumero: "",
+    contactId: "",
     imageUrl: null,
     lastName: "",
     firstName: "",
     dateOfBirth: "",
     mailingAddress: "",
-    contactId: "",
     phone: "",
     email: "",
     role: "Client / Customer (Client Portal)",
@@ -164,8 +188,10 @@ export default function EditContactDossierPage() {
     gestionnaireSuivi: "",
     comments: [],
   });
+  
 
   const [dossier, setDossier] = useState<Dossier>({
+    numero: "",
     informationLogement: {
       systemeChauffage: [],
       surfaceHabitable: "",
@@ -191,6 +217,8 @@ export default function EditContactDossierPage() {
     typeTravaux: "",
     contactId: "",
   });
+  
+  
 
   const [contactErrors, setContactErrors] = useState<Partial<Record<keyof Contact, string>>>({});
   const [dossierErrors ] = useState<{ [key: string]: string }>({});
@@ -212,30 +240,30 @@ export default function EditContactDossierPage() {
   // ----------------------
   // Fetch existing data using the id parameter
   // ----------------------
-  useEffect(() => {
-    if (!id) return;
-    async function fetchData() {
-      try {
-        // First, fetch the dossier data using the id from the URL
-        const resDossier = await fetch(`/api/dossiers/${id}`);
-        if (!resDossier.ok) throw new Error("Failed to fetch dossier data");
-        const fetchedDossier = await resDossier.json();
-        setDossier(fetchedDossier);
+  // useEffect(() => {
+  //   if (!id) return;
+  //   async function fetchData() {
+  //     try {
+  //       // First, fetch the dossier data using the id from the URL
+  //       const resDossier = await fetch(`/api/dossiers/${id}`);
+  //       if (!resDossier.ok) throw new Error("Failed to fetch dossier data");
+  //       const fetchedDossier = await resDossier.json();
+  //       setDossier(fetchedDossier);
   
-        // Now fetch the contact data using dossier.contactId
-        if (fetchedDossier.contactId) {
-          const resContact = await fetch(`/api/contacts/${fetchedDossier.contactId}`);
-          if (!resContact.ok) throw new Error("Failed to fetch contact data");
-          const fetchedContact = await resContact.json();
-          setContact(fetchedContact);
-          setCreatedContactId(fetchedContact.contactId);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    }
-    fetchData();
-  }, [id]);  
+  //       // Now fetch the contact data using dossier.contactId
+  //       if (fetchedDossier.contactId) {
+  //         const resContact = await fetch(`/api/contacts/${fetchedDossier.contactId}`);
+  //         if (!resContact.ok) throw new Error("Failed to fetch contact data");
+  //         const fetchedContact = await resContact.json();
+  //         setContact(fetchedContact);
+  //         setCreatedContactId(fetchedContact.contactId);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   }
+  //   fetchData();
+  // }, [id]);  
 
   // ----------------------
   // Other effects (e.g. fetch users, calculate eligibility, etc.)
@@ -336,11 +364,10 @@ export default function EditContactDossierPage() {
         text: commentInput.trim(),
         timestamp: new Date().toLocaleString(),
       };
-      setContact((prev) => ({
-        ...prev,
-        comments: [...prev.comments, newComment],
-      }));
+      // Optionally update locally before syncing with your backend.
+      setComments((prev) => [...prev, newComment]);
       setCommentInput("");
+      // You might also want to POST this new comment to your /api/commentaires endpoint.
     }
   };
 
@@ -439,9 +466,9 @@ export default function EditContactDossierPage() {
     (dossier.informationLogement?.projetPropose || []).includes(option.value)
   );
 
-  const selectedOptions = chauffageOptions.filter((option) =>
-    (dossier.informationLogement?.systemeChauffage || []).includes(option.value)
-  );  
+  // const selectedOptions = chauffageOptions.filter((option) =>
+  //   (dossier.informationLogement?.systemeChauffage || []).includes(option.value)
+  // );  
 
   useEffect(() => {
     if (!id) return;
@@ -463,7 +490,7 @@ export default function EditContactDossierPage() {
               ? fetchedDossier.solution.split(",").map((s: string) => s.trim())
               : [],
             anneeConstruction: fetchedDossier.anneeConstruction || "",
-            // Map the flat API field to your nested state
+            // Map the flat API fields to your nested state
             typeLogement: fetchedDossier.typeDeLogement || "",
             profileLogement: fetchedDossier.profil || "",
           },
@@ -471,7 +498,7 @@ export default function EditContactDossierPage() {
             numeroDossierMPR: "",
             nombrePersonne: fetchedDossier.nombrePersonne || "",
             codePostale: fetchedDossier.codePostal || "",
-            zoneClimatique: "", // You might need to derive this based on the postal code or department
+            zoneClimatique: "", // Derive this if needed
             rfr: "",
             mprColor: fetchedDossier.mprColor || "",
             compteMPRExistant: false,
@@ -482,6 +509,7 @@ export default function EditContactDossierPage() {
           phaseProjet: fetchedDossier.etape || "",
           typeTravaux: fetchedDossier.typeTravaux || "",
           contactId: fetchedDossier.contactId || "",
+          numero: fetchedDossier.numero || "",
         });
   
         // Now fetch the associated contact data using the dossier's contactId
@@ -498,6 +526,30 @@ export default function EditContactDossierPage() {
     }
     fetchData();
   }, [id]);
+  
+
+  useEffect(() => {
+    // Only fetch comments if we have a dossier.numero value
+    if (dossier.numero) {
+      async function fetchComments() {
+        try {
+          const res = await fetch(`/api/commentaires?linkedTo=${encodeURIComponent(dossier.numero)}`);
+          if (!res.ok) throw new Error("Failed to fetch comments");
+          const data: CommentAPI[] = await res.json();
+
+          // Map API data to local Comment structure
+          const mappedComments: Comment[] = data.map((c) => ({
+            text: c.commentaire,
+            timestamp: c.date,
+          }));
+          setComments(mappedComments);
+        } catch (error) {
+          console.error("Error fetching comments:", error);
+        }
+      }
+      fetchComments();
+    }
+  }, [dossier.numero]);
   
 
   // ----------------------
@@ -740,15 +792,14 @@ export default function EditContactDossierPage() {
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700">Commentaires</label>
                       <div className="border border-gray-300 rounded-lg p-4 h-40 overflow-y-auto bg-blue-50">
-                      {(Array.isArray(contact.comments) ? contact.comments : []).map((comment, index) => (
-                        <div key={index} className="mb-2">
-                          <div className="bg-white rounded-lg p-2 shadow-sm">
-                            <p className="text-sm text-gray-800">{comment.text}</p>
-                            <span className="block text-xs text-gray-500 text-right">{comment.timestamp}</span>
+                        {comments.map((comment, index) => (
+                          <div key={index} className="mb-2">
+                            <div className="bg-white rounded-lg p-2 shadow-sm">
+                              <p className="text-sm text-gray-800">{comment.text}</p>
+                              <span className="block text-xs text-gray-500 text-right">{comment.timestamp}</span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-
+                        ))}
                       </div>
                       <div className="mt-2 flex">
                         <input
@@ -807,58 +858,78 @@ export default function EditContactDossierPage() {
                     )}
                   </div>
 
-                    <div>
-                      <label htmlFor="profileLogement" className="block text-sm font-medium text-gray-700">
-                        Profil
-                      </label>
-                      <select
-                        id="profileLogement"
-                        value={dossier.informationLogement?.profileLogement || ""}
-                        onChange={(e) =>
-                          setDossier({
-                            ...dossier,
-                            informationLogement: { ...dossier.informationLogement, profileLogement: e.target.value },
-                          })
-                        }
-                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        <option value="">Sélectionnez</option>
-                        {profileLogementOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                      {dossierErrors["informationLogement.profileLogement"] && (
-                        <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.profileLogement"]}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label htmlFor="systemeChauffage" className="block text-sm font-medium text-gray-700">
-                        Système de chauffage
-                      </label>
-                      <Select
-                        id="systemeChauffage"
-                        isMulti
-                        options={chauffageOptions}
-                        value={selectedOptions}
-                        onChange={(selectedOptions) => {
-                          const values = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-                          setDossier({
-                            ...dossier,
-                            informationLogement: {
-                              ...dossier.informationLogement,
-                              systemeChauffage: values,
-                            },
-                          });
-                        }}
-                        placeholder="Sélectionnez..."
-                        className="mt-1"
-                      />
-                      {dossierErrors["informationLogement.systemeChauffage"] && (
-                        <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.systemeChauffage"]}</p>
-                      )}
-                    </div>
+                  {/* Profil Field */}
+                  <div>
+                    <label htmlFor="profileLogement" className="block text-sm font-medium text-gray-700">
+                      Profil
+                    </label>
+                    <select
+                      id="profileLogement"
+                      value={dossier.informationLogement?.profileLogement || ""}
+                      onChange={(e) =>
+                        setDossier({
+                          ...dossier,
+                          informationLogement: {
+                            ...dossier.informationLogement,
+                            profileLogement: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="">Sélectionnez</option>
+                      {profileLogementOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    {dossierErrors["informationLogement.profileLogement"] && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {dossierErrors["informationLogement.profileLogement"]}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Système de chauffage Field */}
+                  <div>
+                    <label htmlFor="systemeChauffage" className="block text-sm font-medium text-gray-700">
+                      Système de chauffage
+                    </label>
+                    <Select
+                      id="systemeChauffage"
+                      isMulti
+                      options={chauffageOptions}
+                      value={chauffageOptions.filter((option) => {
+                        // Treat the current value as an array
+                        const currentValues = Array.isArray(dossier.informationLogement?.systemeChauffage)
+                          ? dossier.informationLogement.systemeChauffage
+                          : dossier.informationLogement?.systemeChauffage
+                            ? [dossier.informationLogement.systemeChauffage]
+                            : [];
+                        return currentValues.includes(option.value);
+                      })}
+                      onChange={(selectedOptions) => {
+                        const values = selectedOptions ? selectedOptions.map((option) => option.value) : [];
+                        setDossier({
+                          ...dossier,
+                          informationLogement: {
+                            ...dossier.informationLogement,
+                            systemeChauffage: values,
+                          },
+                        });
+                      }}
+                      placeholder="Sélectionnez..."
+                      className="mt-1"
+                    />
+                    {dossierErrors["informationLogement.systemeChauffage"] && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {dossierErrors["informationLogement.systemeChauffage"]}
+                      </p>
+                    )}
+                  </div>
+
+
                     <div>
                       <label htmlFor="surfaceHabitable" className="block text-sm font-medium text-gray-700">
                         Surface habitable (m²)
@@ -880,6 +951,8 @@ export default function EditContactDossierPage() {
                         <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.surfaceHabitable"]}</p>
                       )}
                     </div>
+
+                    {/* Type de compteur électrique Field */}
                     <div>
                       <label htmlFor="typeCompteurElectrique" className="block text-sm font-medium text-gray-700">
                         Type de compteur électrique
@@ -902,11 +975,13 @@ export default function EditContactDossierPage() {
                         <option value="Monophasé">Monophasé</option>
                         <option value="Triphasé">Triphasé</option>
                       </select>
-
                       {dossierErrors["informationLogement.typeCompteurElectrique"] && (
-                        <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.typeCompteurElectrique"]}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {dossierErrors["informationLogement.typeCompteurElectrique"]}
+                        </p>
                       )}
                     </div>
+
                     <div>
                       <label htmlFor="anneeConstruction" className="block text-sm font-medium text-gray-700">
                         Année de construction
@@ -1042,7 +1117,7 @@ export default function EditContactDossierPage() {
                       <input
                         type="text"
                         id="numeroDossierMPR"
-                        value={dossier.informationAides?.numeroDossierMPR || ""}
+                        value={contact.maprNumero || ""}
                         onChange={(e) =>
                           setDossier({
                             ...dossier,
@@ -1089,7 +1164,7 @@ export default function EditContactDossierPage() {
                           <input
                             type="email"
                             id="mpremail"
-                            value={dossier.informationAides.mpremail || ""}
+                            value={contact.mpremail || ""}
                             onChange={(e) =>
                               setDossier({
                                 ...dossier,
@@ -1113,7 +1188,7 @@ export default function EditContactDossierPage() {
                           <input
                             type="password"
                             id="mprpassword"
-                            value={dossier.informationAides.mprpassword || ""}
+                            value={contact.mprpassword || ""}
                             onChange={(e) =>
                               setDossier({
                                 ...dossier,
@@ -1175,7 +1250,7 @@ export default function EditContactDossierPage() {
                       <input
                         type="text"
                         id="zoneClimatique"
-                        value={dossier.informationAides.zoneClimatique || ""}
+                        value={contact.climateZone || ""}
                         readOnly
                         className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2"
                       />
@@ -1190,7 +1265,7 @@ export default function EditContactDossierPage() {
                       <input
                         type="text"
                         id="rfr"
-                        value={dossier.informationAides.rfr || ""}
+                        value={contact.rfr || ""}
                         onChange={(e) =>
                           setDossier({
                             ...dossier,
@@ -1225,7 +1300,7 @@ export default function EditContactDossierPage() {
                     </div>
                     <div className="flex items-center space-x-3">
                       <span className="text-sm font-medium text-gray-700">Eligible :</span>
-                      {dossier.informationAides.eligible ? (
+                      {contact.eligible ? (
                         <span className="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">
                           Eligible
                         </span>
