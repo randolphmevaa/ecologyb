@@ -3,24 +3,35 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
+// Define a type for the query object
+interface CommentQuery {
+  contactId?: number | string;
+  linkedTo?: string;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const contactIdParam = searchParams.get("contactId");
+    const linkedToParam = searchParams.get("linkedTo");
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    let query = {};
+    // Use const and the CommentQuery interface for the query object
+    const query: CommentQuery = {};
+
     if (contactIdParam) {
       // Convert the contactId to a number.
       const numericContactId = parseInt(contactIdParam, 10);
-      // If the conversion is successful, use the numeric value.
       if (!isNaN(numericContactId)) {
-        query = { contactId: numericContactId };
+        query.contactId = numericContactId;
       } else {
-        // Fallback if conversion fails (if it contains non-numeric characters).
-        query = { contactId: contactIdParam };
+        query.contactId = contactIdParam;
       }
+    }
+    
+    if (linkedToParam) {
+      query.linkedTo = linkedToParam;
     }
     
     const commentaires = await db.collection("commentaires").find(query).toArray();
@@ -55,4 +66,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "An unknown error occurred" }, { status: 500 });
   }
 }
-

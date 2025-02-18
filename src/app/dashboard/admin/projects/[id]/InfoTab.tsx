@@ -24,12 +24,26 @@ import {
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import CommentsSection from "./CommentsSection";
+import { Button } from "@/components/ui/Button";
+import { useRouter } from "next/navigation";
 
 // ------------------------------------------------------
 // Type Definitions
 // ------------------------------------------------------
 
 export interface Dossier {
+  nombrePersonne?: string;
+  typeTravaux?: string;
+  nombrePersonnes?: string;
+  codePostal?: string;
+  mprColor?: string;
+  anneeConstruction?: string;
+  typeCompteurElectrique?: string;
+  compteurElectrique?: string;
+  surfaceChauffee?: string;
+  profil?: string;
+  typeDeLogement?: string;
   numero: string;
   client: string;
   projet: string;
@@ -47,7 +61,7 @@ export interface Dossier {
     nombrePersonnes?: string;
   };
   informationTravaux?: {
-    typeTravaux: string;
+    typeTravaux?: string;
     typeUtilisation: string;
     surfaceChauffee: string;
     circuitChauffageFonctionnel: string;
@@ -57,7 +71,7 @@ export interface Dossier {
 }
 
 export interface DossierFormData {
-  nombrePersonnes: string;
+  nombrePersonnes?: string;
   client: string;
   projet: string;
   solution: string;
@@ -73,6 +87,8 @@ export interface DossierFormData {
   profil?: string;
   typeTravaux?: string;
   mprColor?: string;
+  // Additional properties expected by InfoTab
+  nombrePersonne?: string;  // if different from nombrePersonnes
   codePostal?: string;
   // New field for API/COMMENTAIRES:
   commentaire?: string;
@@ -100,6 +116,11 @@ export interface CommentData {
   date?: string;
   linkedTo?: string;
 }
+
+// interface UserDetailsCardProps {
+//   user: User;
+//   label?: string;
+// }
 
 // Contact data interface
 export interface Contact {
@@ -138,10 +159,15 @@ export interface Contact {
   department?: string;
   climateZone?: string;
   imageUrl?: string;
+  mpremail?: string;
+  mprpassword?: string;
   maprNumero?: string;     // Numéro de dossier MPR
   maprEmail?: string;      // Accès Ma Prime Renov - Email
   mprPassword?: string;    // Accès Ma Prime Renov - Mot de passe    // Zone climatique          // Revenue Fiscal de Référence
   eligible?: string;
+  mprColor?: string;
+  codePostal?: string;
+  nombrePersonnes?: string;
 }
 
 // Weather data type
@@ -158,6 +184,23 @@ interface User {
   firstName: string;
   lastName: string;
   phone: string;
+}
+
+interface AssignedUserCardProps {
+  user: User;
+}
+
+// Helper function to translate roles if needed
+function getRoleInFrench(role: string | undefined) {
+  const ROLE_TRANSLATIONS: Record<string, string> = {
+    "Sales Representative / Account Executive": "Représentant commercial / Directeur de compte",
+    "Project / Installation Manager": "Responsable de projet / Gestionnaire d'installation",
+    "Technician / Installer": "Technicien / Installateur",
+    "Customer Support / Service Representative": "Support client / Représentant du service",
+    "Client / Customer (Client Portal)": "Client / Consommateur (Portail client)",
+    "Super Admin": "Super Admin",
+  };
+  return role ? ROLE_TRANSLATIONS[role] || role : "N/A";
 }
 
 // Props for InfoTab
@@ -288,6 +331,44 @@ const EditableField: React.FC<EditableFieldProps> = ({
   );
 };
 
+const AssignedUserCard: React.FC<AssignedUserCardProps> = ({ user }) => {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <Image
+          src="https://www.svgrepo.com/show/134330/avatar.svg"
+          alt="Chargé de compte"
+          width={24}
+          height={24}
+          className="h-8 w-8"
+        />
+        <h3 className="text-lg font-semibold text-gray-800">Chargé de compte</h3>
+      </div>
+      <div className="space-y-2 text-sm text-gray-700">
+        <p>
+          <span className="font-medium">Nom:</span>{" "}
+          {user.firstName} {user.lastName}
+        </p>
+        <p>
+          <span className="font-medium">Téléphone:</span>{" "}
+          {user.phone || "N/A"}
+        </p>
+        <p>
+          <span className="font-medium">Email:</span>{" "}
+          {user.email || "N/A"}
+        </p>
+        <p>
+          <span className="font-medium">Rôle:</span>{" "}
+          {getRoleInFrench(user.role)}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
 // ------------------------------------------------------
 // AccordionSection Component
 // ------------------------------------------------------
@@ -331,6 +412,91 @@ const EditableField: React.FC<EditableFieldProps> = ({
 //   );
 // };
 
+// const UserDetailsCard: React.FC<UserDetailsCardProps> = ({
+//   user,
+//   label = "Gestionnaire de suivi",
+// }) => {
+//   return (
+//     <div className="border p-4 rounded-lg bg-white shadow-sm">
+//       <div className="flex items-center gap-2 mb-3">
+//         <UserCircleIcon className="h-8 w-8 text-gray-600" />
+//         <h3 className="text-lg font-semibold text-gray-800">{label}</h3>
+//       </div>
+//       <div className="space-y-1 text-sm text-gray-700">
+//         <p>
+//           <span className="font-medium">Nom:</span> {user.firstName}{" "}
+//           {user.lastName}
+//         </p>
+//         <p>
+//           <span className="font-medium">Email:</span> {user.email}
+//         </p>
+//         <p>
+//           <span className="font-medium">Rôle:</span> {user.role}
+//         </p>
+//       </div>
+//     </div>
+//   );
+// };
+
+// Custom PasswordField Component
+const PasswordField: React.FC<{ 
+  label: string; 
+  password: string; 
+  icon?: React.ElementType; 
+}> = ({ label, password, icon: Icon }) => {
+  const [revealed, setRevealed] = useState(false);
+
+  return (
+    <div className="group flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors">
+      {Icon && (
+        <Icon
+          className="h-5 w-5 text-gray-400 flex-shrink-0"
+          aria-hidden="true"
+        />
+      )}
+      <div className="flex-1 min-w-0">
+        <label className="block text-sm font-medium text-gray-500 mb-1">
+          {label}
+        </label>
+        <input
+          type={revealed ? "text" : "password"}
+          value={password}
+          readOnly
+          className="w-full bg-transparent border-b border-gray-300 py-1 focus:outline-none"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={() => setRevealed(!revealed)}
+        className="text-sm text-blue-600 hover:underline"
+      >
+        {revealed ? "Masquer" : "Afficher"}
+      </button>
+    </div>
+  );
+};
+
+function getPhaseBadgeColor(phase: string): string {
+  switch (phase) {
+    case "1 Prise de contact":
+      return "bg-gray-100 text-gray-800";
+    case "2 En attente des documents":
+      return "bg-blue-100 text-blue-800";
+    case "3 Instruction du dossier":
+      return "bg-yellow-100 text-yellow-800";
+    case "4 Dossier Accepter":
+      return "bg-green-100 text-green-800";
+    case "5 Installation":
+      return "bg-purple-100 text-purple-800";
+    case "6 Contrôle":
+      return "bg-orange-100 text-orange-800";
+    case "7 Dossier clôturé":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
+
 // ------------------------------------------------------
 // InfoTab Component (Updated with EditableFields)
 // ------------------------------------------------------
@@ -339,10 +505,11 @@ const InfoTab: React.FC<InfoTabProps> = ({
   formData,
   // handleInputChange,
   // handleNestedInputChange,
-  userList,
+  // userList,
   contact: contactProp,
-  commentData,
+  // commentData,
 }) => {
+  const router = useRouter();
   // const [saveStatus] = useState("Sauvegardé");
   const [weather, setWeather] = useState<{
       temp: number;
@@ -353,6 +520,8 @@ const InfoTab: React.FC<InfoTabProps> = ({
     const [weatherError, setWeatherError] = useState<string | null>(null);
 
   const [contact, setContact] = useState<Contact | null>(contactProp ?? null);
+  const [ , setAssignedUserDetails] = useState<User | null>(null);
+  const [assignedUser, setAssignedUser] = useState<User | null>(null);
   // const [contactLoading, setContactLoading] = useState(false);
   // const [contactError, setContactError] = useState<string | null>(null);
 
@@ -753,10 +922,10 @@ const DEPARTMENT_OPTIONS = [
   
 
   // Get assigned team email and matching user
-  const assignedTeamEmail = dossier.assignedTeam
-    ? dossier.assignedTeam.split(" (")[0]
-    : "";
-  const assignedUser = userList.find((user) => user.email === assignedTeamEmail);
+  // const assignedTeamEmail = dossier.assignedTeam
+  //   ? dossier.assignedTeam.split(" (")[0]
+  //   : "";
+  // const assignedUser = userList.find((user) => user.email === assignedTeamEmail);
 
   // Update assigned team via PATCH request (only needed if you still want it to happen automatically)
   // const handleAssignedTeamChange = async (val: string) => {
@@ -801,46 +970,46 @@ const DEPARTMENT_OPTIONS = [
   //   { label: "7 – Dossier clôturé", value: "7Dossier cloturer" },
   // ];
 
-  const assignedTeamOptions = [
-    { label: "Sélectionnez une équipe", value: "" },
-    ...userList.map((user) => {
-      // Translate user.role to French if needed
-      const roleTranslations: { [key: string]: string } = {
-        "Sales Representative / Account Executive":
-          "Représentant commercial / Directeur de compte",
-        "Project / Installation Manager":
-          "Responsable de projet / Gestionnaire d'installation",
-        "Technician / Installer": "Technicien / Installateur",
-        "Customer Support / Service Representative":
-          "Support client / Représentant du service",
-        "Client / Customer (Client Portal)":
-          "Client / Consommateur (Portail client)",
-        "Super Admin": "Super Admin",
-      };
-      const roleLabel = roleTranslations[user.role] || user.role;
+  // const assignedTeamOptions = [
+  //   { label: "Sélectionnez une équipe", value: "" },
+  //   ...userList.map((user) => {
+  //     // Translate user.role to French if needed
+  //     const roleTranslations: { [key: string]: string } = {
+  //       "Sales Representative / Account Executive":
+  //         "Représentant commercial / Directeur de compte",
+  //       "Project / Installation Manager":
+  //         "Responsable de projet / Gestionnaire d'installation",
+  //       "Technician / Installer": "Technicien / Installateur",
+  //       "Customer Support / Service Representative":
+  //         "Support client / Représentant du service",
+  //       "Client / Customer (Client Portal)":
+  //         "Client / Consommateur (Portail client)",
+  //       "Super Admin": "Super Admin",
+  //     };
+  //     const roleLabel = roleTranslations[user.role] || user.role;
 
-      return {
-        label: `${user.email} (${roleLabel})`,
-        value: user.email,
-      };
-    }),
-  ];
+  //     return {
+  //       label: `${user.email} (${roleLabel})`,
+  //       value: user.email,
+  //     };
+  //   }),
+  // ];
 
   // Create a dictionary of English -> French translations
-const ROLE_TRANSLATIONS: Record<string, string> = {
-  "Sales Representative / Account Executive": "Représentant commercial / Directeur de compte",
-  "Project / Installation Manager": "Responsable de projet / Gestionnaire d'installation",
-  "Technician / Installer": "Technicien / Installateur",
-  "Customer Support / Service Representative": "Support client / Représentant du service",
-  "Client / Customer (Client Portal)": "Client / Consommateur (Portail client)",
-  "Super Admin": "Super Admin"
-};
+// const ROLE_TRANSLATIONS: Record<string, string> = {
+//   "Sales Representative / Account Executive": "Représentant commercial / Directeur de compte",
+//   "Project / Installation Manager": "Responsable de projet / Gestionnaire d'installation",
+//   "Technician / Installer": "Technicien / Installateur",
+//   "Customer Support / Service Representative": "Support client / Représentant du service",
+//   "Client / Customer (Client Portal)": "Client / Consommateur (Portail client)",
+//   "Super Admin": "Super Admin"
+// };
 
-function getRoleInFrench(role: string | undefined) {
-  if (!role) return "";
-  return ROLE_TRANSLATIONS[role] ?? role; 
-  // ^ If `role` is missing in the dictionary, fallback to the original value
-}
+// function getRoleInFrench(role: string | undefined) {
+//   if (!role) return "";
+//   return ROLE_TRANSLATIONS[role] ?? role; 
+//   // ^ If `role` is missing in the dictionary, fallback to the original value
+// }
 
   // For "informationLogement"
   // const typeDeLogementOptions = [
@@ -894,12 +1063,85 @@ function getRoleInFrench(role: string | undefined) {
   
     fetchContactById();
   }, [dossier.contactId]);
+
+  // Fetch the user details whenever formData.assignedTeam changes
+useEffect(() => {
+  if (formData.assignedTeam) {
+    fetch(`/api/users?id=${formData.assignedTeam}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user");
+        return res.json();
+      })
+      .then((data) => {
+        setAssignedUserDetails(data);
+      })
+      .catch((err) => {
+        console.error("Error fetching user:", err);
+        setAssignedUserDetails(null);
+      });
+  }
+}, [formData.assignedTeam]);
+
+// Format the user details as a string (you can adjust the format as needed)
+// const formattedUserDetails = assignedUserDetails
+//   ? `Email: ${assignedUserDetails.email}
+// Role: ${assignedUserDetails.role}
+// First Name: ${assignedUserDetails.firstName}
+// Last Name: ${assignedUserDetails.lastName}`
+//   : "";
+
+  useEffect(() => {
+    if (formData.assignedTeam) {
+      fetch(`/api/users?id=${formData.assignedTeam}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch assigned user");
+          return res.json();
+        })
+        .then((data) => {
+          setAssignedUser(data);
+        })
+        .catch((err) => {
+          console.error("Error fetching assigned user:", err);
+          setAssignedUser(null);
+        });
+    }
+  }, [formData.assignedTeam]);
+
+  function formatEligible(eligible: string | boolean | undefined): string {
+    if (eligible === undefined) return "";
+    if (typeof eligible === "boolean") {
+      return eligible ? "oui" : "non";
+    }
+    if (typeof eligible === "string") {
+      const lowerValue = eligible.toLowerCase();
+      if (lowerValue === "true") return "oui";
+      if (lowerValue === "false") return "non";
+      return eligible;
+    }
+    return "";
+  }
+
+  // Function to navigate to the dynamic edit page
+  const handleEditClick = () => {
+    // Navigate to a dynamic route for editing (e.g., /modifier/[id])
+    router.push(`/dashboard/admin/projects/modifier/${dossier._id}`);
+  };
   
   
   return (
     <div className="flex gap-8">
       {/* Left Column: Main Sections */}
       <div className="flex-1 space-y-10">
+        {/* "Modifier" Button on top */}
+        <div className="flex justify-end">
+        <Button
+    onClick={handleEditClick}
+    className="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded"
+  >
+            Modifier
+          </Button>
+        </div>
+
         {/* --- Information du client --- */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -921,14 +1163,14 @@ function getRoleInFrench(role: string | undefined) {
 
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <EditableField
+            {/* <EditableField
               label="Photo de profil (facultatif)"
               value={contact?.imageUrl || ""}
               onChange={() => {}}
               icon={UserCircleIcon}
               inputType="text"
               readOnly={true}
-            />
+            /> */}
             <EditableField
               label="Nom"
               value={contact?.firstName || ""}
@@ -994,30 +1236,29 @@ function getRoleInFrench(role: string | undefined) {
               options={DEPARTMENT_OPTIONS}
               readOnly={true}
             />
-            <EditableField
+            {/* <EditableField
               label="Contact ID"
               value={contact?._id || ""}
               onChange={() => {}}
               icon={IdentificationIcon}
               readOnly={true}
-            />
-            <EditableField
-              label="Gestionnaire de suivi"
-              value={formData.assignedTeam || ""}
-              onChange={() => {}}
-              icon={UserCircleIcon}
-              inputType="select"
-              options={assignedTeamOptions}
-              readOnly={true}
-            />
-            <EditableField
+            /> */}
+            {/* {assignedUserDetails ? (
+              <UserDetailsCard user={assignedUserDetails} />
+            ) : (
+              <div className="border p-4 rounded-lg bg-white shadow-sm">
+                <p className="text-sm text-gray-500">Aucun gestionnaire de suivi assigné</p>
+              </div>
+            )} */}
+            {/* <EditableField
               label="Commentaires"
               value={commentData?.commentaire || ""}
               onChange={() => {}}
               icon={PencilIcon}
               inputType="textarea"
               readOnly={true}
-            />
+            /> */}
+            <CommentsSection dossier={dossier} />
 
           </div>
         </motion.section>
@@ -1044,48 +1285,8 @@ function getRoleInFrench(role: string | undefined) {
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <EditableField
-              label="Système de chauffage"
-              value={formData.projet || ""}
-              onChange={() => {}}
-              icon={FireIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Surface habitable (m²)"
-              value={formData.surfaceChauffee || ""}
-              onChange={() => {}}
-              icon={HomeIcon}
-              inputType="number"
-              readOnly={true}
-            />
-            <EditableField
-              label="Type de compteur électrique"
-              value={formData.compteurElectrique || ""}
-              onChange={() => {}}
-              icon={LightBulbIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Projet proposé"
-              value={formData.solution || ""}
-              onChange={() => {}}
-              icon={MapIcon}
-              inputType="select"
-              readOnly={true}
-            />
-            <EditableField
-              label="Année de construction"
-              value={formData.anneeConstruction || ""}
-              onChange={() => {}}
-              icon={CalendarIcon}
-              inputType="number"
-              readOnly={true}
-            />
-            <EditableField
               label="Type de logement"
-              value={formData.typeDeLogement || ""}
+              value={dossier?.typeDeLogement || ""}
               onChange={() => {}}
               icon={HomeIcon}
               inputType="select"
@@ -1093,12 +1294,70 @@ function getRoleInFrench(role: string | undefined) {
             />
             <EditableField
               label="Profil"
-              value={formData.profil || ""}
+              value={dossier?.profil || ""}
               onChange={() => {}}
               icon={UserCircleIcon}
               inputType="text"
               readOnly={true}
             />
+            <EditableField
+              label="Système de chauffage"
+              value={dossier?.projet || ""}
+              onChange={() => {}}
+              icon={FireIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Surface habitable (m²)"
+              value={dossier?.surfaceChauffee || ""}
+              onChange={() => {}}
+              icon={HomeIcon}
+              inputType="number"
+              readOnly={true}
+            />
+            <EditableField
+              label="Type de compteur électrique"
+              value={dossier?.typeCompteurElectrique || ""}
+              onChange={() => {}}
+              icon={LightBulbIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
+              label="Année de construction"
+              value={dossier?.anneeConstruction || ""}
+              onChange={() => {}}
+              icon={CalendarIcon}
+              inputType="number"
+              readOnly={true}
+            />
+            <div className="group flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors">
+      {MapIcon && (
+        <MapIcon className="h-5 w-5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+      )}
+      <div className="flex-1 min-w-0">
+        <label className="block text-sm font-medium text-gray-500 mb-1">
+          Projet proposé
+        </label>
+        {dossier?.solution ? (
+          <div className="flex flex-wrap gap-2">
+            {dossier.solution.split(',').map((sol, index) => (
+              <span
+                key={index}
+                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+              >
+                {sol.trim()}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="cursor-pointer truncate text-gray-900">
+            <span className="text-gray-400 italic">Non défini</span>
+          </div>
+        )}
+      </div>
+    </div>
           </div>
         </motion.section>
 
@@ -1132,23 +1391,20 @@ function getRoleInFrench(role: string | undefined) {
             />
             <EditableField
               label="Accès Ma Prime Renov - Email"
-              value={contact?.maprEmail || ""}
+              value={contact?.mpremail || ""}
               onChange={() => {}}
               icon={MapIcon}
               inputType="email"
               readOnly={true}
             />
-            <EditableField
+            <PasswordField
               label="Accès Ma Prime Renov - Mot de passe"
-              value={contact?.mprPassword || ""}
-              onChange={() => {}}
+              password={contact?.mprpassword || ""}
               icon={LockClosedIcon}
-              inputType="text"
-              readOnly={true}
             />
             <EditableField
               label="Nombre de personne"
-              value={formData.nombrePersonnes || ""}
+              value={dossier?.nombrePersonne || ""}
               onChange={() => {}}
               icon={UserCircleIcon}
               inputType="number"
@@ -1156,7 +1412,7 @@ function getRoleInFrench(role: string | undefined) {
             />
             <EditableField
               label="Code postal"
-              value={formData.codePostal || ""}
+              value={dossier?.codePostal || ""}
               onChange={() => {}}
               icon={HomeIcon}
               inputType="text"
@@ -1172,7 +1428,7 @@ function getRoleInFrench(role: string | undefined) {
             />
             <EditableField
               label="Ma Prime Renov Couleur"
-              value={formData.mprColor || ""}
+              value={dossier?.mprColor || ""}
               onChange={() => {}}
               icon={PencilIcon}
               inputType="text"
@@ -1180,12 +1436,13 @@ function getRoleInFrench(role: string | undefined) {
             />
             <EditableField
               label="Eligible"
-              value={contact?.eligible || ""}
+              value={formatEligible(contact?.eligible)}
               onChange={() => {}}
               icon={IdentificationIcon}
               inputType="text"
               readOnly={true}
             />
+
           </div>
         </motion.section>
 
@@ -1209,17 +1466,31 @@ function getRoleInFrench(role: string | undefined) {
           </div>
           {/* Projet Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <EditableField
-              label="Phase du projet"
-              value={formData.etape || ""}
-              onChange={() => {}}
-              icon={CalendarIcon}
-              inputType="select"
-              readOnly={true}
-            />
+          {/* Updated "Phase du projet" field */}
+          <div className="group flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors">
+            {CalendarIcon && (
+              <CalendarIcon className="h-5 w-5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+            )}
+            <div className="flex-1 min-w-0">
+              <label className="block text-sm font-medium text-gray-500 mb-1">
+                Phase du projet
+              </label>
+              {formData.etape ? (
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${getPhaseBadgeColor(
+                    formData.etape
+                  )}`}
+                >
+                  {formData.etape}
+                </span>
+              ) : (
+                <span className="text-gray-400 italic">Non défini</span>
+              )}
+            </div>
+          </div>
             <EditableField
               label="Type de travaux"
-              value={formData.typeTravaux || ""}
+              value={dossier.typeTravaux || ""}
               onChange={() => {}}
               icon={PencilIcon}
               inputType="select"
@@ -1256,37 +1527,16 @@ function getRoleInFrench(role: string | undefined) {
         </motion.div>
 
         {/* Infos Organisation (Assigned User) */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
-        >
-          <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-            <UserCircleIcon className="h-6 w-6 text-gray-600" />
-            Chargé de compte
-          </h3>
-          <div className="space-y-2">
-            <p className="text-sm">
-              <span className="font-medium">Nom:</span>{" "}
-              {assignedUser
-                ? `${assignedUser.firstName} ${assignedUser.lastName}`
-                : "N/A"}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Téléphone:</span>{" "}
-              {assignedUser?.phone || "N/A"}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Email:</span>{" "}
-              {assignedUser?.email || "N/A"}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Rôle:</span>{" "}
-              {assignedUser?.role
-                ? getRoleInFrench(assignedUser.role)
-                : "N/A"}
-            </p>
-          </div>
-        </motion.div>
+        {assignedUser ? (
+            <AssignedUserCard user={assignedUser} />
+          ) : (
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+            >
+              <p className="text-sm text-gray-500">Aucun chargé de compte assigné</p>
+            </motion.div>
+          )}
 
         {/* Synthèse Énergétique */}
         <motion.div
@@ -1309,7 +1559,7 @@ function getRoleInFrench(role: string | undefined) {
               <FireIcon className="h-5 w-5 text-orange-500" />
               <div>
                 <p className="text-sm text-gray-500">Chauffage</p>
-                <p className="font-medium">{contact?.heatingType ?? "N/A"}</p>
+                <p className="font-medium">{dossier?.projet ?? "N/A"}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { hash } from "bcryptjs";
 import sgMail from "@sendgrid/mail";
+import { ObjectId } from "mongodb";
 
 // Set the SendGrid API Key
 sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
@@ -261,13 +262,39 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Parse query parameters from the URL
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
     const client = await clientPromise;
     const db = client.db("yourdbname");
-    const users = await db.collection("users").find({}).toArray();
-    // Return users as is, including their plain text password in `realPassword`
-    return NextResponse.json(users);
+
+    // If an id is provided, try to fetch the user by _id (ObjectId)
+    if (id) {
+      // Validate that the id is a valid ObjectId
+      if (!ObjectId.isValid(id)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid user id provided." },
+          { status: 400 }
+        );
+      }
+
+      const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
+      if (!user) {
+        return NextResponse.json(
+          { success: false, message: "User not found." },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(user);
+    } else {
+      // Otherwise, return all users
+      const users = await db.collection("users").find({}).toArray();
+      return NextResponse.json(users);
+    }
   } catch (error: unknown) {
     console.error("Error fetching users:", error);
     return NextResponse.error();

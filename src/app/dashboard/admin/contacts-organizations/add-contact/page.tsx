@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Select, { MultiValue } from "react-select";
@@ -33,7 +33,7 @@ interface Contact {
 
 interface Dossier {
   informationLogement: {
-    systemeChauffage: string;
+    systemeChauffage: string[];
     surfaceHabitable: string;
     typeCompteurElectrique: string;
     projetPropose: string[];
@@ -105,18 +105,19 @@ const typeLogementOptions = [
 
 // Options for "Profil" dropdown (for logement)
 const profileLogementOptions = [
-  { value: "Locataire", label: "Locataire" },
-  { value: "Bailleur", label: "Bailleur" },
-  { value: "Propriétaire", label: "Propriétaire" },
-  { value: "SCI", label: "SCI" },
+  { value: "proprietaireOccupant", label: "Propriétaire Occupant" },
+  { value: "proprietaireBailleur", label: "Propriétaire Bailleur" },
+  { value: "locataire", label: "Locataire" },
+  { value: "sci", label: "SCI" },
+  { value: "residenceSecondaire", label: "Résidence Secondaire" },
 ];
 
 // Options for "Type de travaux" in "Le projet"
 const travauxOptions = [
-  { value: "Rénovation", label: "Rénovation" },
-  { value: "Extension", label: "Extension" },
-  { value: "Installation", label: "Installation" },
-  { value: "Autre", label: "Autre" },
+  { value: "Mono-geste", label: "Mono-geste" },
+  { value: "Financement", label: "Financement" },
+  { value: "Rénovation d'ampleur", label: "Rénovation d'ampleur" },
+  { value: "Panneaux photovoltaique", label: "Panneaux photovoltaique" },
 ];
 
 // Options for "Phase du projet"
@@ -167,7 +168,7 @@ export default function AddContactDossierPage() {
 
   const [dossier, setDossier] = useState<Dossier>({
     informationLogement: {
-      systemeChauffage: "",
+      systemeChauffage: [],
       surfaceHabitable: "",
       typeCompteurElectrique: "",
       projetPropose: [],
@@ -333,14 +334,14 @@ export default function AddContactDossierPage() {
   };
 
   // Image Upload
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setContact({ ...contact, imageUrl: e.dataTransfer.files[0] });
-    }
-  };
-  const handleImageDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
+  // const fileInputRef = useRef<HTMLInputElement>(null);
+  // const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  //   e.preventDefault();
+  //   if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+  //     setContact({ ...contact, imageUrl: e.dataTransfer.files[0] });
+  //   }
+  // };
+  // const handleImageDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
 
   // Unified Submit Handler
   const handleUnifiedSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -384,7 +385,7 @@ export default function AddContactDossierPage() {
       }
     });
     const aidesFields: (keyof Dossier["informationAides"])[] = [
-      "numeroDossierMPR",
+      // "numeroDossierMPR",
       "nombrePersonne",
       "codePostale",
       "zoneClimatique",
@@ -499,6 +500,21 @@ export default function AddContactDossierPage() {
     dossier.informationLogement.projetPropose.includes(option.value)
   );
 
+  // Define your options outside the component or in the same file
+const chauffageOptions = [
+  { value: 'gaz', label: 'Gaz' },
+  { value: 'fioul', label: 'Fioul' },
+  { value: 'electrique', label: 'Electrique' },
+  { value: 'pompe-a-chaleur', label: 'Pompe à chaleur' },
+  { value: 'chaudiere-a-bois', label: 'Chaudière à bois' },
+  { value: 'chaudiere-a-granules', label: 'Chaudière à granulés' },
+];
+
+  // Map the selected values to the corresponding react-select options
+  const selectedOptions = chauffageOptions.filter(option =>
+    dossier.informationLogement.systemeChauffage.includes(option.value)
+  );
+
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -536,33 +552,6 @@ export default function AddContactDossierPage() {
               {activeTab === "client" && (
                 <motion.div key="client" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white p-6 rounded-lg shadow-lg mb-8">
                   <div className="grid grid-cols-1 gap-6">
-                    {/* Photo de profil */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Photo de profil (facultatif)</label>
-                      <div
-                        onDrop={handleImageDrop}
-                        onDragOver={handleImageDragOver}
-                        onClick={() => fileInputRef.current?.click()}
-                        className="mt-2 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-                      >
-                        {contact.imageUrl ? (
-                          <p className="text-gray-600">{contact.imageUrl.name}</p>
-                        ) : (
-                          <p className="text-gray-500">Glissez-déposez ou cliquez pour sélectionner</p>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          ref={fileInputRef}
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              setContact({ ...contact, imageUrl: e.target.files[0] });
-                            }
-                          }}
-                          className="hidden"
-                        />
-                      </div>
-                    </div>
                     {/* Nom & Prénom */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -663,53 +652,6 @@ export default function AddContactDossierPage() {
               {activeTab === "habitation" && (
                 <motion.div key="habitation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white p-6 rounded-lg shadow-lg mb-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Système de chauffage */}
-                    <div>
-                      <label htmlFor="systemeChauffage" className="block text-sm font-medium text-gray-700">Système de chauffage</label>
-                      <input type="text" id="systemeChauffage" value={dossier.informationLogement.systemeChauffage} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, systemeChauffage: e.target.value } })} placeholder="Ex: Chaudière gaz, pompe à chaleur..." className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                      {dossierErrors["informationLogement.systemeChauffage"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.systemeChauffage"]}</p>}
-                    </div>
-                    {/* Surface habitable */}
-                    <div>
-                      <label htmlFor="surfaceHabitable" className="block text-sm font-medium text-gray-700">Surface habitable (m²)</label>
-                      <input type="number" id="surfaceHabitable" value={dossier.informationLogement.surfaceHabitable} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, surfaceHabitable: e.target.value } })} placeholder="Ex: 180" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                      {dossierErrors["informationLogement.surfaceHabitable"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.surfaceHabitable"]}</p>}
-                    </div>
-                    {/* Type de compteur électrique */}
-                    <div>
-                      <label htmlFor="typeCompteurElectrique" className="block text-sm font-medium text-gray-700">Type de compteur électrique</label>
-                      <select id="typeCompteurElectrique" value={dossier.informationLogement.typeCompteurElectrique} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, typeCompteurElectrique: e.target.value } })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Sélectionnez</option>
-                        <option value="Monophasé">Monophasé</option>
-                        <option value="Biphasé">Biphasé</option>
-                        <option value="Triphasé">Triphasé</option>
-                      </select>
-                      {dossierErrors["informationLogement.typeCompteurElectrique"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.typeCompteurElectrique"]}</p>}
-                    </div>
-                    {/* Projet proposé (Multi-select) */}
-                    <div>
-                      <label htmlFor="projetPropose" className="block text-sm font-medium text-gray-700">Projet proposé</label>
-                      <Select
-                        isMulti
-                        options={projetOptions}
-                        value={projetSelectValue}
-                        onChange={(
-                          selectedOptions: MultiValue<{ value: string; label: string }>
-                        ) => {
-                          const values = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-                          setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, projetPropose: values } });
-                        }}
-                        placeholder="Sélectionnez..."
-                        className="mt-1"
-                      />
-                      {dossierErrors["informationLogement.projetPropose"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.projetPropose"]}</p>}
-                    </div>
-                    {/* Année de construction */}
-                    <div>
-                      <label htmlFor="anneeConstruction" className="block text-sm font-medium text-gray-700">Année de construction</label>
-                      <input type="number" id="anneeConstruction" value={dossier.informationLogement.anneeConstruction} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, anneeConstruction: e.target.value } })} placeholder="Ex: 1998" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                      {dossierErrors["informationLogement.anneeConstruction"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.anneeConstruction"]}</p>}
-                    </div>
                     {/* Type de logement */}
                     <div>
                       <label htmlFor="typeLogement" className="block text-sm font-medium text-gray-700">Type de logement</label>
@@ -725,8 +667,23 @@ export default function AddContactDossierPage() {
                     </div>
                     {/* Profil */}
                     <div>
-                      <label htmlFor="profileLogement" className="block text-sm font-medium text-gray-700">Profil</label>
-                      <select id="profileLogement" value={dossier.informationLogement.profileLogement} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, profileLogement: e.target.value } })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      <label htmlFor="profileLogement" className="block text-sm font-medium text-gray-700">
+                        Profil
+                      </label>
+                      <select
+                        id="profileLogement"
+                        value={dossier.informationLogement.profileLogement}
+                        onChange={(e) =>
+                          setDossier({
+                            ...dossier,
+                            informationLogement: {
+                              ...dossier.informationLogement,
+                              profileLogement: e.target.value,
+                            },
+                          })
+                        }
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
                         <option value="">Sélectionnez</option>
                         {profileLogementOptions.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -734,8 +691,162 @@ export default function AddContactDossierPage() {
                           </option>
                         ))}
                       </select>
-                      {dossierErrors["informationLogement.profileLogement"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.profileLogement"]}</p>}
+                      {dossierErrors["informationLogement.profileLogement"] && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {dossierErrors["informationLogement.profileLogement"]}
+                        </p>
+                      )}
                     </div>
+                    {/* Système de chauffage */}
+                    <div>
+                      <label htmlFor="systemeChauffage" className="block text-sm font-medium text-gray-700">
+                        Système de chauffage
+                      </label>
+                      <Select
+                        id="systemeChauffage"
+                        isMulti
+                        options={chauffageOptions}
+                        value={selectedOptions}
+                        onChange={(selectedOptions) => {
+                          const values = selectedOptions ? selectedOptions.map(option => option.value) : [];
+                          setDossier({
+                            ...dossier,
+                            informationLogement: {
+                              ...dossier.informationLogement,
+                              systemeChauffage: values,
+                            },
+                          });
+                        }}
+                        placeholder="Sélectionnez..."
+                        className="mt-1"
+                      />
+                      {dossierErrors["informationLogement.systemeChauffage"] && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {dossierErrors["informationLogement.systemeChauffage"]}
+                        </p>
+                      )}
+                    </div>
+                    {/* Surface habitable */}
+                    <div>
+                      <label htmlFor="surfaceHabitable" className="block text-sm font-medium text-gray-700">Surface habitable (m²)</label>
+                      <input type="number" id="surfaceHabitable" value={dossier.informationLogement.surfaceHabitable} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, surfaceHabitable: e.target.value } })} placeholder="Ex: 180" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {dossierErrors["informationLogement.surfaceHabitable"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.surfaceHabitable"]}</p>}
+                    </div>
+                    {/* Type de compteur électrique */}
+                    <div>
+                      <label htmlFor="typeCompteurElectrique" className="block text-sm font-medium text-gray-700">Type de compteur électrique</label>
+                      <select id="typeCompteurElectrique" value={dossier.informationLogement.typeCompteurElectrique} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, typeCompteurElectrique: e.target.value } })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Sélectionnez</option>
+                        <option value="Monophasé">Monophasé</option>
+                        <option value="Triphasé">Triphasé</option>
+                      </select>
+                      {dossierErrors["informationLogement.typeCompteurElectrique"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.typeCompteurElectrique"]}</p>}
+                    </div>
+                    {/* Année de construction */}
+                    <div>
+                      <label htmlFor="anneeConstruction" className="block text-sm font-medium text-gray-700">Année de construction</label>
+                      <input type="number" id="anneeConstruction" value={dossier.informationLogement.anneeConstruction} onChange={(e) => setDossier({ ...dossier, informationLogement: { ...dossier.informationLogement, anneeConstruction: e.target.value } })} placeholder="Ex: 1998" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      {dossierErrors["informationLogement.anneeConstruction"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.anneeConstruction"]}</p>}
+                    </div>
+                    {/* Projet proposé (Multi-select) */}
+                    <div>
+                      <label htmlFor="projetPropose" className="block text-sm font-medium text-gray-700">
+                        Projet proposé
+                      </label>
+                      <Select
+                        isMulti
+                        options={projetOptions}
+                        value={projetSelectValue}
+                        onChange={(
+                          selectedOptions: MultiValue<{ value: string; label: string }>
+                        ) => {
+                          const values = selectedOptions
+                            ? selectedOptions.map((option) => option.value)
+                            : [];
+                          setDossier({
+                            ...dossier,
+                            informationLogement: {
+                              ...dossier.informationLogement,
+                              projetPropose: values,
+                            },
+                          });
+                        }}
+                        placeholder="Sélectionnez..."
+                        className="mt-1"
+                        styles={{
+                          control: (provided, state) => ({
+                            ...provided,
+                            borderRadius: '0.375rem',
+                            borderColor: state.isFocused ? '#2563eb' : '#d1d5db',
+                            boxShadow: state.isFocused ? '0 0 0 2px rgba(37, 99, 235, 0.25)' : provided.boxShadow,
+                            '&:hover': {
+                              borderColor: '#2563eb',
+                            },
+                            padding: 4,
+                            minHeight: 'auto',
+                          }),
+                          // Stack selected options vertically
+                          valueContainer: (provided) => ({
+                            ...provided,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            padding: '6px 8px',
+                          }),
+                          // Adjust styling for each selected option (chip) so it fits its content
+                          multiValue: (provided) => ({
+                            ...provided,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: '0.375rem',
+                            // Remove the fixed width so the chip sizes to its content
+                            alignSelf: 'flex-start',
+                            marginBottom: '0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }),
+                          multiValueLabel: (provided) => ({
+                            ...provided,
+                            color: 'white',
+                            padding: '4px 8px',
+                            fontSize: '0.875rem',
+                          }),
+                          multiValueRemove: (provided) => ({
+                            ...provided,
+                            color: 'white',
+                            padding: '4px',
+                            cursor: 'pointer',
+                            ':hover': {
+                              backgroundColor: '#2563eb',
+                              color: 'white',
+                            },
+                          }),
+                          menu: (provided) => ({
+                            ...provided,
+                            borderRadius: '0.375rem',
+                            marginTop: 4,
+                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                          }),
+                          option: (provided, state) => ({
+                            ...provided,
+                            backgroundColor: state.isFocused ? '#ebf8ff' : 'white',
+                            color: state.isFocused ? '#2563eb' : '#111827',
+                            cursor: 'pointer',
+                            padding: '8px 12px',
+                          }),
+                          indicatorsContainer: (provided) => ({
+                            ...provided,
+                            display: 'none',
+                          }),
+                        }}
+                      />
+                      {dossierErrors["informationLogement.projetPropose"] && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {dossierErrors["informationLogement.projetPropose"]}
+                        </p>
+                      )}
+                    </div>
+                    
+                    
                   </div>
                 </motion.div>
               )}
@@ -757,19 +868,51 @@ export default function AddContactDossierPage() {
                     </div>
                     {/* Conditionally show MPR Access fields */}
                     {dossier.informationAides.compteMPRExistant && (
-                      <>
-                        <div>
-                          <label htmlFor="mpremail" className="block text-sm font-medium text-gray-700">Accès Ma Prime Renov - Email</label>
-                          <input type="email" id="mpremail" value={dossier.informationAides.mpremail} onChange={(e) => setDossier({ ...dossier, informationAides: { ...dossier.informationAides, mpremail: e.target.value } })} placeholder="Entrez l'email d'accès" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                          {dossierErrors["informationAides.mpremail"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mpremail"]}</p>}
-                        </div>
-                        <div>
-                          <label htmlFor="mprpassword" className="block text-sm font-medium text-gray-700">Accès Ma Prime Renov - Mot de passe</label>
-                          <input type="password" id="mprpassword" value={dossier.informationAides.mprpassword} onChange={(e) => setDossier({ ...dossier, informationAides: { ...dossier.informationAides, mprpassword: e.target.value } })} placeholder="Entrez le mot de passe" className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                          {dossierErrors["informationAides.mprpassword"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mprpassword"]}</p>}
-                        </div>
-                      </>
-                    )}
+  <div className="grid grid-cols-2 gap-6">
+    <div>
+      <label htmlFor="mpremail" className="block text-sm font-medium text-gray-700">
+        Accès Ma Prime Renov - Email
+      </label>
+      <input
+        type="email"
+        id="mpremail"
+        value={dossier.informationAides.mpremail}
+        onChange={(e) =>
+          setDossier({
+            ...dossier,
+            informationAides: { ...dossier.informationAides, mpremail: e.target.value },
+          })
+        }
+        placeholder="Entrez l'email d'accès"
+        className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+      {dossierErrors["informationAides.mpremail"] && (
+        <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mpremail"]}</p>
+      )}
+    </div>
+    <div>
+      <label htmlFor="mprpassword" className="block text-sm font-medium text-gray-700">
+        Accès Ma Prime Renov - Mot de passe
+      </label>
+      <input
+        type="password"
+        id="mprpassword"
+        value={dossier.informationAides.mprpassword}
+        onChange={(e) =>
+          setDossier({
+            ...dossier,
+            informationAides: { ...dossier.informationAides, mprpassword: e.target.value },
+          })
+        }
+        placeholder="Entrez le mot de passe"
+        className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+      {dossierErrors["informationAides.mprpassword"] && (
+        <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mprpassword"]}</p>
+      )}
+    </div>
+  </div>
+)}
                     {/* Nombre de personne */}
                     <div>
                       <label htmlFor="nombrePersonne" className="block text-sm font-medium text-gray-700">Nombre de personne</label>
@@ -783,7 +926,7 @@ export default function AddContactDossierPage() {
                     </div>
                     {/* Zone climatique (read-only) */}
                     <div>
-                      <label htmlFor="zoneClimatique" className="block text-sm font-medium text-gray-700">Zone climatique</label>
+                      <label htmlFor="zoneClimatique" className="block text-sm font-medium text-gray-700">Zone</label>
                       <input type="text" id="zoneClimatique" value={dossier.informationAides.zoneClimatique} readOnly className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2" />
                       {dossierErrors["informationAides.zoneClimatique"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.zoneClimatique"]}</p>}
                     </div>

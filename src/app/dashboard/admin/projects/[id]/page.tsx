@@ -48,8 +48,13 @@ interface DossierFormData {
   projet: string;
   solution: string;
   etape: string;
+  nombrePersonne?: string;
   valeur: string;
   assignedTeam: string;
+  // Additional properties expected by InfoTab
+  typeTravaux?: string;
+  codePostal?: string;
+  mprColor?: string;
   notes: string;
   nombrePersonnes: string;
   informationLogement: {
@@ -110,6 +115,20 @@ type Dossier = {
     circuitChauffageFonctionnel: string;
   };
   contactId?: string;
+  
+  // Additional properties expected by InfoTab
+  nombrePersonne?: string;  // if different from nombrePersonnes
+  typeTravaux?: string;
+  codePostal?: string;
+  mprColor?: string;
+  // Add the missing properties (with optional if necessary)
+  anneeConstruction?: string;
+  typeCompteurElectrique?: string;
+  compteurElectrique?: string;
+  surfaceChauffee?: string;
+  profil?: string;
+  typeDeLogement?: string;
+  // ... add any other properties that InfoTab requires, marking them optional if necessary
 };
 
 type StepProgressProps = {
@@ -368,8 +387,15 @@ function StepProgress({ currentStep, onStepClick }: StepProgressProps) {
     "Dossier clôturé",
   ];
 
-  // Calculate the progress percentage based on the current step.
-  const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
+  // Define weights for each step.
+  // Here, steps 2-5 have a weight of 2 while steps 1, 6, and 7 have a weight of 1.
+  const stepWeights = [1, 1.25, 1.6, 1.5, 1.4, 2, 1];
+  const totalWeight = stepWeights.reduce((sum, weight) => sum + weight, 0);
+  const currentWeight = stepWeights
+    .slice(0, currentStep)
+    .reduce((sum, weight) => sum + weight, 0);
+  const progressPercent = (currentWeight / totalWeight) * 100;
+
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
   // Tooltip animation variants.

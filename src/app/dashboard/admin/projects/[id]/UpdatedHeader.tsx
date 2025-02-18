@@ -11,6 +11,7 @@ import { LockClosedIcon } from "@heroicons/react/24/solid";
 
 // Define the contact interface based on your API response.
 interface Contact {
+  numeroDossier: string;
   _id: string;
   name?: string;
   firstName?: string;
@@ -26,6 +27,33 @@ interface Contact {
   mprpassword?: string; // Fallback for mprPassword
   maprNumero?: string;
   // add any other fields if needed
+}
+
+export interface Dossier {
+  numero: string;
+  client: string;
+  projet: string;
+  solution: string;
+  etape: string;
+  valeur: string;
+  assignedTeam?: string;
+  notes?: string;
+  informationLogement?: {
+    typeDeLogement: string;
+    surfaceHabitable: string;
+    anneeConstruction: string;
+    systemeChauffage: string;
+    profil?: string;
+    nombrePersonnes?: string;
+  };
+  informationTravaux?: {
+    typeTravaux: string;
+    typeUtilisation: string;
+    surfaceChauffee: string;
+    circuitChauffageFonctionnel: string;
+  };
+  _id: string;
+  contactId?: string;
 }
 
 // Update props to receive a contactId.
@@ -49,6 +77,22 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
   const [loading, setLoading] = useState(true);
   const [showUIPassword, setShowUIPassword] = useState(false);
   const [showMPRPassword, setShowMPRPassword] = useState(false);
+  const [, setDossier] = useState<Dossier | null>(null);
+  const [, setLoadingDossier] = useState(true);
+
+useEffect(() => {
+  if (!contactId) return;
+  fetch(`/api/dossiers?contactId=${contactId}`)
+    .then((res) => res.json())
+    .then((data: Dossier) => {
+      setDossier(data);
+      setLoadingDossier(false);
+    })
+    .catch((err) => {
+      console.error("Error fetching dossier data:", err);
+      setLoadingDossier(false);
+    });
+}, [contactId]);
 
   // Fetch the contact data from your API based on the contactId.
   useEffect(() => {
@@ -129,6 +173,7 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
           {/* Left Column – Client Information */}
           <div className="space-y-6">
             <div className="flex items-start justify-between">
+              {/* Client Profile */}
               <motion.div whileHover={{ x: 2 }} className="flex flex-col space-y-1">
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Profil du client
@@ -136,6 +181,15 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
                 <h1 className="text-3xl font-light text-gray-900">
                   {fullName}
                   <span className="ml-2 text-blue-600 text-xl align-top">®</span>
+                </h1>
+              </motion.div>
+              {/* Dossier Number */}
+              <motion.div whileHover={{ x: 2 }} className="flex flex-col space-y-1">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Numero de dossier
+                </span>
+                <h1 className="text-xl font-light text-gray-900">
+                  {contact?.numeroDossier || "N/A"}
                 </h1>
               </motion.div>
             </div>
@@ -205,7 +259,7 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">
-                    Accès Ma Prime Renov
+                    Accès MAPRIMERENOV’
                   </span>
                   <div className="flex items-center space-x-2">
                     <button
@@ -241,7 +295,7 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
                   onClick={handleSendMPRAccess}
                   className="mt-2 inline-flex items-center px-3 py-1.5 border border-green-200 text-xs font-semibold text-green-600 bg-green-50 rounded-full hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-300 transition duration-150"
                 >
-                  Envoyer Accès Ma Prime Renov
+                  Envoyer Accès MAPRIMERENOV’
                 </button>
               </div>
             </div>
@@ -283,36 +337,26 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
 
             {/* Avatar Section */}
             <div className="flex flex-col items-center md:items-start">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="relative group"
-              >
+              <motion.div whileHover={{ scale: 1.02 }} className="relative group">
                 <div className="absolute inset-0 rounded-full transform transition-all group-hover:scale-105 group-hover:bg-gradient-to-r from-blue-200/30 to-purple-200/30" />
-                {contact.imageUrl ? (
-                  <img
-                    src={contact.imageUrl}
-                    alt="Avatar"
-                    className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-xl"
-                  />
-                ) : (
-                  <div className="w-32 h-32 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-purple-100 border-4 border-white shadow-xl">
-                    <span className="text-2xl font-bold text-gray-700">
-                      {initials}
-                    </span>
-                  </div>
-                )}
+                <div className="w-32 h-32 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-purple-100 border-4 border-white shadow-xl">
+                  <span className="text-2xl font-bold text-gray-700">
+                    {initials}
+                  </span>
+                </div>
                 <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-sm" />
               </motion.div>
 
               <div className="text-center mt-4">
                 <span className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  ID Ma Prime Renov
+                  N° Dossier MAPRIMERENOV’
                 </span>
                 <span className="text-lg font-semibold text-gray-900">
                   {contact.maprNumero || "N/A"}
                 </span>
               </div>
             </div>
+
           </div>
         </motion.div>
       </header>

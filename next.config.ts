@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       "example.com",
       "via.placeholder.com",
       "images.blush.design",
+      "svgrepo.com",
       // You can add more domains if needed
     ],
   },
