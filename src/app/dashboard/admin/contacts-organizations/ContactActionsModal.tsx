@@ -26,6 +26,8 @@ import { ConvertToOrganizationForm } from "./ConvertToOrganizationForm";
  * The canonical Contact interface used throughout your app.
  */
 export interface Contact {
+  numeroDossier: string | undefined;
+  contactId: any;
   lastName: string;
   firstName: string;
   effectif: string | number | boolean;

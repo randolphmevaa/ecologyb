@@ -32,16 +32,20 @@ export function getContactName(contact: Contact): string {
 
 function getContactTitle(contact: Contact): string {
   // Use 'titre' if available; otherwise fallback to 'role'
-  return contact.titre ?? contact.role ?? "";
+  return contact.numeroDossier ?? "";
 }
 
 export default function ContactTable() {
-  // Using SWR to fetch contacts; note that contacts may have id as number or string.
+  // Fetch contacts from /api/contacts
   const { data: contacts, error, mutate } = useSWR<Contact[]>("/api/contacts", fetcher, {
     fallbackData: [],
   });
-  const [showAddContactModal, setShowAddContactModal] = useState(false);
+  // Fetch dossiers from /api/dossiers
+  const { data: dossiers } = useSWR<any[]>("/api/dossiers", fetcher, {
+    fallbackData: [],
+  });
 
+  const [showAddContactModal, setShowAddContactModal] = useState(false);
   const [searchFilter, setSearchFilter] = useState("");
   const [contactFilter, setContactFilter] = useState("all");
   const [sidebarVisible, setSidebarVisible] = useState(false);
@@ -110,6 +114,22 @@ export default function ContactTable() {
   // Updated toggleFollow function accepts a string id.
   const toggleFollow = (id: string) => {
     setFollowStatus((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Navigate to the dossier page when clicking on the client's name.
+  const handleClientClick = (contact: Contact) => {
+    // Try matching the dossier by comparing contact.id or contact.contactId with dossier.contactId
+    const dossier = dossiers?.find(
+      (d) =>
+        d.contactId === contact.id ||
+        d.contactId === contact.contactId
+    );
+    if (dossier) {
+      router.push(`/dashboard/admin/projects/${dossier._id}`);
+    } else {
+      // Optionally handle the case where no dossier is found.
+      console.error("No dossier found for contact", contact);
+    }
   };
 
   if (error)
@@ -247,7 +267,7 @@ export default function ContactTable() {
                     Nom
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-[#213f5b] uppercase tracking-wider">
-                    Titre
+                  Numero  de dossier
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-[#213f5b] uppercase tracking-wider">
                     Téléphone
@@ -261,9 +281,9 @@ export default function ContactTable() {
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#213f5b] uppercase tracking-wider">
                     Suivre
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-[#213f5b] uppercase tracking-wider">
+                  {/* <th className="px-4 py-3 text-center text-xs font-medium text-[#213f5b] uppercase tracking-wider">
                     Actions
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -293,7 +313,8 @@ export default function ContactTable() {
                         </td>
                         <td className="px-4 py-3">
                           <button
-                            onClick={() => setSelectedContact(contact)}
+                            // You can also navigate when clicking the avatar
+                            onClick={() => handleClientClick(contact)}
                             aria-label={`Voir le profil de ${getContactName(contact)}`}
                           >
                             <div className="h-10 w-10 rounded-full bg-[#213f5b] text-white flex items-center justify-center font-bold shadow-md">
@@ -303,7 +324,7 @@ export default function ContactTable() {
                         </td>
                         <td className="px-4 py-3">
                           <button
-                            onClick={() => setSelectedContact(contact)}
+                            onClick={() => handleClientClick(contact)}
                             className="underline text-[#213f5b] hover:text-[#213f5b] transition-colors"
                           >
                             {getContactName(contact)}
@@ -313,7 +334,7 @@ export default function ContactTable() {
                         <td className="px-4 py-3">{contact.phone}</td>
                         <td className="px-4 py-3">{contact.email}</td>
                         <td className="px-4 py-3">
-                          {contact.tags?.join(", ") || "-"}
+                          {contact.mailingAddress || "-"}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button
@@ -332,7 +353,7 @@ export default function ContactTable() {
                             )}
                           </button>
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        {/* <td className="px-4 py-3 text-center">
                           <button
                             onClick={() => setSelectedActionsContact(contact)}
                             aria-label="Actions"
@@ -340,7 +361,7 @@ export default function ContactTable() {
                           >
                             <EllipsisHorizontalIcon className="h-6 w-6 text-[#213f5b]" />
                           </button>
-                        </td>
+                        </td> */}
                       </motion.tr>
                     );
                   })
