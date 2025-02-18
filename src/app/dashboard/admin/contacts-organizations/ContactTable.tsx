@@ -9,7 +9,7 @@ import {
   ArrowPathIcon,
   Bars3Icon,
   XMarkIcon,
-  EllipsisHorizontalIcon,
+  // EllipsisHorizontalIcon,
   StarIcon as StarIconOutline,
   StarIcon as StarIconSolid,
 } from "@heroicons/react/24/outline";
@@ -30,6 +30,13 @@ export function getContactName(contact: Contact): string {
   return "Unknown";
 }
 
+// Define a Dossier interface with the expected properties
+interface Dossier {
+  _id: string;
+  contactId: string | number;
+  // Add any other properties you expect from the dossier data
+}
+
 function getContactTitle(contact: Contact): string {
   // Use 'titre' if available; otherwise fallback to 'role'
   return contact.numeroDossier ?? "";
@@ -41,9 +48,11 @@ export default function ContactTable() {
     fallbackData: [],
   });
   // Fetch dossiers from /api/dossiers
-  const { data: dossiers } = useSWR<any[]>("/api/dossiers", fetcher, {
-    fallbackData: [],
-  });
+  // Fetch dossiers from /api/dossiers with the proper type
+const { data: dossiers } = useSWR<Dossier[]>("/api/dossiers", fetcher, {
+  fallbackData: [],
+});
+
 
   const [showAddContactModal, setShowAddContactModal] = useState(false);
   const [searchFilter, setSearchFilter] = useState("");

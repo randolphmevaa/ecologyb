@@ -27,7 +27,7 @@ import { ConvertToOrganizationForm } from "./ConvertToOrganizationForm";
  */
 export interface Contact {
   numeroDossier: string | undefined;
-  contactId: any;
+  contactId: string | number;
   lastName: string;
   firstName: string;
   effectif: string | number | boolean;
