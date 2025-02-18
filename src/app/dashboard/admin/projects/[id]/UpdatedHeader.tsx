@@ -336,7 +336,7 @@ useEffect(() => {
             </div>
 
             {/* Avatar Section */}
-            <div className="flex flex-col items-center md:items-start">
+            <div className="flex flex-col items-center">
               <motion.div whileHover={{ scale: 1.02 }} className="relative group">
                 <div className="absolute inset-0 rounded-full transform transition-all group-hover:scale-105 group-hover:bg-gradient-to-r from-blue-200/30 to-purple-200/30" />
                 <div className="w-32 h-32 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-purple-100 border-4 border-white shadow-xl">
