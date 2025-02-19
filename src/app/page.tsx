@@ -6,7 +6,7 @@ import Image from "next/image";
 import Head from "next/head";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Mappe les rôles aux chemins de redirection appropriés
+// Map roles to their corresponding dashboard paths
 const roleToPath: Record<string, string> = {
   "Sales Representative / Account Executive": "/dashboard/sales",
   "Project / Installation Manager": "/dashboard/pm",
@@ -29,7 +29,6 @@ export default function Home() {
   const [resetMessage, setResetMessage] = useState("");
 
   // --- SLIDER SETUP FOR LEFT PANEL ---
-  // Define three slides with illustration, title and description.
   const slides = [
     {
       image:
@@ -74,13 +73,14 @@ export default function Home() {
     setIsLoading(true);
 
     try {
+      // First, attempt to log in
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await response.json();
+
       if (!response.ok || !data.success) {
         setErrorMessage(data.message || "Identifiants invalides.");
         return;
@@ -95,14 +95,39 @@ export default function Home() {
         return;
       }
 
-      // Save client info and role in localStorage
+      // Assume that the login response contains a contactId
+      const contactId = data.contactId;
+      if (!contactId) {
+        setErrorMessage("Aucun identifiant de contact n'a été retourné.");
+        return;
+      }
+
+      // Fetch additional client information from the contacts API
+      const contactResponse = await fetch(`/api/contacts/${contactId}`);
+      if (!contactResponse.ok) {
+        setErrorMessage("Erreur lors de la récupération des informations du contact.");
+        return;
+      }
+      const contactData = await contactResponse.json();
+
+      // Fetch dossier information from the dossiers API
+      const dossierResponse = await fetch(`/api/dossiers?contactId=${contactId}`);
+      if (!dossierResponse.ok) {
+        setErrorMessage("Erreur lors de la récupération des informations du dossier.");
+        return;
+      }
+      const dossierData = await dossierResponse.json();
+
+      // Save client info along with additional data in localStorage
       const clientInfo = {
         email,
         role: userRole,
+        contact: contactData, // details from /api/contacts/{contactId}
+        dossier: dossierData, // details from /api/dossiers?contactId={contactId}
       };
       localStorage.setItem("clientInfo", JSON.stringify(clientInfo));
 
-      // Redirect to the appropriate dashboard
+      // Redirect to the appropriate dashboard based on the user's role
       const dashboardPath = roleToPath[userRole];
       if (dashboardPath) {
         router.push(dashboardPath);
@@ -160,7 +185,7 @@ export default function Home() {
       </Head>
 
       <div className="min-h-screen flex bg-[#ffffff]">
-        {/* Panneau gauche – Slider d'information client (visible sur grand écran) */}
+        {/* Left Panel – Client information slider (visible on larger screens) */}
         <div
           className="hidden lg:flex relative flex-col w-1/2 p-8 lg:p-12 justify-center overflow-hidden"
           style={{
@@ -212,7 +237,7 @@ export default function Home() {
           </AnimatePresence>
         </div>
 
-        {/* Panneau droit – Formulaire de connexion with an animated morphing blob background */}
+        {/* Right Panel – Login form with an animated morphing blob background */}
         <div className="relative flex flex-1 items-center justify-center p-4 lg:p-6">
           {/* Animated SVG shapes */}
           <svg
@@ -308,7 +333,7 @@ export default function Home() {
                       Connectez-vous à votre espace sécurisé.
                     </p>
                     <form onSubmit={handleLogin} className="space-y-4">
-                      {/* Champ Email */}
+                      {/* Email Field */}
                       <div>
                         <label
                           htmlFor="email"
@@ -327,7 +352,7 @@ export default function Home() {
                         />
                       </div>
 
-                      {/* Champ Mot de passe */}
+                      {/* Password Field */}
                       <div>
                         <label
                           htmlFor="password"
@@ -357,14 +382,14 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Message d'erreur */}
+                      {/* Error Message */}
                       {errorMessage && (
                         <div className="text-center text-red-600 text-sm font-medium">
                           {errorMessage}
                         </div>
                       )}
 
-                      {/* Bouton de connexion */}
+                      {/* Login Button */}
                       <button
                         type="submit"
                         disabled={isLoading}
@@ -490,7 +515,6 @@ export default function Home() {
                 >
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.947a1 1 0 00.95.69h4.15c.969 0 1.371 1.24.588 1.81l-3.36 2.44a1 1 0 00-.364 1.118l1.286 3.947c.3.921-.755 1.688-1.54 1.118l-3.36-2.44a1 1 0 00-1.176 0l-3.36 2.44c-.785.57-1.84-.197-1.54-1.118l1.286-3.947a1 1 0 00-.364-1.118L2.03 9.374c-.783-.57-.38-1.81.588-1.81h4.15a1 1 0 00.95-.69l1.286-3.947z" />
                 </svg>
-                {/* Add additional star icons if needed */}
               </div>
               <span className="text-sm text-[#213f5b]">
                 Excellent · 5 392 avis sur Trustpilot

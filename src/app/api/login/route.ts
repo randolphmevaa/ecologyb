@@ -40,11 +40,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Return the user role so the client can route accordingly
+    // Return the user role and contact identifier so the client can route accordingly.
+    // We check if user.contactId exists; otherwise, we fallback to user._id.
     return NextResponse.json({
       success: true,
       role: user.role,
       message: "Connexion réussie",
+      contactId: user.contactId || user._id, 
     });
   } catch (error: unknown) {
     if (error instanceof Error) {

@@ -1,181 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { motion } from "framer-motion";
-import {
-  FireIcon,
-  SunIcon,
-  BoltIcon,
-  Squares2X2Icon,
-  ChevronRightIcon,
-  CheckIcon,
-} from "@heroicons/react/24/outline";
-import { FC, SVGProps } from "react";
+import Link from "next/link";
+import { ChevronRightIcon, ChatBubbleBottomCenterTextIcon } from "@heroicons/react/24/outline";
+import ChatWidget from "@/components/ChatWidget"; // Adjust the path as needed
 
-type Solution =
-  | "Pompes a chaleur"
-  | "Chauffe-eau solaire individuel"
-  | "Chauffe-eau thermodynamique"
-  | "Système Solaire Combiné";
-
-
-// Mapping of energy solutions to their respective icons
-const solutionIcons: Record<
-  Solution,
-  FC<SVGProps<SVGSVGElement>>
-> = {
-  "Pompes a chaleur": FireIcon,
-  "Chauffe-eau solaire individuel": SunIcon,
-  "Chauffe-eau thermodynamique": BoltIcon,
-  "Système Solaire Combiné": Squares2X2Icon,
-};
-
-// Sample projects data with steps
-const projects = [
-  {
-    id: 1,
-    title: "Installation Pompe à chaleur - Maison Dupont",
-    solution: "Pompes a chaleur",
-    status: "En cours",
-    currentStep: 1, // Zero-based index: step 0 completed, now at step 1
-    steps: [
-      { id: 1, name: "Prévisualisation", completed: true },
-      { id: 2, name: "Documents", completed: false },
-      { id: 3, name: "Validation", completed: false },
-      { id: 4, name: "Installation", completed: false },
-    ],
-    description:
-      "Installation d'une pompe à chaleur haute performance pour optimiser le chauffage.",
-  },
-  {
-    id: 2,
-    title: "Chauffe-eau Solaire - Résidence Martin",
-    solution: "Chauffe-eau solaire individuel",
-    status: "Terminé",
-    currentStep: 3,
-    steps: [
-      { id: 1, name: "Prévisualisation", completed: true },
-      { id: 2, name: "Documents", completed: true },
-      { id: 3, name: "Validation", completed: true },
-      { id: 4, name: "Installation", completed: true },
-    ],
-    description:
-      "Mise en place d'un chauffe-eau solaire pour une efficacité énergétique optimale.",
-  },
-  {
-    id: 3,
-    title: "Projet Thermodynamique - Immeuble Central",
-    solution: "Chauffe-eau thermodynamique",
-    status: "En attente",
-    currentStep: 0,
-    steps: [
-      { id: 1, name: "Prévisualisation", completed: false },
-      { id: 2, name: "Documents", completed: false },
-      { id: 3, name: "Validation", completed: false },
-      { id: 4, name: "Installation", completed: false },
-    ],
-    description:
-      "Projet innovant combinant chauffe-eau thermodynamique et solutions complémentaires.",
-  },
-  {
-    id: 4,
-    title: "Système Solaire Combiné - Complexe Résidentiel",
-    solution: "Système Solaire Combiné",
-    status: "En cours",
-    currentStep: 2,
-    steps: [
-      { id: 1, name: "Prévisualisation", completed: true },
-      { id: 2, name: "Documents", completed: true },
-      { id: 3, name: "Validation", completed: false },
-      { id: 4, name: "Installation", completed: false },
-    ],
-    description:
-      "Intégration de plusieurs technologies solaires pour une performance globale.",
-  },
-];
-
-// Define a type for a single step
-interface Step {
-  id: number;
-  name: string;
-  completed: boolean;
+interface Project {
+  _id: string;
+  numero: string;
+  typeDeLogement: string;
+  solution: string;
+  surfaceChauffee: number;
+  etape: string;
 }
-
-// interface Project {
-//   id: number;
-//   title: string;
-//   solution: Solution;
-//   status: string;
-//   currentStep: number;
-//   steps: {
-//     id: number;
-//     name: string;
-//     completed: boolean;
-//   }[];
-//   description: string;
-// }
-
-// Define the props for the StepTracker component
-interface StepTrackerProps {
-  steps: Step[];
-  currentStep: number;
-}
-
-/**
- * StepTracker component renders the steps for a project.
- * It displays a circular indicator for each step:
- *  - A check icon if the step is completed.
- *  - The step number if pending.
- * A horizontal line connects each step.
- */
-const StepTracker = ({ steps, currentStep }: StepTrackerProps) => {
-  return (
-    <div className="flex items-center justify-between mt-4">
-      {steps.map((step, index) => (
-        <div key={step.id} className="relative flex-1 flex items-center">
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                step.completed
-                  ? "bg-green-600"
-                  : index === currentStep
-                  ? "bg-green-400"
-                  : "bg-gray-200"
-              }`}
-            >
-              {step.completed ? (
-                <CheckIcon className="h-5 w-5 text-white" />
-              ) : (
-                <span className="text-sm font-medium text-white">
-                  {index + 1}
-                </span>
-              )}
-            </div>
-            <span className="mt-1 text-xs text-gray-600 text-center">
-              {step.name}
-            </span>
-          </div>
-          {index < steps.length - 1 && (
-            <div className="flex-1 h-1 bg-gray-300 mx-2 rounded-full"></div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
 
 export default function ClientProjects() {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [filter, setFilter] = useState("Tous");
+  const [loading, setLoading] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Filter projects by solution type (or show all)
+  // Fetch projects (dossiers) for the logged-in client based on contactId from localStorage.
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const storedInfo = localStorage.getItem("clientInfo");
+        if (storedInfo) {
+          const clientInfo = JSON.parse(storedInfo);
+          // Assume the contact info is stored under the key "contact"
+          const contact = clientInfo.contact;
+          const contactId = contact.contactId || contact._id;
+          const res = await fetch(`/api/dossiers?contactId=${contactId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setProjects(data);
+          } else {
+            console.error("Error fetching dossiers:", res.statusText);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProjects();
+  }, []);
+
+  // Filter projects by solution if a filter is applied.
+  // Note: The dossier's "solution" field is a comma‐separated string.
   const filteredProjects =
     filter === "Tous"
       ? projects
-      : projects.filter((project) => project.solution === filter);
+      : projects.filter((project) => {
+          if (!project.solution) return false;
+          return project.solution
+            .split(",")
+            .map((s: string) => s.trim())
+            .includes(filter);
+        });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-green-50">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-green-50 relative">
       {/* Header component for consistent navigation */}
       <Header />
 
@@ -189,8 +77,7 @@ export default function ClientProjects() {
         >
           <h1 className="text-3xl font-bold text-gray-800">Mes Projets</h1>
           <p className="mt-2 text-lg text-gray-600">
-            Suivez l&apos;avancement de vos projets d&apos;installations énergétiques et
-            vérifiez si des documents supplémentaires sont nécessaires.
+            Suivez l&apos;avancement de vos projets d&apos;installations énergétiques et vérifiez si des documents supplémentaires sont nécessaires.
           </p>
         </motion.div>
 
@@ -223,73 +110,80 @@ export default function ClientProjects() {
         </motion.div>
 
         {/* Projects Grid */}
-        <motion.div
-          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: {},
-            visible: {
-              transition: {
-                staggerChildren: 0.2,
-              },
-            },
-          }}
-        >
-          {filteredProjects.map((project) => {
-            const Icon = solutionIcons[project.solution as keyof typeof solutionIcons];
-            return (
+        {loading ? (
+          <div className="text-center text-gray-600">Chargement...</div>
+        ) : (
+          <>
+            {filteredProjects.length > 0 ? (
               <motion.div
-                key={project.id}
-                className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10"
+                className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                initial="hidden"
+                animate="visible"
                 variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0 },
+                  hidden: {},
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.2,
+                    },
+                  },
                 }}
-                whileHover={{ scale: 1.02 }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-green-100 rounded-full">
-                      <Icon className="h-8 w-8 text-green-600" />
-                    </div>
-                    <h2 className="text-lg font-semibold text-gray-800">
-                      {project.title}
-                    </h2>
-                  </div>
-                  <div className="text-sm font-medium text-gray-500">
-                    {project.status}
-                  </div>
-                </div>
-                <p className="mt-4 text-sm text-gray-600">
-                  {project.description}
-                </p>
-
-                {/* Step Tracker */}
-                <StepTracker steps={project.steps} currentStep={project.currentStep} />
-
-                {/* Call-to-Action for Adding Documents (if the current step is "Documents") */}
-                {project.steps[project.currentStep] &&
-                  project.steps[project.currentStep].name === "Documents" && (
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      className="mt-4 flex items-center justify-center w-full py-2 px-4 bg-green-600 text-white rounded-full transition-colors hover:bg-green-700"
+                {filteredProjects.map((project) => (
+                  <Link
+                    key={project._id}
+                    href={`/client/projects/${project._id}`}
+                  >
+                    <motion.div
+                      className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10 cursor-pointer"
+                      variants={{
+                        hidden: { opacity: 0, y: 20 },
+                        visible: { opacity: 1, y: 0 },
+                      }}
+                      whileHover={{ scale: 1.02 }}
                     >
-                      Ajouter Document <ChevronRightIcon className="ml-2 h-5 w-5" />
-                    </motion.button>
-                  )}
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-gray-800">
+                          {project.numero} - {project.typeDeLogement}
+                        </h2>
+                        <div className="text-sm font-medium text-gray-500">
+                          {project.etape}
+                        </div>
+                      </div>
+                      <p className="mt-4 text-sm text-gray-600">
+                        <strong>Solution:</strong> {project.solution}
+                      </p>
+                      <p className="mt-2 text-sm text-gray-600">
+                        <strong>Surface chauffée:</strong> {project.surfaceChauffee} m²
+                      </p>
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        className="mt-4 flex items-center justify-center w-full py-2 px-4 bg-green-600 text-white rounded-full transition-colors hover:bg-green-700"
+                      >
+                        Détails <ChevronRightIcon className="ml-2 h-5 w-5" />
+                      </motion.button>
+                    </motion.div>
+                  </Link>
+                ))}
               </motion.div>
-            );
-          })}
-        </motion.div>
-
-        {/* No Projects Message */}
-        {filteredProjects.length === 0 && (
-          <div className="mt-10 text-center text-gray-500">
-            Aucun projet trouvé pour ce filtre.
-          </div>
+            ) : (
+              <div className="mt-10 text-center text-gray-500">
+                Aucun projet trouvé pour ce filtre.
+              </div>
+            )}
+          </>
         )}
       </main>
+
+      {/* Chat Open Button */}
+      <button
+        onClick={() => setIsChatOpen(true)}
+        className="fixed bottom-6 right-6 z-40 bg-green-600 hover:bg-green-700 text-white rounded-full p-4 shadow-lg"
+      >
+        <ChatBubbleBottomCenterTextIcon className="h-6 w-6" />
+      </button>
+
+      {/* Chat Widget */}
+      {isChatOpen && <ChatWidget onClose={() => setIsChatOpen(false)} />}
     </div>
   );
 }

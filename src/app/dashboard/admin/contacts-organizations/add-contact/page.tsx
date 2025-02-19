@@ -94,6 +94,8 @@ const projetOptions = [
   { value: "Chauffe-eau solaire individuel", label: "Chauffe-eau solaire individuel" },
   { value: "Chauffe-eau thermodynamique", label: "Chauffe-eau thermodynamique" },
   { value: "Système Solaire Combiné", label: "Système Solaire Combiné" },
+  { value: "Poêle à granulés", label: "Poêle à granulés" },
+  { value: "Panneaux photovoltaïques", label: "Panneaux photovoltaïques" },
 ];
 
 // Options for "Type de logement"

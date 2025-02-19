@@ -334,40 +334,40 @@ const EditableField: React.FC<EditableFieldProps> = ({
 const AssignedUserCard: React.FC<AssignedUserCardProps> = ({ user }) => {
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+      whileHover={{ scale: 1.03 }}
+      className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xl transition-all duration-300 hover:shadow-green-300"
     >
-      <div className="flex items-center gap-2 mb-3">
-        <Image
-          src="https://www.svgrepo.com/show/134330/avatar.svg"
-          alt="Chargé de compte"
-          width={24}
-          height={24}
-          className="h-8 w-8"
-        />
-        <h3 className="text-lg font-semibold text-gray-800">Chargé de compte</h3>
+      <div className="flex items-center gap-4 mb-4">
+        {/* Profile Image Container */}
+        <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-300 shadow-inner">
+          <Image
+            src="https://www.svgrepo.com/show/134330/avatar.svg"
+            alt="Chargé de compte"
+            width={48}
+            height={48}
+            className="object-cover"
+          />
+        </div>
+        <h3 className="text-xl font-bold text-gray-800">Chargé de compte</h3>
       </div>
-      <div className="space-y-2 text-sm text-gray-700">
+      <div className="space-y-2 text-base text-gray-700">
         <p>
-          <span className="font-medium">Nom:</span>{" "}
-          {user.firstName} {user.lastName}
+          <span className="font-semibold">Nom:</span> {user.firstName} {user.lastName}
         </p>
         <p>
-          <span className="font-medium">Téléphone:</span>{" "}
-          {user.phone || "N/A"}
+          <span className="font-semibold">Téléphone:</span> {user.phone || "N/A"}
         </p>
         <p>
-          <span className="font-medium">Email:</span>{" "}
-          {user.email || "N/A"}
+          <span className="font-semibold">Email:</span> {user.email || "N/A"}
         </p>
         <p>
-          <span className="font-medium">Rôle:</span>{" "}
-          {getRoleInFrench(user.role)}
+          <span className="font-semibold">Rôle:</span> {getRoleInFrench(user.role)}
         </p>
       </div>
     </motion.div>
   );
 };
+
 
 // ------------------------------------------------------
 // AccordionSection Component
@@ -552,6 +552,23 @@ const InfoTab: React.FC<InfoTabProps> = ({
   //     // Optional: revert local state if needed
   //   }
   // };
+
+  {/* Helper to convert French color names to hex values */}
+const getColorHex = (colorName: string | undefined) => {
+  if (!colorName) return "#ffffff";
+  switch (colorName.toLowerCase()) {
+    case "vert":
+      return "#28a745"; // Bootstrap green
+    case "rouge":
+      return "#dc3545"; // Bootstrap red
+    case "bleu":
+      return "#007bff"; // Bootstrap blue
+    case "jaune":
+      return "#ffc107"; // Bootstrap yellow
+    default:
+      return colorName; // Assume it's already a valid hex or CSS color
+  }
+};
 
   const DEPARTMENT_COORDINATES: { [key: string]: { lat: number; lon: number } } = {
       // Metropolitan France
@@ -777,9 +794,9 @@ const DEPARTMENT_OPTIONS = [
       51: { label: "Bruine légère", icon: "/weather-icons/51.svg" },
       53: { label: "Bruine modérée", icon: "/weather-icons/51.svg" },
       55: { label: "Bruine dense", icon: "/weather-icons/51.svg" },
-      61: { label: "Pluie légère", icon: "/weather-icons/61.svg" },
-      63: { label: "Pluie modérée", icon: "/weather-icons/61.svg" },
-      65: { label: "Pluie forte", icon: "/weather-icons/61.svg" },
+      61: { label: "Pluie légère", icon: "/weather-icons/rain.svg" },
+      63: { label: "Pluie modérée", icon: "/weather-icons/rain.svg" },
+      65: { label: "Pluie forte", icon: "/weather-icons/rain.svg" },
       71: { label: "Neige légère", icon: "/weather-icons/71.svg" },
       73: { label: "Neige modérée", icon: "/weather-icons/71.svg" },
       75: { label: "Neige forte", icon: "/weather-icons/71.svg" },
@@ -1258,7 +1275,6 @@ useEffect(() => {
               inputType="textarea"
               readOnly={true}
             /> */}
-            <CommentsSection dossier={dossier} />
 
           </div>
         </motion.section>
@@ -1381,14 +1397,7 @@ useEffect(() => {
           </div>
           {/* Aides Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <EditableField
-              label="Numéro de dossier MPR"
-              value={contact?.maprNumero || ""}
-              onChange={() => {}}
-              icon={ClipboardDocumentCheckIcon}
-              inputType="text"
-              readOnly={true}
-            />
+            
             <EditableField
               label="Accès Ma Prime Renov - Email"
               value={contact?.mpremail || ""}
@@ -1411,6 +1420,14 @@ useEffect(() => {
               readOnly={true}
             />
             <EditableField
+              label="Numéro de dossier MPR"
+              value={contact?.maprNumero || ""}
+              onChange={() => {}}
+              icon={ClipboardDocumentCheckIcon}
+              inputType="text"
+              readOnly={true}
+            />
+            <EditableField
               label="Code postal"
               value={dossier?.codePostal || ""}
               onChange={() => {}}
@@ -1426,22 +1443,50 @@ useEffect(() => {
               inputType="text"
               readOnly={true}
             />
-            <EditableField
-              label="Ma Prime Renov Couleur"
-              value={dossier?.mprColor || ""}
-              onChange={() => {}}
-              icon={PencilIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Eligible"
-              value={formatEligible(contact?.eligible)}
-              onChange={() => {}}
-              icon={IdentificationIcon}
-              inputType="text"
-              readOnly={true}
-            />
+
+              {/* Ma Prime Renov Couleur Field */}
+              <div className="flex items-center gap-4 p-4 bg-white rounded-lg shadow border border-gray-200 flex-1">
+                <PencilIcon className="h-8 w-8 text-gray-500" />
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Ma Prime Renov Couleur</div>
+                  <div className="flex items-center gap-3 mt-1">
+                    {/* Color swatch */}
+                    <div
+                      className="w-10 h-10 rounded-full border border-gray-300"
+                      style={{ backgroundColor: getColorHex(dossier?.mprColor) }}
+                    />
+                    <span className="text-gray-800 font-semibold">
+                      {dossier?.mprColor ? dossier?.mprColor : "Non défini"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Eligible Field */}
+              <div className="flex items-center gap-4 p-4 bg-white rounded-lg shadow border border-gray-200 flex-1">
+                <IdentificationIcon className="h-8 w-8 text-gray-500" />
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Éligibilité</div>
+                  <div className="mt-1">
+                    {contact?.eligible !== undefined ? (
+                      <span
+                        className={`inline-block px-4 py-2 text-sm font-semibold rounded-full ${
+                          formatEligible(contact?.eligible).toLowerCase() === "oui"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {formatEligible(contact?.eligible).toLowerCase() === "oui"
+                          ? "Eligible"
+                          : "Non Eligible"}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 italic">Non défini</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
 
           </div>
         </motion.section>
@@ -1496,6 +1541,7 @@ useEffect(() => {
               inputType="select"
               readOnly={true}
             />
+            <CommentsSection dossier={dossier} />
           </div>
         </motion.section>
 
@@ -1505,26 +1551,6 @@ useEffect(() => {
 
       {/* Right Column: Additional Info Boxes */}
       <div className="w-80 space-y-6 sticky top-10">
-        {/* Heure Locale */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4"
-        >
-          <div className="flex items-center gap-4">
-            <ClockIcon className="h-12 w-12 text-green-600" />
-            <div>
-              <h3 className="font-semibold text-green-800 text-lg">Heure Locale</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-green-900">
-                  {new Date().toLocaleTimeString("fr-FR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
 
         {/* Infos Organisation (Assigned User) */}
         {assignedUser ? (
@@ -1540,35 +1566,45 @@ useEffect(() => {
 
         {/* Synthèse Énergétique */}
         <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+          whileHover={{ scale: 1.03 }}
+          className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xl transition-all duration-300 hover:shadow-yellow-300"
         >
-          <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-            <LightBulbIcon className="h-6 w-6 text-yellow-500" />
-            Synthèse Énergétique
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <SunIcon className="h-5 w-5 text-blue-500" />
+          <div className="flex items-center gap-4 mb-4">
+            {/* Icon Container */}
+            <div className="flex items-center justify-center p-3 bg-yellow-100 rounded-full shadow-inner">
+              <LightBulbIcon className="h-8 w-8 text-yellow-500" />
+            </div>
+            <h3 className="text-2xl font-extrabold text-gray-800">Synthèse Énergétique</h3>
+          </div>
+          <div className="space-y-4">
+            {/* Zone Climatique */}
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-blue-100 rounded-full shadow-inner">
+                <SunIcon className="h-6 w-6 text-blue-500" />
+              </div>
               <div>
                 <p className="text-sm text-gray-500">Zone Climatique</p>
-                <p className="font-medium">{contact?.climateZone ?? "N/A"}</p>
+                <p className="font-semibold text-gray-700">{contact?.climateZone ?? "N/A"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <FireIcon className="h-5 w-5 text-orange-500" />
+            {/* Chauffage */}
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-orange-100 rounded-full shadow-inner">
+                <FireIcon className="h-6 w-6 text-orange-500" />
+              </div>
               <div>
                 <p className="text-sm text-gray-500">Chauffage</p>
-                <p className="font-medium">{dossier?.projet ?? "N/A"}</p>
+                <p className="font-semibold text-gray-700">{dossier?.projet ?? "N/A"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <PaintBrushIcon className="h-5 w-5 text-green-500" />
+            {/* MaPrimeRénov */}
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-green-100 rounded-full shadow-inner">
+                <PaintBrushIcon className="h-6 w-6 text-green-500" />
+              </div>
               <div>
                 <p className="text-sm text-gray-500">MaPrimeRénov</p>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getMaprimeColor(rfrValue)}`}
-                >
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getMaprimeColor(rfrValue)}`}>
                   {calculateMaprimeLevel(rfrValue)}
                 </span>
               </div>
@@ -1578,57 +1614,77 @@ useEffect(() => {
 
         {/* Météo Locale */}
         <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4"
+          whileHover={{ scale: 1.03 }}
+          className="bg-gradient-to-br from-blue-100 to-blue-50 border border-blue-300 rounded-2xl p-6 shadow-2xl transition-all duration-300 hover:shadow-blue-400"
         >
-          <div className="flex items-center gap-4">
-            {weatherLoading ? (
-              // Loading skeleton
-              <div className="animate-pulse flex items-center gap-4">
-                <div className="h-12 w-12 bg-gray-200 rounded-full" />
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-24" />
-                  <div className="h-6 bg-gray-200 rounded w-16" />
-                </div>
+          {weatherLoading ? (
+            <div className="flex items-center gap-4 animate-pulse">
+              <div className="h-16 w-16 bg-gray-300 rounded-full" />
+              <div className="space-y-2">
+                <div className="h-4 w-28 bg-gray-300 rounded" />
+                <div className="h-6 w-20 bg-gray-300 rounded" />
               </div>
-            ) : weatherError ? (
-              // Error display
-              <div className="text-red-500 text-sm flex items-center gap-2">
-                <ExclamationTriangleIcon className="h-5 w-5" />
-                {weatherError}
-              </div>
-            ) : weather ? (
-              // Weather data
-              <>
+            </div>
+          ) : weatherError ? (
+            <div className="flex items-center gap-2 text-red-600">
+              <ExclamationTriangleIcon className="h-6 w-6" />
+              <span>{weatherError}</span>
+            </div>
+          ) : weather ? (
+            <div className="flex items-center">
+              {/* Icon container */}
+              <div className="flex items-center justify-center p-4 bg-blue-200 rounded-full shadow-inner">
                 {weather.icon && (
                   <Image
                     src={weather.icon}
                     alt={weather.condition}
-                    width={112}
-                    height={112}
+                    width={48}
+                    height={48}
                     className="h-12 w-12"
                   />
                 )}
-                <div>
-                  <h3 className="font-semibold text-blue-800 text-lg">
-                    Météo Locale
-                  </h3>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-blue-900">
-                      {weather.temp}°C
-                    </span>
-                    <span className="text-sm text-blue-800 capitalize">
-                      {weather.condition}
-                    </span>
-                  </div>
-                  <p className="text-sm text-blue-800 mt-1">
-                    {contact?.department
-                      ? `Département ${contact.department}`
-                      : "Localisation inconnue"}
-                  </p>
+              </div>
+              {/* Weather details */}
+              <div className="ml-5">
+                <h3 className="text-2xl font-extrabold text-blue-800">Météo Locale</h3>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-blue-900">
+                    {weather.temp}°C
+                  </span>
+                  <span className="text-xl text-blue-700 capitalize">
+                    {weather.condition}
+                  </span>
                 </div>
-              </>
-            ) : null}
+                <p className="mt-1 text-sm text-blue-700">
+                  {contact?.department
+                    ? `Département ${contact.department}`
+                    : "Localisation inconnue"}
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </motion.div>
+
+        {/* Heure Locale */}
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          className="bg-gradient-to-br from-green-100 to-green-50 border border-green-300 rounded-2xl p-6 shadow-2xl transition-all duration-300 hover:shadow-green-400"
+        >
+          <div className="flex items-center">
+            {/* Icon container */}
+            <div className="flex items-center justify-center p-4 bg-green-200 rounded-full shadow-inner">
+              <ClockIcon className="h-12 w-12 text-green-700" />
+            </div>
+            {/* Textual info */}
+            <div className="ml-5">
+              <h3 className="text-2xl font-extrabold text-green-800">Heure Locale</h3>
+              <p className="mt-2 text-4xl font-bold text-green-900">
+                {new Date().toLocaleTimeString("fr-FR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
           </div>
         </motion.div>
 

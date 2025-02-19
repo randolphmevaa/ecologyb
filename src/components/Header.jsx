@@ -725,27 +725,29 @@ function AdminHeader({ user, contactId }) {
 /**
  * Main exported Header component
  *
- * This version reads user info ("proInfo") from localStorage and then renders
- * a specialized header based on the user's role.
+ * This version reads user info from localStorage.
  */
 export function Header({ contactId = "123" }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Retrieve the user info from localStorage.
-    const storedInfo = localStorage.getItem("proInfo");
+    // Try to retrieve the user info from localStorage using "proInfo" or "clientInfo".
+    const storedInfo =
+      localStorage.getItem("proInfo") || localStorage.getItem("clientInfo");
     if (storedInfo) {
       try {
         const parsed = JSON.parse(storedInfo);
         setUser(parsed);
       } catch (error) {
-        console.error("Error parsing proInfo from localStorage:", error);
+        console.error("Error parsing user info from localStorage:", error);
       }
+    } else {
+      console.warn("No user info found in localStorage.");
     }
   }, []);
 
   if (!user) {
-    // You can return a loader or a placeholder here if desired.
+    // If no user is found, you might want to render a login prompt or redirect.
     return <div>Loading...</div>;
   }
 
