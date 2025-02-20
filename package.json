@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production node server.js",
     "lint": "next lint"
   },
   "dependencies": {
@@ -14,12 +14,13 @@
     "@heroui/tabs": "^2.2.8",
     "@sendgrid/mail": "^8.1.4",
     "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
     "formidable": "^3.5.2",
     "framer-motion": "^12.4.0",
     "leaflet": "^1.9.4",
     "mongodb": "^6.13.0",
     "mongoose": "^8.9.6",
-    "next": "15.1.6",
+    "next": "^15.1.6",
     "react": "^19.0.0",
     "react-datepicker": "^8.0.0",
     "react-dom": "^19.0.0",
@@ -27,6 +28,8 @@
     "react-leaflet": "^5.0.0",
     "react-select": "^5.10.0",
     "recharts": "^2.15.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "swr": "^2.3.0",
     "tailwind-merge": "^3.0.1"
   },

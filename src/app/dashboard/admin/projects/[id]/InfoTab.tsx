@@ -22,6 +22,10 @@ import {
   PencilIcon,
   // CurrencyRupeeIcon,
   LockClosedIcon,
+  WrenchScrewdriverIcon,
+  UserIcon,
+  EnvelopeIcon,
+  // BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import CommentsSection from "./CommentsSection";
@@ -335,39 +339,58 @@ const AssignedUserCard: React.FC<AssignedUserCardProps> = ({ user }) => {
   return (
     <motion.div
       whileHover={{ scale: 1.03 }}
-      className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xl transition-all duration-300 hover:shadow-green-300"
+      className="max-w-xl w-full bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-green-300"
     >
-      <div className="flex items-center gap-4 mb-4">
-        {/* Profile Image Container */}
-        <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-300 shadow-inner">
-          <Image
-            src="https://www.svgrepo.com/show/134330/avatar.svg"
-            alt="Chargé de compte"
-            width={48}
-            height={48}
-            className="object-cover"
-          />
-        </div>
-        <h3 className="text-xl font-bold text-gray-800">Chargé de compte</h3>
+      {/* Top Banner Image */}
+      <div className="relative w-full h-40">
+        <Image
+          src="https://www.hotesse-interim.fr/ressources/images/ab4fec7ce0ed.jpg"
+          alt="Chargé de compte"
+          fill
+          priority
+          className="object-cover object-center"
+        />
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/100" />
       </div>
-      <div className="space-y-2 text-base text-gray-700">
-        <p>
-          <span className="font-semibold">Nom:</span> {user.firstName} {user.lastName}
-        </p>
-        <p>
-          <span className="font-semibold">Téléphone:</span> {user.phone || "N/A"}
-        </p>
-        <p>
-          <span className="font-semibold">Email:</span> {user.email || "N/A"}
-        </p>
-        <p>
-          <span className="font-semibold">Rôle:</span> {getRoleInFrench(user.role)}
-        </p>
+
+      {/* User Info Section */}
+      <div className="p-6 space-y-5">
+        {/* Title & Role */}
+        <div className="flex flex-col items-start gap-1">
+          <h3 className="text-xl font-bold text-gray-800">Chargé de compte</h3>
+          <span className="inline-block px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm font-semibold">
+            {getRoleInFrench(user.role)}
+          </span>
+        </div>
+
+        {/* Full Name */}
+        <div className="flex items-start gap-2 flex-wrap break-words">
+          <UserIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+          <p className="text-base text-gray-700 leading-snug">
+            {user.firstName} {user.lastName}
+          </p>
+        </div>
+
+        {/* Phone */}
+        <div className="flex items-start gap-2 flex-wrap break-words">
+          <PhoneIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+          <p className="text-base text-gray-700 leading-snug">
+            {user.phone || "N/A"}
+          </p>
+        </div>
+
+        {/* Email */}
+        <div className="flex items-start gap-2 flex-wrap break-words">
+          <EnvelopeIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+          <p className="text-base text-gray-700 leading-snug">
+            {user.email || "N/A"}
+          </p>
+        </div>
       </div>
     </motion.div>
   );
 };
-
 
 // ------------------------------------------------------
 // AccordionSection Component
@@ -475,6 +498,16 @@ const PasswordField: React.FC<{
     </div>
   );
 };
+
+function formatPhaseLabel(phase: string): string {
+  const parts = phase.split(" ");
+  if (parts.length > 1) {
+    const stepNumber = parts[0];
+    const stepTitle = parts.slice(1).join(" ");
+    return `Étape ${stepNumber} – ${stepTitle}`;
+  }
+  return phase;
+}
 
 function getPhaseBadgeColor(phase: string): string {
   switch (phase) {
@@ -1309,6 +1342,15 @@ useEffect(() => {
               readOnly={true}
             />
             <EditableField
+              label="Type de travaux"
+              value={dossier.typeTravaux || ""}
+              onChange={() => {}}
+              // Use a more relevant icon:
+              icon={WrenchScrewdriverIcon}
+              inputType="select"
+              readOnly={true}
+            />
+            <EditableField
               label="Profil"
               value={dossier?.profil || ""}
               onChange={() => {}}
@@ -1411,6 +1453,32 @@ useEffect(() => {
               password={contact?.mprpassword || ""}
               icon={LockClosedIcon}
             />
+            {/* Updated "Phase du projet" field */}
+          <div className="group flex items-center gap-4 p-3 rounded-lg transition-colors bg-white shadow-sm hover:shadow-md">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-blue-50 group-hover:bg-blue-100" />
+              <CalendarIcon
+                className="h-6 w-6 text-blue-600 relative z-10 flex-shrink-0"
+                aria-hidden="true"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Phase du projet
+              </label>
+              {formData.etape ? (
+                <span
+                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${getPhaseBadgeColor(
+                    formData.etape
+                  )}`}
+                >
+                  {formatPhaseLabel(formData.etape)}
+                </span>
+              ) : (
+                <span className="text-gray-400 italic">Non défini</span>
+              )}
+            </div>
+          </div>
             <EditableField
               label="Nombre de personne"
               value={dossier?.nombrePersonne || ""}
@@ -1505,42 +1573,12 @@ useEffect(() => {
                 <ClipboardDocumentCheckIcon className="w-10 h-10" />
               </div>
               <h2 className="text-3xl font-extrabold text-gray-800">
-                Le projet
+                Commentaires
               </h2>
             </div>
           </div>
           {/* Projet Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Updated "Phase du projet" field */}
-          <div className="group flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors">
-            {CalendarIcon && (
-              <CalendarIcon className="h-5 w-5 text-gray-400 flex-shrink-0" aria-hidden="true" />
-            )}
-            <div className="flex-1 min-w-0">
-              <label className="block text-sm font-medium text-gray-500 mb-1">
-                Phase du projet
-              </label>
-              {formData.etape ? (
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${getPhaseBadgeColor(
-                    formData.etape
-                  )}`}
-                >
-                  {formData.etape}
-                </span>
-              ) : (
-                <span className="text-gray-400 italic">Non défini</span>
-              )}
-            </div>
-          </div>
-            <EditableField
-              label="Type de travaux"
-              value={dossier.typeTravaux || ""}
-              onChange={() => {}}
-              icon={PencilIcon}
-              inputType="select"
-              readOnly={true}
-            />
             <CommentsSection dossier={dossier} />
           </div>
         </motion.section>

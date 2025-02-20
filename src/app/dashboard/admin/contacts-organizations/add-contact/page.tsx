@@ -146,7 +146,7 @@ export default function AddContactDossierPage() {
     { key: "client", label: "Information client" },
     { key: "habitation", label: "Information de l'habitation" },
     { key: "aides", label: "Information des aides" },
-    { key: "projet", label: "Le projet" },
+    { key: "projet", label: "Commentaires" },
   ];
 
   // ----------------------
@@ -628,24 +628,7 @@ const chauffageOptions = [
                       </select>
                       {contactErrors.gestionnaireSuivi && <p className="mt-1 text-xs text-red-500">{contactErrors.gestionnaireSuivi}</p>}
                     </div>
-                    {/* Commentaires */}
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">Commentaires</label>
-                      <div className="border border-gray-300 rounded-lg p-4 h-40 overflow-y-auto bg-blue-50">
-                        {contact.comments.map((comment, index) => (
-                          <div key={index} className="mb-2">
-                            <div className="bg-white rounded-lg p-2 shadow-sm">
-                              <p className="text-sm text-gray-800">{comment.text}</p>
-                              <span className="block text-xs text-gray-500 text-right">{comment.timestamp}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-2 flex">
-                        <input type="text" value={commentInput} onChange={(e) => setCommentInput(e.target.value)} placeholder="Ajouter un commentaire..." className="flex-1 rounded-l-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                        <Button type="button" variant="primary" onClick={addComment}>Ajouter</Button>
-                      </div>
-                    </div>
+                    
                   </div>
                 </motion.div>
               )}
@@ -666,6 +649,19 @@ const chauffageOptions = [
                         ))}
                       </select>
                       {dossierErrors["informationLogement.typeLogement"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationLogement.typeLogement"]}</p>}
+                    </div>
+                    {/* Type de travaux (dropdown) */}
+                    <div>
+                      <label htmlFor="typeTravaux" className="block text-sm font-medium text-gray-700">Type de travaux</label>
+                      <select id="typeTravaux" value={dossier.typeTravaux} onChange={(e) => setDossier({ ...dossier, typeTravaux: e.target.value })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Sélectionnez</option>
+                        {travauxOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {dossierErrors.typeTravaux && <p className="mt-1 text-xs text-red-500">{dossierErrors.typeTravaux}</p>}
                     </div>
                     {/* Profil */}
                     <div>
@@ -870,51 +866,51 @@ const chauffageOptions = [
                     </div>
                     {/* Conditionally show MPR Access fields */}
                     {dossier.informationAides.compteMPRExistant && (
-  <div className="grid grid-cols-2 gap-6">
-    <div>
-      <label htmlFor="mpremail" className="block text-sm font-medium text-gray-700">
-        Accès Ma Prime Renov - Email
-      </label>
-      <input
-        type="email"
-        id="mpremail"
-        value={dossier.informationAides.mpremail}
-        onChange={(e) =>
-          setDossier({
-            ...dossier,
-            informationAides: { ...dossier.informationAides, mpremail: e.target.value },
-          })
-        }
-        placeholder="Entrez l'email d'accès"
-        className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-      {dossierErrors["informationAides.mpremail"] && (
-        <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mpremail"]}</p>
-      )}
-    </div>
-    <div>
-      <label htmlFor="mprpassword" className="block text-sm font-medium text-gray-700">
-        Accès Ma Prime Renov - Mot de passe
-      </label>
-      <input
-        type="password"
-        id="mprpassword"
-        value={dossier.informationAides.mprpassword}
-        onChange={(e) =>
-          setDossier({
-            ...dossier,
-            informationAides: { ...dossier.informationAides, mprpassword: e.target.value },
-          })
-        }
-        placeholder="Entrez le mot de passe"
-        className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-      {dossierErrors["informationAides.mprpassword"] && (
-        <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mprpassword"]}</p>
-      )}
-    </div>
-  </div>
-)}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label htmlFor="mpremail" className="block text-sm font-medium text-gray-700">
+                          Accès Ma Prime Renov - Email
+                        </label>
+                        <input
+                          type="email"
+                          id="mpremail"
+                          value={dossier.informationAides.mpremail}
+                          onChange={(e) =>
+                            setDossier({
+                              ...dossier,
+                              informationAides: { ...dossier.informationAides, mpremail: e.target.value },
+                            })
+                          }
+                          placeholder="Entrez l'email d'accès"
+                          className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        {dossierErrors["informationAides.mpremail"] && (
+                          <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mpremail"]}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label htmlFor="mprpassword" className="block text-sm font-medium text-gray-700">
+                          Accès Ma Prime Renov - Mot de passe
+                        </label>
+                        <input
+                          type="password"
+                          id="mprpassword"
+                          value={dossier.informationAides.mprpassword}
+                          onChange={(e) =>
+                            setDossier({
+                              ...dossier,
+                              informationAides: { ...dossier.informationAides, mprpassword: e.target.value },
+                            })
+                          }
+                          placeholder="Entrez le mot de passe"
+                          className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        {dossierErrors["informationAides.mprpassword"] && (
+                          <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mprpassword"]}</p>
+                        )}
+                      </div>
+                    </div>
+                    )}
                     {/* Nombre de personne */}
                     <div>
                       <label htmlFor="nombrePersonne" className="block text-sm font-medium text-gray-700">Nombre de personne</label>
@@ -957,14 +953,6 @@ const chauffageOptions = [
                         <span className="px-2 py-1 rounded bg-red-100 text-red-700 text-xs font-semibold">Non Eligible</span>
                       )}
                     </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* LE PROJET TAB */}
-              {activeTab === "projet" && (
-                <motion.div key="projet" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white p-6 rounded-lg shadow-lg mb-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Phase du projet */}
                     <div>
                       <label htmlFor="phaseProjet" className="block text-sm font-medium text-gray-700">Phase du projet</label>
@@ -978,19 +966,34 @@ const chauffageOptions = [
                       </select>
                       {dossierErrors.phaseProjet && <p className="mt-1 text-xs text-red-500">{dossierErrors.phaseProjet}</p>}
                     </div>
-                    {/* Type de travaux (dropdown) */}
-                    <div>
-                      <label htmlFor="typeTravaux" className="block text-sm font-medium text-gray-700">Type de travaux</label>
-                      <select id="typeTravaux" value={dossier.typeTravaux} onChange={(e) => setDossier({ ...dossier, typeTravaux: e.target.value })} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Sélectionnez</option>
-                        {travauxOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* LE PROJET TAB */}
+              {activeTab === "projet" && (
+                <motion.div key="projet" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white p-6 rounded-lg shadow-lg mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Commentaires */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700">Commentaires</label>
+                      <div className="border border-gray-300 rounded-lg p-4 h-40 overflow-y-auto bg-blue-50">
+                        {contact.comments.map((comment, index) => (
+                          <div key={index} className="mb-2">
+                            <div className="bg-white rounded-lg p-2 shadow-sm">
+                              <p className="text-sm text-gray-800">{comment.text}</p>
+                              <span className="block text-xs text-gray-500 text-right">{comment.timestamp}</span>
+                            </div>
+                          </div>
                         ))}
-                      </select>
-                      {dossierErrors.typeTravaux && <p className="mt-1 text-xs text-red-500">{dossierErrors.typeTravaux}</p>}
+                      </div>
+                      <div className="mt-2 flex">
+                        <input type="text" value={commentInput} onChange={(e) => setCommentInput(e.target.value)} placeholder="Ajouter un commentaire..." className="flex-1 rounded-l-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        <Button type="button" variant="primary" onClick={addComment}>Ajouter</Button>
+                      </div>
                     </div>
+                    
+                    
                   </div>
                 </motion.div>
               )}
