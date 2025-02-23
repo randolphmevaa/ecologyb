@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useSearchParams  } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ChevronLeftIcon, ChatBubbleBottomCenterTextIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon  } from "@heroicons/react/24/outline";
 import { Header } from "@/components/Header";
 import UpdatedHeader from "./UpdatedHeader";
 import PremiumTabs from "./PremiumTabs";
@@ -136,7 +136,8 @@ export default function ProjectDetailPage() {
   // New state: documentCount to show the number of documents with status "Manquant"
   const [documentCount, setDocumentCount] = useState(0);
   // New state: Control the floating ChatWidget.
-  const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
+  // const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
+  const [showChatWidget, setShowChatWidget] = useState(false);
 
   // If URL contains a ?tab=documents parameter, switch to that tab and scroll down.
   useEffect(() => {
@@ -425,14 +426,43 @@ export default function ProjectDetailPage() {
         </main>
       </div>
 
-      {/* Floating Chat Widget Button */}
-      <button
-        onClick={() => setIsChatWidgetOpen(true)}
-        className="fixed bottom-6 right-6 z-40 bg-green-600 hover:bg-green-700 text-white rounded-full p-4 shadow-lg"
-      >
-        <ChatBubbleBottomCenterTextIcon className="h-6 w-6" />
-      </button>
-      {isChatWidgetOpen && <ChatWidget onClose={() => setIsChatWidgetOpen(false)} />}
+      {/* Enhanced Chat Button */}
+      {!showChatWidget && (
+        <motion.button
+          onClick={() => setShowChatWidget(true)}
+          className="fixed bottom-8 right-8 bg-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all z-50 border border-gray-200 backdrop-blur-lg bg-opacity-80"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <div className="relative h-12 w-12">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg
+                className="h-6 w-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+            </div>
+          </div>
+        </motion.button>
+      )}
+      
+            {/* --- 2) Chat Widget (visible if showChatWidget === true) --- */}
+            {showChatWidget && (
+              <ChatWidget
+                onClose={() => {
+                  setShowChatWidget(false);
+                }}
+              />
+            )}
     </div>
   );
 }

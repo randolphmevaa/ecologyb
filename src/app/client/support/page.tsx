@@ -60,7 +60,7 @@ const tickets = [
 ];
 
 export default function ClientSupport() {
-  const [filter, setFilter] = useState("Tous");
+  const [filter ] = useState("Tous");
 
   // Filter tickets by energy solution type (or show all)
   const filteredTickets =
@@ -117,7 +117,7 @@ export default function ClientSupport() {
         </motion.div>
 
         {/* Filter Buttons */}
-        <motion.div
+        {/* <motion.div
           className="flex flex-wrap gap-4 mb-8 justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -142,7 +142,7 @@ export default function ClientSupport() {
               {item}
             </button>
           ))}
-        </motion.div>
+        </motion.div> */}
 
         {/* Tickets List */}
         <div className="space-y-6">

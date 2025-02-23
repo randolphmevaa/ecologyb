@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ChevronRightIcon, ChatBubbleBottomCenterTextIcon } from "@heroicons/react/24/outline";
-import ChatWidget from "@/components/ChatWidget"; // Adjust the path as needed
+import { ChevronRightIcon,   } from "@heroicons/react/24/outline";
+import ChatWidget from '@/components/ChatWidget';
 
 interface Project {
   _id: string;
@@ -18,9 +18,10 @@ interface Project {
 
 export default function ClientProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [filter, setFilter] = useState("Tous");
+  const [filter,  ] = useState("Tous");
   const [loading, setLoading] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  // const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showChatWidget, setShowChatWidget] = useState(false);
 
   // Fetch projects (dossiers) for the logged-in client based on contactId from localStorage.
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function ClientProjects() {
         </motion.div>
 
         {/* Filter Buttons */}
-        <motion.div
+        {/* <motion.div
           className="flex flex-wrap gap-4 mb-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -107,7 +108,7 @@ export default function ClientProjects() {
               {item}
             </button>
           ))}
-        </motion.div>
+        </motion.div> */}
 
         {/* Projects Grid */}
         {loading ? (
@@ -174,16 +175,30 @@ export default function ClientProjects() {
         )}
       </main>
 
-      {/* Chat Open Button */}
-      <button
-        onClick={() => setIsChatOpen(true)}
-        className="fixed bottom-6 right-6 z-40 bg-green-600 hover:bg-green-700 text-white rounded-full p-4 shadow-lg"
-      >
-        <ChatBubbleBottomCenterTextIcon className="h-6 w-6" />
-      </button>
-
-      {/* Chat Widget */}
-      {isChatOpen && <ChatWidget onClose={() => setIsChatOpen(false)} />}
+      {/* --- 1) The Chat Button (visible if showChatWidget === false) --- */}
+            {!showChatWidget && (
+              <motion.button
+                onClick={() => setShowChatWidget(true)}
+                className="fixed bottom-6 right-6 bg-[#213f5b] p-3 rounded-full shadow-md hover:shadow-lg hover:scale-105 transition-transform z-50"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <img
+                  src="https://www.svgrepo.com/show/134330/avatar.svg"
+                  alt="Ouvrir le chat"
+                  className="h-8 w-8"
+                />
+              </motion.button>
+            )}
+      
+            {/* --- 2) Chat Widget (visible if showChatWidget === true) --- */}
+            {showChatWidget && (
+              <ChatWidget
+                onClose={() => {
+                  setShowChatWidget(false);
+                }}
+              />
+            )}
     </div>
   );
 }

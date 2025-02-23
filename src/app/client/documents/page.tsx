@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Header } from "@/components/Header";
 import { motion } from "framer-motion";
 import {
@@ -45,13 +44,6 @@ const documents = [
 ];
 
 export default function ClientDocuments() {
-  const [filter, setFilter] = useState("Tous");
-
-  const filteredDocuments =
-    filter === "Tous"
-      ? documents
-      : documents.filter((doc) => doc.solution === filter);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-green-50">
       {/* Consistent header */}
@@ -72,34 +64,6 @@ export default function ClientDocuments() {
           </p>
         </motion.div>
 
-        {/* Filter Buttons */}
-        <motion.div
-          className="flex flex-wrap gap-4 mb-8 justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          {[
-            "Tous",
-            "Pompes a chaleur",
-            "Chauffe-eau solaire individuel",
-            "Chauffe-eau thermodynamique",
-            "Système Solaire Combiné",
-          ].map((item) => (
-            <button
-              key={item}
-              onClick={() => setFilter(item)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
-                filter === item
-                  ? "bg-green-600 text-white border-green-600"
-                  : "bg-white text-gray-600 border-gray-300 hover:bg-green-50"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </motion.div>
-
         {/* Documents Grid */}
         <motion.div
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
@@ -114,7 +78,7 @@ export default function ClientDocuments() {
             },
           }}
         >
-          {filteredDocuments.map((doc) => (
+          {documents.map((doc) => (
             <motion.div
               key={doc.id}
               className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10"
@@ -152,13 +116,6 @@ export default function ClientDocuments() {
             </motion.div>
           ))}
         </motion.div>
-
-        {/* No Documents Found Message */}
-        {filteredDocuments.length === 0 && (
-          <div className="mt-10 text-center text-gray-500">
-            Aucun document trouvé pour ce filtre.
-          </div>
-        )}
       </main>
     </div>
   );

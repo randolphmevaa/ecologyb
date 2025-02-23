@@ -9,8 +9,11 @@ const nextConfig: NextConfig = {
       "via.placeholder.com",
       "images.blush.design",
       "www.advancia-teleservices.com",
+      "openweathermap.org",
       "svgrepo.com",
       "images.unsplash.com",
+      "randomuser.me",
+      "picsum.photos",
       "www.hotesse-interim.fr",
       // You can add more domains if needed
     ],

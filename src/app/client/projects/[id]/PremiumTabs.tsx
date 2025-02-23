@@ -23,9 +23,9 @@ interface PremiumTabsProps {
 
 // Define the tabs with labels and associated Heroicons.
 const tabs = [
-  { id: "info", label: "Cartes d'information", icon: InformationCircleIcon },
+  { id: "info", label: "Mon projet", icon: InformationCircleIcon },
   { id: "documents", label: "Documents", icon: DocumentTextIcon },
-  { id: "photo", label: "Photo d'installation", icon: PhotoIcon },
+  { id: "photo", label: "Mes photos", icon: PhotoIcon },
   { id: "chat", label: "Chat", icon: ChatBubbleLeftEllipsisIcon },
   { id: "sav", label: "S.A.V.", icon: LifebuoyIcon },
 ];

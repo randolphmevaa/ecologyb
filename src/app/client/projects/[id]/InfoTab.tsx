@@ -1,6 +1,9 @@
 "use client";
 
+import {  CalendarIcon, EnvelopeIcon, HomeIcon, LightBulbIcon, PhoneIcon, UserCircleIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter
+import { motion } from "framer-motion";
 
 interface Dossier {
   _id: string;
@@ -84,161 +87,255 @@ interface InfoTabProps {
 
 export default function InfoTab({ dossier }: InfoTabProps) {
   const [assignedTeamUser, setAssignedTeamUser] = useState<User | null>(null);
+  const router = useRouter();
 
-  // Fetch the assigned team (charge de compte) details if available.
   useEffect(() => {
     if (dossier.assignedTeam) {
       fetch(`/api/users?id=${dossier.assignedTeam}`)
         .then((res) => res.json())
-        .then((data: User) => {
-          setAssignedTeamUser(data);
-        })
-        .catch((err) => {
-          console.error("Error fetching assigned team user:", err);
-        });
+        .then((data: User) => setAssignedTeamUser(data))
+        .catch(console.error);
     }
   }, [dossier.assignedTeam]);
 
+  const getSolutionColor = (solution: string) => {
+    const colors: { [key: string]: string } = {
+      "Pompes à chaleur": "bg-blue-100 text-blue-800",
+      "Chauffe-eau solaire individuel": "bg-yellow-100 text-yellow-800",
+      "Chauffe-eau thermodynamique": "bg-green-100 text-green-800",
+      "Système Solaire Combiné": "bg-purple-100 text-purple-800"
+    };
+    return colors[solution] || "bg-gray-100 text-gray-800";
+  };
+
   return (
-    <div
-      className="p-8 bg-white rounded-2xl shadow-2xl border border-transparent bg-clip-padding"
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative p-8 bg-white rounded-[2rem] shadow-2xl border-2 border-transparent bg-clip-padding overflow-hidden"
       style={{
         backgroundImage:
-          "linear-gradient(white, white), linear-gradient(135deg, #bfddf9, #d2fcb2)",
+          "linear-gradient(white, white), linear-gradient(135deg, #bfddf950, #d2fcb250)",
         backgroundOrigin: "border-box",
         backgroundClip: "padding-box, border-box",
       }}
     >
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 border-b pb-3">
-        Détails du Projet
-      </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column */}
-        <div className="space-y-5">
+      <div className="relative z-10 space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
           <div>
-            <p className="text-sm text-gray-500 uppercase tracking-wider">Projet</p>
-            <p className="mt-1 text-xl font-semibold text-gray-700">
-              {Array.isArray(dossier.projet)
-                ? dossier.projet.join(", ")
-                : dossier.projet}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 uppercase tracking-wider">Solution</p>
-            <p className="mt-1 text-xl font-semibold text-gray-700">{dossier.solution}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 uppercase tracking-wider">Surface Chauffée</p>
-            <p className="mt-1 text-xl font-semibold text-gray-700">
-              {dossier.surfaceChauffee} m²
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 uppercase tracking-wider">Type de Compteur</p>
-            <p className="mt-1 text-xl font-semibold text-gray-700">
-              {dossier.typeCompteurElectrique}
-            </p>
-          </div>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-5">
-          <div>
-            <p className="text-sm text-gray-500 uppercase tracking-wider">
-              Année de Construction
-            </p>
-            <p className="mt-1 text-xl font-semibold text-gray-700">
-              {dossier.anneeConstruction}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 uppercase tracking-wider">
-              Type de Logement
-            </p>
-            <p className="mt-1 text-xl font-semibold text-gray-700">
-              {dossier.typeDeLogement}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 uppercase tracking-wider">Profil</p>
-            <p className="mt-1 text-xl font-semibold text-gray-700">
-              {dossier.profil}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 uppercase tracking-wider">
-              Nombre de Personnes
-            </p>
-            <p className="mt-1 text-xl font-semibold text-gray-700">
-              {dossier.nombrePersonne}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Details */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <p className="text-sm text-gray-500 uppercase tracking-wider">
-            Code Postal
-          </p>
-          <p className="mt-1 text-xl font-semibold text-gray-700">
-            {dossier.codePostal}
-          </p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-500 uppercase tracking-wider">
-            Couleur MPR
-          </p>
-          <p className="mt-1 text-xl font-semibold text-gray-700">
-            {dossier.mprColor}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <p className="text-sm text-gray-500 uppercase tracking-wider">
-          Étape du dossier
-        </p>
-        <p className="mt-1 text-2xl font-semibold text-gray-700">
-          {dossier.etape}
-        </p>
-      </div>
-
-      <div className="mt-8">
-        <p className="text-sm text-gray-500 uppercase tracking-wider">
-          Type de Travaux
-        </p>
-        <p className="mt-1 text-2xl font-semibold text-gray-700">
-          {dossier.typeTravaux}
-        </p>
-      </div>
-
-      {/* Assigned Team (Charge de compte) Section */}
-      {assignedTeamUser && (
-        <div className="mt-10 p-6 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
-            Chargé de compte
-          </p>
-          <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 flex-shrink-0 rounded-full bg-blue-100 flex items-center justify-center">
-              <span className="text-2xl font-bold text-blue-600">
-                {assignedTeamUser.firstName.charAt(0)}
-                {assignedTeamUser.lastName.charAt(0)}
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Détails du Projet</h2>
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium text-gray-600">
+                #{dossier.numero}
               </span>
+              <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
             </div>
-            <div>
-              <p className="text-xl font-semibold text-gray-700">
-                {assignedTeamUser.firstName} {assignedTeamUser.lastName}
-              </p>
-              <p className="text-sm text-gray-500">{assignedTeamUser.role}</p>
-              <p className="text-sm text-gray-500">{assignedTeamUser.email}</p>
-              <p className="text-sm text-gray-500">{assignedTeamUser.phone}</p>
+          </div>
+          <motion.button
+          onClick={() => router.push("/client/contacts")}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="bg-gradient-to-br from-blue-600 to-green-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all"
+          >
+            Demander un nouveau projet
+          </motion.button>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column */}
+          <div className="space-y-6">
+            <DetailCard
+              icon={<LightBulbIcon className="w-6 h-6" />}
+              title="Solutions Énergétiques"
+            >
+              <div className="flex flex-wrap gap-2">
+                {dossier.solution.split(', ').map((solution) => (
+                  <span
+                    key={solution}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium ${getSolutionColor(solution)}`}
+                  >
+                    {solution}
+                  </span>
+                ))}
+              </div>
+            </DetailCard>
+
+            <div className="grid grid-cols-2 gap-4">
+              <DetailItem 
+                icon={<HomeIcon className="w-5 h-5" />}
+                label="Surface Chauffée"
+                value={`${dossier.surfaceChauffee} m²`}
+              />
+              <DetailItem
+                icon={<WrenchScrewdriverIcon className="w-5 h-5" />}
+                label="Type Compteur"
+                value={dossier.typeCompteurElectrique}
+              />
+              <DetailItem
+                icon={<CalendarIcon className="w-5 h-5" />}
+                label="Année Construction"
+                value={dossier.anneeConstruction}
+              />
+              <DetailItem
+                icon={<UserCircleIcon className="w-5 h-5" />}
+                label="Type Logement"
+                value={dossier.typeDeLogement}
+              />
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            <DetailCard
+              icon={<div className="w-6 h-6" />} // Spacer
+              title="Détails Complémentaires"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                {/* <InfoPair label="Profil" value={dossier.profil} />
+                <InfoPair label="Personnes" value={dossier.nombrePersonne} />
+                <InfoPair label="Code Postal" value={dossier.codePostal} /> */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">MPR:</span>
+                  <div className="flex items-center gap-1.5">
+                    <div 
+                      className="w-4 h-4 rounded-full border"
+                      style={{ backgroundColor: getColorHex(dossier.mprColor) }}
+                    />
+                    <span className="font-medium">{dossier.mprColor}</span>
+                  </div>
+                </div>
+              </div>
+            </DetailCard>
+
+            <div className="space-y-4">
+              <StatusCard 
+                title="Étape du dossier"
+                value={dossier.etape}
+                color="bg-blue-100 text-blue-800"
+              />
+              <StatusCard
+                title="Type de Travaux"
+                value={dossier.typeTravaux}
+                color="bg-green-100 text-green-800"
+              />
             </div>
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Assigned Team Section */}
+        {assignedTeamUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="p-6 bg-gray-50 rounded-2xl border border-gray-200"
+          >
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+              Chargé de Compte
+            </h3>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-green-500 flex items-center justify-center text-white font-bold">
+                  {assignedTeamUser.firstName[0]}{assignedTeamUser.lastName[0]}
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-lg font-semibold text-gray-900">
+                  {assignedTeamUser.firstName} {assignedTeamUser.lastName}
+                </h4>
+                <p className="text-sm text-gray-600 mb-2">{assignedTeamUser.role}</p>
+                <div className="flex flex-wrap gap-4">
+                  <ContactLink
+                    icon={<EnvelopeIcon className="w-4 h-4" />}
+                    value={assignedTeamUser.email}
+                    type="email"
+                  />
+                  <ContactLink
+                    icon={<PhoneIcon className="w-4 h-4" />}
+                    value={assignedTeamUser.phone}
+                    type="tel"
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
   );
 }
+
+// Helper Components
+const DetailCard = ({ icon, title, children }: { 
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className="flex items-center gap-2 mb-4">
+      {icon}
+      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+        {title}
+      </h3>
+    </div>
+    {children}
+  </div>
+);
+
+const DetailItem = ({ icon, label, value }: { 
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) => (
+  <motion.div 
+    whileHover={{ y: -2 }}
+    className="p-4 bg-gray-50 rounded-xl border border-gray-200"
+  >
+    <div className="flex items-center gap-2 text-gray-500 mb-2">
+      {icon}
+      <span className="text-sm font-medium">{label}</span>
+    </div>
+    <p className="text-lg font-semibold text-gray-900">{value}</p>
+  </motion.div>
+);
+
+const StatusCard = ({ title, value, color }: { 
+  title: string;
+  value: string;
+  color: string;
+}) => (
+  <motion.div
+    whileHover={{ scale: 1.01 }}
+    className={`p-4 rounded-xl ${color} backdrop-blur-sm`}
+  >
+    <p className="text-sm font-medium text-gray-700">{title}</p>
+    <p className="text-xl font-bold mt-1">{value}</p>
+  </motion.div>
+);
+
+const ContactLink = ({ icon, value, type }: { 
+  icon: React.ReactNode;
+  value: string;
+  type: 'email' | 'tel';
+}) => (
+  <a
+    href={`${type}:${value}`}
+    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+  >
+    {icon}
+    <span className="text-sm font-medium">{value}</span>
+  </a>
+);
+
+// Color mapping helper
+const getColorHex = (mprColor: string) => {
+  const colors: { [key: string]: string } = {
+    Bleu: '#3b82f6',
+    Jaune: '#eab308',
+    Violet: '#8b5cf6',
+    Rose: '#ec4899'
+  };
+  return colors[mprColor] || '#6b7280';
+};
