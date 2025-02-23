@@ -10,6 +10,7 @@ import {
   EyeSlashIcon,
 } from "@heroicons/react/24/outline";
 import { LockClosedIcon } from "@heroicons/react/24/solid";
+import Image from "next/image";
 
 // Define the contact interface based on your API response.
 interface Contact {
@@ -266,7 +267,13 @@ export default function UpdatedHeader({ contactId }: UpdatedHeaderProps) {
                 </div>
                 {/* Ma Prime Renov Email */}
                 <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2.5 rounded-lg">
-                  <img src="/Group 9.svg" alt="Logo Ma Prime Renov" className="w-5 h-5" />
+                  <Image 
+                                      src="/Group 9.svg"
+                                      alt="MaPrimeRénov’ Logo"
+                                      width={24}
+                                      height={24}
+                                      className="w-6 h-6"
+                                    />
                   <span className="font-mono">{mprEmail}</span>
                 </div>
                 {/* Ma Prime Renov Password */}

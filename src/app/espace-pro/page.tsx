@@ -73,21 +73,21 @@ export default function ProLogin() {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
-
+  
     try {
-      // Use /api/login endpoint
+      // Perform the initial login request
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
       if (!response.ok || !data.success) {
         setErrorMessage(data.message || "Identifiants invalides.");
         return;
       }
-
+  
       // Retrieve the role from the API response
       const userRole = data.role;
       // Allowed professional roles
@@ -98,22 +98,25 @@ export default function ProLogin() {
         "Customer Support / Service Representative",
         "Super Admin",
       ];
-
-      // Check if the user's role is one of the allowed roles
+  
       if (!allowedRoles.includes(userRole)) {
         setErrorMessage(
           "Cette page de connexion est réservée aux professionnels. Veuillez utiliser le portail approprié."
         );
         return;
       }
-
-      // Save the pro info and role in localStorage
-      const proInfo = {
-        email,
-        role: userRole,
-      };
-      localStorage.setItem("proInfo", JSON.stringify(proInfo));
-
+  
+      // Fetch additional user data based on email
+      const resUser = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
+      if (!resUser.ok) {
+        setErrorMessage("Échec de récupération des informations utilisateur.");
+        return;
+      }
+      const userDetails = await resUser.json();
+  
+      // Store the full user data in localStorage
+      localStorage.setItem("proInfo", JSON.stringify(userDetails));
+  
       // Redirect to the dashboard based on the role
       const dashboardPath = roleToPath[userRole];
       if (dashboardPath) {
@@ -128,7 +131,7 @@ export default function ProLogin() {
       setIsLoading(false);
     }
   };
-
+  
   // Handle the reset password form submission
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();

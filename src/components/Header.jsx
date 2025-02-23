@@ -654,7 +654,7 @@ function ClientHeader({ user, contactId }) {
     { name: "Facturation / Paiements", href: "/client/billing", icon: CreditCardIcon },
     { name: "Support / Tickets", href: "/client/support", icon: LifebuoyIcon },
     { name: "Documents", href: "/client/documents", icon: DocumentIcon },
-    { name: "Contacts / Mon Conseiller", href: "/client/contacts", icon: UserCircleIcon },
+    { name: "Chat / Mon Conseiller", href: "/client/contacts", icon: UserCircleIcon },
   ];
 
   // Clients might not need a "Créer" dropdown.

@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       "example.com",
       "via.placeholder.com",
       "images.blush.design",
+      "www.advancia-teleservices.com",
       "svgrepo.com",
       "images.unsplash.com",
       "www.hotesse-interim.fr",

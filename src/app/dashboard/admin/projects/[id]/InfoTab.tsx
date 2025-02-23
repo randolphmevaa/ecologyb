@@ -25,6 +25,13 @@ import {
   WrenchScrewdriverIcon,
   UserIcon,
   EnvelopeIcon,
+  // CheckIcon,
+  // ChevronRightIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  // InformationCircleIcon,
+  QuestionMarkCircleIcon,
+  XCircleIcon,
   // BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
@@ -121,11 +128,6 @@ export interface CommentData {
   linkedTo?: string;
 }
 
-// interface UserDetailsCardProps {
-//   user: User;
-//   label?: string;
-// }
-
 // Contact data interface
 export interface Contact {
   _id?: string;
@@ -183,6 +185,7 @@ export interface Contact {
 
 // User type
 interface User {
+  gender?: string; // Now optional
   email: string;
   role: string;
   firstName: string;
@@ -336,130 +339,88 @@ const EditableField: React.FC<EditableFieldProps> = ({
 };
 
 const AssignedUserCard: React.FC<AssignedUserCardProps> = ({ user }) => {
+  // Set the banner image based on the user's gender
+  const bannerImage =
+    user.gender === "Homme"
+      ? "https://www.advancia-teleservices.com/wp-content/uploads/2023/11/Centre-dappels-tunisie.jpg"
+      : "https://www.hotesse-interim.fr/ressources/images/ab4fec7ce0ed.jpg";
+
   return (
     <motion.div
-      whileHover={{ scale: 1.03 }}
-      className="max-w-xl w-full bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-green-300"
+      whileHover={{ scale: 1.02 }}
+      className="max-w-xl w-full bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-green-100/40"
     >
-      {/* Top Banner Image */}
-      <div className="relative w-full h-40">
+      {/* Enhanced Top Banner */}
+      <div className="relative w-full h-40 group">
         <Image
-          src="https://www.hotesse-interim.fr/ressources/images/ab4fec7ce0ed.jpg"
-          alt="Chargé de compte"
+          src={bannerImage}
+          alt="Banner image"
           fill
           priority
-          className="object-cover object-center"
+          className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, 400px"
         />
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/100" />
+        {/* Improved Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white group-hover:scale-105" />
       </div>
 
       {/* User Info Section */}
-      <div className="p-6 space-y-5">
+      <div className="p-6 space-y-6">
         {/* Title & Role */}
-        <div className="flex flex-col items-start gap-1">
-          <h3 className="text-xl font-bold text-gray-800">Chargé de compte</h3>
-          <span className="inline-block px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm font-semibold">
+        <div className="flex flex-col items-start gap-2">
+          <h3 className="text-2xl font-semibold text-gray-900 tracking-tight">
+            Chargé de compte
+          </h3>
+          <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-100/80 text-emerald-800 text-sm font-medium backdrop-blur-sm border border-emerald-200/50">
             {getRoleInFrench(user.role)}
           </span>
         </div>
 
-        {/* Full Name */}
-        <div className="flex items-start gap-2 flex-wrap break-words">
-          <UserIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
-          <p className="text-base text-gray-700 leading-snug">
-            {user.firstName} {user.lastName}
-          </p>
-        </div>
+        {/* Enhanced Info Items */}
+        <div className="space-y-4">
+          {/* Name */}
+          <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <UserIcon className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Nom complet</p>
+              <p className="text-base font-medium text-gray-900">
+                {user.firstName} {user.lastName}
+              </p>
+            </div>
+          </div>
 
-        {/* Phone */}
-        <div className="flex items-start gap-2 flex-wrap break-words">
-          <PhoneIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
-          <p className="text-base text-gray-700 leading-snug">
-            {user.phone || "N/A"}
-          </p>
-        </div>
+          {/* Phone */}
+          <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <PhoneIcon className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Téléphone</p>
+              <p className="text-base font-medium text-gray-900">
+                {user.phone || "Non disponible"}
+              </p>
+            </div>
+          </div>
 
-        {/* Email */}
-        <div className="flex items-start gap-2 flex-wrap break-words">
-          <EnvelopeIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
-          <p className="text-base text-gray-700 leading-snug">
-            {user.email || "N/A"}
-          </p>
+          {/* Email */}
+          <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <EnvelopeIcon className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Email</p>
+              <p className="text-base font-medium text-gray-900 truncate">
+                {user.email || "Non renseigné"}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
   );
 };
-
-// ------------------------------------------------------
-// AccordionSection Component
-// ------------------------------------------------------
-// const AccordionSection = ({
-//   title,
-//   icon: Icon,
-//   children,
-// }: {
-//   title: string;
-//   icon?: React.ElementType;
-//   children: React.ReactNode;
-// }) => {
-//   const [open, setOpen] = useState(true);
-//   return (
-//     <div className="border-b border-gray-200">
-//       <button
-//         onClick={() => setOpen(!open)}
-//         className="w-full text-left py-3 px-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
-//       >
-//         <div className="flex items-center gap-2">
-//           {Icon && <Icon className="h-5 w-5 text-gray-500" />}
-//           <span className="font-semibold text-gray-700">{title}</span>
-//         </div>
-//         <motion.span animate={{ rotate: open ? 0 : 180 }} className="text-gray-500">
-//           ▼
-//         </motion.span>
-//       </button>
-//       <AnimatePresence>
-//         {open && (
-//           <motion.div
-//             initial={{ opacity: 0, height: 0 }}
-//             animate={{ opacity: 1, height: "auto" }}
-//             exit={{ opacity: 0, height: 0 }}
-//             className="overflow-hidden"
-//           >
-//             <div className="p-4 space-y-4">{children}</div>
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-//     </div>
-//   );
-// };
-
-// const UserDetailsCard: React.FC<UserDetailsCardProps> = ({
-//   user,
-//   label = "Gestionnaire de suivi",
-// }) => {
-//   return (
-//     <div className="border p-4 rounded-lg bg-white shadow-sm">
-//       <div className="flex items-center gap-2 mb-3">
-//         <UserCircleIcon className="h-8 w-8 text-gray-600" />
-//         <h3 className="text-lg font-semibold text-gray-800">{label}</h3>
-//       </div>
-//       <div className="space-y-1 text-sm text-gray-700">
-//         <p>
-//           <span className="font-medium">Nom:</span> {user.firstName}{" "}
-//           {user.lastName}
-//         </p>
-//         <p>
-//           <span className="font-medium">Email:</span> {user.email}
-//         </p>
-//         <p>
-//           <span className="font-medium">Rôle:</span> {user.role}
-//         </p>
-//       </div>
-//     </div>
-//   );
-// };
 
 // Custom PasswordField Component
 const PasswordField: React.FC<{ 
@@ -560,48 +521,121 @@ const InfoTab: React.FC<InfoTabProps> = ({
 
   const rfrValue = Number(contact?.rfr ?? 0);
 
-  // Update a contact field locally and via API
-  // const updateContactField = async (field: string, value: string | boolean) => {
-  //   if (!contact || !contact._id) return;
-  //   // 1) update local state
-  //   setContact((prev) => (prev ? { ...prev, [field]: value } : null));
+// Instead of naming your state 'dossier', we rename it to 'dossierState'
+const [dossierState, setDossierState] = useState<Partial<Dossier>>({
+  nombrePersonne: "",
+  codePostal: "",
+  mprColor: "",
+  // You may add other defaults or leave them undefined if you use Partial<Dossier>
+});
 
-  //   // 2) update the server
-  //   try {
-  //     const res = await fetch(`/api/contacts/${dossier.contactId}`, {
-  //       method: "PUT",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ [field]: value }),
-  //     });
-  //     const data = await res.json();
-  //     if (!res.ok) {
-  //       console.error("Update failed", data);
-  //       // Optional: revert local state if needed
-  //     } else {
-  //       console.log("Update successful", data);
-  //     }
-  //   } catch (err) {
-  //     console.error("Error updating contact", err);
-  //     // Optional: revert local state if needed
-  //   }
-  // };
+// Merge API dossier into local state on mount/update
+useEffect(() => {
+  if (dossier) {
+    setDossierState({
+      ...dossier,
+      // Ensure these fields are strings (or empty if missing)
+      nombrePersonne: dossier.nombrePersonne ?? "",
+      codePostal: dossier.codePostal ?? "",
+      mprColor: dossier.mprColor ?? "",
+    });
+  }
+}, [dossier]);
 
-  {/* Helper to convert French color names to hex values */}
-const getColorHex = (colorName: string | undefined) => {
-  if (!colorName) return "#ffffff";
-  switch (colorName.toLowerCase()) {
-    case "vert":
-      return "#28a745"; // Bootstrap green
-    case "rouge":
-      return "#dc3545"; // Bootstrap red
-    case "bleu":
-      return "#007bff"; // Bootstrap blue
-    case "jaune":
-      return "#ffc107"; // Bootstrap yellow
-    default:
-      return colorName; // Assume it's already a valid hex or CSS color
+// Helper function to calculate the MPR color
+const calculateMprColor = (
+  rfrStr: string,
+  nombrePersonneStr: string,
+  department: string
+): string => {
+  const rfr = parseFloat(rfrStr);
+  const persons = parseInt(nombrePersonneStr, 10);
+  if (isNaN(rfr) || isNaN(persons)) return "";
+
+  const ileDeFranceDepartments = ["91", "92", "93", "94", "95", "75", "77", "78"];
+  const isIDF = ileDeFranceDepartments.includes(department);
+
+  let thresholds: [number, number, number];
+
+  if (isIDF) {
+    const thresholdsMap: Record<number, [number, number, number]> = {
+      1: [23768, 28933, 40404],
+      2: [34884, 42463, 59394],
+      3: [41893, 51000, 71060],
+      4: [48914, 59549, 83637],
+      5: [55961, 68123, 95758],
+    };
+    if (persons <= 5) {
+      thresholds = thresholdsMap[persons];
+    } else {
+      const extra = persons - 5;
+      const base = thresholdsMap[5];
+      thresholds = [
+        base[0] + extra * 7038,
+        base[1] + extra * 8568,
+        base[2] + extra * 12122,
+      ];
+    }
+  } else {
+    const thresholdsMap: Record<number, [number, number, number]> = {
+      1: [17173, 22015, 30844],
+      2: [25115, 32197, 45340],
+      3: [30206, 38719, 54592],
+      4: [35285, 45234, 63844],
+      5: [40388, 51775, 73098],
+    };
+    if (persons <= 5) {
+      thresholds = thresholdsMap[persons];
+    } else {
+      const extra = persons - 5;
+      const base = thresholdsMap[5];
+      thresholds = [
+        base[0] + extra * 5094,
+        base[1] + extra * 6525,
+        base[2] + extra * 9524,
+      ];
+    }
+  }
+
+  if (rfr <= thresholds[0]) return "Bleu";
+  else if (rfr <= thresholds[1]) return "Jaune";
+  else if (rfr <= thresholds[2]) return "Violet";
+  else return "Rose";
+};
+
+// const getMPRLevelIndex = (color?: string): number => {
+//   const order = ['Bleu', 'Jaune', 'Violet', 'Rose'];
+//   return color ? order.indexOf(color) + 1 : 0;
+// };
+
+const getColorHex = (mprColor: string | undefined): string => {
+  switch (mprColor) {
+    case "Bleu": return "#007AFF";
+    case "Jaune": return "#FFCC00";
+    case "Violet": return "#5856D6";
+    case "Rose": return "#FF2D55";
+    default: return "#E5E5EA";
   }
 };
+
+// Recalculate and update mprColor whenever contact.rfr, nombrePersonne, or codePostal change
+useEffect(() => {
+  // Only run calculation if required fields are available.
+  if (dossierState.nombrePersonne && dossierState.codePostal) {
+    const codePostal: string = dossierState.codePostal;
+    const department: string = codePostal.slice(0, 2);
+    const rfrValue: string = contact?.rfr ?? "";
+    const nombrePersonneValue: string = dossierState.nombrePersonne;
+    
+    const color: string = calculateMprColor(rfrValue, nombrePersonneValue, department);
+    
+    setDossierState((prev: Partial<Dossier>) => ({
+      ...prev,
+      mprColor: color,
+    }));
+  }
+}, [contact?.rfr, dossierState.nombrePersonne, dossierState.codePostal]);
+
 
   const DEPARTMENT_COORDINATES: { [key: string]: { lat: number; lon: number } } = {
       // Metropolitan France
@@ -879,76 +913,6 @@ const DEPARTMENT_OPTIONS = [
         if (contact) fetchWeather();
       }, [contact]);
 
-  // Helper to update top-level fields via handleInputChange
-  // const handleEditableFieldChange = async (fieldName: string, value: string) => {
-  //   // 1) Update local state
-  //   handleInputChange({
-  //     target: { name: fieldName, value },
-  //   } as React.ChangeEvent<HTMLInputElement>);
-
-  //   // 2) PATCH the single changed field to server
-  //   try {
-  //     const res = await fetch(`/api/dossiers/${dossier._id}`, {
-  //       method: "PATCH",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ [fieldName]: value }),
-  //     });
-  //     if (!res.ok) {
-  //       console.error("Failed to patch field:", fieldName);
-  //     }
-  //   } catch (err) {
-  //     console.error("Patch error:", err);
-  //   }
-  // };
-
-  // Helper to update nested fields (informationLogement / informationTravaux)
-  // const handleNestedEditableFieldChange = async (
-  //   section: "informationLogement" | "informationTravaux",
-  //   fieldName: string,
-  //   value: string
-  // ) => {
-  //   // 1) Update local state
-  //   handleNestedInputChange(
-  //     {
-  //       target: { name: fieldName, value },
-  //     } as React.ChangeEvent<HTMLInputElement>,
-  //     section
-  //   );
-
-  //   // 2) Build new partial object for PATCH
-  //   // For example, if user updates "typeDeLogement",
-  //   // then we send { informationLogement: { ...existing, typeDeLogement: newVal } }
-  //   const oldSectionData = dossier[section] || {};
-  //   const newSectionData = {
-  //     ...oldSectionData,
-  //     [fieldName]: value,
-  //   };
-
-  //   try {
-  //     const res = await fetch(`/api/dossiers/${dossier._id}`, {
-  //       method: "PATCH",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         [section]: newSectionData,
-  //       }),
-  //     });
-  //     if (!res.ok) {
-  //       console.error(`Failed to patch nested field: ${section}.${fieldName}`);
-  //     }
-  //   } catch (error) {
-  //     console.error("Nested patch error:", error);
-  //   }
-  // };
-
-  // Helper function for MaPrimeRenov badge color
-  // const getMaPrimeRenovColor = (rfr: string | undefined) => {
-  //   const value = parseInt(rfr || "0", 10);
-  //   if (isNaN(value)) return "bg-gray-500";
-  //   if (value < 50000) return "bg-green-500";
-  //   else if (value < 100000) return "bg-yellow-500";
-  //   else return "bg-red-500";
-  // };
-
   const calculateMaprimeLevel = (rfr: number): string => {
     if (!rfr) return "Non défini";
     if (rfr < 20000) return "Bleu";
@@ -969,130 +933,7 @@ const DEPARTMENT_OPTIONS = [
         return "bg-gray-100 text-gray-800";
     }
   };
-  
 
-  // Get assigned team email and matching user
-  // const assignedTeamEmail = dossier.assignedTeam
-  //   ? dossier.assignedTeam.split(" (")[0]
-  //   : "";
-  // const assignedUser = userList.find((user) => user.email === assignedTeamEmail);
-
-  // Update assigned team via PATCH request (only needed if you still want it to happen automatically)
-  // const handleAssignedTeamChange = async (val: string) => {
-  //   // First, update local formData
-  //   handleEditableFieldChange("assignedTeam", val);
-
-  //   // Then, call your API to persist
-  //   try {
-  //     const res = await fetch(`/api/dossiers/${dossier._id}`, {
-  //       method: "PATCH",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         assignedTeam: val,
-  //       }),
-  //     });
-  //     if (!res.ok) {
-  //       console.error("Failed to update assignedTeam");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating assignedTeam:", error);
-  //   }
-  // };
-
-  // Pre-build some select options
-  // const solutionOptions = [
-  //   { label: "Sélectionnez une solution", value: "" },
-  //   { label: "Pompes à chaleur", value: "Pompes a chaleur" },
-  //   { label: "Chauffe-eau solaire individuel", value: "Chauffe-eau solaire individuel" },
-  //   { label: "Chauffe-eau thermodynamique", value: "Chauffe-eau thermodynamique" },
-  //   { label: "Système Solaire Combiné", value: "Système Solaire Combiné" },
-  // ];
-
-  // const etapeOptions = [
-  //   { label: "1 – Prise de contact", value: "1Prise de contact" },
-  //   { label: "2 – En attente des documents", value: "2En attente des documents" },
-  //   { label: "3 – Instruction du dossier", value: "3Instruction du dossier" },
-  //   { label: "4 – Dossier accepté", value: "4Dossier Accepter" },
-  //   { label: "5 – Installation", value: "5Installation" },
-  //   { label: "6 – Contrôle", value: "6Controle" },
-  //   { label: "7 – Dossier clôturé", value: "7Dossier cloturer" },
-  // ];
-
-  // const assignedTeamOptions = [
-  //   { label: "Sélectionnez une équipe", value: "" },
-  //   ...userList.map((user) => {
-  //     // Translate user.role to French if needed
-  //     const roleTranslations: { [key: string]: string } = {
-  //       "Sales Representative / Account Executive":
-  //         "Représentant commercial / Directeur de compte",
-  //       "Project / Installation Manager":
-  //         "Responsable de projet / Gestionnaire d'installation",
-  //       "Technician / Installer": "Technicien / Installateur",
-  //       "Customer Support / Service Representative":
-  //         "Support client / Représentant du service",
-  //       "Client / Customer (Client Portal)":
-  //         "Client / Consommateur (Portail client)",
-  //       "Super Admin": "Super Admin",
-  //     };
-  //     const roleLabel = roleTranslations[user.role] || user.role;
-
-  //     return {
-  //       label: `${user.email} (${roleLabel})`,
-  //       value: user.email,
-  //     };
-  //   }),
-  // ];
-
-  // Create a dictionary of English -> French translations
-// const ROLE_TRANSLATIONS: Record<string, string> = {
-//   "Sales Representative / Account Executive": "Représentant commercial / Directeur de compte",
-//   "Project / Installation Manager": "Responsable de projet / Gestionnaire d'installation",
-//   "Technician / Installer": "Technicien / Installateur",
-//   "Customer Support / Service Representative": "Support client / Représentant du service",
-//   "Client / Customer (Client Portal)": "Client / Consommateur (Portail client)",
-//   "Super Admin": "Super Admin"
-// };
-
-// function getRoleInFrench(role: string | undefined) {
-//   if (!role) return "";
-//   return ROLE_TRANSLATIONS[role] ?? role; 
-//   // ^ If `role` is missing in the dictionary, fallback to the original value
-// }
-
-  // For "informationLogement"
-  // const typeDeLogementOptions = [
-  //   { label: "Sélectionnez un type", value: "" },
-  //   { label: "Maison", value: "maison" },
-  //   { label: "Appartement", value: "appartement" },
-  //   { label: "Autre", value: "autre" },
-  // ];
-
-  // const chauffageOptions = [
-  //   { label: "Sélectionnez un type de chauffage", value: "" },
-  //   { label: "Gaz", value: "gaz" },
-  //   { label: "Bois", value: "bois" },
-  //   { label: "Électrique", value: "electrique" },
-  //   { label: "Autre", value: "autre" },
-  // ];
-
-  // const profilOptions = [
-  //   { label: "Sélectionnez un profil", value: "" },
-  //   { label: "Propriétaire", value: "proprietaire" },
-  //   { label: "Occupant", value: "occupant" },
-  //   { label: "Bailleur", value: "bailleur" },
-  //   { label: "SCI", value: "SCI" },
-  // ];
-
-  // // For "informationTravaux"
-  // const typeTravauxOptions = [
-  //   { label: "Sélectionnez un type de travaux", value: "" },
-  //   { label: "Rénovation", value: "renovation" },
-  //   { label: "Extension", value: "extension" },
-  //   { label: "Installation", value: "installation" },
-  //   { label: "Autre", value: "autre" },
-  // ];
 
   useEffect(() => {
     if (!dossier.contactId) return;
@@ -1176,8 +1017,19 @@ useEffect(() => {
     // Navigate to a dynamic route for editing (e.g., /modifier/[id])
     router.push(`/dashboard/admin/projects/modifier/${dossier._id}`);
   };
-  
-  
+
+  // Add this utility function above your component
+// const getColorPosition = (mprColor: string): number => {
+//   const COLOR_POSITIONS: Record<string, number> = {
+//     "Bleu": 25,   // Lower third (blue segment)
+//     "Jaune": 50,  // Middle (yellow segment)
+//     "Violet": 75, // Upper middle (purple segment)
+//     "Rose": 90    // Top position (beyond main gradient)
+//   };
+
+//   return COLOR_POSITIONS[mprColor] || 0;
+// };
+
   return (
     <div className="flex gap-8">
       {/* Left Column: Main Sections */}
@@ -1511,48 +1363,127 @@ useEffect(() => {
               inputType="text"
               readOnly={true}
             />
+            <EditableField
+              label="RFR"
+              value={contact?.rfr || ""}
+              onChange={() => {}}
+              icon={CalendarIcon}
+              inputType="text"
+              readOnly={true}
+            />
 
-              {/* Ma Prime Renov Couleur Field */}
-              <div className="flex items-center gap-4 p-4 bg-white rounded-lg shadow border border-gray-200 flex-1">
-                <PencilIcon className="h-8 w-8 text-gray-500" />
-                <div>
-                  <div className="text-sm font-medium text-gray-600">Ma Prime Renov Couleur</div>
-                  <div className="flex items-center gap-3 mt-1">
-                    {/* Color swatch */}
-                    <div
-                      className="w-10 h-10 rounded-full border border-gray-300"
-                      style={{ backgroundColor: getColorHex(dossier?.mprColor) }}
-                    />
-                    <span className="text-gray-800 font-semibold">
-                      {dossier?.mprColor ? dossier?.mprColor : "Non défini"}
-                    </span>
+              {/* MaPrimeRénov’ Color Indicator - Simplified Professional */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 transition-all hover:border-gray-200">
+                {/* Official Header with Logo */}
+                <div className="flex items-center gap-2 mb-3">
+                  <Image 
+                    src="/Group 9.svg"
+                    alt="MaPrimeRénov’ Logo"
+                    width={24}
+                    height={24}
+                    className="w-6 h-6"
+                  />
+                  <span className="text-sm font-semibold text-gray-700">MaPrimeRénov’</span>
+                </div>
+
+                {/* Core Information */}
+                <div className="flex items-center gap-4">
+                  {/* Color Indicator */}
+                  <div className="h-12 w-12 rounded-lg border-2 border-gray-100 shadow-inner"
+                      style={{ 
+                        backgroundColor: dossierState?.mprColor ? getColorHex(dossierState.mprColor) : '#f3f4f6',
+                        borderColor: dossierState?.mprColor ? `${getColorHex(dossierState.mprColor)}30` : '#e5e7eb'
+                      }}>
+                    {!dossierState?.mprColor && (
+                      <QuestionMarkCircleIcon className="w-5 h-5 text-gray-400 m-auto" />
+                    )}
+                  </div>
+
+                  {/* Text Info */}
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">Niveau de prime</div>
+                    <div className="text-lg font-semibold text-gray-800">
+                      {dossierState?.mprColor || (
+                        <span className="text-amber-600 text-sm flex items-center gap-1">
+                          <ExclamationCircleIcon className="w-4 h-4" />
+                          Non défini
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Eligible Field */}
-              <div className="flex items-center gap-4 p-4 bg-white rounded-lg shadow border border-gray-200 flex-1">
-                <IdentificationIcon className="h-8 w-8 text-gray-500" />
-                <div>
-                  <div className="text-sm font-medium text-gray-600">Éligibilité</div>
-                  <div className="mt-1">
+              <div className="group relative bg-white rounded-xl p-5 shadow-sm border border-gray-100 transition-all hover:shadow-md hover:border-gray-200">
+                {/* Subtle background pattern */}
+                <div className="absolute inset-0 bg-[radial-gradient(#f5f5f5_1px,transparent_1px)] bg-[size:16px_16px] opacity-10" />
+                
+                <div className="relative z-10 flex items-center gap-5">
+                  {/* Icon container with subtle gradient */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-gray-50 to-white shadow-inner">
+                    <IdentificationIcon className="h-6 w-6 text-gray-600" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Éligibilité MaPrimeRénov’
+                    </div>
+                    
                     {contact?.eligible !== undefined ? (
-                      <span
-                        className={`inline-block px-4 py-2 text-sm font-semibold rounded-full ${
-                          formatEligible(contact?.eligible).toLowerCase() === "oui"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {formatEligible(contact?.eligible).toLowerCase() === "oui"
-                          ? "Eligible"
-                          : "Non Eligible"}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        {/* Animated status indicator */}
+                        <motion.div 
+                          initial={{ scale: 0.9 }}
+                          animate={{ scale: 1 }}
+                          className={`relative p-2 rounded-full ${
+                            formatEligible(contact.eligible) === "oui" 
+                              ? "bg-green-50" 
+                              : "bg-red-50"
+                          }`}
+                        >
+                          {formatEligible(contact.eligible) === "oui" ? (
+                            <CheckCircleIcon className="h-6 w-6 text-green-600" />
+                          ) : (
+                            <XCircleIcon className="h-6 w-6 text-red-600" />
+                          )}
+                          {/* Subtle pulse effect */}
+                          <div className="absolute inset-0 animate-pulse rounded-full border-2 opacity-50" />
+                        </motion.div>
+
+                        {/* Status text */}
+                        <div className="space-y-1">
+                          <span className={`text-xl font-semibold ${
+                            formatEligible(contact.eligible) === "oui"
+                              ? "text-green-700"
+                              : "text-red-700"
+                          }`}>
+                            {formatEligible(contact.eligible) === "oui" ? "Éligible" : "Non éligible"}
+                          </span>
+                          <p className="text-sm text-gray-600">
+                            {formatEligible(contact.eligible) === "oui"
+                              ? "Répond aux critères du programme"
+                              : "Ne répond pas aux exigences"}
+                          </p>
+                        </div>
+                      </div>
                     ) : (
-                      <span className="text-gray-400 italic">Non défini</span>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-gray-100">
+                          <QuestionMarkCircleIcon className="h-6 w-6 text-gray-500" />
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-xl font-semibold text-gray-600">Statut inconnu</span>
+                          <p className="text-sm text-gray-500">Informations manquantes</p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
+
+                {/* Hover effect layer */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-transparent opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity" />
               </div>
 
 
@@ -1652,52 +1583,77 @@ useEffect(() => {
 
         {/* Météo Locale */}
         <motion.div
-          whileHover={{ scale: 1.03 }}
-          className="bg-gradient-to-br from-blue-100 to-blue-50 border border-blue-300 rounded-2xl p-6 shadow-2xl transition-all duration-300 hover:shadow-blue-400"
+          whileHover={{ scale: 1.005 }}
+          className="relative bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-8 shadow-2xl overflow-hidden transition-all duration-300 group"
         >
+          {/* Background texture */}
+          <div className="absolute inset-0 bg-noise opacity-10 mix-blend-overlay" />
+          
+          {/* Animated highlight */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
           {weatherLoading ? (
-            <div className="flex items-center gap-4 animate-pulse">
-              <div className="h-16 w-16 bg-gray-300 rounded-full" />
-              <div className="space-y-2">
-                <div className="h-4 w-28 bg-gray-300 rounded" />
-                <div className="h-6 w-20 bg-gray-300 rounded" />
-              </div>
+            <div className="flex flex-col items-center justify-center h-48 space-y-4">
+              <div className="h-12 w-12 bg-white/20 rounded-full animate-pulse" />
+              <div className="h-6 w-32 bg-white/20 rounded-full animate-pulse" />
+              <div className="h-4 w-48 bg-white/20 rounded-full animate-pulse" />
             </div>
           ) : weatherError ? (
-            <div className="flex items-center gap-2 text-red-600">
-              <ExclamationTriangleIcon className="h-6 w-6" />
-              <span>{weatherError}</span>
+            <div className="flex flex-col items-center justify-center h-48 space-y-4 text-red-100">
+              <ExclamationTriangleIcon className="h-12 w-12" />
+              <p className="text-lg font-semibold">{weatherError}</p>
             </div>
           ) : weather ? (
-            <div className="flex items-center">
-              {/* Icon container */}
-              <div className="flex items-center justify-center p-4 bg-blue-200 rounded-full shadow-inner">
-                {weather.icon && (
-                  <Image
-                    src={weather.icon}
-                    alt={weather.condition}
-                    width={48}
-                    height={48}
-                    className="h-12 w-12"
-                  />
-                )}
+            <div className="relative z-10 space-y-6 text-white">
+              {/* Location */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold tracking-tight">
+                  {contact?.department ? `Département ${contact.department}` : "Localisation"}
+                </h3>
+                <span className="text-sm opacity-80">
+                  {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
-              {/* Weather details */}
-              <div className="ml-5">
-                <h3 className="text-2xl font-extrabold text-blue-800">Météo Locale</h3>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-blue-900">
-                    {weather.temp}°C
+
+              {/* Main weather data */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <span className="text-6xl font-extrabold tracking-tighter">
+                    {weather.temp}°
                   </span>
-                  <span className="text-xl text-blue-700 capitalize">
+                  <p className="text-xl font-medium capitalize opacity-90">
                     {weather.condition}
-                  </span>
+                  </p>
                 </div>
-                <p className="mt-1 text-sm text-blue-700">
-                  {contact?.department
-                    ? `Département ${contact.department}`
-                    : "Localisation inconnue"}
-                </p>
+
+                {/* Weather icon with floating effect */}
+                <motion.div 
+                  initial={{ y: 0 }}
+                  animate={{ y: [-5, 5, -5] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                  className="relative w-24 h-24"
+                >
+                  {weather.icon && (
+                    <Image
+                      src={weather.icon}
+                      alt={weather.condition}
+                      fill
+                      className="drop-shadow-weather"
+                    />
+                  )}
+                </motion.div>
+              </div>
+
+              {/* Additional details */}
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                <div className="space-y-1">
+                  <p className="text-sm opacity-75">Ressenti</p>
+                  <p className="text-lg font-semibold">{weather.temp}°</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm opacity-75">Vent</p>
+                  <p className="text-lg font-semibold">10 km/h</p>
+                </div>
               </div>
             </div>
           ) : null}
@@ -1705,24 +1661,61 @@ useEffect(() => {
 
         {/* Heure Locale */}
         <motion.div
-          whileHover={{ scale: 1.03 }}
-          className="bg-gradient-to-br from-green-100 to-green-50 border border-green-300 rounded-2xl p-6 shadow-2xl transition-all duration-300 hover:shadow-green-400"
+          whileHover={{ scale: 1.005 }}
+          className="relative bg-gradient-to-br from-indigo-600 to-blue-800 rounded-2xl p-8 shadow-2xl overflow-hidden transition-all duration-300 group"
         >
-          <div className="flex items-center">
-            {/* Icon container */}
-            <div className="flex items-center justify-center p-4 bg-green-200 rounded-full shadow-inner">
-              <ClockIcon className="h-12 w-12 text-green-700" />
-            </div>
-            {/* Textual info */}
-            <div className="ml-5">
-              <h3 className="text-2xl font-extrabold text-green-800">Heure Locale</h3>
-              <p className="mt-2 text-4xl font-bold text-green-900">
-                {new Date().toLocaleTimeString("fr-FR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
+          {/* Background texture */}
+          <div className="absolute inset-0 bg-noise opacity-10 mix-blend-overlay" />
+          
+          {/* Animated highlight */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+          <div className="relative z-10 flex items-center justify-between text-white">
+            {/* Time display */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold tracking-widest uppercase opacity-75">
+                Heure Locale
+              </h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-extrabold tracking-tight tabular-nums">
+                  {new Date().toLocaleTimeString("fr-FR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                <span className="text-lg font-medium opacity-80">
+                  {new Date().toLocaleTimeString("fr-FR", {
+                    second: "2-digit",
+                  })}
+                </span>
+              </div>
+              <p className="text-lg font-medium opacity-90">
+                {new Date().toLocaleDateString("fr-FR", {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long'
                 })}
               </p>
             </div>
+
+            {/* Animated clock icon */}
+            <motion.div 
+              className="flex items-center justify-center p-4 bg-white/10 rounded-full backdrop-blur-sm"
+              initial={{ rotate: 0 }}
+              animate={{ rotate: 360 }}
+              transition={{
+                duration: 12,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            >
+              <ClockIcon className="h-12 w-12 text-white/90" />
+            </motion.div>
+          </div>
+
+          {/* Second indicator */}
+          <div className="absolute bottom-6 right-6">
+            <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse" />
           </div>
         </motion.div>
 

@@ -512,6 +512,109 @@ const chauffageOptions = [
   { value: 'chaudiere-a-granules', label: 'Chaudière à granulés' },
 ];
 
+// Helper function to calculate the MPR color based on the provided rules
+const calculateMprColor = (
+  rfrStr: string,
+  nombrePersonneStr: string,
+  department: string
+): string => {
+  const rfr = parseFloat(rfrStr);
+  const persons = parseInt(nombrePersonneStr, 10);
+  if (isNaN(rfr) || isNaN(persons)) return "";
+
+  // Define the list of departments for Ile de France
+  const ileDeFranceDepartments = ["91", "92", "93", "94", "95", "75", "77", "78"];
+  const isIDF = ileDeFranceDepartments.includes(department);
+
+  let thresholds: [number, number, number];
+
+  if (isIDF) {
+    // Ile de France thresholds for 1 to 5 persons: [blueMax, yellowMax, purpleMax]
+    const thresholdsMap: Record<number, [number, number, number]> = {
+      1: [23768, 28933, 40404],
+      2: [34884, 42463, 59394],
+      3: [41893, 51000, 71060],
+      4: [48914, 59549, 83637],
+      5: [55961, 68123, 95758],
+    };
+    if (persons <= 5) {
+      thresholds = thresholdsMap[persons];
+    } else {
+      // For each additional person beyond 5, add the extra amounts.
+      const extra = persons - 5;
+      const base = thresholdsMap[5];
+      thresholds = [
+        base[0] + extra * 7038,
+        base[1] + extra * 8568,
+        base[2] + extra * 12122,
+      ];
+    }
+  } else {
+    // Other regions thresholds for 1 to 5 persons
+    const thresholdsMap: Record<number, [number, number, number]> = {
+      1: [17173, 22015, 30844],
+      2: [25115, 32197, 45340],
+      3: [30206, 38719, 54592],
+      4: [35285, 45234, 63844],
+      5: [40388, 51775, 73098],
+    };
+    if (persons <= 5) {
+      thresholds = thresholdsMap[persons];
+    } else {
+      const extra = persons - 5;
+      const base = thresholdsMap[5];
+      thresholds = [
+        base[0] + extra * 5094,
+        base[1] + extra * 6525,
+        base[2] + extra * 9524,
+      ];
+    }
+  }
+
+  // thresholds now contains [blueMax, yellowMax, purpleMax]
+  if (rfr <= thresholds[0]) return "Bleu";
+  else if (rfr <= thresholds[1]) return "Jaune";
+  else if (rfr <= thresholds[2]) return "Violet";
+  else return "Rose";
+};
+
+// --- In your component ---
+
+// Update the MPR color whenever RFR, number of persons, or department changes
+useEffect(() => {
+  const color = calculateMprColor(
+    dossier.informationAides.rfr,
+    dossier.informationAides.nombrePersonne,
+    contact.department // assuming department is set in the contact state
+  );
+  setDossier((prev) => ({
+    ...prev,
+    informationAides: {
+      ...prev.informationAides,
+      mprColor: color,
+    },
+  }));
+}, [dossier.informationAides.rfr, dossier.informationAides.nombrePersonne, contact.department]);
+
+// --- In your component ---
+
+// Update the MPR color whenever RFR, number of persons, or department changes
+useEffect(() => {
+  const color = calculateMprColor(
+    dossier.informationAides.rfr,
+    dossier.informationAides.nombrePersonne,
+    contact.department // assuming department is set in the contact state
+  );
+  setDossier((prev) => ({
+    ...prev,
+    informationAides: {
+      ...prev.informationAides,
+      mprColor: color,
+    },
+  }));
+}, [dossier.informationAides.rfr, dossier.informationAides.nombrePersonne, contact.department]);
+
+
   // Map the selected values to the corresponding react-select options
   const selectedOptions = chauffageOptions.filter(option =>
     dossier.informationLogement.systemeChauffage.includes(option.value)
@@ -610,10 +713,10 @@ const chauffageOptions = [
                       <input type="text" id="department" value={contact.department} readOnly className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2" />
                     </div>
                     {/* Preview Contact ID (read-only) */}
-                    <div>
+                    {/* <div>
                       <label htmlFor="contactId" className="block text-sm font-medium text-gray-700">Contact ID</label>
                       <input type="text" id="contactId" value={createdContactId} readOnly className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2" />
-                    </div>
+                    </div> */}
                     {/* Gestionnaire de suivi */}
                     <div>
                       <label htmlFor="gestionnaireSuivi" className="block text-sm font-medium text-gray-700">Gestionnaire de suivi</label>
@@ -936,13 +1039,29 @@ const chauffageOptions = [
                     </div>
                     {/* MPR Color (read-only with visual indicator) */}
                     <div>
-                      <label htmlFor="mprColor" className="block text-sm font-medium text-gray-700">Ma Prime Renov Couleur</label>
+                      <label htmlFor="mprColor" className="block text-sm font-medium text-gray-700">
+                        Ma Prime Renov Couleur
+                      </label>
                       <div className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-3 py-2">
-                        <span className={`font-semibold ${dossier.informationAides.mprColor === "vert" ? "text-green-700" : "text-red-700"}`}>
+                        <span
+                          className={`font-semibold ${
+                            dossier.informationAides.mprColor === "Bleu"
+                              ? "text-blue-700"
+                              : dossier.informationAides.mprColor === "Jaune"
+                              ? "text-yellow-700"
+                              : dossier.informationAides.mprColor === "Violet"
+                              ? "text-purple-700"
+                              : dossier.informationAides.mprColor === "Rose"
+                              ? "text-pink-700"
+                              : "text-gray-700"
+                          }`}
+                        >
                           {dossier.informationAides.mprColor}
                         </span>
                       </div>
-                      {dossierErrors["informationAides.mprColor"] && <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mprColor"]}</p>}
+                      {dossierErrors["informationAides.mprColor"] && (
+                        <p className="mt-1 text-xs text-red-500">{dossierErrors["informationAides.mprColor"]}</p>
+                      )}
                     </div>
                     {/* Eligible Badge */}
                     <div className="flex items-center space-x-3">

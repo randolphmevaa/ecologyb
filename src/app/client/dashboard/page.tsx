@@ -8,9 +8,8 @@ import {
   BoltIcon,
   Squares2X2Icon,
   FireIcon,
-  ChatBubbleBottomCenterTextIcon,
 } from "@heroicons/react/24/outline";
-import ChatWidget from "@/components/ChatWidget";
+import ChatWidget from "@/components/ChatWidget"; // <-- Make sure the path is correct
 
 const solutions = [
   {
@@ -46,6 +45,7 @@ export default function ClientDashboard() {
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 relative">
       {/* Global Header */}
       <Header />
+
       <main className="max-w-7xl mx-auto p-6">
         {/* Hero Section */}
         <motion.div
@@ -58,7 +58,8 @@ export default function ClientDashboard() {
             Bienvenue dans votre Espace Client
           </h1>
           <p className="mt-4 text-lg text-gray-600">
-            Découvrez nos solutions spécialisées en énergie pour optimiser votre confort et réduire vos coûts.
+            Découvrez nos solutions spécialisées en énergie pour optimiser votre
+            confort et réduire vos coûts.
           </p>
         </motion.div>
 
@@ -110,22 +111,35 @@ export default function ClientDashboard() {
           className="mt-16 text-center"
         >
           <p className="text-gray-500 text-sm">
-            Pour toute assistance, n’hésitez pas à contacter notre support dédié.
+            Pour toute assistance, n’hésitez pas à contacter notre support
+            dédié.
           </p>
         </motion.div>
       </main>
 
-      {/* Fixed Button to Open Chat Widget */}
-      <button
-        onClick={() => setShowChatWidget(true)}
-        className="fixed bottom-6 right-6 bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors z-50"
-      >
-        <ChatBubbleBottomCenterTextIcon className="h-6 w-6" />
-      </button>
+      {/* --- 1) The Chat Button (visible if showChatWidget === false) --- */}
+      {!showChatWidget && (
+        <motion.button
+          onClick={() => setShowChatWidget(true)}
+          className="fixed bottom-6 right-6 bg-black p-3 rounded-full shadow-md hover:shadow-lg hover:scale-105 transition-transform z-50"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <img
+            src="https://www.svgrepo.com/show/134330/avatar.svg"
+            alt="Ouvrir le chat"
+            className="h-8 w-8"
+          />
+        </motion.button>
+      )}
 
-      {/* Chat Widget Popup */}
+      {/* --- 2) Chat Widget (visible if showChatWidget === true) --- */}
       {showChatWidget && (
-        <ChatWidget onClose={() => setShowChatWidget(false)} />
+        <ChatWidget
+          onClose={() => {
+            setShowChatWidget(false);
+          }}
+        />
       )}
     </div>
   );

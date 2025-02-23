@@ -7,19 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { INewUser } from "@/types/INewUser";
 
-// interface IUser {
-//   id?: string; // Optional if provided by the server
-//   firstName: string;
-//   lastName: string;
-//   email: string;
-//   phone: string;
-//   role: string;
-// }
-
 interface AddContactModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUserAdded: (newUser: INewUser) => void; // Updated to use IUser instead of any
+  onUserAdded: (newUser: INewUser) => void;
 }
 
 export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModalProps) {
@@ -28,6 +19,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
   const [role, setRole] = useState("");
+  const [gender, setGender] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,6 +54,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
       email: validateField("email", email),
       telephone: validateField("telephone", telephone),
       role: validateField("role", role),
+      gender: validateField("gender", gender),
     };
     Object.keys(newErrors).forEach((key) => {
       if (!newErrors[key]) delete newErrors[key];
@@ -84,6 +77,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
           email,
           phone: telephone,
           role,
+          gender, // Save selected gender
         }),
       });
       const data = await response.json();
@@ -107,6 +101,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
+        {/* Backdrop */}
         <motion.div
           className="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
           onClick={onClose}
@@ -114,6 +109,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         />
+
         <FocusLock>
           <motion.div
             className="relative bg-white rounded-xl shadow-2xl z-10 w-full max-w-lg p-8 mx-4"
@@ -125,7 +121,8 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
             aria-labelledby="modal-title"
             aria-modal="true"
           >
-            <div className="flex justify-between items-center mb-6">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6 border-b pb-3">
               <h2 id="modal-title" className="text-2xl font-bold text-gray-800">
                 Ajouter un client
               </h2>
@@ -145,8 +142,10 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                 </svg>
               </button>
             </div>
+
+            {/* Form */}
             <form onSubmit={handleSubmit} noValidate>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-5">
                 {/* Prénom */}
                 <div>
                   <label htmlFor="prenom" className="block text-sm font-medium text-gray-700">
@@ -161,7 +160,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                     placeholder="Entrez le prénom"
                     required
                     autoFocus
-                    className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                    className={`mt-1 block w-full rounded-md border p-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
                       errors.prenom ? "border-red-500" : "border-gray-300"
                     }`}
                   />
@@ -181,7 +180,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                     onBlur={(e) => handleBlur("nom", e.target.value)}
                     placeholder="Entrez le nom"
                     required
-                    className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                    className={`mt-1 block w-full rounded-md border p-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
                       errors.nom ? "border-red-500" : "border-gray-300"
                     }`}
                   />
@@ -201,7 +200,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                     onBlur={(e) => handleBlur("email", e.target.value)}
                     placeholder="Entrez l'email"
                     required
-                    className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                    className={`mt-1 block w-full rounded-md border p-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
                       errors.email ? "border-red-500" : "border-gray-300"
                     }`}
                   />
@@ -221,7 +220,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                     onBlur={(e) => handleBlur("telephone", e.target.value)}
                     placeholder="Entrez le numéro de téléphone"
                     required
-                    className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                    className={`mt-1 block w-full rounded-md border p-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
                       errors.telephone ? "border-red-500" : "border-gray-300"
                     }`}
                   />
@@ -239,7 +238,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                     onChange={(e) => setRole(e.target.value)}
                     onBlur={(e) => handleBlur("role", e.target.value)}
                     required
-                    className={`mt-1 block w-full rounded-md border p-2 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                    className={`mt-1 block w-full rounded-md border p-3 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
                       errors.role ? "border-red-500" : "border-gray-300"
                     }`}
                   >
@@ -261,10 +260,32 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                   </select>
                   {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role}</p>}
                 </div>
+
+                {/* Genre */}
+                <div>
+                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
+                    Genre
+                  </label>
+                  <select
+                    id="gender"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    onBlur={(e) => handleBlur("gender", e.target.value)}
+                    required
+                    className={`mt-1 block w-full rounded-md border p-3 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                      errors.gender ? "border-red-500" : "border-gray-300"
+                    }`}
+                  >
+                    <option value="">Sélectionnez un genre</option>
+                    <option value="Homme">Homme</option>
+                    <option value="Femme">Femme</option>
+                  </select>
+                  {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
+                </div>
               </div>
 
-              {/* Boutons d'action */}
-              <div className="mt-6 flex justify-end space-x-3">
+              {/* Action Buttons */}
+              <div className="mt-8 flex justify-end space-x-4">
                 <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
                   Annuler
                 </Button>

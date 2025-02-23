@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { XMarkIcon, PhotoIcon, PlusIcon } from "@heroicons/react/24/outline";
 import AddPhotoForm, { PhotoData } from "./AddPhotoForm";
 import Spinner from "./Spinner";
+import Image from "next/image";
 
 interface PhotoTabProps {
   contactId: string;
@@ -131,7 +132,7 @@ function PhotoTab({ contactId }: PhotoTabProps) {
                       className="transition-colors duration-200"
                     >
                       <td className="px-4 py-3">
-                        <img
+                        <Image
                           src={photo.url}
                           alt={photo.caption || "Photo"}
                           className="h-12 w-12 object-cover rounded"
@@ -240,7 +241,7 @@ function PhotoTab({ contactId }: PhotoTabProps) {
                   Fermer
                 </button>
               </div>
-              <img
+              <Image
                 src={previewPhoto.url}
                 alt={previewPhoto.caption || "Aperçu de la photo"}
                 className="w-full h-auto rounded"

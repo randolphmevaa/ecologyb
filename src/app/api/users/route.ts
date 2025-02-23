@@ -177,12 +177,12 @@ L'équipe Ecology'b`,
 
 export async function POST(request: NextRequest) {
   try {
-    // Extraction du corps de la requête (incluant email, role, firstName, lastName et phone)
-    const { email, role, firstName, lastName, phone } = await request.json();
+    // Extraction du corps de la requête incluant email, role, firstName, lastName, phone et gender
+    const { email, role, firstName, lastName, phone, gender } = await request.json();
 
-    if (!email || !role) {
+    if (!email || !role || !gender) {
       return NextResponse.json(
-        { success: false, message: "Email et rôle sont requis." },
+        { success: false, message: "Email, rôle et genre sont requis." },
         { status: 400 }
       );
     }
@@ -194,6 +194,8 @@ export async function POST(request: NextRequest) {
       "Technician / Installer",
       "Customer Support / Service Representative",
       "Super Admin",
+      // Optionnel : ajoutez ce rôle si vous souhaitez gérer les clients ici
+      "Client / Customer (Client Portal)",
     ];
 
     if (!allowedRoles.includes(role)) {
@@ -229,12 +231,13 @@ export async function POST(request: NextRequest) {
     const newUser = {
       id: newUserId,
       email,
-      password: hashedPassword,  // hashed password for authentication
-      realPassword: tempPassword, // plain text password (insecure)
+      password: hashedPassword,  // Mot de passe haché pour l'authentification
+      realPassword: tempPassword, // Mot de passe en clair (à éviter si possible)
       role,
       firstName,
       lastName,
       phone,
+      gender, // Sauvegarde du genre
       createdAt: new Date(),
     };
 
@@ -264,14 +267,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Parse query parameters from the URL
-    const { searchParams } = new URL(request.url);
+    // Parse query parameters from the URL using request.nextUrl
+    const { searchParams } = request.nextUrl;
     const id = searchParams.get("id");
+    const email = searchParams.get("email");
 
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    // If an id is provided, try to fetch the user by _id (ObjectId)
     if (id) {
       // Validate that the id is a valid ObjectId
       if (!ObjectId.isValid(id)) {
@@ -280,22 +283,32 @@ export async function GET(request: NextRequest) {
           { status: 400 }
         );
       }
-
-      const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
+      const user = await db
+        .collection("users")
+        .findOne({ _id: new ObjectId(id) });
       if (!user) {
         return NextResponse.json(
           { success: false, message: "User not found." },
           { status: 404 }
         );
       }
-
+      return NextResponse.json(user);
+    } else if (email) {
+      // Fetch the user by email
+      const user = await db.collection("users").findOne({ email });
+      if (!user) {
+        return NextResponse.json(
+          { success: false, message: "User not found." },
+          { status: 404 }
+        );
+      }
       return NextResponse.json(user);
     } else {
       // Otherwise, return all users
       const users = await db.collection("users").find({}).toArray();
       return NextResponse.json(users);
     }
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.error();
   }

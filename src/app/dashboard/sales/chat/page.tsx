@@ -48,22 +48,20 @@ interface Contact {
   createdAt: string;
 }
 
-// Define a type for messages received from the API.
-interface MessageData {
-  sender: string;
+interface ServerMessage {
+  sender: "client" | "staff";
   text: string;
   time: string;
   contactId: string;
 }
 
-// Define a type for client messages received via socket.
 interface ClientMessage {
   text: string;
   contactId: string;
 }
 
 export default function StaffDashboard() {
-  // Gestion des états
+  // State management
   const [conversations, setConversations] = useState<{ [contactId: string]: Message[] }>({});
   const [contacts, setContacts] = useState<{ [contactId: string]: Contact }>({});
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
@@ -73,7 +71,7 @@ export default function StaffDashboard() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const requestedContacts = useRef<Set<string>>(new Set());
 
-  // Récupération de roomId depuis localStorage
+  // Retrieve roomId from localStorage
   let roomId = "";
   const proInfoStr = localStorage.getItem("proInfo");
   if (proInfoStr) {
@@ -87,14 +85,14 @@ export default function StaffDashboard() {
     }
   }
 
-  // Auto-scroll vers le bas à chaque mise à jour des messages ou lors de l'ouverture d'une conversation
+  // Auto-scroll when messages update or a conversation is opened
   useEffect(() => {
     if (selectedContact && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [conversations, selectedContact]);
 
-  // Récupération des messages de conversation via l'API et groupement par contactId
+  // Fetch conversation messages via the API and group by contactId
   useEffect(() => {
     if (!roomId) {
       console.warn("Aucune salle spécifiée dans proInfo");
@@ -102,7 +100,7 @@ export default function StaffDashboard() {
     }
     fetch(`/api/messages?room=${roomId}`)
       .then((res) => res.json())
-      .then((data: MessageData[]) => {
+      .then((data: ServerMessage[]) => {
         const conv: { [contactId: string]: Message[] } = {};
         data.forEach((item) => {
           const mappedMsg: Message = {
@@ -124,10 +122,9 @@ export default function StaffDashboard() {
         }
       })
       .catch(console.error);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId]);
+  }, [roomId, selectedContact]);
 
-  // Récupération des détails de chaque contact pour chaque conversation
+  // Fetch contact details for each conversation
   useEffect(() => {
     Object.keys(conversations).forEach((contactId) => {
       if (!requestedContacts.current.has(contactId)) {
@@ -142,7 +139,7 @@ export default function StaffDashboard() {
     });
   }, [conversations]);
 
-  // Configuration de la connexion Socket.IO pour la messagerie en temps réel
+  // Configure Socket.IO connection for real-time messaging
   useEffect(() => {
     if (!roomId) return;
 
@@ -161,11 +158,10 @@ export default function StaffDashboard() {
       };
       setConversations((prev) => {
         const conv = { ...prev };
-        const contact = data.contactId;
-        if (!conv[contact]) {
-          conv[contact] = [];
+        if (!conv[data.contactId]) {
+          conv[data.contactId] = [];
         }
-        conv[contact] = [...conv[contact], newMsg];
+        conv[data.contactId] = [...conv[data.contactId], newMsg];
         return conv;
       });
     });
@@ -183,7 +179,7 @@ export default function StaffDashboard() {
     };
   }, [roomId]);
 
-  // Fonction d'envoi de message
+  // Message send function
   const sendMessage = async () => {
     if (!input.trim() || !selectedContact) return;
     const messageTexte = input;
@@ -192,10 +188,10 @@ export default function StaffDashboard() {
       message: messageTexte,
       timestamp: new Date().toLocaleTimeString(),
       contactId: selectedContact,
-      status: "pending", // Statut initial : Envoi...
+      status: "pending",
     };
 
-    // Mise à jour locale immédiate de la conversation (local echo)
+    // Update conversation locally (local echo)
     setConversations((prev) => {
       const conv = { ...prev };
       if (!conv[selectedContact]) {
@@ -206,12 +202,12 @@ export default function StaffDashboard() {
     });
     setInput("");
 
-    // Envoi du message via Socket.IO
+    // Send message via Socket.IO
     if (socketRef.current) {
       socketRef.current.emit("staffMessage", { text: messageTexte, contactId: selectedContact, room: roomId });
     }
 
-    // Persistance du message sur le backend et mise à jour du statut
+    // Persist the message on the backend and update its status
     try {
       await fetch(`/api/messages?room=${roomId}`, {
         method: "POST",
@@ -224,16 +220,13 @@ export default function StaffDashboard() {
           time: new Date().toLocaleTimeString(),
         }),
       });
-      // Mise à jour du statut du dernier message de "pending" à "delivered"
       setConversations((prev) => {
         const conv = { ...prev };
-        if (selectedContact) {
-          const msgs = conv[selectedContact];
-          if (msgs && msgs.length > 0) {
-            const lastIndex = msgs.length - 1;
-            if (msgs[lastIndex].type === "staff" && msgs[lastIndex].status === "pending") {
-              msgs[lastIndex].status = "delivered";
-            }
+        const msgs = conv[selectedContact];
+        if (msgs && msgs.length > 0) {
+          const lastIndex = msgs.length - 1;
+          if (msgs[lastIndex].type === "staff" && msgs[lastIndex].status === "pending") {
+            msgs[lastIndex].status = "delivered";
           }
         }
         return conv;
@@ -243,12 +236,12 @@ export default function StaffDashboard() {
     }
   };
 
-  // Filtrage des conversations via le terme de recherche (par nom du contact)
+  // Filter conversations based on search term (by contact name)
   const filteredContactIds = Object.keys(conversations).filter((contactId) => {
     const contact = contacts[contactId];
     if (!contact) return true;
-    const nomComplet = `${contact.firstName} ${contact.lastName}`;
-    return nomComplet.toLowerCase().includes(searchTerm.toLowerCase());
+    const fullName = `${contact.firstName} ${contact.lastName}`;
+    return fullName.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const currentMessages = selectedContact ? conversations[selectedContact] || [] : [];
@@ -258,7 +251,7 @@ export default function StaffDashboard() {
       <div className="flex-1 flex flex-col">
         <Header />
         <main className="flex-1 overflow-y-auto p-8">
-          {/* Section de présentation */}
+          {/* Presentation section */}
           <motion.div
             className="mb-8 text-center"
             initial={{ opacity: 0, y: -20 }}
@@ -271,7 +264,7 @@ export default function StaffDashboard() {
             </p>
           </motion.div>
 
-          {/* Barre de recherche */}
+          {/* Search bar */}
           <motion.div
             className="relative max-w-md mx-auto mb-8"
             initial={{ opacity: 0 }}
@@ -288,7 +281,7 @@ export default function StaffDashboard() {
             />
           </motion.div>
 
-          {/* Liste des conversations */}
+          {/* Conversation list */}
           <motion.div
             className="grid gap-6"
             initial={{ opacity: 0 }}
@@ -345,7 +338,7 @@ export default function StaffDashboard() {
         </main>
       </div>
 
-      {/* Fenêtre modale de conversation */}
+      {/* Conversation modal */}
       <AnimatePresence>
         {selectedContact && (
           <motion.div
@@ -361,7 +354,7 @@ export default function StaffDashboard() {
               exit={{ y: "100vh" }}
               transition={{ type: "spring", stiffness: 100 }}
             >
-              {/* Entête collante avec avatar */}
+              {/* Sticky header with avatar */}
               <div className="sticky top-0 bg-white z-10 border-b pb-4 mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <UserCircleIcon className="h-10 w-10 text-blue-600" />
@@ -376,7 +369,7 @@ export default function StaffDashboard() {
                 </button>
               </div>
 
-              {/* Zone de conversation */}
+              {/* Conversation area */}
               <div className="flex-1 space-y-4 max-h-80 overflow-y-auto pr-2">
                 {currentMessages.map((msg, index) => (
                   <motion.div
@@ -405,11 +398,11 @@ export default function StaffDashboard() {
                     </motion.div>
                   </motion.div>
                 ))}
-                {/* Élément de fin pour le défilement automatique */}
+                {/* End element for auto-scroll */}
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Zone de saisie de message */}
+              {/* Message input area */}
               <div className="mt-4 border-t pt-4 flex items-center">
                 <input
                   type="text"

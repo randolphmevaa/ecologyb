@@ -85,6 +85,7 @@ interface User {
   firstName: string;
   lastName: string;
   phone: string;
+  gender?: string; // Now optional
 }
 
 type Dossier = {
@@ -1362,7 +1363,7 @@ export default function ProjectDetailPage() {
 
           {activeTab === "chat" && (
             <div id="chat" className="h-full">
-              <ChatTab />
+              <ChatTab currentContactId={dossier.contactId || ""} />
             </div>
           )}
 
