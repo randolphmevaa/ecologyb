@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
       "images.unsplash.com",
       "randomuser.me",
       "picsum.photos",
+      "www.heat-me.be",
       "www.hotesse-interim.fr",
       // You can add more domains if needed
     ],

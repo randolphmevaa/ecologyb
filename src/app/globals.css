@@ -45,3 +45,16 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb:hover {
   background: #a0c8f0;
 }
+
+.shadow-holographic {
+  box-shadow: 0 8px 32px 0 rgba(31, 97, 184, 0.15),
+    0 0 20px rgba(255, 255, 255, 0.15) inset;
+}
+
+.shadow-pulse {
+  filter: drop-shadow(0 0 8px rgba(210, 252, 178, 0.4));
+}
+
+.hover\:paused:hover {
+  animation-play-state: paused;
+}
