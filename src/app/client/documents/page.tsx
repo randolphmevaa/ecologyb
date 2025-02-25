@@ -7,6 +7,14 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 
+// Business colors
+const colors = {
+  white: "#ffffff",
+  lightBlue: "#bfddf9",
+  lightGreen: "#d2fcb2",
+  darkBlue: "#213f5b",
+};
+
 // Sample documents data
 const documents = [
   {
@@ -45,20 +53,30 @@ const documents = [
 
 export default function ClientDocuments() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-green-50">
-      {/* Consistent header */}
+    <div
+      className="min-h-screen"
+      style={{
+        background: `linear-gradient(to bottom, ${colors.white}, ${colors.lightGreen}20)`,
+      }}
+    >
+      {/* Consistent Header */}
       <Header />
 
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Hero Section */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8 text-center"
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
         >
-          <h1 className="text-3xl font-bold text-gray-800">Documents</h1>
-          <p className="mt-2 text-lg text-gray-600">
+          <h1 className="text-4xl font-bold" style={{ color: colors.darkBlue }}>
+            Documents
+          </h1>
+          <p
+            className="mt-4 text-lg"
+            style={{ color: colors.darkBlue, opacity: 0.8 }}
+          >
             Accédez à toute votre documentation pour nos solutions énergétiques
             spécialisées.
           </p>
@@ -66,7 +84,7 @@ export default function ClientDocuments() {
 
         {/* Documents Grid */}
         <motion.div
-          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
           initial="hidden"
           animate="visible"
           variants={{
@@ -81,37 +99,65 @@ export default function ClientDocuments() {
           {documents.map((doc) => (
             <motion.div
               key={doc.id}
-              className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10"
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0 },
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{
+                scale: 1.03,
+                boxShadow: `0 12px 30px -5px ${colors.darkBlue}20`,
               }}
-              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+              className="p-8 rounded-xl border"
+              style={{
+                background: colors.white,
+                borderImage: `linear-gradient(45deg, ${colors.lightBlue}, ${colors.lightGreen}) 1`,
+                borderWidth: "1px",
+              }}
             >
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-full">
-                  <DocumentTextIcon className="h-8 w-8 text-green-600" />
+              <div className="flex items-center gap-5">
+                <div className="p-4 bg-green-100 rounded-full">
+                  <DocumentTextIcon
+                    className="h-10 w-10"
+                    style={{ color: colors.darkBlue }}
+                  />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-800">
+                  <h2
+                    className="text-xl font-semibold"
+                    style={{ color: colors.darkBlue }}
+                  >
                     {doc.name}
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p
+                    className="text-sm"
+                    style={{ color: colors.darkBlue, opacity: 0.7 }}
+                  >
                     {doc.fileType} • {doc.size}
                   </p>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-gray-600">
+              <p
+                className="mt-6 text-base"
+                style={{ color: colors.darkBlue, opacity: 0.85 }}
+              >
                 Solution: {doc.solution}
               </p>
-              <p className="mt-1 text-xs text-gray-500">
+              <p
+                className="mt-2 text-sm"
+                style={{ color: colors.darkBlue, opacity: 0.75 }}
+              >
                 Téléchargé le {doc.uploadedDate}
               </p>
               <motion.button
-                whileHover={{ scale: 1.03 }}
-                className="mt-4 flex items-center justify-center w-full py-2 px-4 bg-green-600 text-white rounded-full transition-colors hover:bg-green-700"
+                whileHover={{ scale: 1.05 }}
+                className="mt-6 flex items-center justify-center w-full py-3 px-6 rounded-full shadow-md transition-colors"
+                style={{
+                  backgroundColor: colors.darkBlue,
+                  color: colors.white,
+                }}
               >
-                Voir Détails <ChevronRightIcon className="ml-2 h-5 w-5" />
+                Voir Détails
+                <ChevronRightIcon className="ml-3 h-5 w-5" />
               </motion.button>
             </motion.div>
           ))}

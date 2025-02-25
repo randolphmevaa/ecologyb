@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { Header } from "@/components/Header";
 import { motion } from "framer-motion";
 import {
   ChatBubbleLeftRightIcon,
@@ -10,8 +8,17 @@ import {
   CheckCircleIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
+import { Header } from "@/components/Header";
 
-// Sample support tickets data
+// Business colors
+const colors = {
+  white: "#ffffff",
+  lightBlue: "#bfddf9",
+  lightGreen: "#d2fcb2",
+  darkBlue: "#213f5b",
+};
+
+// Sample tickets data
 const tickets = [
   {
     id: 1,
@@ -59,151 +66,138 @@ const tickets = [
   },
 ];
 
-export default function ClientSupport() {
-  const [filter ] = useState("Tous");
+// Helper function for status badge styles
+const getStatusBadge = (status: string) => {
+  let bgColor, textColor;
+  if (status === "Fermé") {
+    bgColor = colors.lightGreen;
+    textColor = colors.darkBlue;
+  } else if (status === "En cours") {
+    bgColor = colors.lightBlue;
+    textColor = colors.darkBlue;
+  } else {
+    bgColor = colors.lightBlue;
+    textColor = colors.darkBlue;
+  }
+  return { bgColor, textColor };
+};
 
-  // Filter tickets by energy solution type (or show all)
-  const filteredTickets =
-    filter === "Tous"
-      ? tickets
-      : tickets.filter((ticket) => ticket.solution === filter);
+// Helper function for priority icons
+const getPriorityIcon = (priority: string) => {
+  switch (priority) {
+    case "Haute":
+      return <ExclamationTriangleIcon className="h-5 w-5" style={{ color: colors.darkBlue }} />;
+    case "Moyenne":
+      return <InformationCircleIcon className="h-5 w-5" style={{ color: colors.darkBlue }} />;
+    case "Faible":
+    default:
+      return <CheckCircleIcon className="h-5 w-5" style={{ color: colors.darkBlue }} />;
+  }
+};
 
-  // Helper function for status badge colors
-  const getStatusBadge = (status: string): string => {
-    switch (status) {
-      case "Fermé":
-        return "bg-green-100 text-green-700";
-      case "En cours":
-        return "bg-yellow-100 text-yellow-700";
-      case "Ouvert":
-      default:
-        return "bg-red-100 text-red-700";
-    }
-  };
-
-  // Helper function for priority icons
-  const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case "Haute":
-        return <ExclamationTriangleIcon className="h-5 w-5 text-red-600" />;
-      case "Moyenne":
-        return <InformationCircleIcon className="h-5 w-5 text-yellow-600" />;
-      case "Faible":
-      default:
-        return <CheckCircleIcon className="h-5 w-5 text-green-600" />;
-    }
-  };
-
+export default function SAV() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-green-50">
-      {/* Header for consistent navigation */}
+    <div
+      className="min-h-screen"
+      style={{
+        background: `linear-gradient(to bottom, ${colors.white}, ${colors.lightGreen}20)`,
+      }}
+    >
+      {/* Navigation Header */}
       <Header />
 
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Hero Section */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8 text-center"
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
         >
-          <h1 className="text-3xl font-bold text-gray-800">
-            Support &amp; Tickets
+          <h1 className="text-4xl font-bold" style={{ color: colors.darkBlue }}>
+            S.A.V – Service Après-Vente
           </h1>
-          <p className="mt-2 text-lg text-gray-600">
-            Consultez et gérez vos tickets d&apos;assistance pour nos solutions
-            énergétiques spécialisées.
+          <p className="mt-3 text-lg" style={{ color: colors.darkBlue, opacity: 0.8 }}>
+            Gérez vos demandes d&apos;assistance pour nos solutions énergétiques de façon rapide et simple.
           </p>
         </motion.div>
 
-        {/* Filter Buttons */}
-        {/* <motion.div
-          className="flex flex-wrap gap-4 mb-8 justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          {[
-            "Tous",
-            "Pompes a chaleur",
-            "Chauffe-eau solaire individuel",
-            "Chauffe-eau thermodynamique",
-            "Système Solaire Combiné",
-          ].map((item) => (
-            <button
-              key={item}
-              onClick={() => setFilter(item)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
-                filter === item
-                  ? "bg-green-600 text-white border-green-600"
-                  : "bg-white text-gray-600 border-gray-300 hover:bg-green-50"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </motion.div> */}
-
         {/* Tickets List */}
-        <div className="space-y-6">
-          {filteredTickets.map((ticket) => (
-            <motion.div
-              key={ticket.id}
-              className="p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-[#bfddf9]/30 bg-white hover:border-[#d2fcb2]/50 hover:bg-gradient-to-br hover:from-white hover:to-[#bfddf9]/10"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.01 }}
-            >
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <ChatBubbleLeftRightIcon className="h-8 w-8 text-green-600" />
+        <div className="space-y-8">
+          {tickets.map((ticket) => {
+            const { bgColor, textColor } = getStatusBadge(ticket.status);
+            return (
+              <motion.div
+                key={ticket.id}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: `0 12px 30px -5px ${colors.darkBlue}20`,
+                }}
+                transition={{ duration: 0.3 }}
+                className="p-8 rounded-xl border"
+                style={{
+                  background: colors.white,
+                  borderImage: `linear-gradient(45deg, ${colors.lightBlue}, ${colors.lightGreen}) 1`,
+                  borderWidth: "1px",
+                }}
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-5">
+                    <ChatBubbleLeftRightIcon className="h-10 w-10" style={{ color: colors.darkBlue }} />
+                    <div>
+                      <h2 className="text-2xl font-semibold" style={{ color: colors.darkBlue }}>
+                        {ticket.subject}
+                      </h2>
+                      <p className="text-sm mt-1" style={{ color: colors.darkBlue, opacity: 0.75 }}>
+                        Ticket {ticket.ticketNumber} • Créé le {ticket.createdDate}
+                      </p>
+                    </div>
+                  </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-800">
-                      {ticket.subject}
-                    </h2>
-                    <p className="text-sm text-gray-500">
-                      Ticket {ticket.ticketNumber} • Créé le {ticket.createdDate}
-                    </p>
+                    <span
+                      className="px-4 py-1 rounded-full text-xs font-medium"
+                      style={{ backgroundColor: bgColor, color: textColor }}
+                    >
+                      {ticket.status}
+                    </span>
                   </div>
                 </div>
-                <div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(
-                      ticket.status
-                    )}`}
+
+                <p className="mt-6 text-base" style={{ color: colors.darkBlue, opacity: 0.85 }}>
+                  {ticket.description}
+                </p>
+
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {getPriorityIcon(ticket.priority)}
+                    <span className="text-sm" style={{ color: colors.darkBlue, opacity: 0.75 }}>
+                      Priorité: {ticket.priority}
+                    </span>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    className="flex items-center font-medium px-5 py-2 rounded-full shadow focus:outline-none"
+                    style={{
+                      backgroundColor: colors.darkBlue,
+                      color: colors.white,
+                    }}
                   >
-                    {ticket.status}
-                  </span>
+                    Voir Détails
+                    <ChevronRightIcon className="h-5 w-5 ml-2" />
+                  </motion.button>
                 </div>
-              </div>
-
-              <p className="mt-4 text-sm text-gray-600">
-                {ticket.description}
-              </p>
-
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {getPriorityIcon(ticket.priority)}
-                  <span className="text-sm text-gray-500">
-                    Priorité: {ticket.priority}
-                  </span>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  className="flex items-center text-green-600 font-medium"
-                >
-                  Voir Détails{" "}
-                  <ChevronRightIcon className="h-5 w-5 ml-1" />
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* No Tickets Message */}
-        {filteredTickets.length === 0 && (
-          <div className="mt-10 text-center text-gray-500">
-            Aucun ticket trouvé pour ce filtre.
+        {/* No Tickets Message (if needed) */}
+        {tickets.length === 0 && (
+          <div className="mt-12 text-center text-xl font-medium" style={{ color: colors.darkBlue, opacity: 0.7 }}>
+            Aucun ticket trouvé.
           </div>
         )}
       </main>
