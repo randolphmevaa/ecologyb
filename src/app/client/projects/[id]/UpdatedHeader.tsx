@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPinIcon, PhoneIcon, UserIcon, DocumentTextIcon } from "@heroicons/react/24/solid";
+import Image from "next/image";
 
 interface Contact {
   numeroDossier: string;
@@ -169,7 +170,7 @@ export default function ClientHeader({ contactId }: { contactId: string }) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {/* Logo MaPrimeRénov' stylisé */}
-                    <img src="/Group 9.svg" alt="MaPrimeRénov Logo" className="w-12 h-12 flex-shrink-0" />
+                    <Image src="/Group 9.svg" alt="MaPrimeRénov Logo" className="w-12 h-12 flex-shrink-0" />
 
                     
                     <div>

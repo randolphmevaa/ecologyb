@@ -799,7 +799,7 @@ export default function ClientDashboard() {
               <div className="flex animate-infinite-scroll hover:paused">
                 {["https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png", " https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png", " https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",].map((url, index) => (
                   <div key={index} className="flex-shrink-0 mx-8 opacity-80 hover:opacity-100 transition-opacity">
-                    <img 
+                    <Image
                       src={url} 
                       alt="Partner brand" 
                       className="h-16 object-contain grayscale hover:grayscale-0 transition-all duration-300"
