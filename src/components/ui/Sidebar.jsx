@@ -130,10 +130,10 @@ export function Sidebar({ role }) {
         name: "Gestion", 
         icon: BriefcaseIcon,
         children: [
-          { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
+          // { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
           { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
           { name: "Leads", href: "/dashboard/admin/leads", icon: SparklesIcon, badge: 12 },
-          { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
+          // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
         ]
       },
@@ -145,7 +145,7 @@ export function Sidebar({ role }) {
       { name: "Support & Tickets", href: "/dashboard/admin/support", icon: LifebuoyIcon },
       // { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
       { name: "Mes Utilisateurs", href: "/dashboard/admin/administration", icon: UserGroupIcon },
-      { name: "Intégrations / API", href: "/dashboard/admin/integrations", icon: CodeBracketIcon }
+      // { name: "Intégrations / API", href: "/dashboard/admin/integrations", icon: CodeBracketIcon }
     ];
   }
 

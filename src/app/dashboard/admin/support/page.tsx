@@ -1,45 +1,75 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import { format, subDays, eachDayOfInterval } from "date-fns";
+import { AnimatePresence, motion } from "framer-motion";
+import {  subDays, eachDayOfInterval, isToday } from "date-fns";
+import { fr } from "date-fns/locale";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/Button";
-import { LineChart } from "@/components/ui/Charts/LineChart";
-// import { forwardRef } from "react";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import "react-datepicker/dist/react-datepicker.css";
-import { fr } from 'date-fns/locale';
+import { LineChart, customTooltip } from "@/components/ui/Charts/LineChart";
+// import jsPDF from "jspdf"; // Make sure to install jsPDF (npm install jspdf)
+import Modal from "react-modal"; // Or use your preferred modal library
+
 import {
   LifebuoyIcon,
   ClockIcon,
-  ChatBubbleLeftRightIcon,
-  UserCircleIcon,
   CheckCircleIcon,
-  ArrowUpRightIcon,
   DocumentArrowDownIcon,
-  UserGroupIcon,
-  SparklesIcon,
-  FireIcon,
-  SunIcon,
-  BoltIcon,
-  HomeModernIcon,
-  DocumentMagnifyingGlassIcon,
+  AdjustmentsHorizontalIcon,
+  BellIcon,
+  ShieldCheckIcon,
+  PlusIcon,
   CalendarIcon,
   DocumentCheckIcon,
-  // WrenchIcon,
-  PlusIcon,
+  UserCircleIcon,
   MapPinIcon,
-  ChevronRightIcon,
-  EllipsisVerticalIcon,
+  ChatBubbleLeftRightIcon,
+  // DocumentMagnifyingGlassIcon,
+  FireIcon,
+  // ViewColumnsIcon,
+  // TableCellsIcon,
+  SunIcon,
+  // EllipsisVerticalIcon,
+  ChartBarIcon,
+  EllipsisHorizontalIcon,
+  FunnelIcon,
+  ArrowDownTrayIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-import "react-datepicker/dist/react-datepicker.css";
-import DatePicker from "react-datepicker";
-import { Select } from "@headlessui/react";
-import { cn } from "@/lib/utils";
 
-// Define the valid keys for weekdays
-type WeekdayKey = "Lun" | "Mar" | "Mer" | "Jeu" | "Ven";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+// React Big Calendar
+import { Calendar, momentLocalizer, Views} from "react-big-calendar";
+import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import { CalendarDaysIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, PrinterIcon, SearchIcon, TrashIcon } from "lucide-react";
+
+// Ensure moment is using French
+moment.locale("fr");
+const localizer = momentLocalizer(moment);
+
+// Example French messages for react-big-calendar
+// const messagesFr = {
+//   allDay: "Toute la journée",
+//   previous: "Précédent",
+//   next: "Suivant",
+//   today: "Aujourd'hui",
+//   month: "Mois",
+//   week: "Semaine",
+//   day: "Jour",
+//   agenda: "Agenda",
+//   date: "Date",
+//   time: "Heure",
+//   event: "Événement",
+//   noEventsInRange: "Aucun événement à afficher.",
+//   showMore: (count: number) => `+ ${count} supplémentaire(s)`,
+// };
+
+// interface CustomCSSProperties extends React.CSSProperties {}
+
+// type WeekdayKey = "Lun" | "Mar" | "Mer" | "Jeu" | "Ven";
 
 interface Ticket {
   _id: string;
@@ -53,53 +83,72 @@ interface Ticket {
   solution?: string;
 }
 
+interface CalendarEvent extends SavEvent {
+  title: string;
+  start: Date;
+  end: Date;
+  allDay: boolean;
+}
+
 interface SavEvent {
   id: string;
-  status: "completed" | "pending"; // or any other statuses you use
+  status: "completed" | "pending" | "scheduled";
+  priority?: "high" | "medium" | "low";
   customer: string;
   date: string;
   technician: string;
   address: string;
+  problem?: string;
+  equipmentType?: string;
+  notes?: string;
+  type?: string;         // Added to support conditional styling (e.g. 'réunion')
+  location?: string;     // Added if you want to show location details
+  participants?: string; // Added if you want to list participants
+  conversation?: { sender: string; content: string; timestamp: string }[];
 }
 
-// Extend ProcessedDataPoint so that it satisfies Record<string, unknown>
-interface ProcessedDataPoint extends Record<string, unknown> {
+// A mapping for different equipment types (optional icons/colors).
+const energySolutions: {
+  [key: string]: { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; color: string }
+} = {
+  "Pompe à chaleur": { icon: FireIcon, color: "#213f5b" },
+  "Chauffe-eau solaire individuel": { icon: FireIcon, color: "#f59e0b" },
+  "Chauffe-eau thermodynamique": { icon: FireIcon, color: "#10b981" },
+  "Système Solaire Combiné": { icon: FireIcon, color: "#8b5cf6" },
+};
+
+interface ProcessedDataPoint {
   date?: string;
   label?: string;
   tickets: number;
   solutions: number;
+  [key: string]: unknown;
 }
 
-interface TooltipPayload {
-  active?: boolean;
-  payload?: unknown[];
-  label?: string;
-  tickets?: number;
-  solutions?: number;
-}
 
-// Energy solutions mapping with icons and colors
-const energySolutions = {
-  "Pompes a chaleur": { icon: FireIcon, color: "#2a75c7" },
-  "Chauffe-eau solaire individuel": { icon: SunIcon, color: "#f59e0b" },
-  "Chauffe-eau thermodynamique": { icon: BoltIcon, color: "#10b981" },
-  "Système Solaire Combiné": { icon: HomeModernIcon, color: "#8b5cf6" },
-};
+// Convert your SAV events into the shape react-big-calendar needs
+// function eventsForCalendar(savEvents: SavEvent[]) {
+//   return savEvents.map((ev) => ({
+//     ...ev,
+//     // For RBC: title, start, end
+//     title: ev.customer + (ev.problem ? ` — ${ev.problem}` : ""),
+//     start: new Date(ev.date),
+//     end: new Date(ev.date),
+//     allDay: false, // or true if you want an all-day event
+//   }));
+// }
 
 function processTicketData(
   tickets: Ticket[],
-  dateRange: { startDate: Date | null; endDate: Date | null },
-  // grouping: "daily" | "weekly" | "monthly" | "yearly"
+  dateRange: { startDate: Date | null; endDate: Date | null }
 ): ProcessedDataPoint[] {
   if (!dateRange.startDate || !dateRange.endDate) return [];
 
-  // Generate an array of dates between start and end
   const days = eachDayOfInterval({
     start: dateRange.startDate,
     end: dateRange.endDate,
   });
 
-  // Create a data point for each day with random sample values.
   return days.map((day) => ({
     date: day.toISOString(),
     label: day.toLocaleDateString("fr-FR"),
@@ -108,128 +157,1213 @@ function processTicketData(
   }));
 }
 
+interface CalendarEvent {
+  title: string;
+  start: Date;
+  end: Date;
+  allDay: boolean;
+  type?: string;
+  location?: string;
+  participants?: string;
+}
+
+// Exemple de données pour le calendrier (mars 2025)
+const sampleEvents: CalendarEvent[] = [
+  {
+    id: "1",
+    status: "scheduled", // Peut être "completed", "pending" ou "scheduled"
+    customer: "Jean Dupont",
+    date: "2025-03-05T09:00:00.000Z",
+    technician: "Technicien A",
+    address: "123 Rue de Paris, Paris",
+    title: "Réunion d'équipe",
+    start: new Date("2025-03-05T09:00:00"),
+    end: new Date("2025-03-05T10:00:00"),
+    allDay: false,
+    type: "réunion", // Pour le style conditionnel, par exemple "réunion"
+    location: "Salle de conférence",
+    priority: "medium",
+    equipmentType: "Pompe à chaleur",
+    notes: "Discussion sur les objectifs du mois",
+    participants: "Jean Dupont, Marie Curie",
+    conversation: [
+      {
+        sender: "Jean Dupont",
+        content: "Préparons la réunion.",
+        timestamp: "2025-03-05T08:45:00.000Z",
+      },
+    ],
+  },
+  {
+    id: "2",
+    status: "pending",
+    customer: "Alice Martin",
+    date: "2025-03-10T14:00:00.000Z",
+    technician: "Technicien B",
+    address: "456 Avenue de Lyon, Lyon",
+    title: "Visite client",
+    start: new Date("2025-03-10T14:00:00"),
+    end: new Date("2025-03-10T15:30:00"),
+    allDay: false,
+    type: "visite",
+    location: "Bureau de Lyon",
+    priority: "high",
+    equipmentType: "Chauffe-eau solaire individuel",
+    notes: "Inspection préventive",
+    participants: "Alice Martin, Technicien B",
+  },
+  {
+    id: "3",
+    status: "completed",
+    customer: "Pierre Legrand",
+    date: "2025-03-15T11:00:00.000Z",
+    technician: "Technicien C",
+    address: "789 Boulevard Saint-Germain, Marseille",
+    title: "Maintenance programmée",
+    start: new Date("2025-03-15T11:00:00"),
+    end: new Date("2025-03-15T12:00:00"),
+    allDay: false,
+    type: "maintenance",
+    location: "Centre technique",
+    priority: "low",
+    equipmentType: "Système Solaire Combiné",
+    notes: "Vérification annuelle effectuée",
+    participants: "Pierre Legrand, Technicien C",
+  },
+  {
+    id: "4",
+    status: "pending",
+    customer: "Sophie Lambert",
+    date: "2025-03-20T08:30:00.000Z",
+    technician: "Technicien D",
+    address: "321 Rue de Bordeaux, Bordeaux",
+    title: "Intervention urgente",
+    start: new Date("2025-03-20T08:30:00"),
+    end: new Date("2025-03-20T09:30:00"),
+    allDay: false,
+    type: "intervention",
+    location: "Site de Bordeaux",
+    priority: "high",
+    equipmentType: "Chauffe-eau thermodynamique",
+    notes: "Problème de surchauffe détecté",
+    participants: "Sophie Lambert, Technicien D",
+  },
+  {
+    id: "5",
+    status: "scheduled",
+    customer: "Marc Dubois",
+    date: "2025-03-25T13:00:00.000Z",
+    technician: "Technicien E",
+    address: "987 Rue de Nice, Nice",
+    title: "Formation technique",
+    start: new Date("2025-03-25T13:00:00"),
+    end: new Date("2025-03-25T15:00:00"),
+    allDay: false,
+    type: "formation",
+    location: "Centre de formation",
+    priority: "medium",
+    equipmentType: "Système Solaire Combiné",
+    notes: "Session de formation sur le nouveau logiciel",
+    participants: "Marc Dubois, Technicien E",
+  },
+];
+
+// Main component
+function SAVStatistics() {
+  // State management
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(new Date().setDate(new Date().getDate() - 30)),
+    endDate: new Date()
+  });
+  const [dataGrouping, setDataGrouping] = useState<"daily" | "weekly" | "monthly" | "yearly">("daily");
+  const [processedData, setProcessedData] = useState<ProcessedDataPoint[]>([]);
+  const [activeQuickRange, setActiveQuickRange] = useState<number>(30);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["tickets", "solutions"]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Sample data - replace with actual API call
+  useEffect(() => {
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      const generateSampleData = () => {
+        const data: ProcessedDataPoint[] = [];
+        // Use nullish coalescing operator to ensure a Date is always provided
+        const current = new Date(dateRange.startDate ?? new Date());
+        const end = new Date(dateRange.endDate ?? new Date());
+        
+        while (current <= end) {
+          const day = current.toISOString().split('T')[0];
+          const tickets = Math.floor(Math.random() * 30) + 20;
+          const solutions = Math.floor(tickets * (0.6 + Math.random() * 0.3));
+          
+          data.push({
+            date: day,
+            tickets,
+            solutions,
+            ratio: Math.round((solutions / tickets) * 100)
+          });
+          
+          current.setDate(current.getDate() + 1);
+        }
+        
+        return data;
+      };
+      
+      const rawData = generateSampleData();
+      
+      // Process data according to grouping
+      let grouped: ProcessedDataPoint[] = [];
+      
+      if (dataGrouping === "daily") {
+        grouped = rawData;
+      } else if (dataGrouping === "weekly") {
+        // Group by week
+        const weekMap = new Map<string, { date: string; tickets: number; solutions: number }>();
+        
+        rawData.forEach(point => {
+          const date = new Date(point.date ?? new Date());
+          const weekNum = Math.floor(date.getDate() / 7) + 1;
+          const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
+          const key = `S${weekNum} ${monthYear}`;
+          
+          if (!weekMap.has(key)) {
+            weekMap.set(key, { date: key, tickets: 0, solutions: 0 });
+          }
+          
+          const existing = weekMap.get(key)!;
+          existing.tickets += point.tickets;
+          existing.solutions += point.solutions;
+        });
+        
+        grouped = Array.from(weekMap.values());
+      } else if (dataGrouping === "monthly") {
+        // Group by month
+        const monthMap = new Map<string, { date: string; tickets: number; solutions: number }>();
+        
+        rawData.forEach(point => {
+          const date = new Date(point.date ?? new Date());
+          const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+          
+          if (!monthMap.has(monthYear)) {
+            monthMap.set(monthYear, { date: monthYear, tickets: 0, solutions: 0 });
+          }
+          
+          const existing = monthMap.get(monthYear)!;
+          existing.tickets += point.tickets;
+          existing.solutions += point.solutions;
+        });
+        
+        grouped = Array.from(monthMap.values());
+      } else {
+        // Group by year
+        const yearMap = new Map<string, { date: string; tickets: number; solutions: number }>();
+        
+        rawData.forEach(point => {
+          const date = new Date(point.date ?? new Date());
+          const year = date.getFullYear().toString();
+          
+          if (!yearMap.has(year)) {
+            yearMap.set(year, { date: year, tickets: 0, solutions: 0 });
+          }
+          
+          const existing = yearMap.get(year)!;
+          existing.tickets += point.tickets;
+          existing.solutions += point.solutions;
+        });
+        
+        grouped = Array.from(yearMap.values());
+      }
+      
+      // Add ratio to each grouped item
+      grouped = grouped.map(item => ({
+        ...item,
+        ratio: Math.round((item.solutions / item.tickets) * 100)
+      }));
+      
+      setProcessedData(grouped);
+      setIsLoading(false);
+    }, 800);
+  }, [dateRange, dataGrouping]);  
+
+  // Helper functions
+  const setQuickRange = (days: number) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    
+    setDateRange({
+      startDate: start,
+      endDate: end
+    });
+    setActiveQuickRange(days);
+  };
+
+  const isQuickRangeActive = (days: number) => {
+    return activeQuickRange === days;
+  };
+
+  const formatXAxis = (value: string, grouping: string) => {
+    if (grouping === "daily") {
+      const date = new Date(value);
+      return `${date.getDate()}/${date.getMonth() + 1}`;
+    }
+    return value;
+  };
+
+  // Stats cards
+  const statsCards = [
+    {
+      title: "Total Tickets",
+      value: processedData.reduce((acc, curr) => acc + curr.tickets, 0),
+      icon: <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#213f5b]" />,
+      bgColor: "bg-[#e8f3ff]",
+      textColor: "text-[#213f5b]"
+    },
+    {
+      title: "Total Solutions",
+      value: processedData.reduce((acc, curr) => acc + curr.solutions, 0),
+      icon: <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#10b981]" />,
+      bgColor: "bg-[#e6faf5]",
+      textColor: "text-[#10b981]"
+    },
+    {
+      title: "Taux de Résolution",
+      value: `${Math.round((processedData.reduce((acc, curr) => acc + curr.solutions, 0) / processedData.reduce((acc, curr) => acc + curr.tickets, 0)) * 100)}%`,
+      icon: <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#f59e0b]" />,
+      bgColor: "bg-[#fef7e9]",
+      textColor: "text-[#f59e0b]"
+    }
+  ];
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Stats overview */}
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {statsCards.map((stat, index) => (
+          <motion.div
+            key={index}
+            className={`rounded-2xl ${stat.bgColor} p-4 flex items-center gap-4`}
+            variants={itemVariants}
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="p-3 bg-white/40 rounded-xl">
+              {stat.icon}
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-600">{stat.title}</h3>
+              <p className={`text-2xl font-bold ${stat.textColor}`}>{stat.value}</p>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Main chart */}
+      <motion.div
+        className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#bfddf9]"
+        whileHover={{ y: -5 }}
+        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#213f5b] to-[#1d3349] p-6 text-white">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                <ChatBubbleLeftRightIcon className="h-7 w-7 text-[#d2fcb2]" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold">
+                  Statistique S.A.V.
+                </h2>
+                <p className="text-white/80 font-medium mt-1">
+                  Analyse des tickets sur la période
+                </p>
+              </div>
+            </div>
+            
+            {/* Quick Range Buttons */}
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                className={`${
+                  isQuickRangeActive(7)
+                    ? "bg-white/20 ring-2 ring-white/30"
+                    : "bg-white/10 hover:bg-white/20"
+                } text-white rounded-xl h-10 px-3 transition-all`}
+                onClick={() => setQuickRange(7)}
+              >
+                7J
+              </Button>
+              <Button
+                variant="ghost"
+                className={`${
+                  isQuickRangeActive(14)
+                    ? "bg-white/20 ring-2 ring-white/30"
+                    : "bg-white/10 hover:bg-white/20"
+                } text-white rounded-xl h-10 px-3 transition-all`}
+                onClick={() => setQuickRange(14)}
+              >
+                14J
+              </Button>
+              <Button
+                variant="ghost"
+                className={`${
+                  isQuickRangeActive(30)
+                    ? "bg-white/20 ring-2 ring-white/30"
+                    : "bg-white/10 hover:bg-white/20"
+                } text-white rounded-xl h-10 px-3 transition-all`}
+                onClick={() => setQuickRange(30)}
+              >
+                30J
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="p-6 bg-[#f8fbff] border-b border-[#bfddf9] flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center space-x-2">
+            <DatePicker
+              selected={dateRange.startDate}
+              onChange={(date) =>
+                setDateRange(prev => ({
+                  ...prev,
+                  startDate: date ?? new Date(), // ensures it's always a Date
+                }))
+              }
+              selectsStart
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              dateFormat="dd/MM/yyyy"
+              className="border border-[#bfddf9] rounded-xl px-3 py-2 text-sm"
+              placeholderText="Date de début"
+              locale={fr}
+            />
+            <span className="text-[#5a6e87]">au</span>
+            <DatePicker
+              selected={dateRange.endDate}
+              onChange={(date) =>
+                setDateRange(prev => ({
+                  ...prev,
+                  startDate: date ?? new Date(), // ensures it's always a Date
+                }))
+              }
+              selectsEnd
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              dateFormat="dd/MM/yyyy"
+              className="border border-[#bfddf9] rounded-xl px-3 py-2 text-sm"
+              placeholderText="Date de fin"
+              locale={fr}
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <select
+              value={dataGrouping}
+              onChange={(e) =>
+                setDataGrouping(
+                  e.target.value as
+                    | "daily"
+                    | "weekly"
+                    | "monthly"
+                    | "yearly"
+                )
+              }
+              className="border border-[#bfddf9] rounded-xl px-3 py-2 text-sm"
+            >
+              <option value="daily">Quotidien</option>
+              <option value="weekly">Hebdomadaire</option>
+              <option value="monthly">Mensuel</option>
+              <option value="yearly">Annuel</option>
+            </select>
+
+            {/* Metrics selector */}
+            <div className="flex items-center gap-2 border border-[#bfddf9] rounded-xl px-3 py-1">
+              <div className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  id="tickets"
+                  checked={selectedMetrics.includes("tickets")}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedMetrics([...selectedMetrics, "tickets"]);
+                    } else if (selectedMetrics.length > 1) {
+                      setSelectedMetrics(selectedMetrics.filter(m => m !== "tickets"));
+                    }
+                  }}
+                  className="rounded"
+                />
+                <label htmlFor="tickets" className="text-sm cursor-pointer">Tickets</label>
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  id="solutions"
+                  checked={selectedMetrics.includes("solutions")}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedMetrics([...selectedMetrics, "solutions"]);
+                    } else if (selectedMetrics.length > 1) {
+                      setSelectedMetrics(selectedMetrics.filter(m => m !== "solutions"));
+                    }
+                  }}
+                  className="rounded"
+                />
+                <label htmlFor="solutions" className="text-sm cursor-pointer">Solutions</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="p-6">
+          <AnimatePresence>
+            {isLoading ? (
+              <motion.div 
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="h-64 flex items-center justify-center"
+              >
+                <div className="flex flex-col items-center">
+                  <div className="h-8 w-8 border-4 border-t-[#213f5b] border-r-[#213f5b] border-b-[#10b981] border-l-[#10b981] rounded-full animate-spin"></div>
+                  <p className="mt-4 text-[#5a6e87]">Chargement des données...</p>
+                </div>
+              </motion.div>
+            ) : processedData.length > 0 ? (
+              <motion.div
+                key="chart"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <LineChart<ProcessedDataPoint>
+                  data={processedData}
+                  xKey="date"
+                  yKeys={selectedMetrics as (keyof ProcessedDataPoint)[]}
+                  colors={["#213f5b", "#10b981"]}
+                  xAxisFormatter={(value: string) => formatXAxis(value, dataGrouping)}
+                  tooltip={(props) => customTooltip(props)}
+                  height={350}
+                  className="mx-auto"
+                  // showLegend={true}
+                  // legendLabels={["Tickets créés", "Solutions apportées"]}
+                />
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="no-data"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center text-[#5a6e87] py-12"
+              >
+                <div className="flex flex-col items-center">
+                  <svg className="h-12 w-12 text-[#bfddf9]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="mt-4">Aucune donnée à afficher pour cette période.</p>
+                  <Button 
+                    className="mt-4 bg-[#213f5b] hover:bg-[#1d3349] text-white"
+                    onClick={() => setQuickRange(30)}
+                  >
+                    Réinitialiser la période
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+import React, {useRef} from 'react';
+import SignaturePad from 'signature_pad';
+
+
+// Define the complete attestation data type
+interface AttestationData {
+  customerName: string;
+  ticketId: string;
+  date: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  phone?: string;
+  interventionDate?: string;
+  interventionDetails?: string;
+  signatureDate?: string;
+  signatureLocation?: string;
+  signature?: string | null;
+}
+
+const AttestationModal: React.FC = () => {
+  // State for modal visibility
+  const [showAttestationModal, setShowAttestationModal] = useState<boolean>(false);
+  // const [showAddTicketForm, setShowAddTicketForm] = useState<boolean>(false);
+  
+  // State for form data with proper typing
+  const [attestationData, setAttestationData] = useState<AttestationData>({
+    customerName: '',
+    ticketId: '',
+    date: '',
+    address: '',
+    postalCode: '',
+    city: '',
+    phone: '',
+    interventionDate: '',
+    interventionDetails: '',
+    signatureDate: '',
+    signatureLocation: '',
+    signature: null
+  });
+  
+  // Refs with proper typing
+  const signatureRef = useRef<HTMLDivElement>(null);
+  const signaturePadRef = useRef<SignaturePad | null>(null);
+  
+  // Initialize signature pad when modal is shown
+  useEffect(() => {
+    if (signatureRef.current && showAttestationModal) {
+      // Convert the div to a canvas element first
+      const canvas = document.createElement('canvas');
+      canvas.width = signatureRef.current.clientWidth;
+      canvas.height = signatureRef.current.clientHeight;
+      
+      // Clear any existing content and append the canvas
+      signatureRef.current.innerHTML = '';
+      signatureRef.current.appendChild(canvas);
+      
+      // Initialize SignaturePad on the canvas
+      signaturePadRef.current = new SignaturePad(canvas, {
+        backgroundColor: 'rgba(255, 255, 255, 0)',
+        penColor: 'black'
+      });
+      
+      // If there's an existing signature, load it
+      if (attestationData.signature) {
+        signaturePadRef.current.fromDataURL(attestationData.signature);
+      }
+    }
+    
+    // Cleanup function
+    return () => {
+      if (signaturePadRef.current) {
+        signaturePadRef.current.off();
+        signaturePadRef.current = null;
+      }
+    };
+  }, [showAttestationModal, attestationData.signature]);
+  
+  // Handle window resize to adjust signature pad
+  useEffect(() => {
+    const handleResize = () => {
+      if (signatureRef.current && signaturePadRef.current) {
+        // Retrieve the canvas from the signatureRef container
+        const canvas = signatureRef.current.querySelector('canvas');
+        if (!canvas) return;
+        
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = signatureRef.current.clientWidth * ratio;
+        canvas.height = signatureRef.current.clientHeight * ratio;
+        canvas.getContext('2d')?.scale(ratio, ratio);
+        
+        // Clear and redraw the signature
+        signaturePadRef.current.clear();
+        if (attestationData.signature) {
+          signaturePadRef.current.fromDataURL(attestationData.signature);
+        }
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [attestationData.signature]);
+  
+  // Function to clear signature
+  const clearSignature = () => {
+    if (signaturePadRef.current) {
+      signaturePadRef.current.clear();
+      setAttestationData({
+        ...attestationData,
+        signature: null
+      });
+    }
+  };
+  
+  // Function to handle form submission
+  const handleGenerateAttestation = () => {
+    if (signaturePadRef.current) {
+      if (signaturePadRef.current.isEmpty()) {
+        alert("Veuillez signer le document avant de continuer.");
+        return;
+      }
+      
+      const signatureData = signaturePadRef.current.toDataURL();
+      
+      const finalData = {
+        ...attestationData,
+        signature: signatureData
+      };
+      
+      console.log("Form submitted with data:", finalData);
+      // Here you would send the data to your server or process it further
+      
+      // Close the modal after successful submission
+      setShowAttestationModal(false);
+    }
+  };
+  
+  return (
+    <>
+      {/* Button to open the modal */}
+      <Button 
+        onClick={() => setShowAttestationModal(true)}
+        className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl ml-2 shadow-md"
+      >
+        Générer Attestation
+      </Button>
+    
+      {/* Attestation Modal */}
+      <Modal
+        isOpen={showAttestationModal}
+        onRequestClose={() => setShowAttestationModal(false)}
+        contentLabel="Générer une Attestation d'Intervention S.A.V."
+        className="fixed inset-0 flex items-center justify-center p-4 sm:p-8 outline-none"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50 transition-opacity"
+      >
+        <div
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl mx-auto p-6 sm:p-8 border border-gray-200 dark:border-gray-700 transition-all transform overflow-y-auto"
+          style={{ maxHeight: '80vh' }}
+        >
+          <div className="flex justify-between items-center mb-6 border-b pb-4 dark:border-gray-700">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-white">Générer une Attestation d&apos;Intervention S.A.V.</h2>
+            <button
+              onClick={() => setShowAttestationModal(false)}
+              className="text-gray-500 hover:text-gray-800 dark:hover:text-white p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Fermer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleGenerateAttestation();
+            }}
+            className="space-y-8"
+          >
+            {/* Client Information Section */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Informations Client</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="customerName">
+                    Nom du client
+                  </label>
+                  <input
+                    id="customerName"
+                    type="text"
+                    value={attestationData.customerName}
+                    onChange={(e) =>
+                      setAttestationData({
+                        ...attestationData,
+                        customerName: e.target.value,
+                      })
+                    }
+                    required
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="Entrez le nom du client"
+                  />
+                </div>
+                
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="address">
+                    Adresse
+                  </label>
+                  <input
+                    id="address"
+                    type="text"
+                    value={attestationData.address}
+                    onChange={(e) =>
+                      setAttestationData({
+                        ...attestationData,
+                        address: e.target.value,
+                      })
+                    }
+                    required
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="Adresse complète"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="postalCode">
+                    Code Postal
+                  </label>
+                  <input
+                    id="postalCode"
+                    type="text"
+                    value={attestationData.postalCode}
+                    onChange={(e) =>
+                      setAttestationData({
+                        ...attestationData,
+                        postalCode: e.target.value,
+                      })
+                    }
+                    required
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="Ex: 75001"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="city">
+                    Ville
+                  </label>
+                  <input
+                    id="city"
+                    type="text"
+                    value={attestationData.city}
+                    onChange={(e) =>
+                      setAttestationData({
+                        ...attestationData,
+                        city: e.target.value,
+                      })
+                    }
+                    required
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="Ex: Paris"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="phone">
+                    Tél portable
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={attestationData.phone}
+                    onChange={(e) =>
+                      setAttestationData({
+                        ...attestationData,
+                        phone: e.target.value,
+                      })
+                    }
+                    required
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="Ex: 06 12 34 56 78"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="interventionDate">
+                    Date de l&apos;intervention
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="interventionDate"
+                      type="date"
+                      value={attestationData.interventionDate}
+                      onChange={(e) =>
+                        setAttestationData({
+                          ...attestationData,
+                          interventionDate: e.target.value,
+                        })
+                      }
+                      required
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Technical Team Section */}
+            <div className="space-y-6 pt-6 border-t dark:border-gray-700">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">ENCADRÉ RÉSERVÉ À L&apos;ÉQUIPE TECHNIQUE</h3>
+              
+              <div>
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="interventionDetails">
+                  Détail de l&apos;intervention
+                </label>
+                <textarea
+                  id="interventionDetails"
+                  value={attestationData.interventionDetails}
+                  onChange={(e) =>
+                    setAttestationData({
+                      ...attestationData,
+                      interventionDetails: e.target.value,
+                    })
+                  }
+                  rows={5}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                  placeholder="Décrivez les détails de l'intervention technique..."
+                ></textarea>
+              </div>
+            </div>
+            
+            {/* Client Signature Section */}
+            <div className="space-y-6 pt-6 border-t dark:border-gray-700">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">ENCADRÉ RÉSERVÉ AU CLIENT</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="signatureDate">
+                    Date
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="signatureDate"
+                      type="date"
+                      value={attestationData.signatureDate}
+                      onChange={(e) =>
+                        setAttestationData({
+                          ...attestationData,
+                          signatureDate: e.target.value,
+                        })
+                      }
+                      required
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="signatureLocation">
+                    A
+                  </label>
+                  <input
+                    id="signatureLocation"
+                    type="text"
+                    value={attestationData.signatureLocation}
+                    onChange={(e) =>
+                      setAttestationData({
+                        ...attestationData,
+                        signatureLocation: e.target.value,
+                      })
+                    }
+                    required
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="Lieu de signature"
+                  />
+                </div>
+                
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                    Signature
+                  </label>
+                  <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-900">
+                    <div 
+                      className="w-full h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center relative"
+                      ref={signatureRef}
+                    >
+                      {!attestationData.signature && (
+                        <div className="text-gray-400 dark:text-gray-500 absolute">
+                          Cliquez ou touchez ici pour signer
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex justify-end mt-2">
+                      <button
+                        type="button"
+                        onClick={clearSignature}
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                      >
+                        Effacer la signature
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Button Section */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t dark:border-gray-700">
+              <Button
+                type="button"
+                className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                onClick={() => setShowAttestationModal(false)}
+              >
+                Annuler
+              </Button>
+              <Button 
+                type="submit" 
+                className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Enregistrer
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+    </>
+  );
+};
+
 export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [selectedEvent, setSelectedEvent] = useState<SavEvent | null>(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentView, setCurrentView] = useState<"month" | "week" | "day" | "agenda">(Views.MONTH);
+  const [activeViewTab, setActiveViewTab] = useState("Mois");
   // Date range and grouping state
-  const [dateRange, setDateRange] = useState<{
+  const [dateRange ] = useState<{
     startDate: Date | null;
     endDate: Date | null;
   }>({
     startDate: subDays(new Date(), 7),
     endDate: new Date(),
   });
-  const [dataGrouping, setDataGrouping] = useState<"daily" | "weekly" | "monthly" | "yearly">("weekly");
+  const [dataGrouping,  ] = useState<
+    "daily" | "weekly" | "monthly" | "yearly"
+  >("weekly");
 
-  // Visible metrics for the chart
-  // const [ , setVisibleMetrics] = useState<string[]>(["tickets", "solutions"]);
-  // const toggleMetricVisibility = (metric: string) => {
-  //   setVisibleMetrics((prev) =>
-  //     prev.includes(metric) ? prev.filter((m) => m !== metric) : [...prev, metric]
-  //   );
-  // };
+  // For the S.A.V. filter tabs
+  const [activeFilter, setActiveFilter] = useState<string>("all");
 
+  // Sample S.A.V. events
   const savEvents: SavEvent[] = [
     {
       id: "1",
-      status: "completed",
+      status: "completed", // Must be exactly one of: "completed", "pending", "scheduled"
+      priority: "medium",  // Allowed: "high", "medium", "low"
       customer: "Alice Johnson",
       date: "2024-03-10T14:00:00.000Z",
-      technician: "Technician A",
-      address: "123 Main St",
+      technician: "Technicien A",
+      address: "123 Main St, Paris",
+      problem: "Panne de chauffage",
+      equipmentType: "Pompe à chaleur",
+      notes: "Installation récente, problème de configuration",
+      conversation: [
+        {
+          sender: "Alice Johnson",
+          content: "La panne a été résolue rapidement.",
+          timestamp: "2024-03-10T14:30:00.000Z",
+        },
+        {
+          sender: "Technicien A",
+          content: "Merci pour votre retour.",
+          timestamp: "2024-03-10T14:35:00.000Z",
+        },
+      ],
     },
     {
       id: "2",
       status: "pending",
-      customer: "Bob Smith",
-      date: "2024-03-11T15:30:00.000Z",
-      technician: "Technician B",
-      address: "456 Oak Ave",
+      priority: "high",
+      customer: "Jean Martin",
+      date: "2024-03-11T16:30:00.000Z",
+      technician: "Technicien B",
+      address: "456 Rue de Lyon, Lyon",
+      problem: "Fuite d'eau importante",
+      equipmentType: "Chauffe-eau solaire individuel",
+      notes: "Fuite détectée lors de la vérification de routine, intervention urgente nécessaire",
+      conversation: [
+        {
+          sender: "Jean Martin",
+          content: "L'eau s'accumule rapidement dans la cave.",
+          timestamp: "2024-03-11T16:45:00.000Z",
+        },
+      ],
     },
-    // add more events as needed
+    {
+      id: "3",
+      status: "scheduled",
+      priority: "low",
+      customer: "Marie Dubois",
+      date: "2024-03-12T10:00:00.000Z",
+      technician: "Technicien C",
+      address: "789 Rue Victor Hugo, Marseille",
+      problem: "Maintenance programmée",
+      equipmentType: "Système Solaire Combiné",
+      notes: "Entretien annuel prévu pour vérifier le système",
+      conversation: [],
+    },
+    {
+      id: "4",
+      status: "completed",
+      priority: "medium",
+      customer: "Sophie Laurent",
+      date: "2024-03-13T09:00:00.000Z",
+      technician: "Technicien D",
+      address: "321 Rue de Rivoli, Paris",
+      problem: "Problème de thermostat",
+      equipmentType: "Pompe à chaleur",
+      notes: "Remplacement du thermostat effectué, intervention réussie",
+      conversation: [
+        {
+          sender: "Sophie Laurent",
+          content: "Le remplacement a fonctionné parfaitement.",
+          timestamp: "2024-03-13T09:45:00.000Z",
+        },
+        {
+          sender: "Technicien D",
+          content: "Heureux d'avoir pu aider !",
+          timestamp: "2024-03-13T09:50:00.000Z",
+        },
+      ],
+    },
+    {
+      id: "5",
+      status: "pending",
+      priority: "high",
+      customer: "Luc Moreau",
+      date: "2024-03-14T14:30:00.000Z",
+      technician: "Technicien E",
+      address: "654 Avenue des Champs-Élysées, Paris",
+      problem: "Dysfonctionnement du système de ventilation",
+      equipmentType: "Chauffe-eau thermodynamique",
+      notes: "Signalement urgent, l'intervention est en cours",
+      conversation: [
+        {
+          sender: "Luc Moreau",
+          content:
+            "Le système ne fonctionne pas du tout, j'ai besoin d'une solution rapide.",
+          timestamp: "2024-03-14T14:45:00.000Z",
+        },
+        {
+          sender: "Technicien E",
+          content: "Nous sommes sur le coup, merci de votre patience.",
+          timestamp: "2024-03-14T14:55:00.000Z",
+        },
+      ],
+    },
+    {
+      id: "6",
+      status: "scheduled",
+      priority: "medium",
+      customer: "Claire Petit",
+      date: "2024-03-15T11:00:00.000Z",
+      technician: "Technicien F",
+      address: "987 Boulevard Saint-Germain, Paris",
+      problem: "Vérification annuelle de la chaudière",
+      equipmentType: "Chaudière à condensation",
+      notes: "Inspection de routine programmée pour le contrôle de sécurité",
+      conversation: [],
+    },
+    {
+      id: "7",
+      status: "completed",
+      priority: "low",
+      customer: "Antoine Lefèvre",
+      date: "2024-03-16T08:30:00.000Z",
+      technician: "Technicien G",
+      address: "159 Rue de la République, Lyon",
+      problem: "Mise à jour du logiciel de contrôle",
+      equipmentType: "Système de gestion énergétique",
+      notes: "Mise à jour effectuée sans interruption de service",
+      conversation: [
+        {
+          sender: "Antoine Lefèvre",
+          content: "Tout fonctionne mieux après la mise à jour.",
+          timestamp: "2024-03-16T08:45:00.000Z",
+        },
+      ],
+    },
   ];
   
-  // Function to generate sample data
-  // Note: This function expects non-null start and end dates.
-  const generateSampleData = (_start: Date, _end: Date) => {
-    // const diffTime = Math.abs(end.getTime() - start.getTime());
-    // const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    void _start;
-    void _end;
-    // const newData = Array.from({ length: diffDays }).map((_, i) => ({
-    //   date: new Date(start.getTime() + i * 86400000).toISOString(),
-    //   label: `Jour ${i + 1}`,
-    //   tickets: Math.floor(Math.random() * 100) + 20,
-    //   solutions: Math.floor(Math.random() * 90) + 10,
-    // }));
-    // Here you could update a state variable if needed.
-  };
+  // Prepare RBC events
+  // const bigCalEvents = useMemo(() => eventsForCalendar(savEvents), [savEvents]);
 
-  // Process ticket data for charting
-  const processedData: ProcessedDataPoint[] = useMemo(() => {
+  // Ticket data for charts
+  const processedData = useMemo(() => {
     if (!dateRange.startDate || !dateRange.endDate) return [];
-    return processTicketData(tickets, dateRange );
+    return processTicketData(tickets, dateRange);
   }, [tickets, dateRange, dataGrouping]);
 
-  // Compute totals for sample data (used in footer)
-  const sampleData = useMemo(() => {
-    return {
-      ticketsTotal: processedData.reduce((acc, curr) => acc + curr.tickets, 0),
-      solutionsTotal: processedData.reduce((acc, curr) => acc + curr.solutions, 0),
-    };
-  }, [processedData]);
-
-  const formatXAxis = (value: string, grouping: string): string => {
-    const date = new Date(value);
-    switch (grouping) {
-      case "daily":
-        return format(date, "d MMM");
-      case "weekly":
-        return `Sem. ${format(date, "w")}`;
-      case "monthly":
-        return format(date, "MMM yyyy");
-      case "yearly":
-        return format(date, "yyyy");
-      default:
-        return value;
-    }
-  };
-
-  const formatTooltipDate = (label: string, grouping: string): string => {
-    switch (grouping) {
-      case "weekly":
-        return `Semaine ${label}`;
-      case "monthly":
-        return format(new Date(label), "MMMM yyyy");
-      case "yearly":
-        return `Année ${label}`;
-      default:
-        return format(new Date(label), "d MMMM yyyy");
-    }
-  };
-
-  // const CustomDatePickerInput = forwardRef<HTMLButtonElement, any>(({ value, onClick }, ref) => (
-  //   <button
-  //     ref={ref}
-  //     onClick={onClick}
-  //     className="flex items-center gap-2 px-4 py-2.5 text-[#213f5b] hover:bg-[#f8fbff] rounded-xl transition-colors"
-  //   >
-  //     <CalendarIcon className="h-5 w-5" />
-  //     {value || "Sélectionner une période"}
-  //     <ChevronDownIcon className="h-4 w-4 ml-2" />
-  //   </button>
-  // ));
-
+  // Compute resolution rate
   const resolutionRate = useMemo(() => {
     const totalTickets = processedData.reduce((acc, curr) => acc + curr.tickets, 0);
-    const totalSolutions = processedData.reduce((acc, curr) => acc + curr.solutions, 0);
+    const totalSolutions = processedData.reduce(
+      (acc, curr) => acc + curr.solutions,
+      0
+    );
     return totalTickets > 0
       ? Math.round((totalSolutions / totalTickets) * 100)
       : 0;
   }, [processedData]);
 
+    // Filter S.A.V. events
+    const filteredSavEvents = useMemo(() => {
+      if (activeFilter === "all") return savEvents;
+      return savEvents.filter((event) => event.status === activeFilter);
+    }, [savEvents, activeFilter]);
+
+
+
+// Event handlers
+// const handleSelectEvent = (event: CalendarEvent): void => {
+//   console.log('Event selected:', event);
+//   // Open event details modal
+// };
+
+// const handleSelectSlot = (slotInfo: SlotInfo): void => {
+//   console.log('Slot selected:', slotInfo);
+//   // Open new event creation modal
+// };
+
+  // Fetch tickets on mount
   useEffect(() => {
     fetch("/api/tickets")
       .then((res) => res.json())
@@ -244,686 +1378,1335 @@ export default function SupportPage() {
       });
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading)
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-gradient-to-b from-[#bfddf9]/5 to-white">
+        <div className="text-center">
+          <div className="animate-spin w-16 h-16 mb-4 rounded-full border-4 border-[#bfddf9] border-t-[#213f5b] mx-auto"></div>
+          <p className="text-[#213f5b] font-medium">Chargement des données...</p>
+        </div>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-gradient-to-b from-[#bfddf9]/5 to-white">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-red-200 max-w-md">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <LifebuoyIcon className="h-8 w-8 text-red-500" />
+          </div>
+          <h1 className="text-xl font-bold text-[#213f5b] mb-2">
+            Erreur de chargement
+          </h1>
+          <p className="text-[#5a6e87] mb-4">{error}</p>
+          <Button
+            className="bg-[#213f5b] hover:bg-[#162c41] text-white px-6 py-3"
+            onClick={() => window.location.reload()}
+          >
+            Réessayer
+          </Button>
+        </div>
+      </div>
+    );
 
   // Compute some support metrics
+  // (Adjust if your statuses differ)
   const openTickets = tickets.filter(
     (ticket) => ticket.statut.toLowerCase() === "ouvert"
+  ).length;
+  const pendingTickets = tickets.filter(
+    (ticket) => ticket.statut.toLowerCase() === "pending"
   ).length;
   const closedTickets = tickets.filter(
     (ticket) => ticket.statut.toLowerCase() === "closed"
   ).length;
-  const totalTickets = tickets.length;
 
-  const responseTimes = tickets
-    .filter(
-      (ticket) => ticket.dates.resolution && ticket.dates.resolution !== ""
-    )
-    .map((ticket) => {
-      const created = new Date(ticket.dates.created);
-      const resolution = new Date(ticket.dates.resolution!);
-      return (resolution.getTime() - created.getTime()) / (1000 * 60);
-    });
-  const avgResponseTimeMinutes =
-    responseTimes.length > 0
-      ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
-      : 0;
-  const avgResponseTime = `${avgResponseTimeMinutes}m`;
-  const satisfactionRate =
-    totalTickets > 0
-      ? `${Math.round((closedTickets / totalTickets) * 100)}%`
-      : "N/A";
-  // const slaCompliance = "98%";
+  // Quick range helpers
+  // const isQuickRangeActive = (days: number): boolean => {
+  //   if (!dateRange.startDate || !dateRange.endDate) return false;
+  //   const diff =
+  //     (dateRange.endDate.getTime() - dateRange.startDate.getTime()) /
+  //     (1000 * 60 * 60 * 24);
+  //   return diff === days;
+  // };
 
-  // Group tickets by weekday (only Monday to Friday)
-  const initialChartData: Record<WeekdayKey, { tickets: number; solutions: number }> = {
-    Lun: { tickets: 0, solutions: 0 },
-    Mar: { tickets: 0, solutions: 0 },
-    Mer: { tickets: 0, solutions: 0 },
-    Jeu: { tickets: 0, solutions: 0 },
-    Ven: { tickets: 0, solutions: 0 },
-  };
+  // const setQuickRange = (days: number): void => {
+  //   const newStart = subDays(new Date(), days);
+  //   const newEnd = new Date();
+  //   setDateRange({ startDate: newStart, endDate: newEnd });
+  // };
 
-  tickets.forEach((ticket) => {
-    const created = new Date(ticket.dates.created);
-    const dayIndex = created.getDay();
-    const mapping: Record<number, WeekdayKey> = {
-      1: "Lun",
-      2: "Mar",
-      3: "Mer",
-      4: "Jeu",
-      5: "Ven",
-    };
-    const dayKey = mapping[dayIndex];
-    if (dayKey) {
-      initialChartData[dayKey].tickets += 1;
-      if (
-        ticket.statut.toLowerCase() === "closed" ||
-        (ticket.solution && ticket.solution.trim() !== "")
-      ) {
-        initialChartData[dayKey].solutions += 1;
-      }
-    }
-  });
 
-  // const ticketData = Object.keys(initialChartData).map((day) => {
-  //   const key = day as WeekdayKey;
-  //   return {
-  //     day,
-  //     tickets: initialChartData[key].tickets,
-  //     solutions: initialChartData[key].solutions,
+  // For calendar event styling (color-coded by status)
+  // const eventPropGetter = (event: SavEvent) => {
+  //   let bgColor = "#3b82f6"; // default blue
+  //   if (event.status === "completed") bgColor = "#10b981"; // green
+  //   if (event.status === "pending") bgColor = "#f59e0b"; // amber
+  //   if (event.status === "scheduled") bgColor = "#2563eb"; // lighter blue
+
+  //   const style = {
+  //     backgroundColor: bgColor,
+  //     color: "#fff",
+  //     borderRadius: "8px",
+  //     border: "none",
+  //     padding: "4px 6px",
+  //     // Adjust more if you like
   //   };
-  // });
+  //   return { style };
+  // };
 
-  const recentTickets = [...tickets]
-    .sort(
-      (a, b) =>
-        new Date(b.dates.created).getTime() - new Date(a.dates.created).getTime()
-    )
-    .slice(0, 3);
+  // Format x-axis
+  // const formatXAxis = (value: string, grouping: string): string => {
+  //   const date = new Date(value);
+  //   switch (grouping) {
+  //     case "daily":
+  //       return format(date, "d MMM", { locale: fr });
+  //     case "weekly":
+  //       return `Sem. ${format(date, "w", { locale: fr })}`;
+  //     case "monthly":
+  //       return format(date, "MMM yyyy", { locale: fr });
+  //     case "yearly":
+  //       return format(date, "yyyy", { locale: fr });
+  //     default:
+  //       return value;
+  //   }
+  // };
 
-  const isQuickRangeActive = (days: number): boolean => {
-    if (!dateRange.startDate || !dateRange.endDate) return false;
-    const diff =
-      (dateRange.endDate.getTime() - dateRange.startDate.getTime()) /
-      (1000 * 60 * 60 * 24);
-    return diff === days;
+  // Format tooltip
+  // const formatTooltipDate = (label: string, grouping: string): string => {
+  //   switch (grouping) {
+  //     case "weekly":
+  //       return `Semaine ${label}`;
+  //     case "monthly":
+  //       return format(new Date(label), "MMMM yyyy", { locale: fr });
+  //     case "yearly":
+  //       return `Année ${label}`;
+  //     default:
+  //       return format(new Date(label), "d MMMM yyyy", { locale: fr });
+  //   }
+  // };
+
+  interface CustomCSSProperties extends React.CSSProperties {
+    '--c-primary'?: string;
+    '--c-secondary'?: string;
+    '--c-accent'?: string;
+  }  
+
+   // Handlers for navigation buttons
+   const handleToday = () => {
+    setCurrentDate(new Date());
   };
 
-  const setQuickRange = (days: number): void => {
-    const newStart = subDays(new Date(), days);
-    const newEnd = new Date();
-    setDateRange({ startDate: newStart, endDate: newEnd });
-    generateSampleData(newStart, newEnd);
+  const handlePrev = () => {
+    const newDate = new Date(currentDate);
+    if (currentView === Views.MONTH) {
+      newDate.setMonth(newDate.getMonth() - 1);
+    } else if (currentView === Views.WEEK) {
+      newDate.setDate(newDate.getDate() - 7);
+    } else if (currentView === Views.DAY || currentView === Views.AGENDA) {
+      newDate.setDate(newDate.getDate() - 1);
+    }
+    setCurrentDate(newDate);
+  };
+
+  const handleNext = () => {
+    const newDate = new Date(currentDate);
+    if (currentView === Views.MONTH) {
+      newDate.setMonth(newDate.getMonth() + 1);
+    } else if (currentView === Views.WEEK) {
+      newDate.setDate(newDate.getDate() + 7);
+    } else if (currentView === Views.DAY || currentView === Views.AGENDA) {
+      newDate.setDate(newDate.getDate() + 1);
+    }
+    setCurrentDate(newDate);
+  };
+
+  // Handle view tab changes
+  const viewTabs = ["Mois", "Semaine", "Jour", "Agenda"];
+  const handleViewChange = (view: string) => {
+    setActiveViewTab(view);
+    if (view === "Mois") {
+      setCurrentView(Views.MONTH);
+    } else if (view === "Semaine") {
+      setCurrentView(Views.WEEK);
+    } else if (view === "Jour") {
+      setCurrentView(Views.DAY);
+    } else if (view === "Agenda") {
+      setCurrentView(Views.AGENDA);
+    }
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-gradient-to-br from-white to-[#bfddf9]/5">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-8 space-y-8 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-[#1a365d]">
-              Support & Tickets
-            </h1>
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-8">
+          {/* Page Title & Header */}
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-6">
+            <div className="flex items-center">
+              <div className="bg-[#213f5b] rounded-2xl p-3 mr-4 shadow-lg">
+                <LifebuoyIcon className="h-7 w-7 text-[#d2fcb2]" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-[#213f5b] mb-1">
+                  Support & S.A.V.
+                </h1>
+                <p className="text-[#5a6e87] font-medium">
+                  {new Date().toLocaleDateString("fr-FR", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex mt-4 sm:mt-0 items-center">
+              <Button
+                variant="ghost"
+                className="bg-white mr-2 border border-[#bfddf9] rounded-xl h-12 w-12 flex items-center justify-center shadow-sm hover:bg-[#bfddf9]/10"
+              >
+                <div className="relative">
+                  <BellIcon className="h-6 w-6 text-[#213f5b]" />
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                    3
+                  </span>
+                </div>
+              </Button>
+
+              <Button className="bg-[#213f5b] hover:bg-[#162c41] text-white rounded-xl shadow-md">
+                <PlusIcon className="h-5 w-5 mr-2 text-[#d2fcb2]" />
+                Nouveau Ticket
+              </Button>
+
+              {/* Attestation Modal */}
+              <AttestationModal/>
+
+            </div>
           </div>
-          {/* Metrics Overview */}
+
+          {/* Metrics Overview Cards */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-red-100 rounded-lg">
-                  <LifebuoyIcon className="h-6 w-6 text-red-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Tickets Ouverts</h3>
-                  <p className="text-2xl font-bold text-red-600">
-                    {openTickets}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <ClockIcon className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Temps de Réponse</h3>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {avgResponseTime}
-                  </p>
+            {/* Tickets Ouverts */}
+            <div className="bg-white rounded-2xl shadow-md border border-[#bfddf9]/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-red-100 rounded-xl">
+                    <LifebuoyIcon className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#213f5b]">
+                      Tickets Ouverts
+                    </h3>
+                    <p className="text-2xl font-bold text-red-600">
+                      {openTickets}
+                    </p>
+                  </div>
                 </div>
               </div>
+              <div className="bg-gradient-to-r from-red-50 to-transparent h-1.5">
+                <div className="bg-red-500 h-full w-1/3" />
+              </div>
             </div>
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <CheckCircleIcon className="h-6 w-6 text-green-600" />
+
+            {/* Tickets en attente de traitement */}
+            <div className="bg-white rounded-2xl shadow-md border border-[#bfddf9]/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-yellow-100 rounded-xl">
+                    <ClockIcon className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#213f5b]">
+                      Tickets en attente
+                    </h3>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {pendingTickets}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Satisfaction</h3>
-                  <p className="text-2xl font-bold text-green-600">
-                    {satisfactionRate}
-                  </p>
+              </div>
+              <div className="bg-gradient-to-r from-yellow-50 to-transparent h-1.5">
+                <div className="bg-yellow-500 h-full w-1/4" />
+              </div>
+            </div>
+
+            {/* Tickets clôturés */}
+            <div className="bg-white rounded-2xl shadow-md border border-[#bfddf9]/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-green-100 rounded-xl">
+                    <CheckCircleIcon className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#213f5b]">
+                      Tickets clôturés
+                    </h3>
+                    <p className="text-2xl font-bold text-green-600">
+                      {closedTickets}
+                    </p>
+                  </div>
                 </div>
+              </div>
+              <div className="bg-gradient-to-r from-green-50 to-transparent h-1.5">
+                <div className="bg-green-500 h-full w-3/4" />
+              </div>
+            </div>
+
+            {/* Résolution */}
+            <div className="bg-white rounded-2xl shadow-md border border-[#bfddf9]/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-[#213f5b]/10 rounded-xl">
+                    <ShieldCheckIcon className="h-6 w-6 text-[#213f5b]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#213f5b]">
+                      Résolution
+                    </h3>
+                    <p className="text-2xl font-bold text-[#213f5b]">
+                      {resolutionRate}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-[#213f5b]/10 to-transparent h-1.5">
+                <div
+                  className="bg-[#213f5b] h-full"
+                  style={{ width: `${resolutionRate}%` }}
+                />
               </div>
             </div>
           </motion.div>
-          {/* Main Dashboard */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* MAIN GRID: Left = S.A.V. Planning (List), Right = Calendar */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* LEFT: S.A.V. Planning List */}
             <motion.div
-              className="lg:col-span-2 space-y-8"
-              initial={{ x: -50, opacity: 0 }}
+              className="space-y-8"
+              initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
             >
-              <motion.div 
-                className="relative bg-white backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl shadow-[#213f5b]/10 border border-[#bfddf9]/30 hover:shadow-[#213f5b]/20 transition-all duration-300 group"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+              {/* S.A.V. Planning Section */}
+              <motion.div
+                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#bfddf9]"
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.3 }}
               >
-                {/* Fond dégradé dynamique */}
-                <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#bfddf9]/15 to-[#d2fcb2]/10 opacity-40 pointer-events-none animate-gradient-shift" />
-                
-                <div className="relative z-10 space-y-8">
-                  {/* En-tête Section */}
+                {/* Header with gradient background */}
+                <div className="bg-gradient-to-r from-[#213f5b] to-[#1d3349] p-6 text-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-[#213f5b] rounded-2xl shadow-inner-lg">
-                        <CalendarIcon className="h-7 w-7 text-[#d2fcb2] animate-pulse-slow" />
+                      <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                        <CalendarIcon className="h-7 w-7 text-[#d2fcb2]" />
                       </div>
                       <div>
-                        <h2 className="text-2xl/normal font-semibold text-[#0d2840]">
+                        <h2 className="text-2xl font-semibold">
                           Planning S.A.V.
                         </h2>
-                        <p className="text-[#5a6e87] font-medium mt-1">
-                          Interventions programmées • {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                        <p className="text-white/80 font-medium mt-1">
+                          Interventions programmées •{" "}
+                          {new Date().toLocaleDateString("fr-FR", {
+                            month: "long",
+                            year: "numeric",
+                          })}
                         </p>
                       </div>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      className="rounded-full h-12 w-12 bg-white/90 shadow-sm border border-[#bfddf9] hover:bg-[#213f5b]/5"
-                    >
-                      <EllipsisVerticalIcon className="h-6 w-6 text-[#213f5b]" />
-                    </Button>
-                  </div>
 
-                  {/* Statistiques en Temps Réel */}
-                  <div className="grid grid-cols-3 gap-6">
-                    <div className="p-5 bg-[#d2fcb2]/20 rounded-2xl border border-[#d2fcb2]/30 backdrop-blur-sm">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#d2fcb2] rounded-xl">
-                          <CheckCircleIcon className="h-6 w-6 text-[#1a4231]" />
-                        </div>
-                        <div>
-                          <div className="text-sm text-[#5a6e87]">Terminées</div>
-                          <div className="text-2xl font-bold text-[#213f5b]">18</div>
-                        </div>
-                      </div>
-                      <div className="mt-3 h-1 bg-[#d2fcb2]/30 rounded-full">
-                        <div className="w-4/5 h-full bg-[#d2fcb2] rounded-full" />
-                      </div>
-                    </div>
-                    
-                    <div className="p-5 bg-[#bfddf9]/20 rounded-2xl border border-[#bfddf9]/30 backdrop-blur-sm">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#bfddf9] rounded-xl">
-                          <ClockIcon className="h-6 w-6 text-[#213f5b]" />
-                        </div>
-                        <div>
-                          <div className="text-sm text-[#5a6e87]">En Cours</div>
-                          <div className="text-2xl font-bold text-[#213f5b]">5</div>
-                        </div>
-                      </div>
-                      <div className="mt-3 h-1 bg-[#bfddf9]/30 rounded-full">
-                        <div className="w-1/3 h-full bg-[#bfddf9] rounded-full animate-pulse" />
-                      </div>
-                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10"
+                      >
+                        <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
+                        Exporter
+                      </Button>
 
-                    <div className="p-5 bg-white/90 rounded-2xl border border-[#bfddf9] shadow-sm">
-                      <div className="flex flex-col items-center justify-center h-full text-center">
-                        <Button
-                          className="w-full h-full py-4 bg-gradient-to-br from-[#213f5b] to-[#1a2f47] hover:from-[#1a2f47] hover:to-[#213f5b] text-white shadow-xl"
-                          onClick={() => console.log('Générer attestation')}
-                        >
-                          <DocumentCheckIcon className="h-6 w-6 mr-2 text-[#d2fcb2]" />
-                          Générer Attestation
-                          <span className="ml-2 bg-white/10 px-2 py-1 rounded-full text-xs">PDF</span>
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10 w-10 p-0 flex items-center justify-center"
+                      >
+                        <AdjustmentsHorizontalIcon className="h-5 w-5" />
+                      </Button>
                     </div>
                   </div>
+                </div>
 
-                  {/* Liste des Interventions */}
-                  <div className="space-y-6">
-                    {savEvents.length > 0 ? savEvents.map((event) => (
+                {/* Filter Tabs */}
+                <div className="bg-[#f8fbff] px-6 py-3 border-b border-[#bfddf9]">
+                  <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+                    {["all", "scheduled", "pending", "completed"].map((filter) => (
+                      <Button
+                        key={filter}
+                        className={`rounded-xl px-4 py-2 whitespace-nowrap ${
+                          activeFilter === filter
+                            ? "bg-[#213f5b] text-white shadow-md"
+                            : "bg-white border border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]/10"
+                        }`}
+                        onClick={() => setActiveFilter(filter)}
+                      >
+                        {filter === "all"
+                          ? "Toutes"
+                          : filter === "scheduled"
+                          ? "Planifiées"
+                          : filter === "pending"
+                          ? "En cours"
+                          : "Terminées"}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Statistics Summary */}
+                <div className="grid grid-cols-3 gap-6 p-6">
+                  <div className="p-5 bg-[#d2fcb2]/10 rounded-xl border border-[#d2fcb2]/30">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-[#d2fcb2] rounded-xl">
+                        <CheckCircleIcon className="h-6 w-6 text-[#213f5b]" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-[#5a6e87]">Terminées</div>
+                        <div className="text-2xl font-bold text-[#213f5b]">
+                          18
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 h-2 bg-[#d2fcb2]/20 rounded-full">
+                      <div className="w-4/5 h-full bg-[#d2fcb2] rounded-full" />
+                    </div>
+                  </div>
+
+                  <div className="p-5 bg-[#bfddf9]/10 rounded-xl border border-[#bfddf9]/30">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-[#bfddf9] rounded-xl">
+                        <ClockIcon className="h-6 w-6 text-[#213f5b]" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-[#5a6e87]">En Cours</div>
+                        <div className="text-2xl font-bold text-[#213f5b]">
+                          5
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 h-2 bg-[#bfddf9]/20 rounded-full">
+                      <div className="w-1/3 h-full bg-[#bfddf9] rounded-full animate-pulse" />
+                    </div>
+                  </div>
+
+                  <div className="p-5 bg-[#213f5b]/5 rounded-xl border border-[#213f5b]/20">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-[#213f5b] rounded-xl">
+                        <DocumentCheckIcon className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-[#5a6e87]">Attestations</div>
+                        <div className="text-2xl font-bold text-[#213f5b]">
+                          12
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 h-2 bg-[#213f5b]/10 rounded-full">
+                      <div className="w-2/3 h-full bg-[#213f5b] rounded-full" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* List of S.A.V. Events */}
+                <div className="px-6 pb-6 space-y-4">
+                  {filteredSavEvents.length > 0 ? (
+                    filteredSavEvents.map((event) => (
                       <motion.div
                         key={event.id}
-                        className={cn(
-                          "relative p-6 bg-white/95 backdrop-blur-sm rounded-2xl shadow-sm border border-[#bfddf9]",
-                          "hover:shadow-md hover:border-[#213f5b]/50 transition-all duration-200 cursor-pointer",
-                          "group/item"
-                        )}
-                        whileHover={{ y: -2 }}
+                        className="bg-white rounded-xl border border-[#bfddf9] shadow-sm p-5 hover:shadow-md transition-all duration-300 cursor-pointer"
+                        whileHover={{ x: 5 }}
                       >
-                        {/* Timeline */}
-                        <div className="absolute left-6 top-8 bottom-8 w-1 bg-gradient-to-b from-[#bfddf9] to-transparent" />
-
-                        <div className="flex items-start gap-5">
-                          {/* Indicateur de Statut */}
-                          <div className="relative mt-1.5">
-                            <div className={cn(
-                              "w-3 h-3 rounded-full ring-4 animate-pulse-slow",
-                              event.status === 'completed' 
-                                ? "bg-[#d2fcb2] ring-[#d2fcb2]/30" 
-                                : "bg-[#bfddf9] ring-[#bfddf9]/30"
-                            )} />
+                        <div className="flex items-start gap-4">
+                          {/* Status Indicator + Priority */}
+                          <div className="mt-1.5 relative">
+                            <div
+                              className={`w-3 h-3 rounded-full ${
+                                event.status === "completed"
+                                  ? "bg-green-500 ring-4 ring-green-100"
+                                  : event.status === "pending"
+                                  ? "bg-amber-500 ring-4 ring-amber-100 animate-pulse"
+                                  : "bg-blue-500 ring-4 ring-blue-100"
+                              }`}
+                            />
+                            {event.priority === "high" && (
+                              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+                            )}
                           </div>
 
-                          {/* Contenu Principal */}
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-lg font-semibold text-[#213f5b]">{event.customer}</h3>
-                              <ChevronRightIcon className="h-6 w-6 text-[#5a6e87] group-hover/item:text-[#213f5b] transition-colors" />
-                            </div>
-
-                            <div className="flex flex-wrap gap-4 text-sm text-[#5a6e87]">
-                              <div className="flex items-center gap-2 bg-[#f8fbff] px-3 py-1.5 rounded-full">
-                                <ClockIcon className="h-4 w-4" />
-                                {new Date(event.date).toLocaleTimeString('fr-FR', { 
-                                  hour: '2-digit', 
-                                  minute: '2-digit' 
-                                })}
-                              </div>
-                              
-                              <div className="flex items-center gap-2 bg-[#f8fbff] px-3 py-1.5 rounded-full">
-                                <UserCircleIcon className="h-4 w-4" />
-                                {event.technician}
-                              </div>
-
-                              <div className="flex items-center gap-2 bg-[#f8fbff] px-3 py-1.5 rounded-full">
-                                <MapPinIcon className="h-4 w-4" />
-                                {event.address}
-                              </div>
-                            </div>
-
-                            {/* Barre de Progression */}
-                            <div className="mt-4 relative">
-                              <div className="h-2 bg-[#bfddf9]/20 rounded-full overflow-hidden">
-                                <div 
-                                  className={cn(
-                                    "h-full rounded-full transition-all duration-500",
-                                    event.status === 'completed' 
-                                      ? "bg-[#d2fcb2] w-full" 
-                                      : "bg-[#213f5b] w-2/3"
+                          {/* Content */}
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="text-lg font-semibold text-[#213f5b] flex items-center gap-2">
+                                  {event.customer}
+                                  {event.priority === "high" && (
+                                    <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">
+                                      Urgent
+                                    </span>
                                   )}
-                                />
+                                </h3>
+                                <p className="text-[#5a6e87] text-sm mt-1">
+                                  {event.problem || "Intervention programmée"}
+                                </p>
                               </div>
-                              <div className="mt-2 text-xs text-[#5a6e87]">
-                                {event.status === 'completed' 
-                                  ? 'Intervention finalisée' 
-                                  : 'En cours de traitement'}
+                              <div className="text-right">
+                                <p className="text-sm text-[#213f5b] font-medium">
+                                  {new Date(event.date).toLocaleDateString("fr-FR", {
+                                    day: "numeric",
+                                    month: "short",
+                                  })}
+                                </p>
+                                <p className="text-sm text-[#5a6e87]">
+                                  {new Date(event.date).toLocaleTimeString("fr-FR", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </p>
                               </div>
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Actions Secondaires */}
-                        <div className="absolute right-6 top-6 flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-10 h-10 rounded-xl bg-white/90 shadow-sm border border-[#bfddf9] hover:bg-[#213f5b]/5"
-                            onClick={() => console.log('Générer attestation')}
-                          >
-                            <DocumentCheckIcon className="h-5 w-5 text-[#5a6e87]" />
-                          </Button>
+                            {/* Badges for technician, address, etc. */}
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#f8fbff] text-[#5a6e87]">
+                                <UserCircleIcon className="h-3.5 w-3.5 mr-1" />
+                                {event.technician}
+                              </span>
+
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#f8fbff] text-[#5a6e87]">
+                                <MapPinIcon className="h-3.5 w-3.5 mr-1" />
+                                {event.address}
+                              </span>
+
+                              {event.equipmentType && (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#f8fbff] text-[#5a6e87]">
+                                  {energySolutions[event.equipmentType] ? (
+                                    <>
+                                      {(() => {
+                                        const Icon =
+                                          energySolutions[event.equipmentType].icon;
+                                        const color =
+                                          energySolutions[event.equipmentType].color;
+                                        return (
+                                          <Icon
+                                            className="h-3.5 w-3.5 mr-1"
+                                            style={{ color }}
+                                          />
+                                        );
+                                      })()}
+                                      {event.equipmentType}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FireIcon className="h-3.5 w-3.5 mr-1 text-[#213f5b]" />
+                                      {event.equipmentType}
+                                    </>
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
-                    )) : (
-                      <div className="p-8 text-center bg-white/90 rounded-2xl border border-dashed border-[#bfddf9]">
-                        <DocumentMagnifyingGlassIcon className="mx-auto h-12 w-12 text-[#bfddf9] mb-4" />
-                        <h3 className="text-lg font-semibold text-[#213f5b]">Aucune intervention programmée</h3>
-                        <p className="text-[#5a6e87] mt-2">Commencez par planifier une nouvelle intervention</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bouton Flottant */}
-                  <motion.div 
-                    className="sticky bottom-6 mt-8"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Button
-                      className="w-full py-6 rounded-[1.5rem] bg-gradient-to-br from-[#213f5b] to-[#1a2f47] hover:from-[#1a2f47] hover:to-[#213f5b] text-white shadow-2xl"
-                      onClick={() => console.log('Nouvelle intervention')}
-                    >
-                      <PlusIcon className="h-6 w-6 mr-3 text-[#d2fcb2]" />
-                      Planifier Intervention
-                      <span className="ml-3 bg-white/10 px-3 py-1 rounded-full text-sm">Nouveau</span>
-                    </Button>
-                  </motion.div>
-                </div>
-              </motion.div>
-
-              {/* Trends des Tickets */}
-              <motion.div 
-                className="bg-white/95 backdrop-blur-lg p-8 rounded-[2rem] shadow-2xl shadow-[#213f5b]/10 border border-[#bfddf9] hover:shadow-[#213f5b]/20 transition-all duration-300 group"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                {/* En-tête */}
-                <div className="flex flex-col gap-6 mb-8 pb-6 border-b border-[#bfddf9]">
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-start">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-[#213f5b]/5 rounded-2xl shadow-inner border border-[#bfddf9]">
-                        <ChatBubbleLeftRightIcon className="h-8 w-8 text-[#213f5b] animate-pulse-slow" />
-                      </div>
-                      <div className="space-y-1">
-                        <h1 className="text-2xl/normal font-bold text-[#213f5b]">
-                          Activité des Demandes S.A.V.
-                          <span className="ml-3 bg-[#d2fcb2] text-[#1a4231] px-3 py-1 rounded-full text-sm font-medium">
-                            Données en Direct
-                          </span>
-                        </h1>
-                        <p className="text-sm text-[#5a6e87] font-medium">
-                          Analyse temporelle des interventions • Mise à jour : {new Date().toLocaleTimeString('fr-FR')}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="h-12 px-5 shadow-sm bg-white border-[#bfddf9] text-[#213f5b] hover:bg-[#f8fbff] font-medium flex items-center gap-2"
-                    >
-                      <DocumentArrowDownIcon className="h-5 w-5" />
-                      Exporter CSV
-                    </Button>
-                  </div>
-
-                  {/* Contrôles Graphique */}
-                  <div className="flex flex-wrap gap-4 items-center justify-between">
-                    <div className="flex items-center gap-3 bg-white/90 backdrop-blur-sm p-2 rounded-xl border border-[#bfddf9]">
-                    <DatePicker
-                      selected={dateRange.startDate}
-                      onChange={(dates) => {
-                        const [start, end] = dates as [Date | null, Date | null];
-                        setDateRange({ startDate: start, endDate: end || start });
-                      }}
-                      startDate={dateRange.startDate}
-                      endDate={dateRange.endDate}
-                      selectsRange
-                      locale={fr}
-                      dateFormat="dd/MM/yyyy"
-                      isClearable
-                      placeholderText="📅 Sélectionner une période"
-                      className="font-medium text-[#213f5b] border-none bg-transparent w-[280px]"
-                      calendarClassName="shadow-2xl rounded-2xl border border-[#bfddf9] z-[1000]"
-                      popperClassName="z-[1000]"
-                      customInput={
-                        <button className="flex items-center gap-2 px-4 py-2.5 text-[#213f5b] hover:bg-[#f8fbff] rounded-xl transition-colors">
-                          <CalendarIcon className="h-5 w-5" />
-                          {dateRange.startDate ? 
-                            `${dateRange.startDate.toLocaleDateString('fr-FR')} - ${dateRange.endDate?.toLocaleDateString('fr-FR')}` 
-                            : "Choisir dates"}
-                          <ChevronDownIcon className="h-4 w-4 ml-2" />
-                        </button>
-                      }
-                    />
-                      
-                      <Select
-                        value={dataGrouping}
-                        onChange={(e) => setDataGrouping(e.target.value as typeof dataGrouping)}
-                        className="border-0 bg-transparent font-medium text-[#213f5b] [&>button]:px-3 [&>button]:py-2"
-                      >
-                        <option value="daily" className="text-[#213f5b]">📆 Journalier</option>
-                        <option value="weekly" className="text-[#213f5b]">🗓️ Hebdomadaire</option>
-                        <option value="monthly" className="text-[#213f5b]">📅 Mensuel</option>
-                        <option value="yearly" className="text-[#213f5b]">🎉 Annuel</option>
-                      </Select>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {[1, 7, 30, 90].map((days) => (
-                        <Button
-                          key={days}
-                          className={`px-4 py-2 rounded-xl font-medium transition-all ${
-                            isQuickRangeActive(days)
-                              ? "bg-[#213f5b] text-white shadow-lg hover:bg-[#1a2f47]"
-                              : "text-[#5a6e87] hover:bg-[#f8fbff] hover:text-[#213f5b]"
-                          }`}
-                          onClick={() => setQuickRange(days)}
-                        >
-                          {days}j
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Visualisation Graphique */}
-                <div className="relative h-[500px]">
-                  {processedData.length > 0 ? (
-                    <LineChart
-                      data={processedData}
-                      xKey={dataGrouping === "daily" ? "date" : "label"}
-                      yKeys={["tickets", "solutions"]}
-                      colors={["#213f5b", "#d2fcb2"]}
-                      height={500}
-                      gradient
-                      gradientColor="rgba(191, 221, 249, 0.1)"
-                      strokeWidth={2.5}
-                      dotRadius={5}
-                      showGrid
-                      gridColor="rgba(191, 221, 249, 0.15)"
-                      axisProps={{
-                        stroke: "#bfddf9",
-                        fontSize: 13,
-                        // tickMargin: 12,
-                      }}
-                      xAxisFormatter={(value: string) => formatXAxis(value, dataGrouping)}
-                      tooltip={(payload: TooltipPayload) => (
-                        <div className="bg-white p-4 rounded-xl shadow-xl border border-[#e0efff] backdrop-blur-sm">
-                          <p className="text-sm font-semibold text-[#213f5b] mb-2">
-                            📌 {formatTooltipDate(payload.label!, dataGrouping)}
-                          </p>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-3">
-                              <div className="h-2.5 w-2.5 rounded-full bg-[#213f5b]" />
-                              <span className="text-sm font-medium text-[#405976]">
-                                Tickets: <span className="text-[#0d2840] font-bold">{payload.tickets}</span>
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <div className="h-2.5 w-2.5 rounded-full bg-[#d2fcb2]" />
-                              <span className="text-sm font-medium text-[#405976]">
-                                Solutions: <span className="text-[#0d2840] font-bold">{payload.solutions}</span>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                    />
+                    ))
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center bg-[#f8fbff] rounded-2xl border-2 border-dashed border-[#bfddf9]">
-                      <DocumentMagnifyingGlassIcon className="h-16 w-16 text-[#bfddf9] mb-4 animate-pulse" />
-                      <p className="text-[#8aa4bf] font-medium">Chargement des données...</p>
+                    <div className="text-center text-[#5a6e87] py-4">
+                      Aucune intervention trouvée.
                     </div>
                   )}
                 </div>
+              </motion.div>
+            </motion.div>
 
-                {/* Pied de Section */}
-                <div className="mt-8 pt-6 border-t border-[#bfddf9]">
-                  <div className="flex flex-wrap gap-6 items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 bg-[#f8fbff] px-4 py-2 rounded-xl">
-                        <div className="h-3 w-3 rounded-full bg-[#213f5b]" />
-                        <span className="text-sm text-[#5a6e87]">Total Tickets : {sampleData.ticketsTotal}</span>
+            {/* RIGHT: Enhanced Big Calendar (French) */}
+            <motion.div
+              className="space-y-8"
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+            >
+              <motion.div
+                className="bg-white rounded-3xl overflow-hidden border border-[#e0eeff]"
+                whileHover={{ y: -8 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                {/* En-tête du calendrier */}
+                <div className="bg-gradient-to-r from-[#1a365d] to-[#0f2942] p-7 text-white">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex items-center gap-5">
+                      <div className="p-4 bg-white/15 rounded-2xl backdrop-blur-md flex items-center justify-center">
+                        <CalendarIcon className="h-8 w-8 text-[#e2ffc2]" />
                       </div>
-                      <div className="flex items-center gap-2 bg-[#f8fbff] px-4 py-2 rounded-xl">
-                        <div className="h-3 w-3 rounded-full bg-[#d2fcb2]" />
-                        <span className="text-sm text-[#5a6e87]">Solutions : {sampleData.solutionsTotal}</span>
+                      <div>
+                        <h2 className="text-2xl font-bold tracking-tight">Calendrier S.A.V.</h2>
+                        <p className="text-white/90 font-medium mt-1.5">
+                          Planifiez, gérez et organisez vos rendez-vous
+                        </p>
                       </div>
                     </div>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group">
+                        <button className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors">
+                          <BellIcon className="h-5 w-5" />
+                        </button>
+                        <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 p-3 border border-gray-100">
+                          <h4 className="font-semibold text-gray-800 mb-2">Notifications</h4>
+                          <div className="space-y-2">
+                            <div className="p-2 bg-blue-50 rounded-lg border-l-4 border-blue-500 text-sm">
+                              <p className="font-medium text-blue-800">Réunion d&apos;équipe</p>
+                              <p className="text-blue-700 mt-1">Aujourd&apos;hui, 14:00 - 15:30</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="relative group">
+                        <button className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors">
+                          <UserCircleIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-6 gap-4">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleToday}
+                        className="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors text-sm font-medium backdrop-blur-md flex items-center gap-2"
+                      >
+                        <CalendarDaysIcon className="h-4 w-4" />
+                        Aujourd&apos;hui
+                      </button>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={handlePrev}
+                          className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors"
+                        >
+                          <ChevronLeftIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={handleNext}
+                          className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors"
+                        >
+                          <ChevronRightIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white">
+                      {currentDate.toLocaleString("fr-FR", { month: "long", year: "numeric" })}
+                    </h3>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <div className="relative flex-1 sm:flex-none">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <SearchIcon className="h-4 w-4 text-white/60" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Rechercher un événement..."
+                          className="w-full sm:w-64 text-sm border-none bg-white/15 hover:bg-white/20 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all text-white placeholder-white/60"
+                        />
+                      </div>
+                      <button className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#e2ffc2] to-[#c5f7a5] hover:opacity-90 text-[#1a365d] rounded-xl text-sm font-semibold transition-colors">
+                        <PlusIcon className="h-4 w-4" />
+                        <span className="hidden sm:inline">Nouvel événement</span>
+                        <span className="sm:hidden">Nouveau</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Onglets de vue */}
+                <div className="px-4 sm:px-7 pt-4 bg-white border-b border-gray-100 overflow-x-auto">
+                  <div className="flex gap-2 min-w-max">
+                    {viewTabs.map((view, index) => (
+                      <motion.button
+                        key={index}
+                        onClick={() => handleViewChange(view)}
+                        className={`px-3 sm:px-5 py-2.5 text-sm font-medium rounded-t-xl transition-colors ${
+                          activeViewTab === view
+                            ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                        whileHover={{ y: -2 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        {view}
+                      </motion.button>
+                    ))}
+                    <div className="ml-auto flex items-center gap-2">
+                      <button className="p-2 text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
+                        <SunIcon className="h-5 w-5" />
+                      </button>
+                      <button className="p-2 text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
+                        <ChartBarIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Composant Calendrier */}
+                <div className="p-4 sm:p-7 pt-5">
+                  <motion.div 
+                    className="rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Calendar
+                      localizer={localizer}
+                      events={sampleEvents}
+                      startAccessor="start"
+                      endAccessor="end"
+                      date={currentDate}
+                      view={currentView}
+                      onNavigate={(date) => setCurrentDate(date)}
+                      onView={(view) => setCurrentView(view as "month" | "week" | "day" | "agenda")}
+                      defaultView={Views.MONTH}
+                      views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+                      messages={{
+                        month: "Mois",
+                        week: "Semaine",
+                        day: "Jour",
+                        agenda: "Agenda",
+                        previous: "Précédent",
+                        next: "Suivant",
+                        today: "Aujourd'hui",
+                        showMore: (total) => `+ ${total} autres`,
+                        allDay: "Toute la journée",
+                        date: "Date",
+                        time: "Heure",
+                        event: "Événement",
+                        noEventsInRange: "Aucun événement dans cette période",
+                      }}
+                      style={
+                        {
+                          height: "75vh",
+                          "--c-primary": "#1a365d",
+                          "--c-secondary": "#0f2942",
+                          "--c-accent": "#c5f7a5",
+                        } as CustomCSSProperties
+                      }
+                      className="calendrier-premium"
+                      eventPropGetter={(event) => ({
+                        style: {
+                          backgroundColor: event.type === "réunion" ? "var(--c-primary)" : "var(--c-accent)",
+                          border: `1px solid ${event.type === "réunion" ? "var(--c-secondary)" : "#b3e19f"}`,
+                          borderRadius: "10px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                          color: event.type === "réunion" ? "white" : "var(--c-secondary)",
+                          padding: "8px 14px",
+                          fontSize: "0.875rem",
+                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                        },
+                      })}
+                      dayPropGetter={(date) => ({
+                        className:
+                          date.getDate() === new Date().getDate()
+                            ? "jour-actuel bg-gradient-to-br from-blue-50/70 to-blue-100/40 border-l-4 border-blue-500"
+                            : "",
+                      })}
+                      components={{
+                        event: ({ event }) => (
+                          <motion.div
+                            className="h-full p-2"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: 1.03, y: -1 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`h-2.5 w-2.5 rounded-full mt-1.5 ${event.type === "réunion" ? "bg-white/90" : "bg-[#1a365d]/80"}`} />
+                              <div className="flex-1">
+                                <p className="font-medium truncate">{event.title}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <ClockIcon className={`h-3.5 w-3.5 ${event.type === "réunion" ? "text-white/80" : "text-gray-600"}`} />
+                                  <span className={`text-xs font-medium ${event.type === "réunion" ? "text-white/90" : "text-gray-600"}`}>
+                                    {event.start.toLocaleTimeString("fr-FR", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
+                                  {event.location && (
+                                    <>
+                                      <span className={`${event.type === "réunion" ? "text-white/60" : "text-gray-400"}`}>•</span>
+                                      <MapPinIcon className={`h-3.5 w-3.5 ${event.type === "réunion" ? "text-white/80" : "text-gray-600"}`} />
+                                      <span className={`text-xs ${event.type === "réunion" ? "text-white/90" : "text-gray-600"}`}>{event.location}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button className="p-1 hover:bg-white/10 rounded-full">
+                                  <EllipsisHorizontalIcon className={`h-4 w-4 ${event.type === "réunion" ? "text-white/90" : "text-gray-600"}`} />
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ),
+                        toolbar: ( ) => (
+                          <motion.div
+                            className="border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+                            initial={{ y: -10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                          ></motion.div>
+                        ),
+                        timeGutterHeader: () => (
+                          <div className="h-full bg-gray-50 flex items-center justify-center text-sm font-semibold text-gray-600 border-r border-gray-100">
+                            <ClockIcon className="h-4 w-4 mr-1.5 text-blue-500" /> Horaire
+                          </div>
+                        ),
+                        agenda: {
+                          event: ({ event }) => (
+                            <motion.div
+                              className="flex items-center gap-4 p-4 my-2.5 bg-white border-l-4 border-[#1a365d] rounded-xl shadow-sm hover:shadow-md transition-all group"
+                              whileHover={{ x: 5, backgroundColor: "#f8fafc" }}
+                            >
+                              <div className={`h-3.5 w-3.5 rounded-full ${event.type === "réunion" ? "bg-[#c5f7a5]" : "bg-[#1a365d]"}`} />
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-900">{event.title}</p>
+                                <div className="flex flex-wrap items-center gap-y-2 gap-x-3 mt-1.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <ClockIcon className="h-4 w-4 text-gray-500" />
+                                    <span className="text-sm text-gray-600">
+                                      {event.start.toLocaleTimeString("fr-FR", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                      {" - "}
+                                      {event.end.toLocaleTimeString("fr-FR", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </span>
+                                  </div>
+                                  <span className="text-gray-400 hidden sm:inline">|</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <UserCircleIcon className="h-4 w-4 text-gray-500" />
+                                    <span className="text-sm text-gray-600">
+                                      {event.participants || "Aucun participant"}
+                                    </span>
+                                  </div>
+                                  {event.location && (
+                                    <>
+                                      <span className="text-gray-400 hidden sm:inline">|</span>
+                                      <div className="flex items-center gap-1.5">
+                                        <MapPinIcon className="h-4 w-4 text-gray-500" />
+                                        <span className="text-sm text-gray-600">{event.location}</span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                  <PencilIcon className="h-4 w-4 text-gray-500" />
+                                </button>
+                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                  <TrashIcon className="h-4 w-4 text-gray-500" />
+                                </button>
+                              </div>
+                            </motion.div>
+                          ),
+                          time: ({ label }: { label?: string }) => (
+                            <div className="text-sm font-medium text-gray-700 bg-gray-50 p-3 border-b border-gray-100">
+                              {label || ""}
+                            </div>
+                          ),
+                        },
+                        week: {
+                          header: ({ date }) => (
+                            <div className="text-center py-3 bg-gradient-to-b from-blue-50 to-white border-b border-gray-100">
+                              <p className="text-sm font-bold text-blue-600 mb-1 uppercase">
+                                {date.toLocaleDateString("fr-FR", { weekday: "short" })}
+                              </p>
+                              <p className={`text-xl ${date.getDate() === new Date().getDate() ? "text-blue-600 font-bold" : "text-gray-800 font-semibold"}`}>
+                                {date.getDate()}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {date.toLocaleDateString("fr-FR", { month: "short" })}
+                              </p>
+                            </div>
+                          ),
+                        },
+                        day: {
+                          header: ({ date }) => (
+                            <div className="text-center py-6 bg-blue-50 border-b border-blue-100">
+                              <div className="flex items-center justify-center gap-2 mb-2">
+                                <CalendarDaysIcon className="h-5 w-5 text-blue-600" />
+                                <p className="text-lg font-bold text-blue-600">
+                                  {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                                </p>
+                              </div>
+                              <div className="flex items-center justify-center text-sm text-blue-700">
+                                {isToday(date) && (
+                                  <span className="px-3 py-1 bg-blue-100 rounded-full font-medium">Aujourd&apos;hui</span>
+                                )}
+                              </div>
+                            </div>
+                          ),
+                        },
+                      }}
+                      popup
+                      selectable
+                      onSelectEvent={(event) => console.log("Événement sélectionné:", event)}
+                      onSelectSlot={(slotInfo) => console.log("Créneau sélectionné:", slotInfo)}
+                      culture="fr"
+                    />
+                  </motion.div>
+                </div>
+
+                {/* Custom CSS */}
+                <style jsx global>{`
+                  .calendrier-premium {
+                    .rbc-month-view,
+                    .rbc-time-view {
+                      border: none;
+                      background: linear-gradient(to bottom right, #f8fafc, #ffffff);
+                      border-radius: 12px;
+                      overflow: hidden;
+                    }
+                    .rbc-header {
+                      padding: 1.25rem 1rem;
+                      background: #f9fafb;
+                      color: #4b5563;
+                      font-weight: 600;
+                      border-bottom: 1px solid #e5e7eb;
+                      text-transform: uppercase;
+                      letter-spacing: 0.05em;
+                      font-size: 0.875rem;
+                    }
+                    .rbc-month-row {
+                      overflow: visible;
+                    }
+                    .rbc-day-bg {
+                      transition: background 0.3s;
+                    }
+                    .rbc-day-bg:hover {
+                      background: rgba(243, 244, 246, 0.7);
+                    }
+                    .rbc-event {
+                      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+                      transform-origin: center;
+                      transition: transform 0.2s, box-shadow 0.2s;
+                    }
+                    .rbc-event:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+                      z-index: 5;
+                    }
+                    .rbc-time-content {
+                      border-top: 0;
+                    }
+                    .rbc-timeslot-group {
+                      border-color: #e5e7eb;
+                    }
+                    .rbc-current-time-indicator {
+                      background: #3b82f6;
+                      height: 2px;
+                    }
+                    .rbc-today {
+                      background-color: rgba(239, 246, 255, 0.6);
+                    }
+                    .rbc-label {
+                      font-weight: 500;
+                      color: #4b5563;
+                    }
+                    .rbc-time-header-content {
+                      border-color: #e5e7eb;
+                    }
+                    .rbc-agenda-view table.rbc-agenda-table {
+                      border-radius: 10px;
+                      overflow: hidden;
+                      border: 1px solid #e5e7eb;
+                    }
+                    .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+                      background-color: #f3f4f6;
+                      color: #4b5563;
+                      font-weight: 600;
+                      padding: 12px;
+                      border-bottom: 1px solid #e5e7eb;
+                    }
+                    .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+                      padding: 12px;
+                      border-bottom: 1px solid #e5e7eb;
+                    }
+                    .rbc-agenda-view table.rbc-agenda-table tbody > tr:hover {
+                      background-color: #f9fafb;
+                    }
+                    .rbc-header + .rbc-header {
+                      border-left: 1px solid #e5e7eb;
+                    }
+                    .rbc-off-range-bg {
+                      background: #f9fafb;
+                    }
+                    .rbc-off-range {
+                      color: #9ca3af;
+                    }
+                    .rbc-date-cell {
+                      padding: 6px 8px;
+                      text-align: center;
+                      font-weight: 500;
+                      color: #4b5563;
+                    }
+                    .rbc-date-cell.rbc-now {
+                      color: #2563eb;
+                      font-weight: 700;
+                    }
+                    .rbc-button-link {
+                      font-weight: 500;
+                    }
                     
-                    <div className="flex items-center gap-3 bg-[#d2fcb2]/20 px-4 py-2 rounded-xl">
-                      <SparklesIcon className="h-5 w-5 text-[#1a4231]" />
-                      <span className="text-sm font-medium text-[#1a4231]">
-                        Taux de Résolution : <span className="font-bold">{resolutionRate}%</span>
-                      </span>
+                    /* Support mobile */
+                    @media (max-width: 640px) {
+                      .rbc-toolbar {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        margin-bottom: 10px;
+                      }
+                      .rbc-toolbar-label {
+                        margin: 8px 0;
+                      }
+                      .rbc-btn-group {
+                        margin-bottom: 8px;
+                      }
+                      .rbc-header {
+                        padding: 0.75rem 0.5rem;
+                        font-size: 0.75rem;
+                      }
+                      .rbc-event {
+                        padding: 4px 8px !important;
+                      }
+                      .rbc-day-slot .rbc-events-container {
+                        margin-right: 0;
+                      }
+                    }
+                    
+                    /* Amélioration des en-têtes de la semaine */
+                    .rbc-time-header-content .rbc-header {
+                      background: linear-gradient(to bottom, #eef2ff, #f9fafb);
+                      padding: 1rem;
+                      height: auto;
+                    }
+                    
+                    /* Amélioration des en-têtes du mois */
+                    .rbc-month-header .rbc-header {
+                      background: linear-gradient(to bottom, #eef2ff, #f9fafb);
+                      padding: 1rem;
+                      text-transform: capitalize;
+                      font-weight: 600;
+                      font-size: 0.9rem;
+                    }
+                  }
+                  .jour-actuel {
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(255,255,255,0) 70%);
+                    position: relative;
+                  }
+                  .jour-actuel::after {
+                    content: "";
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    height: 3px;
+                    background: #3b82f6;
+                    border-radius: 3px 3px 0 0;
+                  }
+                `}</style>
+
+                {/* Pied de page - Actions rapides */}
+                <div className="px-4 sm:px-7 py-5 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#1a365d] to-[#0f2942] hover:from-[#1e4269] hover:to-[#133356] text-white rounded-xl text-sm font-medium transition-colors shadow-sm">
+                      <CalendarDaysIcon className="h-4 w-4" />
+                      Synchroniser
+                    </button>
+                    <div className="relative group">
+                      <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                        <FunnelIcon className="h-4 w-4" />
+                        <span className="hidden sm:inline">Filtrer</span>
+                        <ChevronDownIcon className="h-4 w-4 ml-1" />
+                      </button>
+                      <div className="absolute left-0 top-full mt-2 p-3 bg-white rounded-xl shadow-lg z-10 border border-gray-100 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm text-gray-700">
+                            <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" checked />
+                            <span>Réunions</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-sm text-gray-700">
+                            <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" checked />
+                            <span>Rendez-vous clients</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-sm text-gray-700">
+                            <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" checked />
+                            <span>Interventions</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-3 justify-center sm:justify-end w-full sm:w-auto">
+                    <button className="flex-1 sm:flex-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                      <ArrowDownTrayIcon className="h-4 w-4" />
+                      <span className="hidden sm:inline">Exporter</span>
+                    </button>
+                    <button className="flex-1 sm:flex-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                      <PrinterIcon className="h-4 w-4" />
+                      <span className="hidden sm:inline">Imprimer</span>
+                    </button>
+                    <div className="relative group flex-1 sm:flex-auto">
+                      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                        <Cog6ToothIcon className="h-4 w-4" />
+                        <span className="hidden sm:inline">Paramètres</span>
+                        <ChevronDownIcon className="h-4 w-4 ml-1" />
+                      </button>
+                      <div className="absolute right-0 top-full mt-2 p-3 bg-white rounded-xl shadow-lg z-10 border border-gray-100 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                        <div className="space-y-2">
+                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                            Apparence
+                          </button>
+                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                            Notifications
+                          </button>
+                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                            Intégrations
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </motion.div>
 
-              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-[#1a365d]">
-                    S.A.V. Récents
-                  </h2>
-                  <Button variant="ghost" size="sm" className="text-[#1a365d]">
-                    Voir Tous{" "}
-                    <ArrowUpRightIcon className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="space-y-4">
-                  {recentTickets.map((ticket, i) => {
-                    const solutionKeys = Object.keys(energySolutions) as (keyof typeof energySolutions)[];
-                    const solutionKey = solutionKeys[i % solutionKeys.length];
-                    const { color, icon: Icon } = energySolutions[solutionKey];
-                    return (
-                      <div
-                        key={ticket._id}
-                        className="flex items-center justify-between p-4 hover:bg-[#bfddf9]/10 rounded-xl transition-colors cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className="p-2 rounded-lg"
-                            style={{ backgroundColor: `${color}10` }}
-                          >
-                            <Icon className="h-6 w-6" style={{ color }} />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{ticket.problème}</h4>
-                            <p className="text-sm text-gray-500">
-                              Client: {ticket.customer}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <span
-                            className={`text-sm px-2 py-1 rounded-full ${
-                              ticket.statut.toLowerCase() === "ouvert"
-                                ? "bg-red-100 text-red-600"
-                                : "bg-green-100 text-green-600"
-                            }`}
-                          >
-                            {ticket.statut}
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            {new Date(ticket.dates.created).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-            <motion.div
-              className="space-y-6"
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-            >
-              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20">
-                <h3 className="font-semibold text-lg mb-4 text-[#1a365d] flex items-center gap-2">
-                  <UserGroupIcon className="h-6 w-6 text-[#2a75c7]" />
-                  Disponibilité de l&apos;Équipe
-                </h3>
-                <div className="space-y-4">
-                  {["En ligne", "Occupé", "Hors ligne"].map((status, i) => (
-                    <div
-                      key={status}
-                      className="flex items-center justify-between p-3 bg-[#bfddf9]/10 rounded-xl"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`h-3 w-3 rounded-full ${
-                            i === 0
-                              ? "bg-green-500"
-                              : i === 1
-                              ? "bg-amber-500"
-                              : "bg-gray-400"
-                          }`}
-                        />
-                        <span className="text-sm">{status}</span>
-                      </div>
-                      <span className="font-semibold text-[#1a365d]">
-                        {i + 2}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20">
-                <h3 className="font-semibold text-lg mb-4 text-[#1a365d]">
-                  Actions Rapides
-                </h3>
-                <div className="grid grid-cols-1 gap-3">
-                  <Button className="h-12 bg-[#bfddf9]/20 hover:bg-[#bfddf9]/30 text-[#1a365d] justify-start">
-                    <SparklesIcon className="h-5 w-5 mr-2" />
-                    Nouveau Ticket S.A.v.
-                  </Button>
-                  <Button className="h-12 bg-[#d2fcb2] hover:bg-[#c2ecb2] text-[#1a4231] justify-start">
-                    <UserCircleIcon className="h-5 w-5 mr-2" />
-                    Assigner un Technicien
-                  </Button>
-                  <Button className="h-12 bg-white border border-[#bfddf9]/30 hover:bg-[#bfddf9]/10 text-[#1a365d] justify-start">
-                    <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
-                    Base de Connaissances
-                  </Button>
-                </div>
-              </div>
             </motion.div>
           </div>
-          {/* Customer Communications */}
-          <motion.div
-            className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-[#bfddf9]/20"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-header text-xl font-semibold text-[#1a365d]">
-                Communications Clients
-              </h2>
-              <Button variant="ghost" size="sm" className="text-[#1a365d]">
-                Voir Historique{" "}
-                <ArrowUpRightIcon className="ml-2 h-4 w-4" />
-              </Button>
+
+          {/* Statistique S.A.V. (Line Chart) */}
+          <SAVStatistics/>
+
+          {/* IMPROVED SECTION: Unified S.A.V. Interface with Modern UI */}
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#bfddf9]">
+            {/* Unified Header */}
+            <div className="bg-gradient-to-r from-[#213f5b] to-[#1d3349] p-6 text-white">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-semibold">Toutes les S.A.V.</h2>
+                  <p className="text-white/80 font-medium mt-1">
+                    Gestion complète des interventions
+                  </p>
+                </div>
+                {selectedEvent && (
+                  <button
+                    onClick={() => setSelectedEvent(null)}
+                    className="text-white bg-white/10 hover:bg-white/20 border border-white/30 rounded-lg px-4 py-2 transition-all duration-300 flex items-center gap-2"
+                  >
+                    <span>Retour</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {tickets.slice(0, 4).map((ticket, i) => (
-                <div
-                  key={ticket._id}
-                  className="group p-4 hover:bg-[#bfddf9]/10 rounded-xl transition-colors cursor-pointer border border-[#bfddf9]/20"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-[#bfddf9]/20 rounded-lg">
-                      <ChatBubbleLeftRightIcon className="h-6 w-6 text-[#2a75c7]" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium">
-                        Demande de support #{i + 1}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {ticket.problème}
-                      </p>
-                    </div>
+
+            {/* Main Content Area */}
+            <div className="flex flex-col lg:flex-row">
+              {/* Left Panel - Event List (Hidden when event is selected on mobile) */}
+              <div className={`border-r border-[#e5f1fd] ${selectedEvent ? 'hidden lg:block' : 'block'} lg:w-1/2`}>
+                <div className="p-4">
+                  <div className="relative mb-4">
+                    <input
+                      type="text"
+                      placeholder="Rechercher une intervention..."
+                      className="w-full pl-10 pr-4 py-2 bg-[#f5faff] border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#213f5b]"
+                    />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#5a6e87] absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{ticket.customer}</span>
-                    <span className="text-gray-500">
-                      {new Date(ticket.dates.created).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
+                  <div className="max-h-[500px] overflow-auto pr-2">
+                    {savEvents.map((event) => (
+                      <motion.div
+                        key={event.id}
+                        className={`mb-3 bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition-all duration-300 cursor-pointer ${
+                          selectedEvent && selectedEvent.id === event.id
+                            ? 'border-[#213f5b] bg-[#f5faff]'
+                            : 'border-[#bfddf9]'
+                        }`}
+                        whileHover={{ x: 5 }}
+                        onClick={() => setSelectedEvent(event)}
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Status indicator */}
+                          <div className="mt-1.5 relative">
+                            <div
+                              className={`w-3 h-3 rounded-full ${
+                                event.status === "completed"
+                                  ? "bg-green-500 ring-4 ring-green-100"
+                                  : event.status === "pending"
+                                  ? "bg-amber-500 ring-4 ring-amber-100 animate-pulse"
+                                  : "bg-blue-500 ring-4 ring-blue-100"
+                              }`}
+                            />
+                            <div className="absolute top-4 left-1.5 h-full w-px bg-[#e5f1fd]"></div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <h3 className="text-lg font-semibold text-[#213f5b]">
+                                {event.customer}
+                              </h3>
+                              <div className="text-right">
+                                <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-[#f5faff] text-[#213f5b]">
+                                  {new Date(event.date).toLocaleDateString("fr-FR", {
+                                    day: "numeric",
+                                    month: "short",
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-[#5a6e87] text-sm mt-1">
+                              {event.problem || "Intervention programmée"}
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-[#5a6e87]">
+                                {new Date(event.date).toLocaleTimeString("fr-FR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                event.status === "completed"
+                                  ? "bg-green-100 text-green-700"
+                                  : event.status === "pending"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-blue-100 text-blue-700"
+                              }`}>
+                                {event.status === "completed" ? "Terminé" : 
+                                event.status === "pending" ? "En attente" : "En cours"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Right Panel - Conversation View (Full width when selected on mobile) */}
+              <div className={`${selectedEvent ? 'block' : 'hidden lg:block'} lg:w-1/2 bg-[#fafcff]`}>
+                {selectedEvent ? (
+                  <div className="h-full flex flex-col">
+                    <div className="p-4 border-b border-[#e5f1fd] bg-white">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            selectedEvent.status === "completed"
+                              ? "bg-green-500 ring-4 ring-green-100"
+                              : selectedEvent.status === "pending"
+                              ? "bg-amber-500 ring-4 ring-amber-100"
+                              : "bg-blue-500 ring-4 ring-blue-100"
+                          }`} />
+                          <div>
+                            <h3 className="font-semibold text-[#213f5b]">{selectedEvent.customer}</h3>
+                            <p className="text-sm text-[#5a6e87]">{selectedEvent.problem}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button className="p-2 rounded-lg text-[#213f5b] hover:bg-[#f5faff]">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                          </button>
+                          <button className="p-2 rounded-lg text-[#213f5b] hover:bg-[#f5faff]">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 overflow-auto p-4 space-y-4">
+                      {/* Conversation messages */}
+                      {selectedEvent.conversation ? (
+                        selectedEvent.conversation.map((msg, index) => (
+                          <div 
+                            key={index} 
+                            className={`max-w-[80%] ${
+                              msg.sender === "Technicien" 
+                                ? "ml-auto bg-[#213f5b] text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl" 
+                                : "bg-white border border-[#e5f1fd] shadow-sm rounded-tl-2xl rounded-tr-2xl rounded-br-2xl"
+                            } p-4`}
+                          >
+                            <div className="flex justify-between items-start mb-1">
+                              <p className={`text-sm font-semibold ${
+                                msg.sender === "Technicien" ? "text-white/90" : "text-[#213f5b]"
+                              }`}>
+                                {msg.sender}
+                              </p>
+                              <span className={`text-xs ${
+                                msg.sender === "Technicien" ? "text-white/70" : "text-[#5a6e87]"
+                              }`}>
+                                {new Date(msg.timestamp).toLocaleTimeString("fr-FR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit"
+                                })}
+                              </span>
+                            </div>
+                            <p className={`text-sm ${
+                              msg.sender === "Technicien" ? "text-white/90" : "text-[#5a6e87]"
+                            }`}>
+                              {msg.content}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-center text-[#5a6e87] p-6">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-[#bfddf9] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          <p>Aucune conversation disponible pour cette intervention</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Message input area */}
+                    <div className="p-4 border-t border-[#e5f1fd] bg-white">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Tapez votre message..."
+                          className="flex-1 bg-[#f5faff] border border-[#bfddf9] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#213f5b]"
+                        />
+                        <button className="bg-[#213f5b] hover:bg-[#1a324a] text-white rounded-lg p-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center text-[#5a6e87] p-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-[#bfddf9] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    <p className="font-medium text-lg text-[#213f5b] mb-1">Aucune conversation sélectionnée</p>
+                    <p>Sélectionnez un S.A.V. dans la liste pour voir les détails</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </motion.div>
+          </div>
+
         </main>
       </div>
     </div>

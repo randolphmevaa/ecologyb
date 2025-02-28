@@ -13,13 +13,61 @@ import { TooltipProps } from "recharts";
 
 // Custom tooltip function matching Recharts' expected type.
 // We assume the value type is number and the name type is string.
-const customTooltip = (props: TooltipProps<number, string>) => {
+// const customTooltip = (props: TooltipProps<number, string>) => {
+//   const { active, payload, label } = props;
+//   if (active && payload && payload.length) {
+//     // Find the tickets and solutions values based on the dataKey
+//     const tickets = payload.find((item) => item.dataKey === "tickets")?.value;
+//     const solutions = payload.find((item) => item.dataKey === "solutions")?.value;
+
+//     return (
+//       <div className="bg-white p-4 rounded-xl shadow-xl border border-[#e0efff] backdrop-blur-sm">
+//         <p className="text-sm font-semibold text-[#213f5b] mb-2">📌 {label}</p>
+//         <div className="space-y-2">
+//           <div className="flex items-center gap-3">
+//             <div className="h-2.5 w-2.5 rounded-full bg-[#213f5b]" />
+//             <span className="text-sm font-medium text-[#405976]">
+//               Tickets: <span className="text-[#0d2840] font-bold">{tickets}</span>
+//             </span>
+//           </div>
+//           <div className="flex items-center gap-3">
+//             <div className="h-2.5 w-2.5 rounded-full bg-[#d2fcb2]" />
+//             <span className="text-sm font-medium text-[#405976]">
+//               Solutions: <span className="text-[#0d2840] font-bold">{solutions}</span>
+//             </span>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+//   return null;
+// };
+
+// Define a generic interface for the chart props.
+interface LineChartProps<T extends Record<string, unknown>> {
+  data: T[];
+  xKey: keyof T;
+  yKeys?: (keyof T)[];
+  colors: string[];
+  height: number | string;
+  gradient?: boolean;
+  gradientColor?: string;
+  strokeWidth?: number;
+  currency?: string;
+  dotRadius?: number;
+  showGrid?: boolean;
+  gridColor?: string;
+  axisProps?: React.SVGProps<SVGLineElement>;
+  xAxisFormatter?: (value: string) => string;
+  tooltip?: (props: TooltipProps<number, string>) => React.ReactNode;
+  className?: string; // Add this line
+}
+
+export const customTooltip = (props: TooltipProps<number, string>) => {
   const { active, payload, label } = props;
   if (active && payload && payload.length) {
-    // Find the tickets and solutions values based on the dataKey
     const tickets = payload.find((item) => item.dataKey === "tickets")?.value;
     const solutions = payload.find((item) => item.dataKey === "solutions")?.value;
-
     return (
       <div className="bg-white p-4 rounded-xl shadow-xl border border-[#e0efff] backdrop-blur-sm">
         <p className="text-sm font-semibold text-[#213f5b] mb-2">📌 {label}</p>
@@ -43,41 +91,13 @@ const customTooltip = (props: TooltipProps<number, string>) => {
   return null;
 };
 
-// interface TooltipPayload {
-//   active?: boolean;
-//   payload?: unknown[];
-//   label?: string;
-//   tickets: number;
-//   solutions: number;
-// }
-
-// Define a generic interface for the chart props.
-// We now include an optional tooltip prop that, if provided,
-// overrides the default custom tooltip.
-interface LineChartProps<T extends Record<string, unknown>> {
-  data: T[];
-  xKey: keyof T;
-  yKeys: (keyof T)[];
-  colors: string[];
-  height: number | string;
-  gradient?: boolean;
-  gradientColor?: string;
-  strokeWidth?: number;
-  currency?: string;
-  dotRadius?: number;
-  showGrid?: boolean;
-  gridColor?: string;
-  axisProps?: React.SVGProps<SVGLineElement>;
-  xAxisFormatter?: (value: string) => string;
-  tooltip?: (props: TooltipProps<number, string>) => React.ReactNode;
-}
 
 // You can make the component generic so that it accepts any shape of data.
 export function LineChart<T extends Record<string, unknown>>({
   data,
   xKey,
-  yKeys,
-  colors,
+  yKeys = [],
+  colors = [],
   height,
   tooltip,
 }: LineChartProps<T>) {
