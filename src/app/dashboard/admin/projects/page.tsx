@@ -2,17 +2,24 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+// import Image from "next/image";
+import { motion } from "framer-motion";
 import { Header } from "@/components/Header";
 import {
-  ChevronUpIcon,
-  ChevronDownIcon,
   MagnifyingGlassIcon,
-  ArrowRightIcon,
-  FunnelIcon,
   XMarkIcon,
   ArrowPathIcon,
+  ChevronRightIcon,
+  UserGroupIcon,
+  BuildingOfficeIcon,
+  MapPinIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  FunnelIcon,
+  ChartBarIcon,
+  // StarIcon, // Added missing SearchIcon import
 } from "@heroicons/react/24/outline";
+import { SearchIcon } from "lucide-react";
 
 // ------------------------
 // Types
@@ -49,7 +56,19 @@ type Contact = {
   firstName: string;
   lastName: string;
   mailingAddress: string;
-  // …other properties if needed
+  email?: string;
+  phone?: string;
+};
+
+// Mapping for step colors - updated with brand colors
+const stepStyles: { [key: string]: { bg: string; text: string } } = {
+  "1": { bg: "bg-[#bfddf9]/30", text: "text-[#213f5b]" },
+  "2": { bg: "bg-[#bfddf9]/50", text: "text-[#213f5b]" },
+  "3": { bg: "bg-[#d2fcb2]/30", text: "text-[#213f5b]" },
+  "4": { bg: "bg-[#d2fcb2]/50", text: "text-[#213f5b]" },
+  "5": { bg: "bg-[#213f5b]/20", text: "text-[#213f5b]" },
+  "6": { bg: "bg-[#213f5b]/30", text: "text-[#213f5b]" },
+  "7": { bg: "bg-[#213f5b]/50", text: "text-white" },
 };
 
 export default function ProjectsPage() {
@@ -57,22 +76,19 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // State to store fetched contacts (mapping contactId => contact data)
+  // Fetched contacts (mapping contactId => contact data)
   const [contacts, setContacts] = useState<{ [id: string]: Contact }>({});
 
-  // Filtering & Sorting
+  // Filtering state
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [solutionFilter, setSolutionFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [advancedFiltersVisible, setAdvancedFiltersVisible] = useState<boolean>(false);
-  const [sortField, setSortField] = useState<string>("createdAt");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  // One filter for solution (mimicking SalesContactsOrganizations)
+  const [filter, setFilter] = useState("Tous");
 
   // Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
 
-  // Fetch projects
+  // Fetch projects (dossiers)
   const fetchProjects = () => {
     setLoading(true);
     fetch("/api/dossiers")
@@ -91,7 +107,7 @@ export default function ProjectsPage() {
     fetchProjects();
   }, []);
 
-  // When projects change, fetch their contact data if a contactId is available.
+  // When projects change, fetch their contact data if available.
   useEffect(() => {
     projects.forEach((project) => {
       if (project.contactId && !contacts[project.contactId]) {
@@ -107,142 +123,268 @@ export default function ProjectsPage() {
     });
   }, [projects, contacts]);
 
-  // Filtering logic
+  // Helper: Format the etape string to "Etape X - description"
+  const formatEtape = (etape?: string) => {
+    if (!etape) return "N/A";
+    const parts = etape.split(" ");
+    if (parts.length > 1 && !isNaN(Number(parts[0]))) {
+      return `Etape ${parts[0]} - ${parts.slice(1).join(" ")}`;
+    }
+    return etape;
+  };
+
+  // Helper: Get bg and text classes based on the step number
+  const getEtapeStyles = (etape?: string) => {
+    if (!etape) return "bg-gray-200 text-gray-800";
+    const digit = etape.charAt(0);
+    const style = stepStyles[digit];
+    return style ? `${style.bg} ${style.text}` : "bg-gray-200 text-gray-800";
+  };
+
+  // Filtering logic (ensuring string conversion)
   const filteredProjects = projects.filter((project) => {
     const query = searchQuery.toLowerCase();
     const matchesSearch =
-  String(project.client ?? "").toLowerCase().includes(query) ||
-  String(project.projet ?? "").toLowerCase().includes(query) ||
-  String(project.numero ?? "").toLowerCase().includes(query);
-
-    const matchesSolution = solutionFilter
-      ? (project.solution || "").toLowerCase() === solutionFilter.toLowerCase()
-      : true;
-    const matchesStatus = statusFilter
-      ? (project.etape || "").toLowerCase().includes(statusFilter.toLowerCase())
-      : true;
-    return matchesSearch && matchesSolution && matchesStatus;
+      String(project.client || "").toLowerCase().includes(query) ||
+      String(project.projet || "").toLowerCase().includes(query) ||
+      String(project.numero || "").toLowerCase().includes(query);
+    const matchesSolution =
+      filter === "Tous" || project.solution.toLowerCase() === filter.toLowerCase();
+    return matchesSearch && matchesSolution;
   });
 
-  // Sorting logic
-  const sortedProjects = [...filteredProjects].sort((a, b) => {
-    let aValue: string | number;
-    let bValue: string | number;
-
-    // Here, if a contact exists, we use its createdAt, firstName/lastName or mailingAddress.
-    if (sortField === "createdAt") {
-      const aContact = a.contactId ? contacts[a.contactId] : null;
-      const bContact = b.contactId ? contacts[b.contactId] : null;
-      aValue = aContact ? new Date(aContact.createdAt).getTime() : a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      bValue = bContact ? new Date(bContact.createdAt).getTime() : b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    } else if (sortField === "client") {
-      const aContact = a.contactId ? contacts[a.contactId] : null;
-      const bContact = b.contactId ? contacts[b.contactId] : null;
-      // Combine firstName and lastName if contact exists
-      const aName = aContact ? `${aContact.firstName} ${aContact.lastName}` : (a.client || "");
-      const bName = bContact ? `${bContact.firstName} ${bContact.lastName}` : (b.client || "");
-      aValue = aName.toLowerCase();
-      bValue = bName.toLowerCase();
-    } else if (sortField === "location") {
-      const aContact = a.contactId ? contacts[a.contactId] : null;
-      const bContact = b.contactId ? contacts[b.contactId] : null;
-      aValue = aContact ? (aContact.mailingAddress || "").toLowerCase() : (a.informationLogement?.typeDeLogement || "").toLowerCase();
-      bValue = bContact ? (bContact.mailingAddress || "").toLowerCase() : (b.informationLogement?.typeDeLogement || "").toLowerCase();
-    } else if (sortField === "etape") {
-      aValue = (a.etape || "").toLowerCase();
-      bValue = (b.etape || "").toLowerCase();
-    } else {
-      aValue = "";
-      bValue = "";
-    }
-
-    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
-
-  // Pagination logic
-  const totalPages = Math.ceil(sortedProjects.length / pageSize);
-  const paginatedProjects = sortedProjects.slice(
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredProjects.length / pageSize);
+  const paginatedProjects = filteredProjects.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
-  // Handler: Toggle sort on header click
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
-  // Reset all filters
-  const resetFilters = () => {
-    setSearchQuery("");
-    setSolutionFilter("");
-    setStatusFilter("");
-    setCurrentPage(1);
-  };
-
-  // Clear search input
+  // Clear search
   const clearSearch = () => {
     setSearchQuery("");
     setCurrentPage(1);
   };
 
+  // -------------------------------
+  // Stats Calculations
+  // -------------------------------
+  // We'll use the total number of projects as "Total Clients"
+  const totalClientsCount = projects.length;
+  const solutionCounts = projects.reduce((acc, project) => {
+    const sol = project.solution || "Autres";
+    acc[sol] = (acc[sol] || 0) + 1;
+    return acc;
+  }, {} as { [key: string]: number });
+  const sortedSolutions = Object.entries(solutionCounts)
+    .filter(([key]) => key !== "Autres")
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 2);
+
+  // Define solution filter options
+  const solutionOptions = [
+    "Tous",
+    "Pompes a chaleur",
+    "Chauffe-eau solaire individuel",
+    "Chauffe-eau thermodynamique",
+    "Système Solaire Combiné",
+  ];
+
+  // Calculate stage statistics
+  const stageStats = projects.reduce((acc, project) => {
+    const stageNumber = project.etape?.charAt(0) || "N/A";
+    acc[stageNumber] = (acc[stageNumber] || 0) + 1;
+    return acc;
+  }, {} as { [key: string]: number });
+
   if (loading) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-white">
-        <p className="text-lg font-semibold">Chargement...</p>
+      <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-white to-[#bfddf9]/10">
+        <div className="flex flex-col items-center">
+          <svg
+            className="animate-spin h-10 w-10 text-[#213f5b] mb-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <p className="text-lg font-semibold text-[#213f5b]">
+            Chargement des projets...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex h-screen bg-white">
-      {/* Sidebar (empty for now; add content as needed) */}
-      <motion.div
-        className="relative border-r border-[#bfddf9]/30 bg-white"
+      {/* Sidebar placeholder */}
+      {/* <motion.div
+        className="relative border-r border-[#bfddf9]/30 bg-white w-16 md:w-64"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Future sidebar content */}
-      </motion.div>
 
-      {/* Main container */}
+        <div className="p-4 hidden md:block">
+          <div className="h-10 w-full bg-[#213f5b]/10 rounded-lg animate-pulse"></div>
+          <div className="mt-8 space-y-4">
+            <div className="h-8 w-full bg-[#bfddf9]/20 rounded-lg"></div>
+            <div className="h-8 w-full bg-[#bfddf9]/20 rounded-lg"></div>
+            <div className="h-8 w-full bg-[#213f5b]/10 rounded-lg"></div>
+          </div>
+        </div>
+      </motion.div> */}
+
+      {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
 
-        <main className="flex-1 overflow-y-auto p-8 space-y-10 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
-          {/* Page Title */}
-          <header className="mb-8">
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(191,221,249,0.15), rgba(210,252,178,0.1))",
+          }}
+        >
+          {/* Hero Section */}
+          <div
+            className="w-full py-8 md:py-10 relative overflow-hidden"
+            style={{ backgroundColor: "#213f5b" }}
+          >
+            {/* Background pattern */}
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#bfddf9]/10 transform translate-x-1/3 -translate-y-1/3"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-[#d2fcb2]/10 transform -translate-x-1/3 translate-y-1/3"></div>
+
+            <motion.div
+              className="max-w-7xl mx-auto px-4 md:px-8 relative z-10"
+              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl font-bold text-[#1a365d]"
+              transition={{ duration: 0.6 }}
             >
-              Liste des Projets
-            </motion.h1>
-            <motion.p
+              <div className="flex items-start md:items-center justify-between flex-col md:flex-row">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">
+                    Liste des Projets
+                  </h1>
+                  <p className="mt-2 md:mt-4 text-base md:text-lg text-[#d2fcb2]">
+                    Gérez et consultez tous les dossiers projets pour des solutions
+                    énergétiques spécialisées.
+                  </p>
+                </div>
+                <div className="mt-4 md:mt-0">
+                  <button className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white rounded-lg px-4 py-2 inline-flex items-center text-sm transition-all border border-white/20 shadow-lg">
+                    <ChartBarIcon className="h-4 w-4 mr-2" />
+                    Voir les statistiques
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
+            {/* Stats Section */}
+            <motion.div
+              className="mb-6 md:mb-8 grid grid-cols-2 lg:grid-cols-4 gap-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="mt-2 text-lg text-gray-500"
+              transition={{ delay: 0.2 }}
             >
-              Gérez et consultez tous les dossiers projets pour des solutions énergétiques spécialisées.
-            </motion.p>
-          </header>
+              {/* Total Clients */}
+              <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#213f5b] hover:shadow-lg transition-shadow">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm text-gray-500">
+                      Total Clients
+                    </p>
+                    <h3 className="text-xl md:text-2xl font-bold text-[#213f5b]">
+                      {totalClientsCount}
+                    </h3>
+                  </div>
+                  <div className="p-2 md:p-3 rounded-full bg-[#bfddf9]/20">
+                    <UserGroupIcon className="h-5 w-5 md:h-6 md:w-6 text-[#213f5b]" />
+                  </div>
+                </div>
+              </div>
 
-          {/* Wrap the main content in a grid layout */}
-          <div className="grid grid-cols-1 gap-10">
-            {/* Search & Advanced Filters */}
-            <div className="flex flex-col gap-4">
-              <div className="relative flex items-center">
-                <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3" />
+              {/* Active Projects */}
+              <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#d2fcb2] hover:shadow-lg transition-shadow">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm text-gray-500">
+                      Projets Actifs
+                    </p>
+                    <h3 className="text-xl md:text-2xl font-bold text-[#213f5b]">
+                      {stageStats["3"] + (stageStats["4"] || 0) + (stageStats["5"] || 0) || 0}
+                    </h3>
+                  </div>
+                  <div className="p-2 md:p-3 rounded-full bg-[#d2fcb2]/20">
+                    <BuildingOfficeIcon className="h-5 w-5 md:h-6 md:w-6 text-[#213f5b]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Solution */}
+              {sortedSolutions[0] && (
+                <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#bfddf9] hover:shadow-lg transition-shadow">
+                  <div>
+                    <p className="text-xs md:text-sm text-gray-500">
+                      Solution Principale
+                    </p>
+                    <h3 className="text-lg font-bold text-[#213f5b] truncate">
+                      {sortedSolutions[0][0]}
+                    </h3>
+                    <div className="mt-1 w-full bg-gray-200 rounded-full h-1.5">
+                      <div
+                        className="bg-[#bfddf9] h-1.5 rounded-full"
+                        style={{
+                          width: `${(sortedSolutions[0][1] / totalClientsCount) * 100}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {sortedSolutions[0][1]} clients (
+                      {Math.round((sortedSolutions[0][1] / totalClientsCount) * 100)}%)
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Completed Projects */}
+              <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#213f5b] hover:shadow-lg transition-shadow">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm text-gray-500">
+                      Projets Complétés
+                    </p>
+                    <h3 className="text-xl md:text-2xl font-bold text-[#213f5b]">
+                      {stageStats["7"] || 0}
+                    </h3>
+                  </div>
+                  <div className="p-2 md:p-3 rounded-full bg-[#213f5b]/10">
+                    <ChartBarIcon className="h-5 w-5 md:h-6 md:w-6 text-[#213f5b]" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Search Bar & Filter Buttons */}
+            <div className="mb-6 md:mb-8 bg-white p-4 rounded-xl shadow-sm border border-[#bfddf9]/30">
+              <div className="relative mb-4">
+                <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-3.5" />
                 <input
                   type="text"
                   placeholder="Rechercher par client, projet ou numéro..."
@@ -251,270 +393,272 @@ export default function ProjectsPage() {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full pl-12 pr-24 py-3 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#bfddf9] focus:border-transparent transition"
                 />
-                {searchQuery && (
-                  <button
-                    onClick={clearSearch}
-                    className="absolute right-10 text-gray-500 hover:text-gray-700 transition"
-                    title="Effacer la recherche"
-                  >
-                    <XMarkIcon className="w-5 h-5" />
-                  </button>
-                )}
-                <button
-                  onClick={() => setAdvancedFiltersVisible(!advancedFiltersVisible)}
-                  className="ml-3 p-2 border border-gray-300 rounded-md hover:bg-gray-100 transition"
-                  title={advancedFiltersVisible ? "Masquer les filtres avancés" : "Afficher les filtres avancés"}
-                >
-                  {advancedFiltersVisible ? (
-                    <XMarkIcon className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <FunnelIcon className="w-5 h-5 text-gray-600" />
-                  )}
-                </button>
-                <button
-                  onClick={fetchProjects}
-                  className="ml-3 p-2 border border-gray-300 rounded-md hover:bg-gray-100 transition"
-                  title="Rafraîchir la liste"
-                >
-                  <ArrowPathIcon className="w-5 h-5 text-gray-600 animate-spin-slow" />
-                </button>
-              </div>
-              <AnimatePresence>
-                {advancedFiltersVisible && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="flex flex-col md:flex-row gap-4"
-                  >
-                    <select
-                      value={solutionFilter}
-                      onChange={(e) => {
-                        setSolutionFilter(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    >
-                      <option value="">Toutes les solutions</option>
-                      <option value="Pompes à chaleur">Pompes à chaleur</option>
-                      <option value="Chauffe-eau solaire individuel">Chauffe-eau solaire individuel</option>
-                      <option value="Chauffe-eau thermodynamique">Chauffe-eau thermodynamique</option>
-                      <option value="Système Solaire Combiné">Système Solaire Combiné</option>
-                    </select>
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => {
-                        setStatusFilter(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    >
-                      <option value="">Tous les statuts</option>
-                      <option value="1 Prise de contact">1 Prise de contact</option>
-                      <option value="2 En attente des documents">2 En attente des documents</option>
-                      <option value="3 Instruction du dossier">3 Instruction du dossier</option>
-                      <option value="4 Dossier Accepter">4 Dossier Accepter</option>
-                      <option value="5 Installation">5 Installation</option>
-                      <option value="6 Controle">6 Controle</option>
-                      <option value="7 Dossier cloturer">7 Dossier cloturer</option>
-                    </select>
+                <div className="absolute right-3 top-2 flex items-center">
+                  {searchQuery && (
                     <button
-                      onClick={resetFilters}
-                      className="px-4 py-2 bg-red-100 text-red-700 rounded-md shadow-sm hover:bg-red-200 transition"
+                      onClick={clearSearch}
+                      className="p-1.5 text-gray-500 hover:text-gray-700 transition mr-1"
+                      title="Effacer la recherche"
                     >
-                      Réinitialiser
+                      <XMarkIcon className="w-5 h-5" />
                     </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  )}
+                  <button
+                    onClick={fetchProjects}
+                    className="p-1.5 text-[#213f5b] bg-[#bfddf9]/10 rounded-lg hover:bg-[#bfddf9]/20 transition border border-[#bfddf9]/30"
+                    title="Rafraîchir la liste"
+                  >
+                    <ArrowPathIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <FunnelIcon className="w-4 h-4 text-gray-500 mr-2" />
+                <p className="text-sm text-gray-500 mr-4">Filtres:</p>
+                <motion.div
+                  className="flex flex-wrap gap-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  {solutionOptions.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => {
+                        setFilter(item);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        filter === item
+                          ? "bg-[#213f5b] text-white shadow-sm"
+                          : "bg-white text-gray-600 border border-gray-200 hover:border-[#bfddf9] hover:bg-[#bfddf9]/10"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </motion.div>
+              </div>
             </div>
 
-            {/* Summary Count */}
-            <div className="text-gray-700 text-sm">
-              {sortedProjects.length} projet{sortedProjects.length !== 1 && "s"} trouvé{sortedProjects.length !== 1 && "s"}.
+            {/* Project Count */}
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">{filteredProjects.length}</span> projet
+                {filteredProjects.length !== 1 ? "s" : ""} trouvé
+                {filteredProjects.length !== 1 ? "s" : ""}
+              </p>
+
+              {paginatedProjects.length > 0 && (
+                <p className="text-sm text-gray-600">
+                  Page {currentPage} sur {totalPages}
+                </p>
+              )}
             </div>
 
-            {/* Projects Table */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0 z-10">
-                  <tr>
-                    <th
-                      onClick={() => handleSort("createdAt")}
-                      title="Cliquer pour trier par Date"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
-                    >
-                      <div className="flex items-center gap-1">
-                        Date
-                        {sortField === "createdAt" &&
-                          (sortDirection === "asc" ? (
-                            <ChevronUpIcon className="w-4 h-4 text-gray-600" />
-                          ) : (
-                            <ChevronDownIcon className="w-4 h-4 text-gray-600" />
-                          ))}
-                      </div>
-                    </th>
-                    <th
-                      onClick={() => handleSort("client")}
-                      title="Cliquer pour trier par Nom"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
-                    >
-                      <div className="flex items-center gap-1">
-                        Nom
-                        {sortField === "client" &&
-                          (sortDirection === "asc" ? (
-                            <ChevronUpIcon className="w-4 h-4 text-gray-600" />
-                          ) : (
-                            <ChevronDownIcon className="w-4 h-4 text-gray-600" />
-                          ))}
-                      </div>
-                    </th>
-                    <th
-                      onClick={() => handleSort("location")}
-                      title="Cliquer pour trier par Location"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
-                    >
-                      <div className="flex items-center gap-1">
-                        Location
-                        {sortField === "location" &&
-                          (sortDirection === "asc" ? (
-                            <ChevronUpIcon className="w-4 h-4 text-gray-600" />
-                          ) : (
-                            <ChevronDownIcon className="w-4 h-4 text-gray-600" />
-                          ))}
-                      </div>
-                    </th>
-                    <th
-                      onClick={() => handleSort("etape")}
-                      title="Cliquer pour trier par Statut du projet"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
-                    >
-                      <div className="flex items-center gap-1">
-                        Statut du projet
-                        {sortField === "etape" &&
-                          (sortDirection === "asc" ? (
-                            <ChevronUpIcon className="w-4 h-4 text-gray-600" />
-                          ) : (
-                            <ChevronDownIcon className="w-4 h-4 text-gray-600" />
-                          ))}
-                      </div>
-                    </th>
-                    <th className="px-6 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {paginatedProjects.map((project) => {
-                    // If a contact was fetched for this project, use its data:
-                    const contact = project.contactId ? contacts[project.contactId] : null;
+            {/* Projects Cards Grid */}
+            {paginatedProjects.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-md p-8 text-center border border-[#bfddf9]/20">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="p-3 bg-[#bfddf9]/10 rounded-full mb-4">
+                    <SearchIcon className="h-8 w-8 text-[#213f5b]/60" />
+                  </div>
+                  <h3 className="text-lg font-medium text-[#213f5b]">
+                    Aucun projet trouvé
+                  </h3>
+                  <p className="text-gray-500 mt-2">
+                    Essayez de modifier vos filtres ou votre recherche
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setFilter("Tous");
+                    }}
+                    className="mt-4 px-4 py-2 bg-[#213f5b]/10 text-[#213f5b] rounded-lg hover:bg-[#213f5b]/20 transition"
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {paginatedProjects.map((project) => {
+                  // Use fetched contact data if available
+                  const contact = project.contactId
+                    ? contacts[project.contactId]
+                    : null;
+                  const initials = contact
+                    ? `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`.toUpperCase()
+                    : String(project.client || "").slice(0, 2).toUpperCase();
+                  const clientName = contact
+                    ? `${contact.firstName} ${contact.lastName}`
+                    : project.client;
+                  const email = contact?.email || "N/A";
+                  const phone = contact?.phone || "N/A";
+                  const locationStr = contact
+                    ? contact.mailingAddress
+                    : project.informationLogement?.typeDeLogement || "N/A";
+                  const solution = project.solution;
 
-                    return (
-                      <motion.tr
-                        key={project._id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="hover:bg-gray-50 cursor-pointer"
-                      >
-                        {/* Date */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {contact
-                            ? new Date(contact.createdAt).toLocaleDateString()
-                            : project.createdAt
-                            ? new Date(project.createdAt).toLocaleDateString()
-                            : "N/A"}
-                        </td>
-                        {/* Nom (Client & Projet) */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {contact
-                              ? `${contact.firstName} ${contact.lastName}`
-                              : project.client}
+                  return (
+                    <motion.div
+                      key={project._id}
+                      className="relative bg-white rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      whileHover={{ y: -3 }}
+                    >
+                      {/* Decorative elements - reduced size */}
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#bfddf9]/20 rounded-bl-full z-0"></div>
+                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-[#d2fcb2]/15 rounded-tr-full z-0"></div>
+
+                      {/* Client's initials in a circle - reduced size */}
+                      <div className="flex items-center gap-3 mb-3 relative z-10">
+                        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-[#213f5b] to-[#bfddf9] text-white text-lg font-bold shadow-md">
+                          {initials}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-[#213f5b]">
+                            {clientName}
+                          </h3>
+                          {project.numero && (
+                            <p className="text-xs text-gray-500">
+                              #{project.numero}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Info container with subtle background - reduced padding */}
+                      <div className="bg-gradient-to-br from-white to-[#bfddf9]/10 rounded-lg p-3 mb-3 border border-[#bfddf9]/30">
+                        {/* SOLUTION Section - tighter spacing */}
+                        <div className="mb-2">
+                          <p className="text-xs font-bold text-[#213f5b]/70 uppercase mb-1 flex items-center">
+                            <span className="w-3 h-0.5 bg-[#d2fcb2] mr-1"></span>
+                            SOLUTION
+                          </p>
+                          <div className="bg-[#bfddf9]/10 p-2 rounded-lg inline-block border border-[#bfddf9]/30">
+                            <span className="text-xs font-medium text-[#213f5b]">
+                              {solution}
+                            </span>
                           </div>
-                          <div className="text-sm text-gray-500">{project.numero}</div>
-                        </td>
-                        {/* Location */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {contact
-                            ? contact.mailingAddress
-                            : project.informationLogement?.typeDeLogement || "N/A"}
-                        </td>
-                        {/* Statut */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              !project.etape
-                                ? "bg-gray-200 text-gray-800"
-                                : project.etape.startsWith("1")
-                                ? "bg-gray-200 text-gray-800"
-                                : project.etape.startsWith("2")
-                                ? "bg-blue-200 text-blue-800"
-                                : project.etape.startsWith("3")
-                                ? "bg-yellow-200 text-yellow-800"
-                                : project.etape.startsWith("4")
-                                ? "bg-green-200 text-green-800"
-                                : project.etape.startsWith("5")
-                                ? "bg-purple-200 text-purple-800"
-                                : project.etape.startsWith("6")
-                                ? "bg-orange-200 text-orange-800"
-                                : project.etape.startsWith("7")
-                                ? "bg-red-200 text-red-800"
-                                : "bg-gray-200 text-gray-800"
-                            }`}
+                        </div>
+
+                        {/* ETAPE DU PROJET Section - tighter spacing */}
+                        <div>
+                          <p className="text-xs font-bold text-[#213f5b]/70 uppercase mb-1 flex items-center">
+                            <span className="w-3 h-0.5 bg-[#d2fcb2] mr-1"></span>
+                            ETAPE DU PROJET
+                          </p>
+                          <div
+                            className={`${getEtapeStyles(project.etape)} p-2 rounded-lg inline-block`}
                           >
-                            {project.etape || "N/A"}
+                            <span className="text-xs font-medium">
+                              {formatEtape(project.etape)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Contact information - condensed */}
+                      <div className="space-y-1 mb-3">
+                        <div className="flex items-center gap-2 p-1 hover:bg-[#bfddf9]/5 rounded-lg transition-colors">
+                          <div className="bg-[#213f5b]/5 p-1.5 rounded-full">
+                            <EnvelopeIcon className="h-3 w-3 text-[#213f5b]" />
+                          </div>
+                          <span className="text-xs text-gray-700 truncate">
+                            {email}
                           </span>
-                        </td>
-                        {/* Action */}
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Link
-                            href={`/dashboard/admin/projects/${project._id}`}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow transition"
-                          >
-                            Voir le détail
-                            <ArrowRightIcon className="w-4 h-4 ml-2" />
-                          </Link>
-                        </td>
-                      </motion.tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                        <div className="flex items-center gap-2 p-1 hover:bg-[#bfddf9]/5 rounded-lg transition-colors">
+                          <div className="bg-[#213f5b]/5 p-1.5 rounded-full">
+                            <PhoneIcon className="h-3 w-3 text-[#213f5b]" />
+                          </div>
+                          <span className="text-xs text-gray-700">{phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-1 hover:bg-[#bfddf9]/5 rounded-lg transition-colors">
+                          <div className="bg-[#213f5b]/5 p-1.5 rounded-full">
+                            <MapPinIcon className="h-3 w-3 text-[#213f5b]" />
+                          </div>
+                          <span className="text-xs text-gray-700 truncate">
+                            {locationStr}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action button - reduced padding */}
+                      <div className="mt-auto">
+                        <Link
+                          href={`/dashboard/admin/projects/${project._id}`}
+                          className="group inline-flex items-center justify-center w-full py-2 px-4 bg-[#213f5b] text-white rounded-lg transition-all hover:bg-[#213f5b]/90 hover:shadow-md text-sm"
+                        >
+                          <span>Voir le détail</span>
+                          <ChevronRightIcon className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center space-x-2 mt-6">
+              <div className="flex items-center justify-center space-x-1 mt-6">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
-                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 transition disabled:opacity-50"
+                  className="px-3 py-2 border border-[#bfddf9]/30 rounded-md shadow-sm hover:bg-[#bfddf9]/10 transition disabled:opacity-50 text-sm"
                 >
                   Précédent
                 </button>
-                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-2 border rounded-md transition ${
-                      currentPage === page
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  // Show first, last, current and surrounding pages
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-2 border rounded-md transition text-sm ${
+                        currentPage === pageNum
+                          ? "bg-[#213f5b] text-white border-[#213f5b]"
+                          : "bg-white text-gray-700 border-[#bfddf9]/30 hover:bg-[#bfddf9]/10"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
-                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 transition disabled:opacity-50"
+                  className="px-3 py-2 border border-[#bfddf9]/30 rounded-md shadow-sm hover:bg-[#bfddf9]/10 transition disabled:opacity-50 text-sm"
                 >
                   Suivant
                 </button>
               </div>
             )}
+
+            {/* Footer spacing */}
+            <div className="h-8"></div>
           </div>
         </main>
       </div>
