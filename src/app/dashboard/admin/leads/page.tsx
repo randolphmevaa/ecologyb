@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion} from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/Button";
-import { ChevronDownIcon} from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 // Dummy leads data for demonstration
 const dummyLeads = [
@@ -41,7 +41,7 @@ const dummyLeads = [
     status: "Converti",
     createdAt: "2025-01-25",
   },
-  // ... more sample leads if needed
+  // ... add more leads if needed
 ];
 
 const solutions = [
@@ -50,6 +50,13 @@ const solutions = [
   "Chauffe-eau thermodynamique",
   "Système Solaire Combiné",
 ];
+
+const solutionColors: { [key: string]: string } = {
+  "Pompes a chaleur": "#bfddf9",
+  "Chauffe-eau solaire individuel": "#d2fcb2",
+  "Chauffe-eau thermodynamique": "#213f5b",
+  "Système Solaire Combiné": "#bfddf9",
+};
 
 export default function LeadsPage() {
   // State for filtering and search
@@ -80,40 +87,55 @@ export default function LeadsPage() {
   const contactedLeads = leads.filter((lead) => lead.status === "Contacté").length;
   const convertedLeads = leads.filter((lead) => lead.status === "Converti").length;
 
+  // Define stat cards with matching border accents
+  const statCards = [
+    { label: "Total Leads", value: totalLeads, borderColor: "#213f5b" },
+    { label: "Nouveaux Leads", value: newLeads, borderColor: "#bfddf9" },
+    { label: "Contactés", value: contactedLeads, borderColor: "#d2fcb2" },
+    { label: "Convertis", value: convertedLeads, borderColor: "#213f5b" },
+  ];
+
   return (
     <div className="flex h-screen bg-white">
-      {/* Sidebar (currently a placeholder; add content as needed) */}
-      <motion.div
-        className="relative border-r border-[#bfddf9]/30 bg-white"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Sidebar content can be added here */}
-      </motion.div>
 
-      {/* Main container */}
+      {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
 
-        <main className="flex-1 overflow-y-auto p-8 space-y-10 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
-          {/* Page Title */}
-          <header className="mb-8">
-            <motion.h1
-              initial={{ opacity: 0, y: -10 }}
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(191,221,249,0.15), rgba(210,252,178,0.1))",
+          }}
+        >
+          {/* Hero Section */}
+          <div
+            className="w-full py-8 md:py-10 relative overflow-hidden"
+            style={{ backgroundColor: "#213f5b" }}
+          >
+            {/* Background patterns */}
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#bfddf9]/10 transform translate-x-1/3 -translate-y-1/3"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-[#d2fcb2]/10 transform -translate-x-1/3 translate-y-1/3"></div>
+            <motion.div
+              className="max-w-7xl mx-auto px-4 md:px-8 relative z-10"
+              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl lg:text-4xl font-extrabold text-[#1a365d]"
+              transition={{ duration: 0.6 }}
             >
-              Leads
-            </motion.h1>
-          </header>
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
+                Prospects
+              </h1>
+              <p className="mt-2 text-base md:text-lg text-[#d2fcb2]">
+                Gérez vos prospects et suivez l'évolution de vos opportunités.
+              </p>
+            </motion.div>
+          </div>
 
-          {/* Wrap main content in a grid */}
-          <div className="grid grid-cols-1 gap-10">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8 space-y-10">
             {/* Filter & Action Bar */}
             <motion.div
-              className="flex flex-col md:flex-row md:items-center justify-between gap-6"
+              className="bg-white p-4 rounded-xl shadow-sm border border-[#bfddf9]/30 flex flex-col md:flex-row md:items-center justify-between gap-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
@@ -123,7 +145,7 @@ export default function LeadsPage() {
                   <select
                     value={filterSolution}
                     onChange={(e) => setFilterSolution(e.target.value)}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary transition-colors shadow-sm"
+                    className="appearance-none bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-[#bfddf9] transition-colors shadow-sm"
                   >
                     <option value="">Toutes les solutions</option>
                     {solutions.map((solution) => (
@@ -141,7 +163,7 @@ export default function LeadsPage() {
                   placeholder="Rechercher par nom ou entreprise..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-white border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary transition-colors shadow-sm"
+                  className="bg-white border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-[#bfddf9] transition-colors shadow-sm"
                 />
               </div>
 
@@ -160,20 +182,18 @@ export default function LeadsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              {[
-                { label: "Total Leads", value: totalLeads },
-                { label: "Nouveaux Leads", value: newLeads },
-                { label: "Contactés", value: contactedLeads },
-                { label: "Convertis", value: convertedLeads },
-              ].map((stat) => (
+              {statCards.map((stat) => (
                 <motion.div
                   key={stat.label}
-                  className="bg-white p-6 rounded-xl shadow hover:shadow-2xl transition-transform transform hover:scale-105"
+                  className="bg-white rounded-xl shadow-md p-4 md:p-6 hover:shadow-lg transition-shadow border-l-4"
+                  style={{ borderColor: stat.borderColor }}
                 >
-                  <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">
                     {stat.label}
                   </p>
-                  <p className="mt-2 text-3xl font-bold text-gray-800">{stat.value}</p>
+                  <p className="mt-2 text-3xl font-bold text-[#213f5b]">
+                    {stat.value}
+                  </p>
                 </motion.div>
               ))}
             </motion.div>
@@ -240,7 +260,12 @@ export default function LeadsPage() {
                             {new Date(lead.createdAt).toLocaleDateString("fr-FR")}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="outline">Voir</Button>
+                            <Button
+                              variant="outline"
+                              className="group inline-flex items-center justify-center py-2 px-4 border border-[#bfddf9]/30 rounded-lg transition-all hover:bg-[#213f5b]/90 hover:shadow-md text-sm"
+                            >
+                              Voir
+                            </Button>
                           </td>
                         </motion.tr>
                       ))
@@ -261,17 +286,18 @@ export default function LeadsPage() {
 
             {/* Leads Distribution Chart */}
             <motion.div
-              className="bg-white p-8 rounded-xl shadow hover:shadow-2xl transition-shadow"
+              className="bg-white p-8 rounded-xl shadow-md hover:shadow-2xl transition-shadow"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <motion.h2 className="text-2xl font-bold text-gray-800 mb-6">
-                Distribution des Leads par Solution
+              <motion.h2 className="text-2xl font-bold text-[#213f5b] mb-6">
+                Distribution des Prospects par Solution
               </motion.h2>
               <div className="flex justify-around items-end space-x-4">
                 {solutions.map((solution) => {
-                  const count = leads.filter((lead) => lead.solution === solution)
-                    .length;
+                  const count = leads.filter(
+                    (lead) => lead.solution === solution
+                  ).length;
                   return (
                     <div key={solution} className="flex flex-col items-center">
                       <motion.span
@@ -282,8 +308,11 @@ export default function LeadsPage() {
                         {solution}
                       </motion.span>
                       <motion.div
-                        className="w-10 bg-primary rounded-t-md"
-                        style={{ height: `${count * 12}px` }}
+                        className="w-10 rounded-t-md"
+                        style={{
+                          backgroundColor: solutionColors[solution],
+                          height: `${count * 12}px`,
+                        }}
                         initial={{ height: 0 }}
                         animate={{ height: `${count * 12}px` }}
                         transition={{ duration: 0.6 }}

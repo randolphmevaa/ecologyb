@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/Header";
 import {
   XMarkIcon,
-  // ChatBubbleLeftRightIcon,
   ArrowLeftIcon,
   MagnifyingGlassIcon,
   PlusIcon,
@@ -179,7 +178,7 @@ function NewConversationModal({ isOpen, onClose, onCreate }: NewConversationModa
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative"
+            className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative border border-[#bfddf9]/30"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -191,7 +190,7 @@ function NewConversationModal({ isOpen, onClose, onCreate }: NewConversationModa
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
-            <h2 className="text-2xl font-bold text-blue-900 mb-6">Nouvelle Conversation</h2>
+            <h2 className="text-2xl font-bold text-[#213f5b] mb-6">Nouvelle Conversation</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700">
@@ -204,7 +203,7 @@ function NewConversationModal({ isOpen, onClose, onCreate }: NewConversationModa
                   value={form.title}
                   onChange={handleChange}
                   required
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-200 p-2 shadow-sm focus:border-[#213f5b] focus:ring-[#213f5b]"
                 />
               </div>
               <div>
@@ -230,7 +229,7 @@ function NewConversationModal({ isOpen, onClose, onCreate }: NewConversationModa
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {form.participants.map((user) => (
                       <div key={user.email} className="flex items-center p-3 bg-gray-100 rounded-lg shadow-sm">
-                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold mr-3">
+                        <div className="w-10 h-10 rounded-full bg-[#213f5b] flex items-center justify-center text-white font-bold mr-3">
                           {user.firstName?.charAt(0)?.toUpperCase() || "U"}
                         </div>
                         <div>
@@ -256,7 +255,7 @@ function NewConversationModal({ isOpen, onClose, onCreate }: NewConversationModa
                   onChange={handleChange}
                   rows={3}
                   required
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-200 p-2 shadow-sm focus:border-[#213f5b] focus:ring-[#213f5b]"
                 ></textarea>
               </div>
               <div className="flex justify-end">
@@ -291,7 +290,7 @@ function UserDetailsModal({ isOpen, onClose, users }: UserDetailsModalProps) {
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative"
+            className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative border border-[#bfddf9]/30"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -303,14 +302,14 @@ function UserDetailsModal({ isOpen, onClose, users }: UserDetailsModalProps) {
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
-            <h2 className="text-3xl font-bold text-blue-800 mb-6 flex items-center gap-2">
+            <h2 className="text-3xl font-bold text-[#213f5b] mb-6 flex items-center gap-2">
               <UserIcon className="h-8 w-8" /> Détails des participants
             </h2>
             <div className="space-y-6">
               {users.map((user) => (
-                <div key={user.email} className="p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                <div key={user.email} className="p-4 bg-gray-50 rounded-xl border border-[#bfddf9]/30 shadow-sm hover:shadow-md transition">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 rounded-full bg-[#213f5b] flex items-center justify-center text-white font-bold">
                       {user.firstName?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase() || "U"}
                     </div>
                     <div>
@@ -365,7 +364,7 @@ interface ConversationAvatarProps {
 function ConversationAvatar({ title }: ConversationAvatarProps) {
   const displayTitle = title || "U";
   return (
-    <div className="w-10 h-10 rounded-full bg-[#2a75c7] flex items-center justify-center text-white font-bold">
+    <div className="w-10 h-10 rounded-full bg-[#213f5b] flex items-center justify-center text-white font-bold">
       {displayTitle.charAt(0).toUpperCase()}
     </div>
   );
@@ -403,10 +402,10 @@ function ChatList({
   onDeleteConversation,
 }: ChatListProps) {
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-white">
       {/* Sticky header */}
-      <div className="sticky top-0 bg-gray-50 z-10 p-6 border-b border-gray-200 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-[#1a365d]">Conversations</h1>
+      <div className="sticky top-0 bg-white z-10 p-6 border-b border-[#bfddf9]/30 flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-[#213f5b]">Conversations</h1>
         <Button onClick={onNewConversation} className="flex items-center gap-1">
           <PlusIcon className="h-5 w-5" /> Nouvelle
         </Button>
@@ -419,7 +418,7 @@ function ChatList({
             placeholder="Rechercher..."
             value={searchQuery}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-[#2a75c7]"
+            className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#213f5b]"
           />
         </div>
       </div>
@@ -427,7 +426,7 @@ function ChatList({
         {conversations.map((conv, index) => (
           <motion.div
             key={`conversation-${conv.id ?? index}`}
-            className="relative flex items-center gap-4 p-4 bg-white rounded-xl shadow hover:shadow-2xl transition duration-300 cursor-pointer border border-gray-200"
+            className="relative flex items-center gap-4 p-4 bg-white rounded-xl shadow hover:shadow-2xl transition duration-300 cursor-pointer border border-[#bfddf9]/30"
             whileHover={{ scale: 1.02 }}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -435,7 +434,7 @@ function ChatList({
           >
             <ConversationAvatar title={conv.title} />
             <div className="flex-1">
-              <p className="font-semibold text-lg text-[#1a365d]">{conv.title}</p>
+              <p className="font-semibold text-lg text-[#213f5b]">{conv.title}</p>
               <p className="text-xs text-gray-500">
                 {(conv.participants || [])
                   .map((u) => `${u.firstName || ""} ${u.lastName || ""}`)
@@ -566,7 +565,7 @@ function ChatConversation({ conversation, onBack }: ChatConversationProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="sticky top-0 bg-white z-10 p-4 shadow border-b border-gray-200 flex items-center justify-between">
+      <div className="sticky top-0 bg-white z-10 p-4 shadow border-b border-[#bfddf9]/30 flex items-center justify-between">
         <div className="flex items-center">
           <Button variant="outline" onClick={onBack} className="mr-4 p-2 rounded-full hover:bg-gray-100">
             <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
@@ -574,25 +573,23 @@ function ChatConversation({ conversation, onBack }: ChatConversationProps) {
           <div className="flex items-center gap-3">
             <ConversationAvatar title={conversation.title} />
             <div>
-              <p className="font-bold text-xl text-[#1a365d]">{conversation.title}</p>
-              <p className="text-sm text-gray-500">
+              <p className="font-bold text-xl text-[#213f5b]">{conversation.title}</p>
+              <p className="text-sm text-gray-600">
                 {conversation.participants.map((u) => `${u.firstName || ""} ${u.lastName || ""}`).join(" • ")}
               </p>
             </div>
           </div>
         </div>
-        <Button variant="ghost" onClick={() => setShowUserDetails(true)} className="text-[#1a365d] hover:underline">
+        <Button variant="ghost" onClick={() => setShowUserDetails(true)} className="text-[#213f5b] hover:underline">
           Voir les détails utilisateurs
         </Button>
       </div>
 
       {/* Conversation body */}
       <div
-        className="flex-1 p-6 overflow-y-auto space-y-4 bg-white"
+        className="flex-1 p-6 overflow-y-auto space-y-4"
         style={{
-          backgroundImage: "url('/images/chat-bg.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          background: "linear-gradient(135deg, rgba(191,221,249,0.15), rgba(210,252,178,0.1))",
         }}
       >
         {chatMessages.map((msg: Message) => {
@@ -605,8 +602,8 @@ function ChatConversation({ conversation, onBack }: ChatConversationProps) {
                 transition={{ duration: 0.3 }}
                 className={`max-w-[70%] p-4 rounded-3xl shadow-md break-words ${
                   isCurrentUser
-                    ? "bg-blue-500 text-white rounded-br-none"
-                    : "bg-gray-200 text-gray-800 rounded-bl-none"
+                    ? "bg-[#213f5b] text-white rounded-br-none"
+                    : "bg-[#bfddf9]/30 text-[#213f5b] rounded-bl-none"
                 }`}
               >
                 <p className="text-base">{msg.content}</p>
@@ -624,11 +621,11 @@ function ChatConversation({ conversation, onBack }: ChatConversationProps) {
       </div>
 
       {/* Input area */}
-      <div className="p-4 bg-white border-t border-gray-200 flex items-center space-x-3">
-        <button className="p-2 rounded-full hover:bg-gray-100">
+      <div className="p-4 bg-white border-t border-[#bfddf9]/30 flex items-center space-x-3">
+        <button className="p-2 rounded-full hover:bg-[#bfddf9]/20">
           <FaceSmileIcon className="h-6 w-6 text-gray-500" />
         </button>
-        <button className="p-2 rounded-full hover:bg-gray-100">
+        <button className="p-2 rounded-full hover:bg-[#bfddf9]/20">
           <PaperClipIcon className="h-6 w-6 text-gray-500" />
         </button>
         <form onSubmit={handleSendMessage} className="flex flex-1 items-center">
@@ -637,9 +634,9 @@ function ChatConversation({ conversation, onBack }: ChatConversationProps) {
             placeholder="Tapez votre message..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            className="flex-1 rounded-full border border-gray-300 p-3 focus:outline-none focus:border-blue-500 shadow-sm"
+            className="flex-1 rounded-full border border-gray-200 p-3 focus:outline-none focus:border-[#213f5b] shadow-sm"
           />
-          <Button type="submit" disabled={isSending} className="ml-3 p-3 rounded-full shadow hover:shadow-lg transition bg-blue-500 text-white">
+          <Button type="submit" disabled={isSending} className="ml-3 p-3 rounded-full shadow hover:shadow-lg transition bg-[#213f5b] text-white">
             {isSending ? "Envoi..." : "Envoyer"}
           </Button>
         </form>
@@ -710,11 +707,11 @@ export default function ChatPage() {
     <div className="flex h-screen bg-white">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto space-y-8 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
+        <main className="flex-1 overflow-y-auto space-y-8 bg-gradient-to-br from-[#bfddf9]/15 to-[#d2fcb2]/10">
           <div className="flex h-full">
             {/* Conversation List */}
             <motion.div
-              className={`w-full md:w-1/3 border-r border-gray-200 ${selectedConversation ? "hidden md:block" : ""}`}
+              className={`w-full md:w-1/3 border-r border-[#bfddf9]/30 ${selectedConversation ? "hidden md:block" : ""}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
