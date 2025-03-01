@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChatBubbleLeftIcon, ChatBubbleOvalLeftIcon, CheckIcon, DocumentDuplicateIcon, DocumentTextIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Header } from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,16 +38,19 @@ const progressSteps = [
 
 export default function ClientDashboard() {
   const [showChatWidget, setShowChatWidget] = useState(false);
-  const [showPromo, setShowPromo] = useState(true);
+  const [showPromo, setShowPromo] = useState(() => {
+    return localStorage.getItem('promoDismissed') !== 'true';
+  });
   const [progressionGlobale ] = useState<number>(50); // example percentage
   const etapesProgression: string[] = progressSteps; // you can use your progressSteps here
   const [etapeActuelle ] = useState<number>(2); // example: current step index
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(true);
   const [isHovering, setIsHovering] = useState<number | null>(null);
   const clientName = "Jean Dupont";
-  // currentStep is 0-indexed; here 2 means "Instruction du dossier"
-  // const currentStep = 2;
-  // const overallProgress = ((currentStep + 1) / progressSteps.length) * 100;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const logoRefs = useRef<(HTMLDivElement | null)[]>([]);
+
 
   const documents = [
     { id: 1, nom: "Contrat signé", statut: "manquant" },
@@ -97,6 +100,51 @@ export default function ClientDashboard() {
     contact: "contact@ecologyb.fr | 04 75 00 00 00",
   };
 
+  const logos = [
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
+    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
+    
+  ];
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateActiveLogo = () => {
+      const containerRect = container.getBoundingClientRect();
+      // Calculate container's center (horizontally)
+      const containerCenter = containerRect.left + containerRect.width / 2;
+      let closestIndex: number | null = null;
+      let closestDistance = Infinity;
+
+      // Loop over each logo ref and determine which is closest to the center
+      logoRefs.current.forEach((logo, index) => {
+        if (logo) {
+          const rect = logo.getBoundingClientRect();
+          const logoCenter = rect.left + rect.width / 2;
+          const distance = Math.abs(containerCenter - logoCenter);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+          }
+        }
+      });
+
+      setActiveIndex(closestIndex);
+      requestAnimationFrame(updateActiveLogo);
+    };
+
+    requestAnimationFrame(updateActiveLogo);
+  }, []);
+
   useEffect(() => {
     // This code will only run on the client
     delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
@@ -109,6 +157,13 @@ export default function ClientDashboard() {
         "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
     });
   }, []);
+
+  // When showPromo becomes false, persist that state in localStorage
+  useEffect(() => {
+    if (!showPromo) {
+      localStorage.setItem('promoDismissed', 'true');
+    }
+  }, [showPromo]);
 
   return (
     <div className="flex h-screen bg-white relative">
@@ -981,16 +1036,27 @@ export default function ClientDashboard() {
             </div>
 
             {/* Infinite Marquee */}
-            <div className="mt-16 overflow-hidden relative before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-24 before:bg-gradient-to-r before:from-white before:to-transparent after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-24 after:bg-gradient-to-l after:from-white after:to-transparent">
+            <div
+              className="mt-16 overflow-hidden relative before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-24 before:bg-gradient-to-r before:from-white before:to-transparent after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-24 after:bg-gradient-to-l after:from-white after:to-transparent"
+              ref={containerRef}
+            >
               <div className="flex animate-infinite-scroll hover:paused">
-                {["https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png", " https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png", " https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png", "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",].map((url, index) => (
-                  <div key={index} className="flex-shrink-0 mx-8 opacity-80 hover:opacity-100 transition-opacity">
+                {logos.map((url, index) => (
+                  <div
+                    key={index}
+                    ref={(el) => { logoRefs.current[index] = el; }}
+                    className={`flex-shrink-0 mx-8 transition-all duration-300 transform ${
+                      activeIndex === index
+                        ? "scale-150 opacity-100 grayscale-0"
+                        : "scale-70 opacity-70 grayscale"
+                    }`}
+                  >
                     <Image
                       src={url.trim()}
                       alt="Partner brand"
-                      width={80}   // Add the required width
-                      height={64}  // Add the required height 
-                      className="h-16 object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                      width={90}
+                      height={74}
+                      className="h-16 object-contain"
                     />
                   </div>
                 ))}
