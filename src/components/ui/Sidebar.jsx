@@ -79,7 +79,7 @@ export function Sidebar({ role }) {
   if (role === "Sales Representative / Account Executive") {
     navigation = [
       { name: "Accueil", href: "/dashboard/sales", icon: HomeIcon },
-      { name: "Leads", href: "/dashboard/sales/leads", icon: SparklesIcon },
+      { name: "Prospects", href: "/dashboard/sales/leads", icon: SparklesIcon },
       { name: "Opportunités", href: "/dashboard/sales/opportunities", icon: BriefcaseIcon },
       { name: "Clients & Organisations", href: "/dashboard/sales/contacts-organizations", icon: UserCircleIcon },
       { name: "Chat", href: "/dashboard/sales/emails", icon: EnvelopeIcon },
@@ -133,7 +133,7 @@ export function Sidebar({ role }) {
           // { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
           // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
           { name: "Clients & Organisations", href: "/dashboard/admin/projects", icon: UserCircleIcon },
-          { name: "Leads", href: "/dashboard/admin/leads", icon: SparklesIcon, badge: 12 },
+          { name: "Prospects", href: "/dashboard/admin/leads", icon: SparklesIcon, badge: 12 },
           // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
         ]

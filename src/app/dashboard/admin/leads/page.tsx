@@ -127,7 +127,7 @@ export default function LeadsPage() {
                 Prospects
               </h1>
               <p className="mt-2 text-base md:text-lg text-[#d2fcb2]">
-                Gérez vos prospects et suivez l'évolution de vos opportunités.
+                Gérez vos prospects et suivez l&apos;évolution de vos opportunités.
               </p>
             </motion.div>
           </div>
