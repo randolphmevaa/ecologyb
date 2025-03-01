@@ -8,7 +8,8 @@ import {
   ChevronRightIcon, 
   ChatBubbleLeftRightIcon,
   ArrowUpIcon,
-  ArrowDownIcon
+  ArrowDownIcon,
+  PlusIcon
 } from "@heroicons/react/24/outline";
 import ChatWidget from '@/components/ChatWidget';
 
@@ -156,19 +157,32 @@ export default function ClientProjects() {
       <Header />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pb-24">
-        {/* Hero Section */}
+        {/* Hero Section with "Nouveau projet" button */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="py-12 sm:py-16"
+          className="py-12 sm:py-16 flex justify-between items-center"
         >
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#213f5b]">
-            Mes Projets
-          </h1>
-          <p className="mt-3 text-lg text-gray-600 max-w-3xl">
-            Suivez l&apos;avancement de vos projets d&apos;installations énergétiques en temps réel.
-          </p>
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-[#213f5b]">
+              Mes Projets
+            </h1>
+            <p className="mt-3 text-lg text-gray-600 max-w-3xl">
+              Suivez l&apos;avancement de vos projets d&apos;installations énergétiques en temps réel.
+            </p>
+          </div>
+          <Link href="/client/projects">
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.05, boxShadow: "0 4px 20px rgba(33, 63, 91, 0.3)" }}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#213f5b] to-[#1a3a5f] text-white rounded-xl transition-all duration-300"
+          >
+            <PlusIcon className="h-5 w-5" />
+            Nouveau projet
+          </motion.button>
+          </Link>
         </motion.div>
 
         {/* Search Bar - Sleek, minimalist design */}

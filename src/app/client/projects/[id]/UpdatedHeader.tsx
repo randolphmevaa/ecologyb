@@ -170,11 +170,12 @@ export default function ClientHeader({ contactId }: { contactId: string }) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {/* Logo MaPrimeRénov' stylisé */}
-                    <Image src="/Group 9.svg" alt="MaPrimeRénov Logo" className="w-12 h-12 flex-shrink-0" />
+                    <Image src="/Group 9.svg" alt="MaPrimeRénov Logo" width={24}
+                    height={24} className="w-12 h-12 flex-shrink-0" />
 
                     
                     <div>
-                      <div className="text-sm text-gray-500/90 mb-1">Identifiant MaPrimeRénov&apos;</div>
+                      <div className="text-sm text-gray-500/90 mb-1">N° de Dossier MaPrimeRénov&apos;</div>
                       <div className="font-medium text-gray-900/95 tracking-tight">
                         {contact.maprNumero || 'Non assigné'}
                       </div>
