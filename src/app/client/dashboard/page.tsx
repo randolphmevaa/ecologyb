@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChatBubbleLeftIcon, ChatBubbleOvalLeftIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, ChatBubbleOvalLeftIcon, CheckIcon, DocumentDuplicateIcon, DocumentTextIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Header } from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -13,7 +13,7 @@ import {
   // ExclamationTriangleIcon,
   InformationCircleIcon,
   ArrowRightIcon,
-  ExclamationCircleIcon,
+  // ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 // import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -39,10 +39,21 @@ const progressSteps = [
 export default function ClientDashboard() {
   const [showChatWidget, setShowChatWidget] = useState(false);
   const [showPromo, setShowPromo] = useState(true);
+  const [progressionGlobale ] = useState<number>(50); // example percentage
+  const etapesProgression: string[] = progressSteps; // you can use your progressSteps here
+  const [etapeActuelle ] = useState<number>(2); // example: current step index
+  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(true);
+  const [isHovering, setIsHovering] = useState<number | null>(null);
   const clientName = "Jean Dupont";
   // currentStep is 0-indexed; here 2 means "Instruction du dossier"
-  const currentStep = 2;
-  const overallProgress = ((currentStep + 1) / progressSteps.length) * 100;
+  // const currentStep = 2;
+  // const overallProgress = ((currentStep + 1) / progressSteps.length) * 100;
+
+  const documents = [
+    { id: 1, nom: "Contrat signé", statut: "manquant" },
+    { id: 2, nom: "Pièce d'identité", statut: "manquant" },
+    { id: 3, nom: "Attestation", statut: "approuvé" }
+  ];
 
   const accountManager = {
     name: "Marie Dupont",
@@ -294,198 +305,373 @@ export default function ClientDashboard() {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Premium Progress Tracker */}
-              <motion.div 
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 backdrop-blur-lg bg-opacity-70"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                whileHover={{ scale: 1.005 }}
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-[#213f5b]">
-                    Avancement du projet
-                  </h2>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-base font-medium text-[#213f5b]/80">
-                      {Math.round(overallProgress)}% complété
-                    </span>
-                    <div className="w-3 h-3 rounded-full bg-[#d2fcb2] animate-pulse" />
+            <motion.div 
+              className="bg-white rounded-3xl p-8 shadow-xl border border-[#bfddf9]/30"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              style={{
+                background: "linear-gradient(145deg, #ffffff 60%, rgba(191, 221, 249, 0.2))"
+              }}
+            >
+              {/* En-tête - Plus élégant avec des éléments visuels */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <motion.div 
+                    className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#213f5b]"
+                    whileHover={{ rotate: 5 }}
+                  >
+                    <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </motion.div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#213f5b]">
+                      Suivi du Projet
+                    </h2>
+                    <p className="text-sm text-[#213f5b]/70">
+                      Dernière mise à jour: Aujourd&apos;hui à 14:30
+                    </p>
                   </div>
                 </div>
+                <motion.div 
+                  className="px-4 py-2 rounded-xl bg-[#213f5b]/5 flex items-center gap-2"
+                  whileHover={{ backgroundColor: "rgba(33, 63, 91, 0.1)" }}
+                >
+                  <span className="text-base font-semibold text-[#213f5b]">
+                    {Math.round(progressionGlobale)}% complété
+                  </span>
+                  <div className="w-3 h-3 rounded-full bg-[#d2fcb2] shadow-[0_0_10px_rgba(210,252,178,0.6)]" />
+                </motion.div>
+              </div>
 
-                {/* Progress Bar */}
-                <div className="relative h-4 rounded-full overflow-hidden bg-[#f5f9ff] backdrop-blur-lg">
+              {/* Barre de progression - Design amélioré */}
+              <div className="relative h-7 rounded-full overflow-hidden bg-[#bfddf9]/20 backdrop-blur-sm">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-[#213f5b] to-[#bfddf9]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressionGlobale}%` }}
+                  transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {/* Effet brillant amélioré */}
                   <motion.div
-                    className="h-full bg-gradient-to-r from-[#2a4b6a] to-[#1d3a57] relative"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${overallProgress}%` }}
-                    transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    {/* Shimmer effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                      initial={{ x: -200 }}
-                      animate={{ x: "100%" }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    />
-                    {/* Floating percentage indicator */}
-                    <motion.div
-                      className="absolute right-0 -top-6 bg-white shadow-lg px-3 py-1 rounded-full text-xs font-semibold text-[#1d3a57] flex items-center"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 }}
-                    >
-                      <div className="w-2 h-2 bg-[#2a4b6a] rounded-full mr-2" />
-                      {Math.round(overallProgress)}%
-                    </motion.div>
-                  </motion.div>
-                </div>
-
-                {/* Steps Timeline */}
-                <div className="relative mt-12">
-                  {/* Animated connection line */}
-                  <motion.div
-                    className="absolute top-1/2 left-0 right-0 h-[2px] bg-gradient-to-r from-[#bfddf9] to-[#d2fcb2]"
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ duration: 1.5, delay: 0.2 }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    initial={{ x: -200 }}
+                    animate={{ x: "100%" }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                   />
-                  <div className="relative flex justify-between">
-                    {progressSteps.map((step, index) => {
-                      const isCompleted = index < currentStep;
-                      const isCurrent = index === currentStep;
-                      return (
-                        <div key={index} className="flex flex-col items-center relative z-10">
-                          {/* Step Indicator with Number */}
+                </motion.div>
+                
+                {/* Indicateur flottant */}
+                <motion.div
+                  className="absolute right-2 top-0 bottom-0 my-auto h-fit bg-white shadow-lg px-4 py-1 rounded-full text-xs font-bold text-[#213f5b] flex items-center"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <div className="w-2 h-2 bg-[#d2fcb2] rounded-full mr-2" />
+                  {Math.round(progressionGlobale)}%
+                </motion.div>
+              </div>
+
+              {/* Timeline des étapes - Visuellement améliorée */}
+              <div className="relative mt-16 mb-12 px-4">
+                {/* Ligne de connexion élégante */}
+                <div className="absolute top-5 left-0 right-0 h-[3px]" style={{ background: "linear-gradient(to right, #bfddf9, #d2fcb2)" }}/>
+                
+                <div className="relative flex justify-between">
+                  {etapesProgression.map((etape, index) => {
+                    const estComplete = index < etapeActuelle;
+                    const estCourante = index === etapeActuelle;
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className="flex flex-col items-center relative z-10"
+                        onMouseEnter={() => setIsHovering(index)}
+                        onMouseLeave={() => setIsHovering(null)}
+                      >
+                        {/* Indicateur d'étape - Plus élégant */}
+                        <motion.div
+                          className={`w-12 h-12 relative flex items-center justify-center rounded-full transition-all duration-500 ${
+                            estComplete
+                              ? "bg-gradient-to-br from-[#213f5b] to-[#213f5b]/80"
+                              : "bg-white border-2 border-[#bfddf9]"
+                          } ${
+                            estCourante
+                              ? "ring-4 ring-[#d2fcb2]/30 shadow-[0_0_20px_rgba(191,221,249,0.5)]"
+                              : ""
+                          }`}
+                          whileHover={{ 
+                            scale: 1.1,
+                            boxShadow: "0 0 25px rgba(191, 221, 249, 0.6)"
+                          }}
+                          animate={isHovering === index ? { y: -5 } : { y: 0 }}
+                        >
+                          {estComplete ? (
+                            <motion.svg
+                              className="w-6 h-6 text-white"
+                              viewBox="0 0 24 24"
+                              initial={{ pathLength: 0, opacity: 0 }}
+                              animate={{ pathLength: 1, opacity: 1 }}
+                              transition={{ duration: 0.5 }}
+                            >
+                              <path
+                                d="M5 13l4 4L19 7"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </motion.svg>
+                          ) : (
+                            <span className="text-sm font-bold text-[#213f5b]">
+                              {index + 1}
+                            </span>
+                          )}
+                          
+                          {/* Indicateur d'étape courante */}
+                          {estCourante && (
+                            <motion.div
+                              className="absolute -top-2 -right-2 w-5 h-5 bg-[#d2fcb2] rounded-full border-2 border-white shadow-[0_0_10px_rgba(210,252,178,0.6)]"
+                              animate={{ scale: [1, 1.2, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          )}
+                        </motion.div>
+
+                        {/* Libellé d'étape */}
+                        <div className="mt-4 text-center">
+                          <p className={`text-sm font-semibold ${
+                            estCourante ? "text-[#213f5b]" : "text-[#213f5b]/70"
+                          }`}>
+                            {etape}
+                          </p>
+                        </div>
+
+                        {/* Informations détaillées pour l'étape courante */}
+                        {/* Detailed information panel with close button */}
+                        {estCourante && isDetailsOpen && (
                           <motion.div
-                            className={`w-10 h-10 relative flex items-center justify-center rounded-2xl transition-all duration-500 ${
-                              isCompleted
-                                ? "bg-gradient-to-br from-[#2a4b6a] to-[#1d3a57] shadow-holographic"
-                                : "bg-white border-2 border-[#e3edf8]"
-                            } ${
-                              isCurrent
-                                ? "ring-[3px] ring-[#bfddf9] shadow-2xl scale-110"
-                                : "hover:scale-105"
-                            }`}
-                            whileHover={{ rotate: isCurrent ? 0 : 8 }}
+                            className="absolute top-24 w-72 bg-white p-5 rounded-2xl shadow-xl border border-[#bfddf9]/50"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
                             style={{
-                              boxShadow: isCurrent
-                                ? "0 8px 32px rgba(31, 97, 184, 0.15)"
-                                : "0 4px 24px rgba(31, 97, 184, 0.1)"
+                              background: "linear-gradient(145deg, #ffffff 60%, rgba(191, 221, 249, 0.1))"
                             }}
                           >
-                            {isCompleted ? (
-                              <>
-                                <motion.svg
-                                  className="w-5 h-5 text-white"
-                                  viewBox="0 0 24 24"
-                                  initial={{ pathLength: 0 }}
-                                  animate={{ pathLength: 1 }}
-                                  transition={{ duration: 0.5 }}
-                                >
-                                  <path
-                                    d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </motion.svg>
-                                {/* Small badge to show step number on completed steps */}
-                                <span className="absolute bottom-0 right-0 bg-white rounded-full w-4 h-4 flex items-center justify-center text-[8px] font-bold text-[#1d3a57]">
-                                  {index + 1}
+                            {/* Close button */}
+                            <motion.button
+                              onClick={() => setIsDetailsOpen(false)}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              className="absolute top-2 right-2 text-xl font-bold text-gray-600"
+                            >
+                              ×
+                            </motion.button>
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-bold text-[#213f5b]">
+                                  Documents Requis
+                                </h3>
+                                <span className="text-xs px-2 py-1 bg-[#d2fcb2]/20 text-[#213f5b] rounded-full">
+                                  {documents.filter(d => d.statut === "approuvé").length}/{documents.length} complétés
                                 </span>
-                              </>
-                            ) : (
-                              <span className="text-sm font-semibold text-[#1d3a57]">
-                                {index + 1}
-                              </span>
-                            )}
-                          </motion.div>
-
-                          {/* Always visible step label */}
-                          <div className="mt-4 text-center">
-                            <p className="text-sm font-semibold text-[#1d3a57]">
-                              {step}
-                            </p>
-                          </div>
-
-                          {/* Animated status indicator for current step */}
-                          {isCurrent && (
-                            <motion.div
-                              className="absolute -top-6 left-1/2 -translate-x-1/2"
-                              animate={{ y: [0, -8, 0], opacity: [1, 0.8, 1] }}
-                              transition={{ duration: 1.5, repeat: Infinity }}
-                            >
-                              <div className="w-3 h-3 bg-[#d2fcb2] rounded-full shadow-pulse" />
-                            </motion.div>
-                          )}
-
-                          {/* Interactive document upload for current step */}
-                          {isCurrent && (
-                            <motion.div
-                              className="mt-6 w-[280px] bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-2xl border border-[#e3edf8]"
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 p-2 bg-red-50 rounded-lg">
-                                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                  </svg>
-                                </div>
-                                <div className="space-y-3">
-                                  <h3 className="text-sm font-semibold text-[#1d3a57]">
-                                    Documents requis
-                                  </h3>
-                                  <p className="text-xs text-[#1d3a57]/90 leading-relaxed">
-                                    Pour continuer, veuillez téléverser les fichiers suivants :<br />
-                                    • Contrat signé<br />
-                                    • Pièce d&apos;identité
-                                  </p>
-                                  <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="w-full bg-gradient-to-r from-[#2a4b6a] to-[#1d3a57] text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
-                                  >
-                                    Téléverser les documents
-                                  </motion.button>
-                                </div>
                               </div>
-                            </motion.div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                              
+                              <div className="space-y-2">
+                                {documents.map(doc => (
+                                  <div key={doc.id} className="flex items-center justify-between p-2 rounded-lg bg-[#213f5b]/5 hover:bg-[#213f5b]/10 transition-colors">
+                                    <div className="flex items-center gap-2">
+                                      {doc.statut === "approuvé" ? (
+                                        <div className="w-6 h-6 rounded-full bg-[#d2fcb2]/30 flex items-center justify-center">
+                                          <CheckIcon className="w-4 h-4 text-[#213f5b]" />
+                                        </div>
+                                      ) : (
+                                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                                          <ExclamationTriangleIcon className="w-4 h-4 text-amber-600" />
+                                        </div>
+                                      )}
+                                      <span className="text-xs font-medium text-[#213f5b]">
+                                        {doc.nom}
+                                      </span>
+                                    </div>
+                                    <motion.button
+                                      whileHover={{ scale: 1.05 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      className={`text-xs px-3 py-1 rounded-lg font-medium ${
+                                        doc.statut === "approuvé" 
+                                          ? "bg-[#d2fcb2]/20 text-[#213f5b]" 
+                                          : "bg-[#213f5b] text-white"
+                                      }`}
+                                    >
+                                      {doc.statut === "approuvé" ? "Voir" : "Ajouter"}
+                                    </motion.button>
+                                  </div>
+                                ))}
+                              </div>
+                              
+                              <motion.button
+                                whileHover={{ scale: 1.02, backgroundColor: "rgba(33, 63, 91, 0.9)" }}
+                                whileTap={{ scale: 0.98 }}
+                                className="w-full bg-[#213f5b] text-white px-4 py-3 rounded-xl text-sm font-medium shadow-md transition-all flex items-center justify-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <span>Téléverser les documents</span>
+                              </motion.button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
 
-                {/* Progress Status */}
-                <div className="mt-8 p-4 bg-[#d2fcb2]/20 rounded-lg">
-                  <div className="flex items-center space-x-2 text-[#1d3a57]">
-                    <InformationCircleIcon className="w-5 h-5" />
-                    <span className="text-sm font-medium">
-                      Étape actuelle: {progressSteps[currentStep]} (Étape {currentStep + 1} sur {progressSteps.length})
-                    </span>
+              {/* Section d'information et actions */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+                {/* Panneau d'état */}
+                <motion.div 
+                  className="p-5 rounded-2xl border border-[#bfddf9]/30"
+                  whileHover={{ scale: 1.01, boxShadow: "0 10px 30px rgba(191, 221, 249, 0.2)" }}
+                  style={{
+                    background: "linear-gradient(145deg, #ffffff 60%, rgba(191, 221, 249, 0.1))"
+                  }}
+                >
+                  <div className="flex items-center space-x-3 mb-4">
+                    <InformationCircleIcon className="w-5 h-5 text-[#213f5b]" />
+                    <h3 className="text-base font-semibold text-[#213f5b]">
+                      État du Projet
+                    </h3>
                   </div>
-                  <div className="mt-3 flex items-center gap-3">
-                    <ExclamationCircleIcon className="w-4 h-4 text-red-600" />
-                    <p className="text-xs text-red-600 font-medium">
-                      Certains documents requis manquent pour avancer.
-                    </p>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[#213f5b]/70">Étape actuelle:</span>
+                      <span className="text-sm font-semibold text-[#213f5b]">
+                        {etapesProgression[etapeActuelle]} ({etapeActuelle + 1}/{etapesProgression.length})
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[#213f5b]/70">Date d&apos;échéance:</span>
+                      <span className="text-sm font-semibold text-[#213f5b]">30 Mars 2025</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[#213f5b]/70">Responsable:</span>
+                      <span className="text-sm font-semibold text-[#213f5b]">Marie Dupont</span>
+                    </div>
+                    
+                    <div className="pt-2">
+                      <div className="w-full h-[1px] bg-gradient-to-r from-[#bfddf9] to-transparent mb-3" />
+                      <div className="flex items-start gap-2">
+                        <ExclamationTriangleIcon className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-[#213f5b]/80">
+                          Documents requis manquants pour passer à l&apos;étape suivante. Veuillez les téléverser dès que possible.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Panneau d'actions */}
+                <motion.div 
+                  className="p-5 rounded-2xl border border-[#d2fcb2]/30"
+                  whileHover={{ scale: 1.01, boxShadow: "0 10px 30px rgba(210, 252, 178, 0.2)" }}
+                  style={{
+                    background: "linear-gradient(145deg, #ffffff 60%, rgba(210, 252, 178, 0.1))"
+                  }}
+                >
+                  <div className="flex items-center space-x-3 mb-4">
+                    <svg className="w-5 h-5 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <h3 className="text-base font-semibold text-[#213f5b]">
+                      Actions Rapides
+                    </h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-xs font-semibold text-[#1d3a57] flex items-center gap-1 transition-all"
+                      whileHover={{ scale: 1.03, backgroundColor: "rgba(33, 63, 91, 0.9)" }}
+                      whileTap={{ scale: 0.97 }}
+                      className="p-4 rounded-xl bg-[#213f5b] text-white flex flex-col items-center gap-2 transition-all"
                     >
-                      Voir détails
-                      <ArrowRightIcon className="w-3 h-3" />
+                      <DocumentTextIcon className="w-6 h-6" />
+                      <span className="text-xs font-medium">Voir les Documents</span>
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      className="p-4 rounded-xl bg-[#bfddf9]/20 text-[#213f5b] border border-[#bfddf9]/30 flex flex-col items-center gap-2 transition-all"
+                    >
+                      <DocumentDuplicateIcon className="w-6 h-6" />
+                      <span className="text-xs font-medium">Télécharger Rapport</span>
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      className="p-4 rounded-xl bg-[#bfddf9]/20 text-[#213f5b] border border-[#bfddf9]/30 flex flex-col items-center gap-2 transition-all"
+                    >
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span className="text-xs font-medium">Contacter Support</span>
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      className="p-4 rounded-xl bg-[#d2fcb2]/20 text-[#213f5b] border border-[#d2fcb2]/30 flex flex-col items-center gap-2 transition-all"
+                    >
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-xs font-medium">Aide & Ressources</span>
                     </motion.button>
                   </div>
+                </motion.div>
+              </div>
+              
+              {/* Footer avec actions supplémentaires */}
+              <div className="mt-6 pt-4 border-t border-[#bfddf9]/30 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[#213f5b]/60">Dernier changement il y a 2 heures</span>
+                  <div className="w-1 h-1 rounded-full bg-[#213f5b]/30" />
+                  <motion.button
+                    whileHover={{ color: "#213f5b" }}
+                    className="text-xs text-[#213f5b]/60 hover:text-[#213f5b] transition-colors"
+                  >
+                    Historique complet
+                  </motion.button>
                 </div>
-              </motion.div>
+                
+                <div className="flex items-center gap-3">
+                  <motion.button
+                    whileHover={{ x: 2 }}
+                    className="text-xs font-medium text-[#213f5b] flex items-center gap-1"
+                  >
+                    Voir tous les détails
+                    <ArrowRightIcon className="w-3 h-3" />
+                  </motion.button>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.05, backgroundColor: "rgba(33, 63, 91, 0.1)" }}
+                    whileTap={{ scale: 0.95 }}
+                    className="text-xs font-medium px-4 py-2 rounded-lg bg-[#213f5b]/5 text-[#213f5b] transition-all"
+                  >
+                    Exporter PDF
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
 
             {/* Documents and S.A.V. Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
