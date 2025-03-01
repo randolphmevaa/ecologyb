@@ -7,11 +7,14 @@ import { motion, AnimatePresence } from "framer-motion";
 // import { useRouter } from "next/navigation";
 import {
   PhoneIcon,
-  MapIcon,
+  // MapIcon,
   ChatBubbleLeftRightIcon,
   MapPinIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  EnvelopeIcon,
+  CalendarIcon,
+  ShareIcon,
 } from "@heroicons/react/24/outline";
 import ChatWidget from "@/components/ChatWidget";
 
@@ -138,69 +141,104 @@ export default function ClientContacts() {
           </motion.div>
 
           {/* Advisor Contact Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="bg-[#ffffff]/90 backdrop-blur-md border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow overflow-hidden flex flex-col md:flex-row"
-          >
-            {/* Left side: Advisor Image */}
-            <div className="relative md:w-1/3">
-              <Image
-                src={
-                  advisor.avatar ||
-                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2487&auto=format&fit=crop&ixlib=rb-4.0.3"
-                }
-                alt={`${advisor.firstName} ${advisor.lastName}`}
-                className="h-full w-full object-cover"
-                width={400}
-                height={400}
-              />
-              {/* Gradient overlay on the right */}
-              <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-[#ffffff] to-transparent" />
-            </div>
-            {/* Right side: Advisor Details */}
-            <div className="p-8 md:w-2/3 flex flex-col justify-between">
-              <div>
-                <h2 className="text-3xl font-semibold text-[#213f5b]">
-                  {advisor.firstName} {advisor.lastName}
-                </h2>
-                <span className="inline-block mt-2 px-3 py-1 bg-[#213f5b] text-white text-xl rounded">
-                  {advisor.role}
-                </span>
-                <p className="mt-4 text-gray-600 leading-relaxed">
-                  {advisor.bio ||
-                    "Votre expert en solutions énergétiques innovantes, prêt à vous guider vers une meilleure efficacité énergétique."}
-                </p>
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-center text-gray-600">
-                    <PhoneIcon className="h-5 w-5 mr-3" />
-                    <span className="text-lg">{advisor.phone}</span>
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <MapIcon className="h-5 w-5 mr-3" />
-                    <span className="text-lg">{advisor.email}</span>
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <MapPinIcon className="h-5 w-5 mr-3" />
-                    <span className="text-lg">
-                      {advisor.location || dossier.codePostal}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-8 flex flex-col gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  onClick={() => setShowChatWidget(true)}
-                  className="flex items-center justify-center px-8 py-3 bg-[#213f5b] text-white rounded-full shadow hover:bg-[#213f5b]/90 transition-colors"
-                >
-                  <ChatBubbleLeftRightIcon className="h-6 w-6 mr-2" />
-                  <span className="text-lg">Discuter</span>
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.4, ease: "easeOut" }}
+  className="w-full bg-white/98 backdrop-blur-lg border border-gray-100 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col md:flex-row"
+>
+  {/* Left side: Advisor Image with fixed positioning for face visibility */}
+  <div className="relative w-full md:w-1/3 h-48 md:h-auto overflow-hidden">
+    <div className="absolute inset-0">
+      <Image
+        src={
+          advisor.avatar ||
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2487&auto=format&fit=crop&ixlib=rb-4.0.3"
+        }
+        alt={`${advisor.firstName} ${advisor.lastName}`}
+        className="h-full w-full object-cover object-top" // Changed from object-center to object-top
+        width={400}
+        height={400}
+        priority
+      />
+      {/* Enhanced gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-[#213f5b]/40 via-[#213f5b]/10 to-transparent" />
+    </div>
+  </div>
+
+  {/* Right side: Advisor Details with responsive width */}
+  <div className="p-5 md:p-6 w-full md:w-2/3 flex flex-col justify-between space-y-3">
+    <div>
+      {/* Name and role section with responsive layout */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
+        <h2 className="text-xl md:text-2xl font-bold text-[#213f5b]">
+          {advisor.firstName} {advisor.lastName}
+        </h2>
+        <span className="inline-block px-3 py-0.5 self-start sm:self-auto bg-[#213f5b]/90 text-white text-xs font-medium rounded-full">
+          {advisor.role}
+        </span>
+      </div>
+
+      {/* Bio section */}
+      <p className="text-gray-700 text-sm leading-relaxed">
+        {advisor.bio ||
+          "Votre expert en solutions énergétiques innovantes, prêt à vous guider vers une meilleure efficacité énergétique."}
+      </p>
+
+      {/* Contact information with responsive grid */}
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <a href={`tel:${advisor.phone}`} className="flex items-center text-gray-700 hover:text-[#213f5b] transition-colors group">
+          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#213f5b]/10 group-hover:bg-[#213f5b]/20 transition-colors mr-2 flex-shrink-0">
+            <PhoneIcon className="h-4 w-4 text-[#213f5b]" />
+          </div>
+          <span className="text-sm truncate">{advisor.phone}</span>
+        </a>
+        <a href={`mailto:${advisor.email}`} className="flex items-center text-gray-700 hover:text-[#213f5b] transition-colors group">
+          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#213f5b]/10 group-hover:bg-[#213f5b]/20 transition-colors mr-2 flex-shrink-0">
+            <EnvelopeIcon className="h-4 w-4 text-[#213f5b]" />
+          </div>
+          <span className="text-sm truncate">{advisor.email}</span>
+        </a>
+        <div className="flex items-center text-gray-700 col-span-1 sm:col-span-2">
+          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#213f5b]/10 mr-2 flex-shrink-0">
+            <MapPinIcon className="h-4 w-4 text-[#213f5b]" />
+          </div>
+          <span className="text-sm">{advisor.location || dossier.codePostal}</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Action buttons with responsive design */}
+    <div className="flex flex-wrap gap-2 mt-2">
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setShowChatWidget(true)}
+        className="flex-1 min-w-0 flex items-center justify-center px-4 py-2 bg-[#213f5b] text-white text-sm rounded-md shadow-sm hover:bg-[#2d5174] transition-colors focus:outline-none focus:ring-2 focus:ring-[#213f5b]/50"
+      >
+        <ChatBubbleLeftRightIcon className="h-4 w-4 mr-2 flex-shrink-0" />
+        <span className="truncate">Discuter</span>
+      </motion.button>
+      
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="flex-1 min-w-0 flex items-center justify-center px-4 py-2 border border-[#213f5b] text-[#213f5b] text-sm rounded-md hover:bg-[#213f5b]/5 transition-colors focus:outline-none focus:ring-2 focus:ring-[#213f5b]/50"
+      >
+        <CalendarIcon className="h-4 w-4 mr-2 flex-shrink-0" />
+        <span className="truncate">Rendez-vous</span>
+      </motion.button>
+      
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 flex-shrink-0"
+      >
+        <ShareIcon className="h-5 w-5" />
+      </motion.button>
+    </div>
+  </div>
+</motion.div>
 
           {/* FAQ Section as Accordions */}
           <motion.div

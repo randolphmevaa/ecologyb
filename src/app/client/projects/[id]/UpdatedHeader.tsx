@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPinIcon, PhoneIcon, UserIcon, DocumentTextIcon } from "@heroicons/react/24/solid";
+import { MapPinIcon, PhoneIcon, DocumentTextIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 
 interface Contact {
@@ -52,7 +52,7 @@ export default function ClientHeader({ contactId }: { contactId: string }) {
   );
 
   const fullName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
-  const initials = (contact.firstName?.[0] || '') + (contact.lastName?.[0] || '');
+  // const initials = (contact.firstName?.[0] || '') + (contact.lastName?.[0] || '');
   const address = contact.mailingAddress || "60 Rue François 1er, Paris";
   const phone = contact.phone || "01 23 45 67 89";
 

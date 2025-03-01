@@ -227,33 +227,38 @@ export default function InfoTab({ dossier }: InfoTabProps) {
         {/* Assigned Team Section */}
         {assignedTeamUser && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="p-6 bg-gray-50 rounded-2xl border border-gray-200"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all"
           >
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
               Chargé de Compte
             </h3>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-5">
               <div className="relative">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-green-500 flex items-center justify-center text-white font-bold">
-                  {assignedTeamUser.firstName[0]}{assignedTeamUser.lastName[0]}
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
+                  <img 
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+                    alt={`${assignedTeamUser.firstName} ${assignedTeamUser.lastName}`}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white" />
               </div>
               <div className="flex-1">
-                <h4 className="text-lg font-semibold text-gray-900">
+                <h4 className="text-xl font-semibold text-gray-900 mb-1">
                   {assignedTeamUser.firstName} {assignedTeamUser.lastName}
                 </h4>
-                <p className="text-sm text-gray-600 mb-2">{assignedTeamUser.role}</p>
+                <p className="text-sm font-medium text-blue-600 mb-3">{assignedTeamUser.role}</p>
                 <div className="flex flex-wrap gap-4">
                   <ContactLink
-                    icon={<EnvelopeIcon className="w-4 h-4" />}
+                    icon={<EnvelopeIcon className="w-4 h-4 text-gray-400" />}
                     value={assignedTeamUser.email}
                     type="email"
                   />
                   <ContactLink
-                    icon={<PhoneIcon className="w-4 h-4" />}
+                    icon={<PhoneIcon className="w-4 h-4 text-gray-400" />}
                     value={assignedTeamUser.phone}
                     type="tel"
                   />
@@ -315,14 +320,20 @@ const StatusCard = ({ title, value, color }: {
   </motion.div>
 );
 
-const ContactLink = ({ icon, value, type }: { 
+const ContactLink = ({ 
+  icon, 
+  value, 
+  type,
+  className = "" // Default to empty string
+}: { 
   icon: React.ReactNode;
   value: string;
   type: 'email' | 'tel';
+  className?: string; // Optional className prop
 }) => (
   <a
     href={`${type}:${value}`}
-    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+    className={`flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors ${className}`}
   >
     {icon}
     <span className="text-sm font-medium">{value}</span>
