@@ -1,11 +1,14 @@
 "use client";
 
+import React, {useRef} from 'react';
+import SignaturePad from 'signature_pad';
 import { useEffect, useState, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {  subDays, eachDayOfInterval, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/Button";
+import { jsPDF } from 'jspdf';
 import { LineChart, customTooltip } from "@/components/ui/Charts/LineChart";
 // import jsPDF from "jspdf"; // Make sure to install jsPDF (npm install jspdf)
 import Modal from "react-modal"; // Or use your preferred modal library
@@ -49,6 +52,7 @@ import { CalendarDaysIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, P
 // Ensure moment is using French
 moment.locale("fr");
 const localizer = momentLocalizer(moment);
+
 
 // Example French messages for react-big-calendar
 // const messagesFr = {
@@ -116,6 +120,26 @@ const energySolutions: {
   "Chauffe-eau thermodynamique": { icon: FireIcon, color: "#10b981" },
   "Système Solaire Combiné": { icon: FireIcon, color: "#8b5cf6" },
 };
+
+  // Example usage:
+  // const data: AttestationData = {
+  //   customerName: "Jean Dupont",
+  //   address: "123 Rue de Paris",
+  //   postalCode: "75001",
+  //   city: "Paris",
+  //   phone: "06 12 34 56 78",
+  //   email: "jean.dupont@email.com",
+  //   interventionDate: "2025-03-01",
+  //   interventionDetails: "Réparation de la carte mère et remplacement du ventilateur. Nettoyage complet du système.",
+  //   technicianName: "Pierre Martin",
+  //   parts: [
+  //     { quantity: 1, description: "Carte mère ASUS B550", reference: "ASB550-01", price: 129.99 },
+  //     { quantity: 2, description: "Ventilateur 120mm", reference: "FAN120-A", price: 19.99 }
+  //   ],
+  //   signatureDate: "01/03/2025",
+  //   signatureLocation: "Paris"
+  // };
+  // generatePDF(data);
 
 interface ProcessedDataPoint {
   date?: string;
@@ -708,156 +732,529 @@ function SAVStatistics() {
   );
 }
 
-import React, {useRef} from 'react';
-import SignaturePad from 'signature_pad';
-
-
-// Define the complete attestation data type
 interface AttestationData {
   customerName: string;
-  ticketId: string;
-  date: string;
   address?: string;
   postalCode?: string;
   city?: string;
   phone?: string;
+  email?: string; // Added missing property
   interventionDate?: string;
   interventionDetails?: string;
+  signature?: string | null; // Changed to accept null value
   signatureDate?: string;
   signatureLocation?: string;
-  signature?: string | null;
+  referenceNumber?: string; // Added missing property
+  technicianName?: string; // Added missing property
+  parts?: Part[]; // Added missing property
+  ticketId?: string; // Added missing property from your state
+  date?: string; // Added missing property from your state
 }
 
+// Define the Part interface for parts items
+interface Part {
+  quantity: number;
+  description: string;
+  reference?: string;
+  price?: number;
+}
+
+// Type declaration for missing jsPDF methods
+declare module 'jspdf' {
+  interface jsPDF {
+    setGlobalAlpha(alpha: number): jsPDF;
+    getNumberOfPages(): number;
+  }
+}
+
+// const primaryColor = "#2A4365";    // Deep blue
+// const secondaryColor = "#EBF8FF";  // Light background
+// const accentColor = "#48BB78";     // Fresh green
+// const textColor = "#2D3748";       // Dark gray
+// const lightText = "#718096";       // Gray for labels
+
 const AttestationModal: React.FC = () => {
-  // State for modal visibility
   const [showAttestationModal, setShowAttestationModal] = useState<boolean>(false);
-  // const [showAddTicketForm, setShowAddTicketForm] = useState<boolean>(false);
-  
-  // State for form data with proper typing
   const [attestationData, setAttestationData] = useState<AttestationData>({
     customerName: '',
     ticketId: '',
-    date: '',
+    date: new Date().toISOString().split('T')[0],
     address: '',
     postalCode: '',
     city: '',
     phone: '',
-    interventionDate: '',
+    interventionDate: new Date().toISOString().split('T')[0],
     interventionDetails: '',
     signatureDate: '',
     signatureLocation: '',
-    signature: null
+    signature: null,
   });
-  
-  // Refs with proper typing
+
+  // Références pour le conteneur, le canvas et l'instance de SignaturePad
   const signatureRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const signaturePadRef = useRef<SignaturePad | null>(null);
-  
-  // Initialize signature pad when modal is shown
-  useEffect(() => {
-    if (signatureRef.current && showAttestationModal) {
-      // Convert the div to a canvas element first
+
+  // Fonction d'initialisation de la zone de signature
+  const initializeSignaturePad = () => {
+    if (!signatureRef.current) {
+      console.error("signatureRef.current is null");
+      return;
+    }
+    console.log("signatureRef.current dimensions:", signatureRef.current.clientWidth, signatureRef.current.clientHeight);
+    
+    if (!canvasRef.current) {
       const canvas = document.createElement('canvas');
+      canvasRef.current = canvas;
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.cursor = 'crosshair';
+      canvas.style.touchAction = 'none';
+      
+      // Définir les dimensions du canvas d'après le conteneur
       canvas.width = signatureRef.current.clientWidth;
       canvas.height = signatureRef.current.clientHeight;
       
-      // Clear any existing content and append the canvas
+      // Vider le conteneur et y ajouter le canvas
       signatureRef.current.innerHTML = '';
       signatureRef.current.appendChild(canvas);
-      
-      // Initialize SignaturePad on the canvas
-      signaturePadRef.current = new SignaturePad(canvas, {
-        backgroundColor: 'rgba(255, 255, 255, 0)',
-        penColor: 'black'
-      });
-      
-      // If there's an existing signature, load it
-      if (attestationData.signature) {
-        signaturePadRef.current.fromDataURL(attestationData.signature);
-      }
     }
     
-    // Cleanup function
-    return () => {
-      if (signaturePadRef.current) {
-        signaturePadRef.current.off();
-        signaturePadRef.current = null;
+    if (canvasRef.current) {
+      try {
+        const newSignaturePad = new SignaturePad(canvasRef.current, {
+          backgroundColor: 'rgba(255, 255, 255, 0)',
+          penColor: 'black',
+          minWidth: 1,
+          maxWidth: 2.5,
+        });
+        signaturePadRef.current = newSignaturePad;
+        
+        if (attestationData.signature) {
+          newSignaturePad.fromDataURL(attestationData.signature);
+        }
+        
+        // Pour mettre en surbrillance lors de l'interaction
+        canvasRef.current.addEventListener('mousedown', () => {
+          if (canvasRef.current) {
+            canvasRef.current.style.border = '1px solid #3b82f6';
+          }
+        });
+        
+        console.log("Signature pad initialized successfully");
+      } catch (error) {
+        console.error("Error initializing signature pad:", error);
       }
-    };
+    }
+  };
+
+  // Initialiser la zone de signature après ouverture du modal
+  useEffect(() => {
+    if (showAttestationModal) {
+      // Utiliser onAfterOpen du Modal peut aussi être une solution.
+      const timer = setTimeout(() => {
+        initializeSignaturePad();
+      }, 300); // Délai pour s'assurer que le DOM est rendu
+      return () => {
+        clearTimeout(timer);
+        if (signaturePadRef.current) {
+          signaturePadRef.current.off();
+        }
+      };
+    }
   }, [showAttestationModal, attestationData.signature]);
-  
-  // Handle window resize to adjust signature pad
+
+  // Ajuster le canvas lors du redimensionnement de la fenêtre
   useEffect(() => {
     const handleResize = () => {
-      if (signatureRef.current && signaturePadRef.current) {
-        // Retrieve the canvas from the signatureRef container
-        const canvas = signatureRef.current.querySelector('canvas');
-        if (!canvas) return;
-        
+      if (!signatureRef.current || !canvasRef.current || !signaturePadRef.current) return;
+      try {
+        const data = signaturePadRef.current.toData();
+        const container = signatureRef.current;
+        const canvas = canvasRef.current;
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        canvas.width = signatureRef.current.clientWidth * ratio;
-        canvas.height = signatureRef.current.clientHeight * ratio;
-        canvas.getContext('2d')?.scale(ratio, ratio);
-        
-        // Clear and redraw the signature
-        signaturePadRef.current.clear();
-        if (attestationData.signature) {
-          signaturePadRef.current.fromDataURL(attestationData.signature);
+        canvas.width = container.clientWidth * ratio;
+        canvas.height = container.clientHeight * ratio;
+        const context = canvas.getContext('2d');
+        if (context) {
+          context.scale(ratio, ratio);
         }
+        signaturePadRef.current.clear();
+        if (data && data.length > 0) {
+          signaturePadRef.current.fromData(data);
+        }
+        console.log('Signature pad resized successfully');
+      } catch (error) {
+        console.error('Error resizing signature pad:', error);
       }
     };
-    
-    window.addEventListener('resize', handleResize);
+
+    if (showAttestationModal) {
+      window.addEventListener('resize', handleResize);
+      setTimeout(handleResize, 100);
+    }
     return () => window.removeEventListener('resize', handleResize);
-  }, [attestationData.signature]);
-  
-  // Function to clear signature
+  }, [showAttestationModal]);
+
+  // Fonction pour effacer la signature
   const clearSignature = () => {
     if (signaturePadRef.current) {
       signaturePadRef.current.clear();
-      setAttestationData({
-        ...attestationData,
-        signature: null
-      });
+      setAttestationData(prev => ({ ...prev, signature: null }));
+      if (canvasRef.current) {
+        canvasRef.current.style.border = '1px dashed #cbd5e1';
+      }
     }
   };
+
+  // Fonction pour générer le PDF avec jsPDF
+  const generatePDF = (data: AttestationData) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - margin * 2;
   
-  // Function to handle form submission
-  const handleGenerateAttestation = () => {
-    if (signaturePadRef.current) {
-      if (signaturePadRef.current.isEmpty()) {
-        alert("Veuillez signer le document avant de continuer.");
-        return;
+    // Define colors
+    const primaryColor = "#2A4365";    
+    const secondaryColor = "#EBF8FF";  
+    const accentColor = "#48BB78";     
+    const textColor = "#2D3748";       
+    const lightText = "#718096";       
+  
+    // Set a clean background
+    doc.setFillColor(secondaryColor);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  
+    // -----------------------------
+    // Header Section (reduced height)
+    // -----------------------------
+    const headerHeight = 40; // Reduced header height from 50 to 40
+    doc.setFillColor("#FFFFFF");
+    doc.roundedRect(margin, 15, contentWidth, headerHeight, 3, 3, 'F');
+  
+    // Place logo on the left
+    const logoHeight = 25;
+    const logoWidth = logoHeight * 1.5;
+    try {
+      doc.addImage("/ecologyblogo.png", 'PNG', margin + 10, 15 + (headerHeight - logoHeight) / 2, logoWidth, logoHeight);
+    } catch{
+      doc.setTextColor(primaryColor);
+      doc.setFontSize(14);
+      doc.text("ECOLOGY'B", margin + 10, 15 + headerHeight / 2);
+    }
+  
+    // -----------------------------
+    // Header Titles with Adjustments
+    // -----------------------------
+    doc.setTextColor(primaryColor);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    const title1 = "ATTESTATION D'INTERVENTION";
+    const title1Width = doc.getTextWidth(title1);
+    // Shift title1 to the right by adding an offset of 20
+    const title1X = margin + (contentWidth - title1Width) / 2 + 20;
+    doc.text(title1, title1X, 15 + headerHeight / 2 - 4);
+  
+    doc.setFontSize(12);
+    const title2 = "Service Après-Vente";
+    const title2Width = doc.getTextWidth(title2);
+    const title2X = margin + (contentWidth - title2Width) / 2;
+    // Reduce spacing between title1 and title2 (from +8 to +2)
+    doc.text(title2, title2X, 15 + headerHeight / 2 + 2);
+  
+    // -----------------------------
+    // Client Information Section
+    // -----------------------------
+    let yPos = 15 + headerHeight + 15; // Start below header
+    doc.setFontSize(10);
+    const clientInfo = [
+      { label: "Nom du client", value: data.customerName || "" },
+      { label: "Adresse", value: data.address || "" },
+      { label: "Code Postal", value: data.postalCode || "" },
+      { label: "Ville", value: data.city || "" },
+      { label: "Tél portable", value: data.phone || "" },
+      { label: "Date de l'intervention", value: data.interventionDate ? `Le ${formatDateTime(data.interventionDate)}` : "" }
+    ];
+  
+    clientInfo.forEach(info => {
+      doc.setTextColor(lightText);
+      doc.text(`${info.label}:`, margin, yPos);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(textColor);
+      doc.text(info.value, margin + 45, yPos);
+      doc.setFont("helvetica", "normal");
+      yPos += 7;
+    });
+    yPos += 10;
+  
+    // -----------------------------
+    // Technical Team Box
+    // -----------------------------
+    const techBoxHeight = 40; // Adjusted height for a more compact look
+    doc.setDrawColor(primaryColor);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(margin, yPos, contentWidth, techBoxHeight, 3, 3, 'S');
+    doc.setFontSize(11);
+    doc.setTextColor(primaryColor);
+    doc.text("ENCADRÉ RÉSERVÉ À L'ÉQUIPE TECHNIQUE", margin + 10, yPos + 10);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(textColor);
+    const techDetails = doc.splitTextToSize(data.interventionDetails || "Aucun détail fourni", contentWidth - 20);
+    doc.text(techDetails, margin + 10, yPos + 20);
+    yPos += techBoxHeight + 10;
+  
+    // -----------------------------
+    // Client Declaration Box (with Signature)
+    // -----------------------------
+    const declBoxHeight = 100; // Reduced height to ensure the signature is visible
+    doc.setDrawColor(accentColor);
+    doc.roundedRect(margin, yPos, contentWidth, declBoxHeight, 3, 3, 'S');
+    doc.setFontSize(11);
+    doc.setTextColor(accentColor);
+    doc.text("ENCADRÉ RÉSERVÉ AU CLIENT", margin + 10, yPos + 10);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(textColor);
+    const declLines = [
+      "Je soussigné(e) Madame/Monsieur:",
+      `Demeurant à l'adresse: ${data.address}, Code Postal: ${data.postalCode}  Ville: ${data.city}`,
+      "",
+      "Atteste que la société ECOLOGY'B a pris en charge ma demande de SAV.",
+      "J'atteste sur l'honneur que les tâches mentionnées ci-dessus ont bien été réalisées et",
+      "m'apportent entière satisfaction.",
+      "",
+      `Date: Le ${formatDateTime(data.signatureDate)}`,
+      "Signature:"
+    ];
+    
+    let textY = yPos + 20;
+    declLines.forEach(line => {
+      doc.text(line, margin + 10, textY);
+      textY += 6;
+    });
+    
+    // Add the signature image if it exists
+    if (data.signature) {
+      try {
+        doc.addImage(data.signature, 'PNG', margin + 10, textY + 2, 40, 15);
+      } catch {
+        doc.text("Signature non disponible", margin + 10, textY + 10);
       }
-      
-      const signatureData = signaturePadRef.current.toDataURL();
-      
+    }
+    
+    yPos = yPos + declBoxHeight + 10;
+  
+    // -----------------------------
+    // Footer Section
+    // -----------------------------
+    const footerHeight = 20;
+    doc.setFillColor(primaryColor);
+    doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, 'F');
+    doc.setTextColor("#FFF");
+    doc.setFontSize(9);
+    const footerY = pageHeight - footerHeight + 7;
+    doc.text("Contact: contact@entreprise.com | Tél: 01 23 45 67 89", margin, footerY);
+    doc.text("SIRET: 123 456 789 00034 | RCS Paris", margin, footerY + 5);
+  
+    // Save the PDF
+    doc.save("attestation_professionnelle.pdf");
+  };
+  
+
+// ------------------------------------------------------------------
+// Utility function to format date and time
+// ------------------------------------------------------------------
+function formatDateTime(dateString?: string): string {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace("à ", " à ");
+  } catch {
+    return dateString;
+  }
+}
+
+
+// Helper functions
+// function createSectionHeader(doc: jsPDF, title: string, y: number, margin: number): number {
+//     doc.setFillColor("#E2E8F0");
+//     doc.rect(margin - 5, y, 5, 15, 'F');
+//     doc.setTextColor("#2D3748");
+//     doc.setFontSize(12);
+//     doc.setFont("helvetica", "bold");
+//     doc.text(title, margin + 10, y + 10);
+//     return y + 20;
+// }
+
+// function createTwoColumnForm(doc: jsPDF, fields: any[], y: number, margin: number, width: number): number {
+//     const columnWidth = width / 2 - 10;
+//     let maxY = y;
+    
+//     fields.forEach((field, index) => {
+//         const x = margin + (index % 2 === 0 ? 0 : columnWidth + 20);
+//         const yPos = y + Math.floor(index / 2) * 12;
+        
+//         doc.setFontSize(10);
+//         doc.setTextColor("#718096");
+//         doc.text(field.label + ":", x, yPos + 5);
+        
+//         doc.setFont("helvetica", "bold");
+//         doc.setTextColor("#2A4365");
+//         doc.text(field.value || "N/A", x + 30, yPos + 5);
+        
+//         maxY = Math.max(maxY, yPos + 5);
+//     });
+
+//     return maxY + 15;
+// }
+
+// function createPartsTable(doc: jsPDF, parts: Part[], y: number, margin: number, width: number): number {
+//     const headers = ["Qté", "Description", "Référence", "Prix"];
+//     const colWidths = [width * 0.1, width * 0.5, width * 0.25, width * 0.15];
+//     const rowHeight = 10;
+
+//     // Table header
+//     doc.setFillColor(primaryColor);
+//     doc.setTextColor("#FFF");
+//     let x = margin;
+//     headers.forEach((header, i) => {
+//         doc.rect(x, y, colWidths[i], rowHeight, 'F');
+//         doc.text(header, x + 3, y + 7);
+//         x += colWidths[i];
+//     });
+//     y += rowHeight;
+
+//     // Table rows
+//     doc.setFont("helvetica", "normal");
+//     parts.forEach((part, index) => {
+//         x = margin;
+//         doc.setFillColor(index % 2 === 0 ? "#FFF" : "#F7FAFC");
+//         doc.rect(x, y, width, rowHeight, 'F');
+        
+//         // Quantity
+//         doc.setTextColor(textColor);
+//         doc.text(part.quantity.toString(), x + 3, y + 7);
+//         x += colWidths[0];
+
+//         // Description
+//         doc.text(part.description, x + 3, y + 7);
+//         x += colWidths[1];
+
+//         // Reference
+//         doc.setTextColor(lightText);
+//         doc.text(part.reference || "N/A", x + 3, y + 7);
+//         x += colWidths[2];
+
+//         // Price
+//         doc.setTextColor(textColor);
+//         doc.text(`${part.price?.toFixed(2)} €` || "N/A", x + 3, y + 7);
+        
+//         y += rowHeight;
+//     });
+
+//     return y + 15;
+// }
+  
+  // Helper functions
+  // function formatDate(dateString: string | undefined): string {
+  //   if (!dateString) return "";
+  //   try {
+  //     const date = new Date(dateString);
+  //     return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  //   } catch (e) {
+  //     return dateString;
+  //   }
+  // }
+  
+  // function generateRefNumber(): string {
+  //   const date = new Date();
+  //   const year = date.getFullYear().toString().substr(2);
+  //   const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  //   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  //   return `SAV-${year}${month}-${random}`;
+  // }
+  
+  // // Helper functions
+  // function formatDate(dateString: string | undefined): string {
+  //   if (!dateString) return "";
+    
+  //   try {
+  //     const date = new Date(dateString);
+  //     return date.toLocaleDateString('fr-FR', { 
+  //       day: '2-digit', 
+  //       month: '2-digit', 
+  //       year: 'numeric' 
+  //     });
+  //   } catch (e) {
+  //     return dateString; // Return original if parsing fails
+  //   }
+  // }
+  
+  // function generateRefNumber(): string {
+  //   const date = new Date();
+  //   const year = date.getFullYear().toString().substr(2);
+  //   const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  //   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  //   return `SAV-${year}${month}-${random}`;
+  // }
+  
+  // Fonction de gestion de la soumission du formulaire
+  const handleGenerateAttestation = () => {
+    if (!signaturePadRef.current && canvasRef.current) {
+      initializeSignaturePad();
+      console.log("Signature pad initialized on demand");
+    }
+
+    if (!signaturePadRef.current) {
+      console.error("Signature pad not initialized");
+      alert("Erreur: La zone de signature n'est pas initialisée correctement. Veuillez réessayer.");
+      return;
+    }
+
+    if (signaturePadRef.current.isEmpty()) {
+      alert("Veuillez signer le document avant de continuer.");
+      return;
+    }
+
+    try {
+      const signatureData = signaturePadRef.current.toDataURL('image/png');
       const finalData = {
         ...attestationData,
-        signature: signatureData
+        signature: signatureData,
+        signatureDate: attestationData.signatureDate || new Date().toISOString().split('T')[0],
       };
-      
+
       console.log("Form submitted with data:", finalData);
-      // Here you would send the data to your server or process it further
-      
-      // Close the modal after successful submission
+      generatePDF(finalData);
       setShowAttestationModal(false);
+    } catch (error) {
+      console.error("Error generating attestation:", error);
+      alert("Une erreur s'est produite lors de la génération du document. Veuillez réessayer.");
     }
   };
-  
+
   return (
     <>
-      {/* Button to open the modal */}
+      {/* Bouton pour ouvrir le modal */}
       <Button 
         onClick={() => setShowAttestationModal(true)}
         className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl ml-2 shadow-md"
       >
         Générer Attestation
       </Button>
-    
-      {/* Attestation Modal */}
+
+      {/* Modal de l'attestation */}
       <Modal
         isOpen={showAttestationModal}
+        onAfterOpen={initializeSignaturePad}  // Appel dès que le modal est ouvert
         onRequestClose={() => setShowAttestationModal(false)}
         contentLabel="Générer une Attestation d'Intervention S.A.V."
         className="fixed inset-0 flex items-center justify-center p-4 sm:p-8 outline-none"
@@ -868,19 +1265,21 @@ const AttestationModal: React.FC = () => {
           style={{ maxHeight: '80vh' }}
         >
           <div className="flex justify-between items-center mb-6 border-b pb-4 dark:border-gray-700">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-white">Générer une Attestation d&apos;Intervention S.A.V.</h2>
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-white">
+              Générer une Attestation d&apos;Intervention S.A.V.
+            </h2>
             <button
               onClick={() => setShowAttestationModal(false)}
               className="text-gray-500 hover:text-gray-800 dark:hover:text-white p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="Fermer"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           </div>
-          
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -888,13 +1287,12 @@ const AttestationModal: React.FC = () => {
             }}
             className="space-y-8"
           >
-            {/* Client Information Section */}
+            {/* Section Informations Client */}
             <div className="space-y-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Informations Client</h3>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="col-span-1 md:col-span-2">
-                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="customerName">
+                  <label htmlFor="customerName" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
                     Nom du client
                   </label>
                   <input
@@ -902,19 +1300,15 @@ const AttestationModal: React.FC = () => {
                     type="text"
                     value={attestationData.customerName}
                     onChange={(e) =>
-                      setAttestationData({
-                        ...attestationData,
-                        customerName: e.target.value,
-                      })
+                      setAttestationData(prev => ({ ...prev, customerName: e.target.value }))
                     }
                     required
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                     placeholder="Entrez le nom du client"
                   />
                 </div>
-                
                 <div className="col-span-1 md:col-span-2">
-                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="address">
+                  <label htmlFor="address" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
                     Adresse
                   </label>
                   <input
@@ -922,19 +1316,15 @@ const AttestationModal: React.FC = () => {
                     type="text"
                     value={attestationData.address}
                     onChange={(e) =>
-                      setAttestationData({
-                        ...attestationData,
-                        address: e.target.value,
-                      })
+                      setAttestationData(prev => ({ ...prev, address: e.target.value }))
                     }
                     required
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                     placeholder="Adresse complète"
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="postalCode">
+                  <label htmlFor="postalCode" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
                     Code Postal
                   </label>
                   <input
@@ -942,19 +1332,15 @@ const AttestationModal: React.FC = () => {
                     type="text"
                     value={attestationData.postalCode}
                     onChange={(e) =>
-                      setAttestationData({
-                        ...attestationData,
-                        postalCode: e.target.value,
-                      })
+                      setAttestationData(prev => ({ ...prev, postalCode: e.target.value }))
                     }
                     required
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                     placeholder="Ex: 75001"
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="city">
+                  <label htmlFor="city" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
                     Ville
                   </label>
                   <input
@@ -962,19 +1348,15 @@ const AttestationModal: React.FC = () => {
                     type="text"
                     value={attestationData.city}
                     onChange={(e) =>
-                      setAttestationData({
-                        ...attestationData,
-                        city: e.target.value,
-                      })
+                      setAttestationData(prev => ({ ...prev, city: e.target.value }))
                     }
                     required
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                     placeholder="Ex: Paris"
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="phone">
+                  <label htmlFor="phone" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
                     Tél portable
                   </label>
                   <input
@@ -982,19 +1364,15 @@ const AttestationModal: React.FC = () => {
                     type="tel"
                     value={attestationData.phone}
                     onChange={(e) =>
-                      setAttestationData({
-                        ...attestationData,
-                        phone: e.target.value,
-                      })
+                      setAttestationData(prev => ({ ...prev, phone: e.target.value }))
                     }
                     required
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                     placeholder="Ex: 06 12 34 56 78"
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="interventionDate">
+                  <label htmlFor="interventionDate" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
                     Date de l&apos;intervention
                   </label>
                   <div className="relative">
@@ -1003,20 +1381,17 @@ const AttestationModal: React.FC = () => {
                       type="date"
                       value={attestationData.interventionDate}
                       onChange={(e) =>
-                        setAttestationData({
-                          ...attestationData,
-                          interventionDate: e.target.value,
-                        })
+                        setAttestationData(prev => ({ ...prev, interventionDate: e.target.value }))
                       }
                       required
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
                       </svg>
                     </div>
                   </div>
@@ -1024,22 +1399,18 @@ const AttestationModal: React.FC = () => {
               </div>
             </div>
             
-            {/* Technical Team Section */}
+            {/* Section équipe technique */}
             <div className="space-y-6 pt-6 border-t dark:border-gray-700">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">ENCADRÉ RÉSERVÉ À L&apos;ÉQUIPE TECHNIQUE</h3>
-              
               <div>
-                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="interventionDetails">
+                <label htmlFor="interventionDetails" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
                   Détail de l&apos;intervention
                 </label>
                 <textarea
                   id="interventionDetails"
                   value={attestationData.interventionDetails}
                   onChange={(e) =>
-                    setAttestationData({
-                      ...attestationData,
-                      interventionDetails: e.target.value,
-                    })
+                    setAttestationData(prev => ({ ...prev, interventionDetails: e.target.value }))
                   }
                   rows={5}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
@@ -1048,94 +1419,45 @@ const AttestationModal: React.FC = () => {
               </div>
             </div>
             
-            {/* Client Signature Section */}
-            <div className="space-y-6 pt-6 border-t dark:border-gray-700">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">ENCADRÉ RÉSERVÉ AU CLIENT</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="signatureDate">
-                    Date
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="signatureDate"
-                      type="date"
-                      value={attestationData.signatureDate}
-                      onChange={(e) =>
-                        setAttestationData({
-                          ...attestationData,
-                          signatureDate: e.target.value,
-                        })
-                      }
-                      required
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                      </svg>
+            {/* Section Signature */}
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                Signature
+              </label>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                Utilisez votre souris ou votre doigt pour signer dans la zone ci-dessous.
+              </p>
+              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-white">
+                <div 
+                  className="w-full h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center relative cursor-crosshair"
+                  ref={signatureRef}
+                >
+                  {!attestationData.signature && (
+                    <div className="text-gray-400 dark:text-gray-500 absolute pointer-events-none">
+                      Cliquez ou touchez ici pour signer
                     </div>
-                  </div>
+                  )}
                 </div>
-                
-                <div>
-                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2" htmlFor="signatureLocation">
-                    A
-                  </label>
-                  <input
-                    id="signatureLocation"
-                    type="text"
-                    value={attestationData.signatureLocation}
-                    onChange={(e) =>
-                      setAttestationData({
-                        ...attestationData,
-                        signatureLocation: e.target.value,
-                      })
-                    }
-                    required
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
-                    placeholder="Lieu de signature"
-                  />
-                </div>
-                
-                <div className="col-span-1 md:col-span-2">
-                  <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                    Signature
-                  </label>
-                  <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-900">
-                    <div 
-                      className="w-full h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center relative"
-                      ref={signatureRef}
-                    >
-                      {!attestationData.signature && (
-                        <div className="text-gray-400 dark:text-gray-500 absolute">
-                          Cliquez ou touchez ici pour signer
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex justify-end mt-2">
-                      <button
-                        type="button"
-                        onClick={clearSignature}
-                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
-                      >
-                        Effacer la signature
-                      </button>
-                    </div>
+                <div className="flex justify-between mt-2">
+                  <div className="text-sm text-gray-500">
+                    {signaturePadRef.current && !signaturePadRef.current.isEmpty() ? "Signature enregistrée" : ""}
                   </div>
+                  <button
+                    type="button"
+                    onClick={clearSignature}
+                    className="text-sm text-gray-400 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400"
+                  >
+                    Effacer la signature
+                  </button>
                 </div>
               </div>
             </div>
-
-            {/* Button Section */}
+            
+            {/* Boutons Annuler / Enregistrer */}
             <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t dark:border-gray-700">
               <Button
                 type="button"
-                className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-300 dark:text-gray-300 font-medium transition-colors"
                 onClick={() => setShowAttestationModal(false)}
               >
                 Annuler
@@ -1144,7 +1466,7 @@ const AttestationModal: React.FC = () => {
                 type="submit" 
                 className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors flex items-center justify-center gap-2"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                   <polyline points="17 21 17 13 7 13 7 21"></polyline>
                   <polyline points="7 3 7 8 15 8"></polyline>
