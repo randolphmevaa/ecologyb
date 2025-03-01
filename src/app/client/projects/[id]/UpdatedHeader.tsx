@@ -170,8 +170,13 @@ export default function ClientHeader({ contactId }: { contactId: string }) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {/* Logo MaPrimeRénov' stylisé */}
-                    <Image src="/Group 9.svg" alt="MaPrimeRénov Logo" width={24}
-                    height={24} className="w-12 h-12 flex-shrink-0" />
+                    <div className="p-3 bg-blue-300/10 rounded-xl shadow-inner">
+                      {/* <UserIcon className="w-6 h-6 text-blue-500/90 absolute opacity-20" /> */}
+                      <Image src="/Group 9.svg" alt="MaPrimeRénov Logo" width={24}
+                    height={24} className="w-8 h-8 flex-shrink-0" />
+                      {/* <span className="text-2xl font-medium text-gray-700/95 relative">{initials}</span> */}
+                    </div>
+                    
 
                     
                     <div>
@@ -182,13 +187,7 @@ export default function ClientHeader({ contactId }: { contactId: string }) {
                       {/* <div className="text-xs text-gray-400 mt-0.5">Programme officiel</div> */}
                     </div>
                   </div>
-                  
-                  <div className="relative">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-100/95 to-blue-200/80 flex items-center justify-center border border-gray-100/90 shadow-sm">
-                      <UserIcon className="w-6 h-6 text-blue-500/90 absolute opacity-20" />
-                      <span className="text-2xl font-medium text-gray-700/95 relative">{initials}</span>
-                    </div>
-                  </div>
+
                 </div>
               </motion.div>
             </div>
