@@ -929,39 +929,39 @@ const AttestationModal: React.FC = () => {
     // -----------------------------
     // Header Section (reduced height)
     // -----------------------------
-    const headerHeight = 40; // Reduced header height from 50 to 40
+    const headerHeight = 40; 
     doc.setFillColor("#FFFFFF");
     doc.roundedRect(margin, 15, contentWidth, headerHeight, 3, 3, 'F');
   
-    // Place logo on the left
+    // Place logo on the left (moved a bit higher by subtracting 4 from the y coordinate)
     const logoHeight = 25;
     const logoWidth = logoHeight * 1.5;
     try {
-      doc.addImage("/ecologyblogo.png", 'PNG', margin + 10, 15 + (headerHeight - logoHeight) / 2, logoWidth, logoHeight);
-    } catch{
+      doc.addImage("/ecologyblogo.png", 'PNG', margin + 10, 15 + (headerHeight - logoHeight) / 2 - 2, logoWidth, logoHeight);
+    } catch {
       doc.setTextColor(primaryColor);
       doc.setFontSize(14);
       doc.text("ECOLOGY'B", margin + 10, 15 + headerHeight / 2);
     }
   
     // -----------------------------
-    // Header Titles with Adjustments
+    // Header Titles with Adjustments (moved lower)
     // -----------------------------
     doc.setTextColor(primaryColor);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     const title1 = "ATTESTATION D'INTERVENTION";
     const title1Width = doc.getTextWidth(title1);
-    // Shift title1 to the right by adding an offset of 20
-    const title1X = margin + (contentWidth - title1Width) / 2 + 20;
-    doc.text(title1, title1X, 15 + headerHeight / 2 - 4);
+    const title1X = margin + (contentWidth - title1Width) / 2 + 23;
+    // Lowered by adding 8 to the y coordinate
+    doc.text(title1, title1X, 15 + headerHeight / 2);
   
     doc.setFontSize(12);
     const title2 = "Service Après-Vente";
     const title2Width = doc.getTextWidth(title2);
     const title2X = margin + (contentWidth - title2Width) / 2;
-    // Reduce spacing between title1 and title2 (from +8 to +2)
-    doc.text(title2, title2X, 15 + headerHeight / 2 + 2);
+    // Lowered by adding 8 (or adjust as needed)
+    doc.text(title2, title2X, 15 + headerHeight / 2 + 6);
   
     // -----------------------------
     // Client Information Section
@@ -995,14 +995,25 @@ const AttestationModal: React.FC = () => {
     doc.setDrawColor(primaryColor);
     doc.setLineWidth(0.3);
     doc.roundedRect(margin, yPos, contentWidth, techBoxHeight, 3, 3, 'S');
+    // Center and bold the header text
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
+    const techText = "ENCADRÉ RÉSERVÉ À L'ÉQUIPE TECHNIQUE";
+    const techTextWidth = doc.getTextWidth(techText);
+    const techTextX = margin + (contentWidth - techTextWidth) / 2;
     doc.setTextColor(primaryColor);
-    doc.text("ENCADRÉ RÉSERVÉ À L'ÉQUIPE TECHNIQUE", margin + 10, yPos + 10);
+    doc.text(techText, techTextX, yPos + 10);
     
+    // Insert the new label for intervention details
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(textColor);
+    doc.text("Détail de l’intervention:", margin + 10, yPos + 16);
+  
+    // Now add the intervention details below the label
+    doc.setFont("helvetica", "normal");
     const techDetails = doc.splitTextToSize(data.interventionDetails || "Aucun détail fourni", contentWidth - 20);
-    doc.text(techDetails, margin + 10, yPos + 20);
+    doc.text(techDetails, margin + 10, yPos + 22);
     yPos += techBoxHeight + 10;
   
     // -----------------------------
@@ -1011,10 +1022,16 @@ const AttestationModal: React.FC = () => {
     const declBoxHeight = 100; // Reduced height to ensure the signature is visible
     doc.setDrawColor(accentColor);
     doc.roundedRect(margin, yPos, contentWidth, declBoxHeight, 3, 3, 'S');
+    // Center and bold the text
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
+    const clientBoxText = "ENCADRÉ RÉSERVÉ AU CLIENT";
+    const clientBoxTextWidth = doc.getTextWidth(clientBoxText);
+    const clientBoxTextX = margin + (contentWidth - clientBoxTextWidth) / 2;
     doc.setTextColor(accentColor);
-    doc.text("ENCADRÉ RÉSERVÉ AU CLIENT", margin + 10, yPos + 10);
+    doc.text(clientBoxText, clientBoxTextX, yPos + 10);
     
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(textColor);
     const declLines = [
@@ -1061,150 +1078,25 @@ const AttestationModal: React.FC = () => {
     // Save the PDF
     doc.save("attestation_professionnelle.pdf");
   };
-  
 
-// ------------------------------------------------------------------
-// Utility function to format date and time
-// ------------------------------------------------------------------
-function formatDateTime(dateString?: string): string {
-  if (!dateString) return "";
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace("à ", " à ");
-  } catch {
-    return dateString;
+  // ------------------------------------------------------------------
+  // Utility function to format date and time
+  // ------------------------------------------------------------------
+  function formatDateTime(dateString?: string): string {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('fr-FR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).replace("à ", " à ");
+    } catch {
+      return dateString;
+    }
   }
-}
-
-
-// Helper functions
-// function createSectionHeader(doc: jsPDF, title: string, y: number, margin: number): number {
-//     doc.setFillColor("#E2E8F0");
-//     doc.rect(margin - 5, y, 5, 15, 'F');
-//     doc.setTextColor("#2D3748");
-//     doc.setFontSize(12);
-//     doc.setFont("helvetica", "bold");
-//     doc.text(title, margin + 10, y + 10);
-//     return y + 20;
-// }
-
-// function createTwoColumnForm(doc: jsPDF, fields: any[], y: number, margin: number, width: number): number {
-//     const columnWidth = width / 2 - 10;
-//     let maxY = y;
-    
-//     fields.forEach((field, index) => {
-//         const x = margin + (index % 2 === 0 ? 0 : columnWidth + 20);
-//         const yPos = y + Math.floor(index / 2) * 12;
-        
-//         doc.setFontSize(10);
-//         doc.setTextColor("#718096");
-//         doc.text(field.label + ":", x, yPos + 5);
-        
-//         doc.setFont("helvetica", "bold");
-//         doc.setTextColor("#2A4365");
-//         doc.text(field.value || "N/A", x + 30, yPos + 5);
-        
-//         maxY = Math.max(maxY, yPos + 5);
-//     });
-
-//     return maxY + 15;
-// }
-
-// function createPartsTable(doc: jsPDF, parts: Part[], y: number, margin: number, width: number): number {
-//     const headers = ["Qté", "Description", "Référence", "Prix"];
-//     const colWidths = [width * 0.1, width * 0.5, width * 0.25, width * 0.15];
-//     const rowHeight = 10;
-
-//     // Table header
-//     doc.setFillColor(primaryColor);
-//     doc.setTextColor("#FFF");
-//     let x = margin;
-//     headers.forEach((header, i) => {
-//         doc.rect(x, y, colWidths[i], rowHeight, 'F');
-//         doc.text(header, x + 3, y + 7);
-//         x += colWidths[i];
-//     });
-//     y += rowHeight;
-
-//     // Table rows
-//     doc.setFont("helvetica", "normal");
-//     parts.forEach((part, index) => {
-//         x = margin;
-//         doc.setFillColor(index % 2 === 0 ? "#FFF" : "#F7FAFC");
-//         doc.rect(x, y, width, rowHeight, 'F');
-        
-//         // Quantity
-//         doc.setTextColor(textColor);
-//         doc.text(part.quantity.toString(), x + 3, y + 7);
-//         x += colWidths[0];
-
-//         // Description
-//         doc.text(part.description, x + 3, y + 7);
-//         x += colWidths[1];
-
-//         // Reference
-//         doc.setTextColor(lightText);
-//         doc.text(part.reference || "N/A", x + 3, y + 7);
-//         x += colWidths[2];
-
-//         // Price
-//         doc.setTextColor(textColor);
-//         doc.text(`${part.price?.toFixed(2)} €` || "N/A", x + 3, y + 7);
-        
-//         y += rowHeight;
-//     });
-
-//     return y + 15;
-// }
-  
-  // Helper functions
-  // function formatDate(dateString: string | undefined): string {
-  //   if (!dateString) return "";
-  //   try {
-  //     const date = new Date(dateString);
-  //     return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  //   } catch (e) {
-  //     return dateString;
-  //   }
-  // }
-  
-  // function generateRefNumber(): string {
-  //   const date = new Date();
-  //   const year = date.getFullYear().toString().substr(2);
-  //   const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  //   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  //   return `SAV-${year}${month}-${random}`;
-  // }
-  
-  // // Helper functions
-  // function formatDate(dateString: string | undefined): string {
-  //   if (!dateString) return "";
-    
-  //   try {
-  //     const date = new Date(dateString);
-  //     return date.toLocaleDateString('fr-FR', { 
-  //       day: '2-digit', 
-  //       month: '2-digit', 
-  //       year: 'numeric' 
-  //     });
-  //   } catch (e) {
-  //     return dateString; // Return original if parsing fails
-  //   }
-  // }
-  
-  // function generateRefNumber(): string {
-  //   const date = new Date();
-  //   const year = date.getFullYear().toString().substr(2);
-  //   const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  //   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  //   return `SAV-${year}${month}-${random}`;
-  // }
   
   // Fonction de gestion de la soumission du formulaire
   const handleGenerateAttestation = () => {
