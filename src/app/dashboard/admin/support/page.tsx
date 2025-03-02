@@ -1167,7 +1167,6 @@ const AttestationModal: React.FC = () => {
     }
   }
   
-  
   // Gestion de la soumission du formulaire
   const handleGenerateAttestation = () => {
     if (!signaturePadRef.current && canvasRef.current) {
