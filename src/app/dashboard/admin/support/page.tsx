@@ -783,7 +783,8 @@ const AttestationModal: React.FC = () => {
     postalCode: '',
     city: '',
     phone: '',
-    interventionDate: new Date().toISOString().split('T')[0],
+    // Use slice(0,16) to include both date and hour/minute in ISO format
+    interventionDate: new Date().toISOString().slice(0, 16),
     interventionDetails: '',
     signatureDate: '',
     signatureLocation: '',
@@ -851,10 +852,9 @@ const AttestationModal: React.FC = () => {
   // Initialiser la zone de signature après ouverture du modal
   useEffect(() => {
     if (showAttestationModal) {
-      // Utiliser onAfterOpen du Modal peut aussi être une solution.
       const timer = setTimeout(() => {
         initializeSignaturePad();
-      }, 300); // Délai pour s'assurer que le DOM est rendu
+      }, 300);
       return () => {
         clearTimeout(timer);
         if (signaturePadRef.current) {
@@ -914,26 +914,26 @@ const AttestationModal: React.FC = () => {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     const contentWidth = pageWidth - margin * 2;
-  
+
     // Define colors
     const primaryColor = "#2A4365";    
     const secondaryColor = "#EBF8FF";  
     const accentColor = "#48BB78";     
     const textColor = "#2D3748";       
     const lightText = "#718096";       
-  
+
     // Set a clean background
     doc.setFillColor(secondaryColor);
     doc.rect(0, 0, pageWidth, pageHeight, 'F');
-  
+
     // -----------------------------
     // Header Section (reduced height)
     // -----------------------------
     const headerHeight = 40; 
     doc.setFillColor("#FFFFFF");
     doc.roundedRect(margin, 15, contentWidth, headerHeight, 3, 3, 'F');
-  
-    // Place logo on the left (moved a bit higher by subtracting 4 from the y coordinate)
+
+    // Place logo on the left
     const logoHeight = 25;
     const logoWidth = logoHeight * 1.5;
     try {
@@ -943,9 +943,9 @@ const AttestationModal: React.FC = () => {
       doc.setFontSize(14);
       doc.text("ECOLOGY'B", margin + 10, 15 + headerHeight / 2);
     }
-  
+
     // -----------------------------
-    // Header Titles with Adjustments (moved lower)
+    // Header Titles with Adjustments
     // -----------------------------
     doc.setTextColor(primaryColor);
     doc.setFont("helvetica", "bold");
@@ -953,20 +953,18 @@ const AttestationModal: React.FC = () => {
     const title1 = "ATTESTATION D'INTERVENTION";
     const title1Width = doc.getTextWidth(title1);
     const title1X = margin + (contentWidth - title1Width) / 2 + 23;
-    // Lowered by adding 8 to the y coordinate
     doc.text(title1, title1X, 15 + headerHeight / 2);
-  
+
     doc.setFontSize(12);
     const title2 = "Service Après-Vente";
     const title2Width = doc.getTextWidth(title2);
     const title2X = margin + (contentWidth - title2Width) / 2;
-    // Lowered by adding 8 (or adjust as needed)
     doc.text(title2, title2X, 15 + headerHeight / 2 + 6);
-  
+
     // -----------------------------
     // Client Information Section
     // -----------------------------
-    let yPos = 15 + headerHeight + 15; // Start below header
+    let yPos = 15 + headerHeight + 15;
     doc.setFontSize(10);
     const clientInfo = [
       { label: "Nom du client", value: data.customerName || "" },
@@ -974,28 +972,35 @@ const AttestationModal: React.FC = () => {
       { label: "Code Postal", value: data.postalCode || "" },
       { label: "Ville", value: data.city || "" },
       { label: "Tél portable", value: data.phone || "" },
+      // Build the date string with "Le" and the formatted intervention date.
       { label: "Date de l'intervention", value: data.interventionDate ? `Le ${formatDateTime(data.interventionDate)}` : "" }
     ];
-  
+
     clientInfo.forEach(info => {
-      doc.setTextColor(lightText);
-      doc.text(`${info.label}:`, margin, yPos);
+      // Bold the label
       doc.setFont("helvetica", "bold");
       doc.setTextColor(textColor);
-      doc.text(info.value, margin + 45, yPos);
+      doc.text(`${info.label}:`, margin, yPos);
+      
+      // Normal text for the value
       doc.setFont("helvetica", "normal");
+      // For "Date de l'intervention", don't force uppercase so it keeps the "à" in lowercase
+      if (info.label === "Date de l'intervention") {
+        doc.text(info.value, margin + 45, yPos);
+      } else {
+        doc.text((info.value || "").toUpperCase(), margin + 45, yPos);
+      }
       yPos += 7;
     });
     yPos += 10;
-  
+
     // -----------------------------
     // Technical Team Box
     // -----------------------------
-    const techBoxHeight = 40; // Adjusted height for a more compact look
+    const techBoxHeight = 40;
     doc.setDrawColor(primaryColor);
     doc.setLineWidth(0.3);
     doc.roundedRect(margin, yPos, contentWidth, techBoxHeight, 3, 3, 'S');
-    // Center and bold the header text
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     const techText = "ENCADRÉ RÉSERVÉ À L'ÉQUIPE TECHNIQUE";
@@ -1004,25 +1009,33 @@ const AttestationModal: React.FC = () => {
     doc.setTextColor(primaryColor);
     doc.text(techText, techTextX, yPos + 10);
     
-    // Insert the new label for intervention details
+    // Intervention details in uppercase
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(textColor);
     doc.text("Détail de l’intervention:", margin + 10, yPos + 16);
-  
-    // Now add the intervention details below the label
+
     doc.setFont("helvetica", "normal");
-    const techDetails = doc.splitTextToSize(data.interventionDetails || "Aucun détail fourni", contentWidth - 20);
+    // Convert interventionDetails to uppercase before splitting the text
+    const techDetails = doc.splitTextToSize((data.interventionDetails || "Aucun détail fourni").toUpperCase(), contentWidth - 20);
     doc.text(techDetails, margin + 10, yPos + 22);
     yPos += techBoxHeight + 10;
-  
+
+    function formatDateOnly(dateString?: string): string {
+      if (!dateString) return "";
+      try {
+        return new Date(dateString).toLocaleDateString('fr-FR');
+      } catch {
+        return dateString;
+      }
+    }
+
     // -----------------------------
     // Client Declaration Box (with Signature)
     // -----------------------------
-    const declBoxHeight = 100; // Reduced height to ensure the signature is visible
+    const declBoxHeight = 100;
     doc.setDrawColor(accentColor);
     doc.roundedRect(margin, yPos, contentWidth, declBoxHeight, 3, 3, 'S');
-    // Center and bold the text
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     const clientBoxText = "ENCADRÉ RÉSERVÉ AU CLIENT";
@@ -1031,28 +1044,81 @@ const AttestationModal: React.FC = () => {
     doc.setTextColor(accentColor);
     doc.text(clientBoxText, clientBoxTextX, yPos + 10);
     
-    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(textColor);
-    const declLines = [
-      "Je soussigné(e) Madame/Monsieur:",
-      `Demeurant à l'adresse: ${data.address}, Code Postal: ${data.postalCode}  Ville: ${data.city}`,
-      "",
-      "Atteste que la société ECOLOGY'B a pris en charge ma demande de SAV.",
-      "J'atteste sur l'honneur que les tâches mentionnées ci-dessus ont bien été réalisées et",
-      "m'apportent entière satisfaction.",
-      "",
-      `Date: Le ${formatDateTime(data.signatureDate)}`,
-      "Signature:"
-    ];
-    
     let textY = yPos + 20;
-    declLines.forEach(line => {
-      doc.text(line, margin + 10, textY);
-      textY += 6;
-    });
     
-    // Add the signature image if it exists
+    // Customer declaration lines...
+    doc.setFont("helvetica", "bold");
+    const line1Label = "Je soussigné(e) Madame/Monsieur:";
+    doc.text(line1Label, margin + 10, textY);
+    const line1LabelWidth = doc.getTextWidth(line1Label);
+    doc.setFont("helvetica", "normal");
+    doc.text((data.customerName || "").toUpperCase(), margin + 10 + line1LabelWidth + 2, textY);
+    textY += 6;
+    
+    doc.setFont("helvetica", "bold");
+    const line2Label1 = "Demeurant à l'adresse:";
+    doc.text(line2Label1, margin + 10, textY);
+    const line2Label1Width = doc.getTextWidth(line2Label1);
+    doc.setFont("helvetica", "normal");
+    doc.text((data.address || "").toUpperCase(), margin + 10 + line2Label1Width + 2, textY);
+    
+    doc.setFont("helvetica", "bold");
+    const line2Label2 = ", Code Postal:";
+    const xAfterAddress = margin + 10 + line2Label1Width + 2 + doc.getTextWidth((data.address || "").toUpperCase());
+    doc.text(line2Label2, xAfterAddress, textY);
+    const line2Label2Width = doc.getTextWidth(line2Label2);
+    
+    doc.setFont("helvetica", "normal");
+    doc.text((data.postalCode || "").toUpperCase(), xAfterAddress + line2Label2Width + 2, textY);
+    
+    doc.setFont("helvetica", "bold");
+    const line2Label3 = "  Ville:";
+    const xAfterPostalCode = xAfterAddress + line2Label2Width + 2 + doc.getTextWidth((data.postalCode || "").toUpperCase());
+    doc.text(line2Label3, xAfterPostalCode, textY);
+    const line2Label3Width = doc.getTextWidth(line2Label3);
+    
+    doc.setFont("helvetica", "normal");
+    doc.text((data.city || "").toUpperCase(), xAfterPostalCode + line2Label3Width + 2, textY);
+    textY += 6;
+    
+    textY += 6;
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("Atteste que la société ECOLOGY'B a pris en charge ma demande de SAV.", margin + 10, textY);
+    textY += 6;
+    
+    doc.text("J'atteste sur l'honneur que les tâches mentionnées ci-dessus ont bien été réalisées et", margin + 10, textY);
+    textY += 6;
+    
+    doc.text("m'apportent entière satisfaction.", margin + 10, textY);
+    textY += 6;
+    
+    textY += 6;
+    
+    // Bold "Date: "
+    doc.setFont("helvetica", "bold");
+    const boldLabel = "Date: ";
+    doc.text(boldLabel, margin + 10, textY);
+    const boldLabelWidth = doc.getTextWidth(boldLabel);
+
+    // Normal "Le {date}"
+    doc.setFont("helvetica", "normal");
+    doc.text("Le " + formatDateOnly(data.signatureDate).toUpperCase(), margin + 10 + boldLabelWidth, textY);
+    textY += 6;
+        
+    doc.setFont("helvetica", "bold");
+    const line7Label = "A:";
+    doc.text(line7Label, margin + 10, textY);
+    const line7LabelWidth = doc.getTextWidth(line7Label);
+    doc.setFont("helvetica", "normal");
+    doc.text((data.city || "").toUpperCase(), margin + 10 + line7LabelWidth + 2, textY);
+    textY += 6;
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("Signature:", margin + 10, textY);
+    
     if (data.signature) {
       try {
         doc.addImage(data.signature, 'PNG', margin + 10, textY + 2, 40, 15);
@@ -1060,9 +1126,10 @@ const AttestationModal: React.FC = () => {
         doc.text("Signature non disponible", margin + 10, textY + 10);
       }
     }
-    
+    textY += 15;
+
     yPos = yPos + declBoxHeight + 10;
-  
+
     // -----------------------------
     // Footer Section
     // -----------------------------
@@ -1074,31 +1141,34 @@ const AttestationModal: React.FC = () => {
     const footerY = pageHeight - footerHeight + 7;
     doc.text("Contact: contact@entreprise.com | Tél: 01 23 45 67 89", margin, footerY);
     doc.text("SIRET: 123 456 789 00034 | RCS Paris", margin, footerY + 5);
-  
-    // Save the PDF
+
     doc.save("attestation_professionnelle.pdf");
   };
 
   // ------------------------------------------------------------------
-  // Utility function to format date and time
+  // Fonction utilitaire pour formater la date et l'heure
   // ------------------------------------------------------------------
   function formatDateTime(dateString?: string): string {
     if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      return date.toLocaleString('fr-FR', { 
+      // Format date-time and replace ':' with 'h'
+      const formatted = date.toLocaleString('fr-FR', { 
         day: '2-digit', 
         month: '2-digit', 
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
-      }).replace("à ", " à ");
+      }).replace(/:/g, "h");
+      // Insert " à " after the date part (assumes format dd/mm/yyyy)
+      return formatted.replace(/^(\d{2}\/\d{2}\/\d{4})\s*/, "$1 à ");
     } catch {
       return dateString;
     }
   }
   
-  // Fonction de gestion de la soumission du formulaire
+  
+  // Gestion de la soumission du formulaire
   const handleGenerateAttestation = () => {
     if (!signaturePadRef.current && canvasRef.current) {
       initializeSignaturePad();
@@ -1135,7 +1205,6 @@ const AttestationModal: React.FC = () => {
 
   return (
     <>
-      {/* Bouton pour ouvrir le modal */}
       <Button 
         onClick={() => setShowAttestationModal(true)}
         className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl ml-2 shadow-md"
@@ -1143,10 +1212,9 @@ const AttestationModal: React.FC = () => {
         Générer Attestation
       </Button>
 
-      {/* Modal de l'attestation */}
       <Modal
         isOpen={showAttestationModal}
-        onAfterOpen={initializeSignaturePad}  // Appel dès que le modal est ouvert
+        onAfterOpen={initializeSignaturePad}
         onRequestClose={() => setShowAttestationModal(false)}
         contentLabel="Générer une Attestation d'Intervention S.A.V."
         className="fixed inset-0 flex items-center justify-center p-4 sm:p-8 outline-none"
@@ -1264,29 +1332,25 @@ const AttestationModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="interventionDate" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                    Date de l&apos;intervention
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="interventionDate"
-                      type="date"
-                      value={attestationData.interventionDate}
-                      onChange={(e) =>
-                        setAttestationData(prev => ({ ...prev, interventionDate: e.target.value }))
-                      }
-                      required
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                    </div>
+                <label htmlFor="interventionDate" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                  Date de l&apos;intervention
+                </label>
+                <div className="relative">
+                  <input
+                    id="interventionDate"
+                    type="datetime-local"
+                    lang="fr"
+                    value={attestationData.interventionDate}
+                    onChange={(e) =>
+                      setAttestationData(prev => ({ ...prev, interventionDate: e.target.value }))
+                    }
+                    required
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                    {/* Optional SVG icon */}
                   </div>
+                </div>
                 </div>
               </div>
             </div>
@@ -1372,6 +1436,7 @@ const AttestationModal: React.FC = () => {
     </>
   );
 };
+
 
 export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
