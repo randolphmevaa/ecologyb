@@ -175,14 +175,52 @@ L'équipe Ecology'b`,
   await sgMail.send(msg);
 }
 
+// Define an interface for the new user object
+interface NewUser {
+  id: string;
+  email: string;
+  password: string;
+  realPassword: string;
+  role: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  gender: string;
+  createdAt: Date;
+  siret?: string;
+  raisonSocial?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Extraction du corps de la requête incluant email, role, firstName, lastName, phone et gender
-    const { email, role, firstName, lastName, phone, gender } = await request.json();
+    // Extraction du corps de la requête incluant email, role, firstName, lastName, phone, gender,
+    // et, pour la régie, siret et raisonSocial.
+    const {
+      email,
+      role,
+      firstName,
+      lastName,
+      phone,
+      gender,
+      siret,
+      raisonSocial,
+    } = await request.json();
 
     if (!email || !role || !gender) {
       return NextResponse.json(
         { success: false, message: "Email, rôle et genre sont requis." },
+        { status: 400 }
+      );
+    }
+
+    // Si le rôle est "Project / Installation Manager", vérifier que les champs supplémentaires sont fournis.
+    if (role === "Project / Installation Manager" && (!siret || !raisonSocial)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Pour la Régie, les champs SIRET/SIREN et Raison Sociale sont obligatoires.",
+        },
         { status: 400 }
       );
     }
@@ -227,8 +265,8 @@ export async function POST(request: NextRequest) {
     // Hachage du mot de passe temporaire
     const hashedPassword = await hash(tempPassword, 10);
 
-    // Insertion du nouvel utilisateur dans la collection "users"
-    const newUser = {
+    // Préparation du nouvel utilisateur avec les champs communs
+    const newUser: NewUser = {
       id: newUserId,
       email,
       password: hashedPassword,  // Mot de passe haché pour l'authentification
@@ -240,6 +278,12 @@ export async function POST(request: NextRequest) {
       gender, // Sauvegarde du genre
       createdAt: new Date(),
     };
+
+    // Ajout des champs supplémentaires pour le rôle "Project / Installation Manager"
+    if (role === "Project / Installation Manager") {
+      newUser.siret = siret;
+      newUser.raisonSocial = raisonSocial;
+    }
 
     await db.collection("users").insertOne(newUser);
 

@@ -4,12 +4,15 @@ import React, {useRef} from 'react';
 import SignaturePad from 'signature_pad';
 import { useEffect, useState, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import NewTicketModal from './NewTicketModal';
 import {  subDays, eachDayOfInterval, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
+import axios from 'axios';
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/Button";
 import { jsPDF } from 'jspdf';
 import { LineChart, customTooltip } from "@/components/ui/Charts/LineChart";
+import EventDetailsModal from "./Modal2";
 // import jsPDF from "jspdf"; // Make sure to install jsPDF (npm install jspdf)
 import Modal from "react-modal"; // Or use your preferred modal library
 
@@ -17,8 +20,8 @@ import {
   LifebuoyIcon,
   ClockIcon,
   CheckCircleIcon,
-  DocumentArrowDownIcon,
-  AdjustmentsHorizontalIcon,
+  // DocumentArrowDownIcon,
+  // AdjustmentsHorizontalIcon,
   BellIcon,
   ShieldCheckIcon,
   PlusIcon,
@@ -49,58 +52,65 @@ import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { CalendarDaysIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, PrinterIcon, SearchIcon, TrashIcon } from "lucide-react";
 
+
+// Define your types (adjust as needed)
+interface ConversationMessage {
+  sender: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface Ticket {
+  customerLastName: string;
+  customerFirstName: string;
+  _id?: string;
+  id: string;
+  createdAt: string;
+  ticket?: string;
+  status: 'scheduled' | 'completed' | 'pending';
+  statut: 'scheduled' | 'completed' | 'pending';
+  priority: 'high' | 'medium' | 'low';
+  customer: string;
+  date: Date;
+  technician: string;
+  address: string;
+  title: string;
+  problem: string;
+  start: Date; // Changed to Date
+  end: Date;   // Changed to Date
+  allDay: boolean;
+  type: string;
+  location: string;
+  notes: string;
+  participants: string;
+  equipmentType: string; // Added missing property
+  conversation?: ConversationMessage[];
+}
+
 // Ensure moment is using French
 moment.locale("fr");
 const localizer = momentLocalizer(moment);
 
-
-// Example French messages for react-big-calendar
-// const messagesFr = {
-//   allDay: "Toute la journée",
-//   previous: "Précédent",
-//   next: "Suivant",
-//   today: "Aujourd'hui",
-//   month: "Mois",
-//   week: "Semaine",
-//   day: "Jour",
-//   agenda: "Agenda",
-//   date: "Date",
-//   time: "Heure",
-//   event: "Événement",
-//   noEventsInRange: "Aucun événement à afficher.",
-//   showMore: (count: number) => `+ ${count} supplémentaire(s)`,
-// };
-
-// interface CustomCSSProperties extends React.CSSProperties {}
-
-// type WeekdayKey = "Lun" | "Mar" | "Mer" | "Jeu" | "Ven";
-
-interface Ticket {
-  _id: string;
-  statut: string;
-  dates: {
-    created: string;
-    resolution?: string;
-  };
-  problème: string;
-  customer: string;
-  solution?: string;
-}
-
-interface CalendarEvent extends SavEvent {
-  title: string;
-  start: Date;
-  end: Date;
-  allDay: boolean;
-}
+// interface CalendarEvent extends SavEvent {
+//   title: string;
+//   start: Date;
+//   end: Date;
+//   allDay: boolean;
+// }
 
 interface SavEvent {
-  id: string;
+  id: string | number;
+  customerFirstName?: string;
+  customerLastName?: string;
+  customer?: string;
+  createdAt: string;
+  technicianFirstName?: string;
+  technicianLastName?: string;
+  technician?: string;
+  contactId?: string | number;
   status: "completed" | "pending" | "scheduled";
   priority?: "high" | "medium" | "low";
-  customer: string;
-  date: string;
-  technician: string;
+  date: Date;
   address: string;
   problem?: string;
   equipmentType?: string;
@@ -121,26 +131,6 @@ const energySolutions: {
   "Système Solaire Combiné": { icon: FireIcon, color: "#8b5cf6" },
 };
 
-  // Example usage:
-  // const data: AttestationData = {
-  //   customerName: "Jean Dupont",
-  //   address: "123 Rue de Paris",
-  //   postalCode: "75001",
-  //   city: "Paris",
-  //   phone: "06 12 34 56 78",
-  //   email: "jean.dupont@email.com",
-  //   interventionDate: "2025-03-01",
-  //   interventionDetails: "Réparation de la carte mère et remplacement du ventilateur. Nettoyage complet du système.",
-  //   technicianName: "Pierre Martin",
-  //   parts: [
-  //     { quantity: 1, description: "Carte mère ASUS B550", reference: "ASB550-01", price: 129.99 },
-  //     { quantity: 2, description: "Ventilateur 120mm", reference: "FAN120-A", price: 19.99 }
-  //   ],
-  //   signatureDate: "01/03/2025",
-  //   signatureLocation: "Paris"
-  // };
-  // generatePDF(data);
-
 interface ProcessedDataPoint {
   date?: string;
   label?: string;
@@ -148,19 +138,6 @@ interface ProcessedDataPoint {
   solutions: number;
   [key: string]: unknown;
 }
-
-
-// Convert your SAV events into the shape react-big-calendar needs
-// function eventsForCalendar(savEvents: SavEvent[]) {
-//   return savEvents.map((ev) => ({
-//     ...ev,
-//     // For RBC: title, start, end
-//     title: ev.customer + (ev.problem ? ` — ${ev.problem}` : ""),
-//     start: new Date(ev.date),
-//     end: new Date(ev.date),
-//     allDay: false, // or true if you want an all-day event
-//   }));
-// }
 
 function processTicketData(
   tickets: Ticket[],
@@ -181,118 +158,6 @@ function processTicketData(
   }));
 }
 
-interface CalendarEvent {
-  title: string;
-  start: Date;
-  end: Date;
-  allDay: boolean;
-  type?: string;
-  location?: string;
-  participants?: string;
-}
-
-// Exemple de données pour le calendrier (mars 2025)
-const sampleEvents: CalendarEvent[] = [
-  {
-    id: "1",
-    status: "scheduled", // Peut être "completed", "pending" ou "scheduled"
-    customer: "Jean Dupont",
-    date: "2025-03-05T09:00:00.000Z",
-    technician: "Technicien A",
-    address: "123 Rue de Paris, Paris",
-    title: "Réunion d'équipe",
-    start: new Date("2025-03-05T09:00:00"),
-    end: new Date("2025-03-05T10:00:00"),
-    allDay: false,
-    type: "réunion", // Pour le style conditionnel, par exemple "réunion"
-    location: "Salle de conférence",
-    priority: "medium",
-    equipmentType: "Pompe à chaleur",
-    notes: "Discussion sur les objectifs du mois",
-    participants: "Jean Dupont, Marie Curie",
-    conversation: [
-      {
-        sender: "Jean Dupont",
-        content: "Préparons la réunion.",
-        timestamp: "2025-03-05T08:45:00.000Z",
-      },
-    ],
-  },
-  {
-    id: "2",
-    status: "pending",
-    customer: "Alice Martin",
-    date: "2025-03-10T14:00:00.000Z",
-    technician: "Technicien B",
-    address: "456 Avenue de Lyon, Lyon",
-    title: "Visite client",
-    start: new Date("2025-03-10T14:00:00"),
-    end: new Date("2025-03-10T15:30:00"),
-    allDay: false,
-    type: "visite",
-    location: "Bureau de Lyon",
-    priority: "high",
-    equipmentType: "Chauffe-eau solaire individuel",
-    notes: "Inspection préventive",
-    participants: "Alice Martin, Technicien B",
-  },
-  {
-    id: "3",
-    status: "completed",
-    customer: "Pierre Legrand",
-    date: "2025-03-15T11:00:00.000Z",
-    technician: "Technicien C",
-    address: "789 Boulevard Saint-Germain, Marseille",
-    title: "Maintenance programmée",
-    start: new Date("2025-03-15T11:00:00"),
-    end: new Date("2025-03-15T12:00:00"),
-    allDay: false,
-    type: "maintenance",
-    location: "Centre technique",
-    priority: "low",
-    equipmentType: "Système Solaire Combiné",
-    notes: "Vérification annuelle effectuée",
-    participants: "Pierre Legrand, Technicien C",
-  },
-  {
-    id: "4",
-    status: "pending",
-    customer: "Sophie Lambert",
-    date: "2025-03-20T08:30:00.000Z",
-    technician: "Technicien D",
-    address: "321 Rue de Bordeaux, Bordeaux",
-    title: "Intervention urgente",
-    start: new Date("2025-03-20T08:30:00"),
-    end: new Date("2025-03-20T09:30:00"),
-    allDay: false,
-    type: "intervention",
-    location: "Site de Bordeaux",
-    priority: "high",
-    equipmentType: "Chauffe-eau thermodynamique",
-    notes: "Problème de surchauffe détecté",
-    participants: "Sophie Lambert, Technicien D",
-  },
-  {
-    id: "5",
-    status: "scheduled",
-    customer: "Marc Dubois",
-    date: "2025-03-25T13:00:00.000Z",
-    technician: "Technicien E",
-    address: "987 Rue de Nice, Nice",
-    title: "Formation technique",
-    start: new Date("2025-03-25T13:00:00"),
-    end: new Date("2025-03-25T15:00:00"),
-    allDay: false,
-    type: "formation",
-    location: "Centre de formation",
-    priority: "medium",
-    equipmentType: "Système Solaire Combiné",
-    notes: "Session de formation sur le nouveau logiciel",
-    participants: "Marc Dubois, Technicien E",
-  },
-];
-
-// Main component
 function SAVStatistics() {
   // State management
   const [dateRange, setDateRange] = useState({
@@ -733,7 +598,8 @@ function SAVStatistics() {
 }
 
 interface AttestationData {
-  customerName: string;
+  lastName: string;
+  firstName: string;
   address?: string;
   postalCode?: string;
   city?: string;
@@ -767,34 +633,205 @@ declare module 'jspdf' {
   }
 }
 
-// const primaryColor = "#2A4365";    // Deep blue
-// const secondaryColor = "#EBF8FF";  // Light background
-// const accentColor = "#48BB78";     // Fresh green
-// const textColor = "#2D3748";       // Dark gray
-// const lightText = "#718096";       // Gray for labels
+// Define props for the SAV event card component
+interface SavEventCardProps {
+  event: SavEvent;
+  setSelectedEvent: (event: SavEvent) => void;
+}
+
+const SavEventCard: React.FC<SavEventCardProps> = ({ event, setSelectedEvent }) => {
+  const [mailingAddress, setMailingAddress] = useState<string>("");
+
+  useEffect(() => {
+    if (event.contactId) {
+      fetch(`/api/contacts/${event.contactId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setMailingAddress(data.mailingAddress);
+        })
+        .catch((err) => console.error("Failed to fetch contact:", err));
+    }
+  }, [event.contactId]);
+
+  const customerName = event.customerFirstName
+    ? `${event.customerFirstName} ${event.customerLastName}`
+    : event.customer || "";
+
+  const technicianName = event.technicianFirstName
+    ? `${event.technicianFirstName} ${event.technicianLastName}`
+    : event.technician || "";
+
+  return (
+    <motion.div
+      key={event.id}
+      className="bg-white rounded-xl border border-[#bfddf9] shadow-sm p-5 hover:shadow-md transition-all duration-300 cursor-pointer"
+      whileHover={{ x: 5 }}
+      onClick={() => setSelectedEvent(event)}
+    >
+      <div className="flex items-start gap-4">
+        {/* Status Indicator */}
+        <div className="mt-1.5 relative">
+          <div
+            className={`w-3 h-3 rounded-full ${
+              event.status === "completed"
+                ? "bg-green-500 ring-4 ring-green-100"
+                : event.status === "pending"
+                ? "bg-amber-500 ring-4 ring-amber-100 animate-pulse"
+                : "bg-blue-500 ring-4 ring-blue-100"
+            }`}
+          />
+          {event.priority === "high" && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+          )}
+        </div>
+        {/* Event Content */}
+        <div className="flex-1">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-lg font-semibold text-[#213f5b] flex items-center gap-2">
+                {customerName}
+                {event.priority === "high" && (
+                  <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">
+                    Urgent
+                  </span>
+                )}
+              </h3>
+              <p className="text-[#5a6e87] text-sm mt-1">
+                {event.problem || "Intervention programmée"}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-[#213f5b] font-medium">
+                {new Date(event.createdAt).toLocaleDateString("fr-FR", {
+                  day: "numeric",
+                  month: "short",
+                })}
+              </p>
+              <p className="text-sm text-[#5a6e87]">
+                {new Date(event.createdAt).toLocaleTimeString("fr-FR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
+          </div>
+          {/* Badges */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#f8fbff] text-[#5a6e87]">
+              <UserCircleIcon className="h-3.5 w-3.5 mr-1" />
+              {technicianName}
+            </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#f8fbff] text-[#5a6e87]">
+              <MapPinIcon className="h-3.5 w-3.5 mr-1" />
+              {mailingAddress}
+            </span>
+            {event.equipmentType && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#f8fbff] text-[#5a6e87]">
+                {energySolutions[event.equipmentType]
+                  ? (() => {
+                      const Icon = energySolutions[event.equipmentType].icon;
+                      const color = energySolutions[event.equipmentType].color;
+                      return (
+                        <>
+                          <Icon className="h-3.5 w-3.5 mr-1" style={{ color }} />
+                          {event.equipmentType}
+                        </>
+                      );
+                    })()
+                  : (
+                    <>
+                      <FireIcon className="h-3.5 w-3.5 mr-1 text-[#213f5b]" />
+                      {event.equipmentType}
+                    </>
+                    )}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+interface Contact {
+  mailingAddress: string;
+  phone: string;
+  // add other properties if needed
+}
+
+interface Client {
+  _id: string;
+  mailingAddress: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  // add other properties as needed
+}
+
 
 const AttestationModal: React.FC = () => {
   const [showAttestationModal, setShowAttestationModal] = useState<boolean>(false);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [attestationData, setAttestationData] = useState<AttestationData>({
-    customerName: '',
+    lastName: '',
+    firstName: '',
     ticketId: '',
     date: new Date().toISOString().split('T')[0],
     address: '',
     postalCode: '',
     city: '',
     phone: '',
-    // Use slice(0,16) to include both date and hour/minute in ISO format
     interventionDate: new Date().toISOString().slice(0, 16),
     interventionDetails: '',
     signatureDate: '',
     signatureLocation: '',
     signature: null,
   });
+  const [techSectionRevealed, setTechSectionRevealed] = useState(false);
+  const [clientSectionRevealed, setClientSectionRevealed] = useState(false);
 
   // Références pour le conteneur, le canvas et l'instance de SignaturePad
   const signatureRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const signaturePadRef = useRef<SignaturePad | null>(null);
+
+  // Fetch client contacts from API on mount
+  useEffect(() => {
+    fetch('/api/contacts')
+      .then((res) => res.json())
+      .then((data) => setClients(data))
+      .catch((error) => console.error('Error fetching clients:', error));
+  }, []);
+
+  // Utility function to parse mailingAddress
+  const parseMailingAddress = (mailingAddress: string) => {
+    // Extract postal code (5 digits) and the rest as city from the mailing address string.
+    const regex = /(\d{5})\s+(.+)$/;
+    const match = mailingAddress.match(regex);
+    if (match) {
+      return { postalCode: match[1], city: match[2] };
+    }
+    return { postalCode: '', city: '' };
+  };
+
+  // Update attestationData when a client is selected from dropdown
+  const handleClientSelect = (clientId: string) => {
+    setSelectedClientId(clientId);
+    const client = clients.find((c) => c._id === clientId);
+    if (client) {
+      const { postalCode, city } = parseMailingAddress(client.mailingAddress);
+      setAttestationData((prev) => ({
+        ...prev,
+        lastName: client.lastName,
+        firstName: client.firstName,
+        address: client.mailingAddress,
+        postalCode,
+        city,
+        phone: client.phone,
+      }));
+    }
+  };
 
   // Fonction d'initialisation de la zone de signature
   const initializeSignaturePad = () => {
@@ -920,7 +957,7 @@ const AttestationModal: React.FC = () => {
     const secondaryColor = "#EBF8FF";  
     const accentColor = "#48BB78";     
     const textColor = "#2D3748";       
-    const lightText = "#718096";       
+    // const lightText = "#718096";       
 
     // Set a clean background
     doc.setFillColor(secondaryColor);
@@ -967,12 +1004,14 @@ const AttestationModal: React.FC = () => {
     let yPos = 15 + headerHeight + 15;
     doc.setFontSize(10);
     const clientInfo = [
-      { label: "Nom du client", value: data.customerName || "" },
+      { 
+        label: "Nom du client", 
+        value: ((data.lastName || "") + " " + (data.firstName || "")).trim() 
+      },
       { label: "Adresse", value: data.address || "" },
       { label: "Code Postal", value: data.postalCode || "" },
       { label: "Ville", value: data.city || "" },
       { label: "Tél portable", value: data.phone || "" },
-      // Build the date string with "Le" and the formatted intervention date.
       { label: "Date de l'intervention", value: data.interventionDate ? `Le ${formatDateTime(data.interventionDate)}` : "" }
     ];
 
@@ -984,7 +1023,6 @@ const AttestationModal: React.FC = () => {
       
       // Normal text for the value
       doc.setFont("helvetica", "normal");
-      // For "Date de l'intervention", don't force uppercase so it keeps the "à" in lowercase
       if (info.label === "Date de l'intervention") {
         doc.text(info.value, margin + 45, yPos);
       } else {
@@ -1016,7 +1054,6 @@ const AttestationModal: React.FC = () => {
     doc.text("Détail de l’intervention:", margin + 10, yPos + 16);
 
     doc.setFont("helvetica", "normal");
-    // Convert interventionDetails to uppercase before splitting the text
     const techDetails = doc.splitTextToSize((data.interventionDetails || "Aucun détail fourni").toUpperCase(), contentWidth - 20);
     doc.text(techDetails, margin + 10, yPos + 22);
     yPos += techBoxHeight + 10;
@@ -1052,35 +1089,30 @@ const AttestationModal: React.FC = () => {
     doc.setFont("helvetica", "bold");
     const line1Label = "Je soussigné(e) Madame/Monsieur:";
     doc.text(line1Label, margin + 10, textY);
-    const line1LabelWidth = doc.getTextWidth(line1Label);
     doc.setFont("helvetica", "normal");
-    doc.text((data.customerName || "").toUpperCase(), margin + 10 + line1LabelWidth + 2, textY);
+    doc.text(((data.lastName || "") + " " + (data.firstName || "")).toUpperCase(), margin + 72, yPos+ 20);
     textY += 6;
     
     doc.setFont("helvetica", "bold");
     const line2Label1 = "Demeurant à l'adresse:";
     doc.text(line2Label1, margin + 10, textY);
-    const line2Label1Width = doc.getTextWidth(line2Label1);
     doc.setFont("helvetica", "normal");
-    doc.text((data.address || "").toUpperCase(), margin + 10 + line2Label1Width + 2, textY);
-    
+    doc.text((data.address || "").toUpperCase(), margin + 12 + doc.getTextWidth(line2Label1) + 2, textY);
+    textY += 6;
+
+    // New line for Code Postal:
     doc.setFont("helvetica", "bold");
-    const line2Label2 = ", Code Postal:";
-    const xAfterAddress = margin + 10 + line2Label1Width + 2 + doc.getTextWidth((data.address || "").toUpperCase());
-    doc.text(line2Label2, xAfterAddress, textY);
-    const line2Label2Width = doc.getTextWidth(line2Label2);
-    
+    const line2Label2 = "Code Postal:";
+    doc.text(line2Label2, margin + 10, textY);
     doc.setFont("helvetica", "normal");
-    doc.text((data.postalCode || "").toUpperCase(), xAfterAddress + line2Label2Width + 2, textY);
-    
+    doc.text((data.postalCode || "").toUpperCase(), margin + 10 + doc.getTextWidth(line2Label2) + 2, textY);
+    textY += 6;
     doc.setFont("helvetica", "bold");
     const line2Label3 = "  Ville:";
-    const xAfterPostalCode = xAfterAddress + line2Label2Width + 2 + doc.getTextWidth((data.postalCode || "").toUpperCase());
-    doc.text(line2Label3, xAfterPostalCode, textY);
-    const line2Label3Width = doc.getTextWidth(line2Label3);
+    doc.text(line2Label3, margin + 8, textY);
     
     doc.setFont("helvetica", "normal");
-    doc.text((data.city || "").toUpperCase(), xAfterPostalCode + line2Label3Width + 2, textY);
+    doc.text((data.city || "").toUpperCase(), margin + 10 + doc.getTextWidth(line2Label3) + 2, textY);
     textY += 6;
     
     textY += 6;
@@ -1097,13 +1129,11 @@ const AttestationModal: React.FC = () => {
     
     textY += 6;
     
-    // Bold "Date: "
     doc.setFont("helvetica", "bold");
     const boldLabel = "Date: ";
     doc.text(boldLabel, margin + 10, textY);
     const boldLabelWidth = doc.getTextWidth(boldLabel);
 
-    // Normal "Le {date}"
     doc.setFont("helvetica", "normal");
     doc.text("Le " + formatDateOnly(data.signatureDate).toUpperCase(), margin + 10 + boldLabelWidth, textY);
     textY += 6;
@@ -1111,9 +1141,8 @@ const AttestationModal: React.FC = () => {
     doc.setFont("helvetica", "bold");
     const line7Label = "A:";
     doc.text(line7Label, margin + 10, textY);
-    const line7LabelWidth = doc.getTextWidth(line7Label);
     doc.setFont("helvetica", "normal");
-    doc.text((data.city || "").toUpperCase(), margin + 10 + line7LabelWidth + 2, textY);
+    doc.text((data.city || "").toUpperCase(), margin + 10 + doc.getTextWidth(line7Label) + 2, textY);
     textY += 6;
     
     doc.setFont("helvetica", "bold");
@@ -1139,20 +1168,20 @@ const AttestationModal: React.FC = () => {
     doc.setTextColor("#FFF");
     doc.setFontSize(9);
     const footerY = pageHeight - footerHeight + 7;
-    doc.text("Contact: contact@entreprise.com | Tél: 01 23 45 67 89", margin, footerY);
-    doc.text("SIRET: 123 456 789 00034 | RCS Paris", margin, footerY + 5);
+    doc.text("Contact: contact@ecologyb.fr | Tél: 09 52 02 81 36", margin, footerY);
+    doc.text("SIRET: 891 318 438 00027 | RCS Pontoise", margin, footerY + 5);
 
-    doc.save("attestation_professionnelle.pdf");
+    const randomNumber = Math.floor(Math.random() * 9000) + 1000;
+    const clientName = (data.lastName || "CLIENT").toUpperCase();
+    const fileName = `ATTESTATION_SAV_${clientName}_${randomNumber}.pdf`;
+
+    doc.save(fileName);
   };
 
-  // ------------------------------------------------------------------
-  // Fonction utilitaire pour formater la date et l'heure
-  // ------------------------------------------------------------------
   function formatDateTime(dateString?: string): string {
     if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      // Format date-time and replace ':' with 'h'
       const formatted = date.toLocaleString('fr-FR', { 
         day: '2-digit', 
         month: '2-digit', 
@@ -1160,46 +1189,39 @@ const AttestationModal: React.FC = () => {
         hour: '2-digit',
         minute: '2-digit'
       }).replace(/:/g, "h");
-      // Insert " à " after the date part (assumes format dd/mm/yyyy)
       return formatted.replace(/^(\d{2}\/\d{2}\/\d{4})\s*/, "$1 à ");
     } catch {
       return dateString;
     }
   }
   
-  // Gestion de la soumission du formulaire
   const handleGenerateAttestation = () => {
     if (!signaturePadRef.current && canvasRef.current) {
       initializeSignaturePad();
       console.log("Signature pad initialized on demand");
     }
-
+  
     if (!signaturePadRef.current) {
       console.error("Signature pad not initialized");
       alert("Erreur: La zone de signature n'est pas initialisée correctement. Veuillez réessayer.");
       return;
     }
-
-    if (signaturePadRef.current.isEmpty()) {
-      alert("Veuillez signer le document avant de continuer.");
-      return;
+  
+    // Get signature data only if a signature exists
+    let signatureData = "";
+    if (!signaturePadRef.current.isEmpty()) {
+      signatureData = signaturePadRef.current.toDataURL('image/png');
     }
-
-    try {
-      const signatureData = signaturePadRef.current.toDataURL('image/png');
-      const finalData = {
-        ...attestationData,
-        signature: signatureData,
-        signatureDate: attestationData.signatureDate || new Date().toISOString().split('T')[0],
-      };
-
-      console.log("Form submitted with data:", finalData);
-      generatePDF(finalData);
-      setShowAttestationModal(false);
-    } catch (error) {
-      console.error("Error generating attestation:", error);
-      alert("Une erreur s'est produite lors de la génération du document. Veuillez réessayer.");
-    }
+  
+    const finalData = {
+      ...attestationData,
+      signature: signatureData, // May be an empty string if no signature was provided
+      signatureDate: attestationData.signatureDate || new Date().toISOString().split('T')[0],
+    };
+  
+    console.log("Form submitted with data:", finalData);
+    generatePDF(finalData);
+    setShowAttestationModal(false);
   };
 
   return (
@@ -1246,24 +1268,60 @@ const AttestationModal: React.FC = () => {
             }}
             className="space-y-8"
           >
+            {/* Dropdown to choose a client */}
+            <div className="mb-6">
+              <label htmlFor="clientSelect" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                Sélectionner un client
+              </label>
+              <select
+                id="clientSelect"
+                value={selectedClientId}
+                onChange={(e) => handleClientSelect(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+              >
+                <option value="">-- Choisir un client --</option>
+                {clients.map((client) => (
+                  <option key={client._id} value={client._id}>
+                    {client.firstName} {client.lastName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Section Informations Client */}
             <div className="space-y-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Informations Client</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="col-span-1 md:col-span-2">
-                  <label htmlFor="customerName" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                    Nom du client
+                <div>
+                  <label htmlFor="lastName" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                    Nom
                   </label>
                   <input
-                    id="customerName"
+                    id="lastName"
                     type="text"
-                    value={attestationData.customerName}
+                    value={attestationData.lastName}
                     onChange={(e) =>
-                      setAttestationData(prev => ({ ...prev, customerName: e.target.value }))
+                      setAttestationData(prev => ({ ...prev, lastName: e.target.value }))
                     }
                     required
+                    placeholder="Entrez le nom"
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
-                    placeholder="Entrez le nom du client"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="firstName" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                    Prénom
+                  </label>
+                  <input
+                    id="firstName"
+                    type="text"
+                    value={attestationData.firstName}
+                    onChange={(e) =>
+                      setAttestationData(prev => ({ ...prev, firstName: e.target.value }))
+                    }
+                    required
+                    placeholder="Entrez le prénom"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                   />
                 </div>
                 <div className="col-span-1 md:col-span-2">
@@ -1278,8 +1336,8 @@ const AttestationModal: React.FC = () => {
                       setAttestationData(prev => ({ ...prev, address: e.target.value }))
                     }
                     required
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                     placeholder="Adresse complète"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                   />
                 </div>
                 <div>
@@ -1294,8 +1352,10 @@ const AttestationModal: React.FC = () => {
                       setAttestationData(prev => ({ ...prev, postalCode: e.target.value }))
                     }
                     required
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    maxLength={5}
+                    pattern="\d{5}"
                     placeholder="Ex: 75001"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                   />
                 </div>
                 <div>
@@ -1310,8 +1370,8 @@ const AttestationModal: React.FC = () => {
                       setAttestationData(prev => ({ ...prev, city: e.target.value }))
                     }
                     required
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                     placeholder="Ex: Paris"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
                   />
                 </div>
                 <div>
@@ -1320,99 +1380,128 @@ const AttestationModal: React.FC = () => {
                   </label>
                   <input
                     id="phone"
-                    type="tel"
+                    type="text"
                     value={attestationData.phone}
                     onChange={(e) =>
                       setAttestationData(prev => ({ ...prev, phone: e.target.value }))
                     }
                     required
+                    pattern="\d+"
+                    placeholder="Ex: 0612345678"
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
-                    placeholder="Ex: 06 12 34 56 78"
                   />
                 </div>
                 <div>
-                <label htmlFor="interventionDate" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                  Date de l&apos;intervention
-                </label>
-                <div className="relative">
-                  <input
-                    id="interventionDate"
-                    type="datetime-local"
-                    lang="fr"
-                    value={attestationData.interventionDate}
-                    onChange={(e) =>
-                      setAttestationData(prev => ({ ...prev, interventionDate: e.target.value }))
-                    }
-                    required
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                    {/* Optional SVG icon */}
+                  <label htmlFor="interventionDate" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                    Date de l&apos;intervention
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="interventionDate"
+                      type="datetime-local"
+                      lang="fr"
+                      value={attestationData.interventionDate}
+                      onChange={(e) =>
+                        setAttestationData(prev => ({ ...prev, interventionDate: e.target.value }))
+                      }
+                      required
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                      {/* Optional SVG icon */}
+                    </div>
                   </div>
-                </div>
                 </div>
               </div>
             </div>
             
             {/* Section équipe technique */}
-            <div className="space-y-6 pt-6 border-t dark:border-gray-700">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">ENCADRÉ RÉSERVÉ À L&apos;ÉQUIPE TECHNIQUE</h3>
-              <div>
-                <label htmlFor="interventionDetails" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                  Détail de l&apos;intervention
-                </label>
-                <textarea
-                  id="interventionDetails"
-                  value={attestationData.interventionDetails}
-                  onChange={(e) =>
-                    setAttestationData(prev => ({ ...prev, interventionDetails: e.target.value }))
-                  }
-                  rows={5}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
-                  placeholder="Décrivez les détails de l'intervention technique..."
-                ></textarea>
-              </div>
-            </div>
-            
-            {/* Section Signature */}
-            <div className="col-span-1 md:col-span-2">
-              <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                Signature
-              </label>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                Utilisez votre souris ou votre doigt pour signer dans la zone ci-dessous.
-              </p>
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-white">
-                <div 
-                  className="w-full h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center relative cursor-crosshair"
-                  ref={signatureRef}
+            <div className="relative pt-6 border-t dark:border-gray-700">
+              {!techSectionRevealed && (
+                <button
+                  type="button"
+                  onClick={() => setTechSectionRevealed(true)}
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 px-6 py-2.5 rounded-lg bg-red-600 text-white border border-red-600 hover:bg-red-700 hover:border-red-700 hover:shadow-md font-medium transition-colors"
                 >
-                  {!attestationData.signature && (
-                    <div className="text-gray-400 dark:text-gray-500 absolute pointer-events-none">
-                      Cliquez ou touchez ici pour signer
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-between mt-2">
-                  <div className="text-sm text-gray-500">
-                    {signaturePadRef.current && !signaturePadRef.current.isEmpty() ? "Signature enregistrée" : ""}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={clearSignature}
-                    className="text-sm text-gray-400 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400"
-                  >
-                    Effacer la signature
-                  </button>
+                  Remplir pour l&apos;ÉQUIPE TECHNIQUE
+                </button>
+              
+              )}
+              <div className={`space-y-6 ${!techSectionRevealed ? "blur-sm pointer-events-none" : ""}`}>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  ENCADRÉ RÉSERVÉ À L&apos;ÉQUIPE TECHNIQUE
+                </h3>
+                <div>
+                  <label htmlFor="interventionDetails" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                    Détail de l&apos;intervention
+                  </label>
+                  <textarea
+                    id="interventionDetails"
+                    value={attestationData.interventionDetails}
+                    onChange={(e) =>
+                      setAttestationData(prev => ({ ...prev, interventionDetails: e.target.value }))
+                    }
+                    rows={5}
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="Décrivez les détails de l'intervention technique..."
+                  ></textarea>
                 </div>
               </div>
             </div>
-            
+
+            {/* Section Signature */}
+            <div className="relative pt-6 border-t dark:border-gray-700">
+              {!clientSectionRevealed && (
+                <button
+                  type="button"
+                  onClick={() => setClientSectionRevealed(true)}
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 px-6 py-2.5 rounded-lg bg-red-600 text-white border border-red-600 hover:bg-red-700 hover:border-red-700 hover:shadow-md font-medium transition-colors"
+                >
+                  Remplir pour le CLIENT
+                </button>
+              )}
+              <div className={`space-y-6 ${!clientSectionRevealed ? "blur-sm pointer-events-none" : ""}`}>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  ENCADRÉ RÉSERVÉ AU CLIENT
+                </h3>
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                  Signature
+                </label>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  Utilisez votre souris ou votre doigt pour signer dans la zone ci-dessous.
+                </p>
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-white">
+                  <div 
+                    className="w-full h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center relative cursor-crosshair"
+                    ref={signatureRef}
+                  >
+                    {!attestationData.signature && (
+                      <div className="text-gray-400 dark:text-gray-500 absolute pointer-events-none">
+                        Cliquez ou touchez ici pour signer
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <div className="text-sm text-gray-500">
+                      {signaturePadRef.current && !signaturePadRef.current.isEmpty() ? "Signature enregistrée" : ""}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearSignature}
+                      className="text-sm text-gray-400 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400"
+                    >
+                      Effacer la signature
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Boutons Annuler / Enregistrer */}
             <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t dark:border-gray-700">
               <Button
                 type="button"
-                className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-300 dark:text-gray-300 font-medium transition-colors"
+                className="px-6 py-2.5 rounded-lg bg-red-600 text-white border border-red-600 hover:bg-red-700 hover:border-red-700 hover:shadow-md font-medium transition-colors"
                 onClick={() => setShowAttestationModal(false)}
               >
                 Annuler
@@ -1436,16 +1525,16 @@ const AttestationModal: React.FC = () => {
   );
 };
 
-
 export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<SavEvent | null>(null);
+  const [contact, setContact] = useState<Contact | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<"month" | "week" | "day" | "agenda">(Views.MONTH);
   const [activeViewTab, setActiveViewTab] = useState("Mois");
-  // Date range and grouping state
   const [dateRange ] = useState<{
     startDate: Date | null;
     endDate: Date | null;
@@ -1456,153 +1545,33 @@ export default function SupportPage() {
   const [dataGrouping,  ] = useState<
     "daily" | "weekly" | "monthly" | "yearly"
   >("weekly");
+  // Inside your component
+  const itemsPerPage = 5; // Adjust as needed
+  const [currentPage, setCurrentPage] = useState(1);
+  // These could be set via similar API calls for closedTickets and pendingTickets
+  const [attestationsCount, setAttestationsCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch attestations data from your API endpoint
+    axios.get('/api/attestations')
+      .then(response => {
+        if (response.data.success) {
+          // Set the count to the number of items returned by the API
+          setAttestationsCount(response.data.data.length);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching attestations:', error);
+      });
+  }, []);
+
+  // Calculate indices for slicing the events array
+  const indexOfLastEvent = currentPage * itemsPerPage;
+  const indexOfFirstEvent = indexOfLastEvent - itemsPerPage;
+  
 
   // For the S.A.V. filter tabs
   const [activeFilter, setActiveFilter] = useState<string>("all");
-
-  // Sample S.A.V. events
-  const savEvents: SavEvent[] = [
-    {
-      id: "1",
-      status: "completed", // Must be exactly one of: "completed", "pending", "scheduled"
-      priority: "medium",  // Allowed: "high", "medium", "low"
-      customer: "Alice Johnson",
-      date: "2024-03-10T14:00:00.000Z",
-      technician: "Technicien A",
-      address: "123 Main St, Paris",
-      problem: "Panne de chauffage",
-      equipmentType: "Pompe à chaleur",
-      notes: "Installation récente, problème de configuration",
-      conversation: [
-        {
-          sender: "Alice Johnson",
-          content: "La panne a été résolue rapidement.",
-          timestamp: "2024-03-10T14:30:00.000Z",
-        },
-        {
-          sender: "Technicien A",
-          content: "Merci pour votre retour.",
-          timestamp: "2024-03-10T14:35:00.000Z",
-        },
-      ],
-    },
-    {
-      id: "2",
-      status: "pending",
-      priority: "high",
-      customer: "Jean Martin",
-      date: "2024-03-11T16:30:00.000Z",
-      technician: "Technicien B",
-      address: "456 Rue de Lyon, Lyon",
-      problem: "Fuite d'eau importante",
-      equipmentType: "Chauffe-eau solaire individuel",
-      notes: "Fuite détectée lors de la vérification de routine, intervention urgente nécessaire",
-      conversation: [
-        {
-          sender: "Jean Martin",
-          content: "L'eau s'accumule rapidement dans la cave.",
-          timestamp: "2024-03-11T16:45:00.000Z",
-        },
-      ],
-    },
-    {
-      id: "3",
-      status: "scheduled",
-      priority: "low",
-      customer: "Marie Dubois",
-      date: "2024-03-12T10:00:00.000Z",
-      technician: "Technicien C",
-      address: "789 Rue Victor Hugo, Marseille",
-      problem: "Maintenance programmée",
-      equipmentType: "Système Solaire Combiné",
-      notes: "Entretien annuel prévu pour vérifier le système",
-      conversation: [],
-    },
-    {
-      id: "4",
-      status: "completed",
-      priority: "medium",
-      customer: "Sophie Laurent",
-      date: "2024-03-13T09:00:00.000Z",
-      technician: "Technicien D",
-      address: "321 Rue de Rivoli, Paris",
-      problem: "Problème de thermostat",
-      equipmentType: "Pompe à chaleur",
-      notes: "Remplacement du thermostat effectué, intervention réussie",
-      conversation: [
-        {
-          sender: "Sophie Laurent",
-          content: "Le remplacement a fonctionné parfaitement.",
-          timestamp: "2024-03-13T09:45:00.000Z",
-        },
-        {
-          sender: "Technicien D",
-          content: "Heureux d'avoir pu aider !",
-          timestamp: "2024-03-13T09:50:00.000Z",
-        },
-      ],
-    },
-    {
-      id: "5",
-      status: "pending",
-      priority: "high",
-      customer: "Luc Moreau",
-      date: "2024-03-14T14:30:00.000Z",
-      technician: "Technicien E",
-      address: "654 Avenue des Champs-Élysées, Paris",
-      problem: "Dysfonctionnement du système de ventilation",
-      equipmentType: "Chauffe-eau thermodynamique",
-      notes: "Signalement urgent, l'intervention est en cours",
-      conversation: [
-        {
-          sender: "Luc Moreau",
-          content:
-            "Le système ne fonctionne pas du tout, j'ai besoin d'une solution rapide.",
-          timestamp: "2024-03-14T14:45:00.000Z",
-        },
-        {
-          sender: "Technicien E",
-          content: "Nous sommes sur le coup, merci de votre patience.",
-          timestamp: "2024-03-14T14:55:00.000Z",
-        },
-      ],
-    },
-    {
-      id: "6",
-      status: "scheduled",
-      priority: "medium",
-      customer: "Claire Petit",
-      date: "2024-03-15T11:00:00.000Z",
-      technician: "Technicien F",
-      address: "987 Boulevard Saint-Germain, Paris",
-      problem: "Vérification annuelle de la chaudière",
-      equipmentType: "Chaudière à condensation",
-      notes: "Inspection de routine programmée pour le contrôle de sécurité",
-      conversation: [],
-    },
-    {
-      id: "7",
-      status: "completed",
-      priority: "low",
-      customer: "Antoine Lefèvre",
-      date: "2024-03-16T08:30:00.000Z",
-      technician: "Technicien G",
-      address: "159 Rue de la République, Lyon",
-      problem: "Mise à jour du logiciel de contrôle",
-      equipmentType: "Système de gestion énergétique",
-      notes: "Mise à jour effectuée sans interruption de service",
-      conversation: [
-        {
-          sender: "Antoine Lefèvre",
-          content: "Tout fonctionne mieux après la mise à jour.",
-          timestamp: "2024-03-16T08:45:00.000Z",
-        },
-      ],
-    },
-  ];
-  
-  // Prepare RBC events
-  // const bigCalEvents = useMemo(() => eventsForCalendar(savEvents), [savEvents]);
 
   // Ticket data for charts
   const processedData = useMemo(() => {
@@ -1622,39 +1591,54 @@ export default function SupportPage() {
       : 0;
   }, [processedData]);
 
-    // Filter S.A.V. events
-    const filteredSavEvents = useMemo(() => {
-      if (activeFilter === "all") return savEvents;
-      return savEvents.filter((event) => event.status === activeFilter);
-    }, [savEvents, activeFilter]);
+    // Fetch the contact details when an event is selected
+    useEffect(() => {
+      if (selectedEvent && selectedEvent.contactId) {
+        fetch(`/api/contacts/${selectedEvent.contactId}`)
+          .then((res) => res.json())
+          .then((data: Contact) => setContact(data))
+          .catch((error) => {
+            console.error("Error fetching contact data:", error);
+            setContact(null);
+          });
+      }
+    }, [selectedEvent]);
 
-
-
-// Event handlers
-// const handleSelectEvent = (event: CalendarEvent): void => {
-//   console.log('Event selected:', event);
-//   // Open event details modal
-// };
-
-// const handleSelectSlot = (slotInfo: SlotInfo): void => {
-//   console.log('Slot selected:', slotInfo);
-//   // Open new event creation modal
-// };
-
-  // Fetch tickets on mount
+  // Fetch tickets from your API on mount and convert date strings to Date objects
   useEffect(() => {
-    fetch("/api/tickets")
+    fetch('/api/tickets')
       .then((res) => res.json())
       .then((data: Ticket[]) => {
-        setTickets(data);
+        const mappedTickets = data.map((ticket) => ({
+          ...ticket,
+          start: new Date(ticket.start),
+          end: new Date(ticket.end),
+          date: new Date(ticket.createdAt),
+        }));
+        setTickets(mappedTickets);
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching tickets:", err);
-        setError("Error loading tickets");
+        console.error('Error fetching tickets:', err);
+        setError('Error loading tickets');
         setLoading(false);
       });
   }, []);
+
+  const calendarEvents = tickets;
+
+  const savEvents: Ticket[] = tickets;
+
+  // Filter S.A.V. events
+  const filteredSavEvents = useMemo(() => {
+    if (activeFilter === "all") return savEvents;
+    return savEvents.filter((event) => event.status === activeFilter);
+  }, [savEvents, activeFilter]);
+
+  const currentEvents = filteredSavEvents.slice(indexOfFirstEvent, indexOfLastEvent);
+
+  // Calculate total pages for disabling/enabling navigation buttons
+  const totalPages = Math.ceil(filteredSavEvents.length / itemsPerPage);
 
   if (loading)
     return (
@@ -1690,79 +1674,14 @@ export default function SupportPage() {
   // Compute some support metrics
   // (Adjust if your statuses differ)
   const openTickets = tickets.filter(
-    (ticket) => ticket.statut.toLowerCase() === "ouvert"
+    ticket => ["ouvert", "scheduled", "open" ].includes(ticket.status?.toLowerCase())
   ).length;
   const pendingTickets = tickets.filter(
-    (ticket) => ticket.statut.toLowerCase() === "pending"
+    ticket => ["pending", "scheduled"].includes(ticket.status?.toLowerCase())
   ).length;
   const closedTickets = tickets.filter(
-    (ticket) => ticket.statut.toLowerCase() === "closed"
+    ticket => ["completed", "closed"].includes(ticket.status?.toLowerCase())
   ).length;
-
-  // Quick range helpers
-  // const isQuickRangeActive = (days: number): boolean => {
-  //   if (!dateRange.startDate || !dateRange.endDate) return false;
-  //   const diff =
-  //     (dateRange.endDate.getTime() - dateRange.startDate.getTime()) /
-  //     (1000 * 60 * 60 * 24);
-  //   return diff === days;
-  // };
-
-  // const setQuickRange = (days: number): void => {
-  //   const newStart = subDays(new Date(), days);
-  //   const newEnd = new Date();
-  //   setDateRange({ startDate: newStart, endDate: newEnd });
-  // };
-
-
-  // For calendar event styling (color-coded by status)
-  // const eventPropGetter = (event: SavEvent) => {
-  //   let bgColor = "#3b82f6"; // default blue
-  //   if (event.status === "completed") bgColor = "#10b981"; // green
-  //   if (event.status === "pending") bgColor = "#f59e0b"; // amber
-  //   if (event.status === "scheduled") bgColor = "#2563eb"; // lighter blue
-
-  //   const style = {
-  //     backgroundColor: bgColor,
-  //     color: "#fff",
-  //     borderRadius: "8px",
-  //     border: "none",
-  //     padding: "4px 6px",
-  //     // Adjust more if you like
-  //   };
-  //   return { style };
-  // };
-
-  // Format x-axis
-  // const formatXAxis = (value: string, grouping: string): string => {
-  //   const date = new Date(value);
-  //   switch (grouping) {
-  //     case "daily":
-  //       return format(date, "d MMM", { locale: fr });
-  //     case "weekly":
-  //       return `Sem. ${format(date, "w", { locale: fr })}`;
-  //     case "monthly":
-  //       return format(date, "MMM yyyy", { locale: fr });
-  //     case "yearly":
-  //       return format(date, "yyyy", { locale: fr });
-  //     default:
-  //       return value;
-  //   }
-  // };
-
-  // Format tooltip
-  // const formatTooltipDate = (label: string, grouping: string): string => {
-  //   switch (grouping) {
-  //     case "weekly":
-  //       return `Semaine ${label}`;
-  //     case "monthly":
-  //       return format(new Date(label), "MMMM yyyy", { locale: fr });
-  //     case "yearly":
-  //       return `Année ${label}`;
-  //     default:
-  //       return format(new Date(label), "d MMMM yyyy", { locale: fr });
-  //   }
-  // };
 
   interface CustomCSSProperties extends React.CSSProperties {
     '--c-primary'?: string;
@@ -1800,7 +1719,8 @@ export default function SupportPage() {
   };
 
   // Handle view tab changes
-  const viewTabs = ["Mois", "Semaine", "Jour", "Agenda"];
+  const viewTabs = ["Jour", "Semaine", "Mois", "Listing"];
+
   const handleViewChange = (view: string) => {
     setActiveViewTab(view);
     if (view === "Mois") {
@@ -1809,10 +1729,30 @@ export default function SupportPage() {
       setCurrentView(Views.WEEK);
     } else if (view === "Jour") {
       setCurrentView(Views.DAY);
-    } else if (view === "Agenda") {
+    } else if (view === "Listing") {
       setCurrentView(Views.AGENDA);
     }
   };
+
+  // Dummy attestation generator – replace with your real implementation
+  const handleGenerateAttestation = () => {
+    alert(`Attestation generated for event`);
+  };
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <p>Chargement des données...</p>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-white to-[#bfddf9]/5">
@@ -1853,10 +1793,25 @@ export default function SupportPage() {
                 </div>
               </Button>
 
-              <Button className="bg-[#213f5b] hover:bg-[#162c41] text-white rounded-xl shadow-md">
+              <Button
+                className="bg-[#213f5b] hover:bg-[#162c41] text-white rounded-xl shadow-md"
+                onClick={() => setIsModalOpen(true)}
+              >
                 <PlusIcon className="h-5 w-5 mr-2 text-[#d2fcb2]" />
                 Nouveau Ticket
               </Button>
+
+              {/* Conditionally render the modal */}
+              {isModalOpen && (
+                <NewTicketModal
+                  isOpen={isModalOpen}
+                  onClose={() => setIsModalOpen(false)}
+                  onTicketCreated={(ticket) => {
+                    console.log('New ticket created:', ticket);
+                    // Optionally handle the newly created ticket here
+                  }}
+                />
+              )}
 
               {/* Attestation Modal */}
               <AttestationModal/>
@@ -1964,247 +1919,185 @@ export default function SupportPage() {
 
           {/* MAIN GRID: Left = S.A.V. Planning (List), Right = Calendar */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* LEFT: S.A.V. Planning List */}
+            {/* S.A.V. Planning Section */}
             <motion.div
-              className="space-y-8"
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.1 }}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#bfddf9]"
+              whileHover={{ y: -5 }}
+              transition={{ duration: 0.3 }}
             >
-              {/* S.A.V. Planning Section */}
-              <motion.div
-                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#bfddf9]"
-                whileHover={{ y: -5 }}
-                transition={{ duration: 0.3 }}
-              >
-                {/* Header with gradient background */}
-                <div className="bg-gradient-to-r from-[#213f5b] to-[#1d3349] p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
-                        <CalendarIcon className="h-7 w-7 text-[#d2fcb2]" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-semibold">
-                          Planning S.A.V.
-                        </h2>
-                        <p className="text-white/80 font-medium mt-1">
-                          Interventions programmées •{" "}
-                          {new Date().toLocaleDateString("fr-FR", {
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </p>
+              {/* Header */}
+              <div className="bg-gradient-to-r from-[#213f5b] to-[#1d3349] p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                      <CalendarIcon className="h-7 w-7 text-[#d2fcb2]" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-semibold">Planning S.A.V.</h2>
+                      <p className="text-white/80 font-medium mt-1">
+                        Interventions programmées •{" "}
+                        {new Date().toLocaleDateString("fr-FR", {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  {/* <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10"
+                    >
+                      <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
+                      Exporter
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10 w-10 p-0 flex items-center justify-center"
+                    >
+                      <AdjustmentsHorizontalIcon className="h-5 w-5" />
+                    </Button>
+                  </div> */}
+                </div>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="bg-[#f8fbff] px-6 py-3 border-b border-[#bfddf9]">
+                <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+                  {["all", "scheduled", "pending", "completed"].map((filter) => (
+                    <Button
+                      key={filter}
+                      className={`rounded-xl px-4 py-2 whitespace-nowrap ${
+                        activeFilter === filter
+                          ? "bg-[#213f5b] text-white shadow-md"
+                          : "bg-white border border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]/10"
+                      }`}
+                      onClick={() => setActiveFilter(filter)}
+                    >
+                      {filter === "all"
+                        ? "Toutes"
+                        : filter === "scheduled"
+                        ? "Planifiées"
+                        : filter === "pending"
+                        ? "En cours"
+                        : "Terminées"}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Statistics Summary */}
+              <div className="grid grid-cols-3 gap-6 p-6">
+                <div className="p-5 bg-[#d2fcb2]/10 rounded-xl border border-[#d2fcb2]/30">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[#d2fcb2] rounded-xl">
+                      <CheckCircleIcon className="h-6 w-6 text-[#213f5b]" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-[#5a6e87]">Terminées</div>
+                      <div className="text-2xl font-bold text-[#213f5b]">
+                        {closedTickets}
                       </div>
                     </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10"
-                      >
-                        <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
-                        Exporter
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10 w-10 p-0 flex items-center justify-center"
-                      >
-                        <AdjustmentsHorizontalIcon className="h-5 w-5" />
-                      </Button>
-                    </div>
+                  </div>
+                  <div className="mt-3 h-2 bg-[#d2fcb2]/20 rounded-full">
+                    <div className="w-4/5 h-full bg-[#d2fcb2] rounded-full" />
                   </div>
                 </div>
 
-                {/* Filter Tabs */}
-                <div className="bg-[#f8fbff] px-6 py-3 border-b border-[#bfddf9]">
-                  <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-                    {["all", "scheduled", "pending", "completed"].map((filter) => (
-                      <Button
-                        key={filter}
-                        className={`rounded-xl px-4 py-2 whitespace-nowrap ${
-                          activeFilter === filter
-                            ? "bg-[#213f5b] text-white shadow-md"
-                            : "bg-white border border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]/10"
-                        }`}
-                        onClick={() => setActiveFilter(filter)}
-                      >
-                        {filter === "all"
-                          ? "Toutes"
-                          : filter === "scheduled"
-                          ? "Planifiées"
-                          : filter === "pending"
-                          ? "En cours"
-                          : "Terminées"}
-                      </Button>
-                    ))}
+                <div className="p-5 bg-[#bfddf9]/10 rounded-xl border border-[#bfddf9]/30">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[#bfddf9] rounded-xl">
+                      <ClockIcon className="h-6 w-6 text-[#213f5b]" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-[#5a6e87]">Tickets en attente</div>
+                      <div className="text-2xl font-bold text-[#213f5b]">
+                        {pendingTickets}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 h-2 bg-[#bfddf9]/20 rounded-full">
+                    <div className="w-1/3 h-full bg-[#bfddf9] rounded-full animate-pulse" />
                   </div>
                 </div>
 
-                {/* Statistics Summary */}
-                <div className="grid grid-cols-3 gap-6 p-6">
-                  <div className="p-5 bg-[#d2fcb2]/10 rounded-xl border border-[#d2fcb2]/30">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#d2fcb2] rounded-xl">
-                        <CheckCircleIcon className="h-6 w-6 text-[#213f5b]" />
-                      </div>
-                      <div>
-                        <div className="text-sm text-[#5a6e87]">Terminées</div>
-                        <div className="text-2xl font-bold text-[#213f5b]">
-                          18
-                        </div>
-                      </div>
+                {/* Attestations Card (Real Data) */}
+                <div className="p-5 bg-[#213f5b]/5 rounded-xl border border-[#213f5b]/20">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[#213f5b] rounded-xl">
+                      <DocumentCheckIcon className="h-7 w-7 text-white" />
                     </div>
-                    <div className="mt-3 h-2 bg-[#d2fcb2]/20 rounded-full">
-                      <div className="w-4/5 h-full bg-[#d2fcb2] rounded-full" />
+                    <div>
+                      <div className="text-sm text-[#5a6e87]">Attestations</div>
+                      <div className="text-2xl font-bold text-[#213f5b]">
+                        {attestationsCount}
+                      </div>
                     </div>
                   </div>
-
-                  <div className="p-5 bg-[#bfddf9]/10 rounded-xl border border-[#bfddf9]/30">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#bfddf9] rounded-xl">
-                        <ClockIcon className="h-6 w-6 text-[#213f5b]" />
-                      </div>
-                      <div>
-                        <div className="text-sm text-[#5a6e87]">En Cours</div>
-                        <div className="text-2xl font-bold text-[#213f5b]">
-                          5
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-3 h-2 bg-[#bfddf9]/20 rounded-full">
-                      <div className="w-1/3 h-full bg-[#bfddf9] rounded-full animate-pulse" />
-                    </div>
-                  </div>
-
-                  <div className="p-5 bg-[#213f5b]/5 rounded-xl border border-[#213f5b]/20">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#213f5b] rounded-xl">
-                        <DocumentCheckIcon className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-sm text-[#5a6e87]">Attestations</div>
-                        <div className="text-2xl font-bold text-[#213f5b]">
-                          12
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-3 h-2 bg-[#213f5b]/10 rounded-full">
-                      <div className="w-2/3 h-full bg-[#213f5b] rounded-full" />
-                    </div>
+                  <div className="mt-3 h-2 bg-[#213f5b]/10 rounded-full">
+                    <div className="w-2/3 h-full bg-[#213f5b] rounded-full" />
                   </div>
                 </div>
+              </div>
 
-                {/* List of S.A.V. Events */}
-                <div className="px-6 pb-6 space-y-4">
-                  {filteredSavEvents.length > 0 ? (
-                    filteredSavEvents.map((event) => (
-                      <motion.div
-                        key={event.id}
-                        className="bg-white rounded-xl border border-[#bfddf9] shadow-sm p-5 hover:shadow-md transition-all duration-300 cursor-pointer"
-                        whileHover={{ x: 5 }}
-                      >
-                        <div className="flex items-start gap-4">
-                          {/* Status Indicator + Priority */}
-                          <div className="mt-1.5 relative">
-                            <div
-                              className={`w-3 h-3 rounded-full ${
-                                event.status === "completed"
-                                  ? "bg-green-500 ring-4 ring-green-100"
-                                  : event.status === "pending"
-                                  ? "bg-amber-500 ring-4 ring-amber-100 animate-pulse"
-                                  : "bg-blue-500 ring-4 ring-blue-100"
-                              }`}
-                            />
-                            {event.priority === "high" && (
-                              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-                            )}
-                          </div>
+              {/* List of S.A.V. Events with Pagination */}
+              <div className="px-6 pb-6 space-y-4">
+                {currentEvents.length > 0 ? (
+                  currentEvents.map((event) => (
+                    <SavEventCard
+                      key={event.id}
+                      event={event}
+                      setSelectedEvent={setSelectedEvent}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center text-[#5a6e87] py-4">
+                    Aucune intervention trouvée.
+                  </div>
+                )}
+              </div>
 
-                          {/* Content */}
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="text-lg font-semibold text-[#213f5b] flex items-center gap-2">
-                                  {event.customer}
-                                  {event.priority === "high" && (
-                                    <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">
-                                      Urgent
-                                    </span>
-                                  )}
-                                </h3>
-                                <p className="text-[#5a6e87] text-sm mt-1">
-                                  {event.problem || "Intervention programmée"}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm text-[#213f5b] font-medium">
-                                  {new Date(event.date).toLocaleDateString("fr-FR", {
-                                    day: "numeric",
-                                    month: "short",
-                                  })}
-                                </p>
-                                <p className="text-sm text-[#5a6e87]">
-                                  {new Date(event.date).toLocaleTimeString("fr-FR", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Badges for technician, address, etc. */}
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#f8fbff] text-[#5a6e87]">
-                                <UserCircleIcon className="h-3.5 w-3.5 mr-1" />
-                                {event.technician}
-                              </span>
-
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#f8fbff] text-[#5a6e87]">
-                                <MapPinIcon className="h-3.5 w-3.5 mr-1" />
-                                {event.address}
-                              </span>
-
-                              {event.equipmentType && (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#f8fbff] text-[#5a6e87]">
-                                  {energySolutions[event.equipmentType] ? (
-                                    <>
-                                      {(() => {
-                                        const Icon =
-                                          energySolutions[event.equipmentType].icon;
-                                        const color =
-                                          energySolutions[event.equipmentType].color;
-                                        return (
-                                          <Icon
-                                            className="h-3.5 w-3.5 mr-1"
-                                            style={{ color }}
-                                          />
-                                        );
-                                      })()}
-                                      {event.equipmentType}
-                                    </>
-                                  ) : (
-                                    <>
-                                      <FireIcon className="h-3.5 w-3.5 mr-1 text-[#213f5b]" />
-                                      {event.equipmentType}
-                                    </>
-                                  )}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-center text-[#5a6e87] py-4">
-                      Aucune intervention trouvée.
-                    </div>
-                  )}
-                </div>
-              </motion.div>
+              {/* Pagination Controls */}
+              <div className="flex justify-center items-center space-x-4 p-4">
+                <button
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  Précédent
+                </button>
+                <span className="text-sm text-gray-700">
+                  Page {currentPage} sur {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  Suivant
+                </button>
+              </div>
             </motion.div>
+
+            {/* Modal for Event Details and Attestation */}
+            {selectedEvent && (
+              <EventDetailsModal
+                title="Détails de l'intervention"
+                selectedEvent={{
+                  ...selectedEvent,
+                  _id: String(selectedEvent.id),
+                  customerFirstName: selectedEvent.customerFirstName || "",
+                  customerLastName: selectedEvent.customerLastName || "",
+                  technicianFirstName: selectedEvent.technicianFirstName || "",
+                  technicianLastName: selectedEvent.technicianLastName || "",
+                  // Provide defaults for any other required properties of type string
+                }}
+                contact={contact}
+                onClose={() => setSelectedEvent(null)}
+                handleGenerateAttestation={handleGenerateAttestation}
+              />
+            )}
 
             {/* RIGHT: Enhanced Big Calendar (French) */}
             <motion.div
@@ -2340,7 +2233,7 @@ export default function SupportPage() {
                   >
                     <Calendar
                       localizer={localizer}
-                      events={sampleEvents}
+                      events={calendarEvents}
                       startAccessor="start"
                       endAccessor="end"
                       date={currentDate}
@@ -2796,7 +2689,7 @@ export default function SupportPage() {
 
             {/* Main Content Area */}
             <div className="flex flex-col lg:flex-row">
-              {/* Left Panel - Event List (Hidden when event is selected on mobile) */}
+              {/* Left Panel - Event List (Hidden on mobile when an event is selected) */}
               <div className={`border-r border-[#e5f1fd] ${selectedEvent ? 'hidden lg:block' : 'block'} lg:w-1/2`}>
                 <div className="p-4">
                   <div className="relative mb-4">
@@ -2838,11 +2731,11 @@ export default function SupportPage() {
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <h3 className="text-lg font-semibold text-[#213f5b]">
-                                {event.customer}
+                                {`${event.customerFirstName} ${event.customerLastName}`}
                               </h3>
                               <div className="text-right">
                                 <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-[#f5faff] text-[#213f5b]">
-                                  {new Date(event.date).toLocaleDateString("fr-FR", {
+                                  {new Date(event.createdAt).toLocaleDateString("fr-FR", {
                                     day: "numeric",
                                     month: "short",
                                   })}
@@ -2854,7 +2747,7 @@ export default function SupportPage() {
                             </p>
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-xs text-[#5a6e87]">
-                                {new Date(event.date).toLocaleTimeString("fr-FR", {
+                                {new Date(event.createdAt).toLocaleTimeString("fr-FR", {
                                   hour: "2-digit",
                                   minute: "2-digit",
                                 })}
@@ -2878,7 +2771,7 @@ export default function SupportPage() {
                 </div>
               </div>
 
-              {/* Right Panel - Conversation View (Full width when selected on mobile) */}
+              {/* Right Panel - Conversation View (Full width on mobile when an event is selected) */}
               <div className={`${selectedEvent ? 'block' : 'hidden lg:block'} lg:w-1/2 bg-[#fafcff]`}>
                 {selectedEvent ? (
                   <div className="h-full flex flex-col">
@@ -2893,7 +2786,7 @@ export default function SupportPage() {
                               : "bg-blue-500 ring-4 ring-blue-100"
                           }`} />
                           <div>
-                            <h3 className="font-semibold text-[#213f5b]">{selectedEvent.customer}</h3>
+                            <h3 className="font-semibold text-[#213f5b]">{`${selectedEvent.customerFirstName} ${selectedEvent.customerLastName}`}</h3>
                             <p className="text-sm text-[#5a6e87]">{selectedEvent.problem}</p>
                           </div>
                         </div>
@@ -2912,9 +2805,9 @@ export default function SupportPage() {
                       </div>
                     </div>
                     
+                    {/* Conversation messages */}
                     <div className="flex-1 overflow-auto p-4 space-y-4">
-                      {/* Conversation messages */}
-                      {selectedEvent.conversation ? (
+                      {selectedEvent.conversation && selectedEvent.conversation.length > 0 ? (
                         selectedEvent.conversation.map((msg, index) => (
                           <div 
                             key={index} 

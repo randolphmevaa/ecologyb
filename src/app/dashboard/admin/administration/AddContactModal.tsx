@@ -20,6 +20,11 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
   const [telephone, setTelephone] = useState("");
   const [role, setRole] = useState("");
   const [gender, setGender] = useState("");
+  
+  // New fields for "Régie" role
+  const [siret, setSiret] = useState("");
+  const [raisonSocial, setRaisonSocial] = useState("");
+  
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -56,13 +61,22 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
       role: validateField("role", role),
       gender: validateField("gender", gender),
     };
+
+    // If the role is "Project / Installation Manager", validate the extra fields
+    if (role === "Project / Installation Manager") {
+      newErrors.siret = validateField("siret", siret);
+      newErrors.raisonSocial = validateField("raisonSocial", raisonSocial);
+    }
+    
     Object.keys(newErrors).forEach((key) => {
       if (!newErrors[key]) delete newErrors[key];
     });
+    
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
+    
     setIsSubmitting(true);
     const endpoint = role === "Client / Customer (Client Portal)" ? "/api/contacts" : "/api/users";
     try {
@@ -77,7 +91,9 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
           email,
           phone: telephone,
           role,
-          gender, // Save selected gender
+          gender,
+          // Include additional fields if applicable
+          ...(role === "Project / Installation Manager" && { siret, raisonSocial }),
         }),
       });
       const data = await response.json();
@@ -85,6 +101,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
       setIsSubmitting(false);
       onUserAdded(data);
       onClose();
+      window.location.reload(); // Refresh the page after closing the modal
     } catch (error) {
       console.error("Error submitting form:", error);
       setIsSubmitting(false);
@@ -112,7 +129,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
 
         <FocusLock>
           <motion.div
-            className="relative bg-white rounded-xl shadow-2xl z-10 w-full max-w-lg p-8 mx-4"
+            className="relative bg-white rounded-xl shadow-2xl z-10 w-full max-w-md max-h-[80vh] overflow-y-auto p-8 mx-4"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
@@ -247,14 +264,11 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                       Représentant commercial / Chargé de compte
                     </option>
                     <option value="Project / Installation Manager">
-                      Chef de projet / Responsable installation
+                      Régie
                     </option>
                     <option value="Technician / Installer">Technicien / Installateur</option>
                     <option value="Customer Support / Service Representative">
                       Support client / Représentant du service
-                    </option>
-                    <option value="Client / Customer (Client Portal)">
-                      Client (portail client)
                     </option>
                     <option value="Super Admin">Super administrateur</option>
                   </select>
@@ -282,6 +296,51 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                   </select>
                   {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
                 </div>
+
+                {/* Additional fields for "Régie" role */}
+                {role === "Project / Installation Manager" && (
+                  <>
+                    {/* SIRET / SIREN */}
+                    <div>
+                      <label htmlFor="siret" className="block text-sm font-medium text-gray-700">
+                        SIRET / SIREN
+                      </label>
+                      <input
+                        type="text"
+                        id="siret"
+                        value={siret}
+                        onChange={(e) => setSiret(e.target.value)}
+                        onBlur={(e) => handleBlur("siret", e.target.value)}
+                        placeholder="Entrez votre numéro SIRET ou SIREN"
+                        required
+                        className={`mt-1 block w-full rounded-md border p-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                          errors.siret ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.siret && <p className="text-red-500 text-xs mt-1">{errors.siret}</p>}
+                    </div>
+
+                    {/* Raison Sociale */}
+                    <div>
+                      <label htmlFor="raisonSocial" className="block text-sm font-medium text-gray-700">
+                        Raison Sociale
+                      </label>
+                      <input
+                        type="text"
+                        id="raisonSocial"
+                        value={raisonSocial}
+                        onChange={(e) => setRaisonSocial(e.target.value)}
+                        onBlur={(e) => handleBlur("raisonSocial", e.target.value)}
+                        placeholder="Entrez le nom légal de votre entreprise"
+                        required
+                        className={`mt-1 block w-full rounded-md border p-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                          errors.raisonSocial ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.raisonSocial && <p className="text-red-500 text-xs mt-1">{errors.raisonSocial}</p>}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Action Buttons */}

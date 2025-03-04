@@ -205,11 +205,12 @@ export async function GET(request: Request) {
 
     const contacts = await db.collection("contacts").find(query).toArray();
 
+    // Ensure that both fields are included.
     const modifiedContacts = contacts.map((contact) => {
-      if (contact.plainPassword) {
-        contact.password = contact.plainPassword;
+      // If plainPassword doesn't exist for some reason, ensure the key is still present.
+      if (!contact.plainPassword) {
+        contact.plainPassword = "";
       }
-      delete contact.plainPassword;
       return contact;
     });
 

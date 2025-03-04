@@ -124,13 +124,13 @@ const travauxOptions = [
 
 // Options for "Phase du projet"
 const phaseProjetOptions = [
-  { value: "1 Prise de contact", label: "1 Prise de contact" },
-  { value: "2 En attente des documents", label: "2 En attente des documents" },
-  { value: "3 Instruction du dossier", label: "3 Instruction du dossier" },
-  { value: "4 Dossier Accepter", label: "4 Dossier Accepter" },
-  { value: "5 Installation", label: "5 Installation" },
-  { value: "6 Contrôle", label: "6 Contrôle" },
-  { value: "7 Dossier clôturé", label: "7 Dossier clôturé" },
+  { value: "1 Prise de contact", label: "Étape 1 - Prise de contact" },
+  { value: "2 En attente des documents", label: "Étape 2 - En attente des documents" },
+  { value: "3 Instruction du dossier", label: "Étape 3 - Instruction du dossier" },
+  { value: "4 Dossier Accepter", label: "Étape 4 - Dossier Accepter" },
+  { value: "5 Installation", label: "Étape 5 - Installation" },
+  { value: "6 Contrôle", label: "Étape 6 - Contrôle" },
+  { value: "7 Dossier clôturé", label: "Étape 7 - Dossier clôturé" },
 ];
 
 // ----------------------
@@ -719,19 +719,47 @@ useEffect(() => {
                     </div> */}
                     {/* Gestionnaire de suivi */}
                     <div>
-                      <label htmlFor="gestionnaireSuivi" className="block text-sm font-medium text-gray-700">Gestionnaire de suivi</label>
-                      <select id="gestionnaireSuivi" value={contact.gestionnaireSuivi} onChange={(e) => setContact({ ...contact, gestionnaireSuivi: e.target.value })} onBlur={(e) => handleContactBlur("gestionnaireSuivi", e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      <label htmlFor="gestionnaireSuivi" className="block text-sm font-medium text-gray-700">
+                        Gestionnaire de suivi
+                      </label>
+                      <select
+                        id="gestionnaireSuivi"
+                        value={contact.gestionnaireSuivi}
+                        onChange={(e) => setContact({ ...contact, gestionnaireSuivi: e.target.value })}
+                        onBlur={(e) => handleContactBlur("gestionnaireSuivi", e.target.value)}
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
                         <option value="">Sélectionnez un gestionnaire</option>
                         {users.map((user) => {
                           const name = user.firstName || user.lastName
                             ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
                             : user.email;
-                          return <option key={user._id} value={user._id}>{name} {user.role ? `(${user.role})` : ""}</option>;
+                          
+                          const roleTranslations: { 
+                            [key in "Sales Representative / Account Executive" | "Project / Installation Manager" | "Technician / Installer" | "Customer Support / Service Representative" | "Super Admin"]: string 
+                          } = {
+                            "Sales Representative / Account Executive": "Représentant commercial / Chargé de compte",
+                            "Project / Installation Manager": "Régie",
+                            "Technician / Installer": "Technicien / Installateur",
+                            "Customer Support / Service Representative": "Support client / Représentant du service",
+                            "Super Admin": "Super administrateur"
+                          };
+                          
+                          const translatedRole = user.role 
+                            ? (roleTranslations[user.role as keyof typeof roleTranslations] || user.role)
+                            : "";
+                          
+                          return (
+                            <option key={user._id} value={user._id}>
+                              {name} {translatedRole && `(${translatedRole})`}
+                            </option>
+                          );
                         })}
                       </select>
-                      {contactErrors.gestionnaireSuivi && <p className="mt-1 text-xs text-red-500">{contactErrors.gestionnaireSuivi}</p>}
+                      {contactErrors.gestionnaireSuivi && (
+                        <p className="mt-1 text-xs text-red-500">{contactErrors.gestionnaireSuivi}</p>
+                      )}
                     </div>
-                    
                   </div>
                 </motion.div>
               )}

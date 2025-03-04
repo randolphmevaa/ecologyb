@@ -4,6 +4,7 @@ import {  CalendarIcon, EnvelopeIcon, HomeIcon, LightBulbIcon, PhoneIcon, UserCi
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; // Import useRouter
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface Dossier {
   _id: string;
@@ -238,7 +239,7 @@ export default function InfoTab({ dossier }: InfoTabProps) {
             <div className="flex items-center gap-5">
               <div className="relative">
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
-                  <img 
+                  <Image
                     src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                     alt={`${assignedTeamUser.firstName} ${assignedTeamUser.lastName}`}
                     className="w-full h-full object-cover"

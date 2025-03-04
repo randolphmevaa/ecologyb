@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
-// DELETE: Remove a single ticket by ID
+// DELETE: Remove a single ticket by numeric id or ticket code
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -11,18 +11,28 @@ export async function DELETE(
   try {
     const client = await clientPromise;
     const db = client.db("yourdbname");
-    const result = await db.collection("tickets").deleteOne({ id: parseInt(id) });
+
+    // Determine whether to treat the parameter as a numeric id or a ticket code.
+    const numericId = parseInt(id, 10);
+    let deletionQuery;
+    // If the id string is a valid number and exactly equals its numeric conversion, use numeric id.
+    if (!isNaN(numericId) && numericId.toString() === id) {
+      deletionQuery = { id: numericId };
+    } else {
+      // Otherwise, assume it's the ticket code.
+      deletionQuery = { ticket: id };
+    }
+
+    const result = await db.collection("tickets").deleteOne(deletionQuery);
 
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: "No ticket found" }, { status: 404 });
     }
     return NextResponse.json({ message: "Ticket deleted successfully" });
   } catch (error: unknown) {
-    // Narrow `unknown` to `Error` if possible
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    // Fallback for non-Error values
     return NextResponse.json({ error: "An unknown error occurred" }, { status: 500 });
   }
 }

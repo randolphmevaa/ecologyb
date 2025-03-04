@@ -22,6 +22,7 @@ interface Contact {
   mailingAddress?: string;
   imageUrl?: string;
   password?: string; // Plain-text password
+  plainPassword?: string;
   maprEmail?: string;
   mprPassword?: string;
   mpremail?: string; // Fallback for maprEmail
@@ -101,6 +102,7 @@ useEffect(() => {
     fetch(`/api/contacts/${contactId}`)
       .then((res) => res.json())
       .then((data: Contact) => {
+        console.log("Received contact data:", data); // Debug here
         setContact(data);
         setLoading(false);
       })
@@ -108,7 +110,7 @@ useEffect(() => {
         console.error("Error fetching contact data:", err);
         setLoading(false);
       });
-  }, [contactId]);
+  }, [contactId]);  
 
   if (loading || !contact) {
     return <div>Loading...</div>;
@@ -132,7 +134,7 @@ useEffect(() => {
     contact.mprPassword || contact.mprpassword || "test123";
 
   // For client access, use the real (plain-text) password if available.
-  const realPassword = contact.password || "test123";
+  const realPassword = contact.plainPassword || "test123";
 
   // Map the contact fields to the ones you need.
   const adresse = contact.mailingAddress || "60 Rue François 1er, 75008 Paris";
