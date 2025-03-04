@@ -5,28 +5,39 @@ import {
   MapPin, 
   UserCircle, 
   Clock, 
-  Ticket, 
   AlertTriangle,
   Check 
 } from 'lucide-react';
 
 interface Ticket {
-  id: string;
-  title?: string;
-  description?: string;
+  _id: string;
+  ticket: string;
+  contactId: string;
+  customerFirstName: string;
+  customerLastName: string;
+  technicianFirstName: string;
+  technicianLastName: string;
+  // other fields as needed
+}
+
+interface Contact {
+  _id?: string;
+  id?: string;
+  mailingAddress: string;
+  // other fields as needed
 }
 
 interface NewEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEventCreated: (eventData: {
+    ticketId: string;
     title: string;
     participant: string;
     location: string;
     type: string;
     startTime: string;
     endTime: string;
-    ticketId: string;
   }) => void;
 }
 
@@ -36,11 +47,13 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
   onEventCreated,
 }) => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedTicketId, setSelectedTicketId] = useState<string>('');
   const [title, setTitle] = useState<string>('');
   const [participant, setParticipant] = useState<string>('');
   const [location, setLocation] = useState<string>('');
   const [eventType, setEventType] = useState<string>('');
+  const [customEventType, setCustomEventType] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
   
@@ -48,19 +61,12 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
-  // Refined color palette for event types
-  // const eventTypeColors = {
-  //   'Réunion': 'bg-blue-50 text-blue-700',
-  //   'Conférence': 'bg-green-50 text-green-700',
-  //   'Atelier': 'bg-purple-50 text-purple-700',
-  //   'Autre': 'bg-gray-50 text-gray-700'
-  // };
-
   // Event type suggestions
   const eventTypeSuggestions = [
     'Réunion', 'Conférence', 'Atelier', 'Présentation', 'Formation', 'Autre'
   ];
 
+  // Fetch tickets and contacts when modal opens
   useEffect(() => {
     if (isOpen) {
       fetch('/api/tickets')
@@ -70,54 +76,109 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
           console.error(err);
           setError('Impossible de charger les tickets');
         });
+      fetch('/api/contacts')
+        .then((res) => res.json())
+        .then((data) => setContacts(data))
+        .catch((err) => {
+          console.error(err);
+          setError('Impossible de charger les contacts');
+        });
     }
   }, [isOpen]);
+
+  // Auto-fill Participant and Lieu based on the selected Ticket and matching Contact
+  useEffect(() => {
+    if (selectedTicketId) {
+      const ticket = tickets.find(t => t._id === selectedTicketId);
+      if (ticket) {
+        const techName = ticket.technicianFirstName && ticket.technicianLastName 
+          ? `${ticket.technicianFirstName} ${ticket.technicianLastName}` 
+          : '';
+        const custName = ticket.customerFirstName && ticket.customerLastName 
+          ? `${ticket.customerFirstName} ${ticket.customerLastName}` 
+          : '';
+        // If both exist, join with an ampersand
+        const combined = techName && custName ? `${techName} & ${custName}` : (techName || custName);
+        setParticipant(combined);
+
+        // Find the matching contact by checking both _id and id fields
+        if (ticket.contactId) {
+          const contact = contacts.find(c => c._id === ticket.contactId || c.id === ticket.contactId);
+          setLocation(contact ? contact.mailingAddress : '');
+        } else {
+          setLocation('');
+        }
+      }
+    } else {
+      setParticipant('');
+      setLocation('');
+    }
+  }, [selectedTicketId, tickets, contacts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    // Enhanced validation
+  
     if (!title.trim()) {
-      setError('Le titre de l\'événement est requis');
+      setError("Le titre de l'événement est requis");
       setLoading(false);
       return;
     }
-
+  
     if (new Date(startTime) >= new Date(endTime)) {
-      setError('La date de fin doit être postérieure à la date de début');
+      setError("La date de fin doit être postérieure à la date de début");
       setLoading(false);
       return;
     }
-
+  
     try {
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 1200));
-
+  
+      const finalEventType = eventType === 'Autre' ? (customEventType || 'Autre') : (eventType || 'Autre');
+  
+      // Build the event data
       const newEvent = {
+        ticketId: selectedTicketId,
         title,
         participant,
         location,
-        type: eventType || 'Autre',
+        type: finalEventType,
         startTime,
         endTime,
-        ticketId: selectedTicketId,
       };
-      
+  
+      // Example of updating the ticket with additional event fields:
+      await fetch(`/api/tickets/${selectedTicketId}`, {
+        method: 'PATCH', // or 'PUT' depending on your API design
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          start: startTime,
+          end: endTime,
+          participants: participant,
+          title,
+          type: finalEventType,
+          location, // if you also need to update the location
+        }),
+      });
+  
+      // Callback for further processing if needed
       onEventCreated(newEvent);
       setSuccess(true);
-      
+  
       setTimeout(() => {
         setSuccess(false);
         onClose();
+        window.location.reload();
       }, 1500);
-    } catch {
-      setError('Erreur lors de la création de l\'événement');
+    } catch (error) {
+      console.error(error);
+      setError("Erreur lors de la création de l'événement");
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   if (!isOpen) return null;
 
@@ -158,7 +219,37 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Title with Enhanced Input */}
+            {/* Ticket Association Dropdown at the Top */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Associer un Ticket
+              </label>
+              <select
+                value={selectedTicketId}
+                onChange={(e) => setSelectedTicketId(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+                  focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                  transition-all duration-300 ease-in-out"
+              >
+                <option value="">-- Sélectionner un Ticket --</option>
+                {tickets.map((ticket) => {
+                  const ticketDisplay = ticket.ticket || `Ticket #${ticket._id}`;
+                  const customerFullName = ticket.customerFirstName && ticket.customerLastName 
+                    ? `${ticket.customerFirstName} ${ticket.customerLastName}` 
+                    : 'Client inconnu';
+                  const technicianFullName = ticket.technicianFirstName && ticket.technicianLastName 
+                    ? `${ticket.technicianFirstName} ${ticket.technicianLastName}` 
+                    : 'Technicien inconnu';
+                  return (
+                    <option key={ticket._id} value={ticket._id}>
+                      {ticketDisplay} - {customerFullName} - {technicianFullName}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Title with Enhanced Input and Placeholder */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Titre de l&apos;Événement
@@ -169,16 +260,16 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Nom descriptif de l'événement"
+                  placeholder="Visite client, Inspection urgente ..."
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl 
-                  focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                  transition-all duration-300 ease-in-out"
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                    transition-all duration-300 ease-in-out"
                   required
                 />
               </div>
             </div>
 
-            {/* Event Type with Suggestions */}
+            {/* Event Type with Suggestions and Custom Input for 'Autre' */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Type d&apos;Événement
@@ -201,9 +292,22 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                   </button>
                 ))}
               </div>
+              {eventType === 'Autre' && (
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    value={customEventType}
+                    onChange={(e) => setCustomEventType(e.target.value)}
+                    placeholder="Entrez le type d'événement"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                      transition-all duration-300 ease-in-out"
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Datetime Inputs with Advanced Styling */}
+            {/* Datetime Inputs */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -216,8 +320,8 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl 
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                    transition-all duration-300 ease-in-out"
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                      transition-all duration-300 ease-in-out"
                     required
                   />
                 </div>
@@ -233,15 +337,15 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl 
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                    transition-all duration-300 ease-in-out"
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                      transition-all duration-300 ease-in-out"
                     required
                   />
                 </div>
               </div>
             </div>
 
-            {/* Additional Details */}
+            {/* Participant and Lieu (Read-only) */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -252,12 +356,9 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                   <input
                     type="text"
                     value={participant}
-                    onChange={(e) => setParticipant(e.target.value)}
-                    placeholder="Nom du participant"
+                    readOnly
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl 
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                    transition-all duration-300 ease-in-out"
-                    required
+                      bg-gray-100 text-gray-700 cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -270,35 +371,12 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                   <input
                     type="text"
                     value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Adresse ou emplacement"
+                    readOnly
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl 
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                    transition-all duration-300 ease-in-out"
+                      bg-gray-100 text-gray-700 cursor-not-allowed"
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Ticket Association */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Associer un Ticket
-              </label>
-              <select
-                value={selectedTicketId}
-                onChange={(e) => setSelectedTicketId(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl 
-                focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                transition-all duration-300 ease-in-out"
-              >
-                <option value="">-- Sélectionner un Ticket --</option>
-                {tickets.map((ticket) => (
-                  <option key={ticket.id} value={ticket.id}>
-                    {ticket.title || `Ticket #${ticket.id}`}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {/* Action Buttons */}
@@ -307,7 +385,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                 type="button"
                 onClick={onClose}
                 className="px-6 py-3 text-gray-600 hover:bg-gray-100 
-                rounded-xl transition duration-300 ease-in-out"
+                  rounded-xl transition duration-300 ease-in-out"
               >
                 Annuler
               </button>
@@ -315,11 +393,10 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                 type="submit"
                 disabled={loading || success}
                 className="px-6 py-3 bg-[#213f5b] text-white rounded-xl 
-                hover:bg-[#162c41] focus:outline-none focus:ring-2 
-                focus:ring-blue-500 focus:ring-offset-2 
-                transition duration-300 ease-in-out
-                disabled:opacity-50 disabled:cursor-not-allowed
-                flex items-center"
+                  hover:bg-[#162c41] focus:outline-none focus:ring-2 
+                  focus:ring-blue-500 focus:ring-offset-2 
+                  transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed
+                  flex items-center"
               >
                 {loading ? (
                   <>

@@ -2117,183 +2117,208 @@ export default function SupportPage() {
             {/* Calendrier S.A.V. Popup Modal */}
             {eventDetails && (
               <div className="fixed inset-0 flex items-center justify-center z-50">
-              {/* Semi-transparent background with blur effect */}
-              <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={handleClosePopup}
-              ></div>
-        
-              {/* Popup content */}
-              <motion.div
-                className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl z-10 max-w-md w-full mx-4 relative"
-                initial={{ opacity: 0, scale: 0.9, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 300, 
-                  damping: 20 
-                }}
-              >
-                {/* Close Button */}
-                <button
+                {/* Semi-transparent background with blur effect */}
+                <div
+                  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                   onClick={handleClosePopup}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white transition-colors"
+                ></div>
+
+                {/* Popup content */}
+                <motion.div
+                  className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl z-10 max-w-md w-full mx-4 relative"
+                  initial={{ opacity: 0, scale: 0.9, y: 50 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 300, 
+                    damping: 20 
+                  }}
                 >
-                  <X className="h-6 w-6" />
-                </button>
-        
-                {/* Header */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                  <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
-                    {eventDetails.title || eventDetails.type || "Détails de l'événement"}
-                  </h3>
-                </div>
-        
-                {/* Event Information Grid */}
-                <div className="space-y-4">
-                  {/* Ticket and Status */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {eventDetails.ticket && (
-                      <div className="flex items-center space-x-2">
-                        <Clipboard className="h-5 w-5 text-blue-500" />
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">Ticket</p>
-                          <p className="font-semibold text-white">{eventDetails.ticket}</p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex items-center space-x-2">
-                      <div className={`h-3 w-3 rounded-full ${
-                        eventDetails.status === 'completed' ? 'bg-green-500' : 
-                        eventDetails.status === 'pending' ? 'bg-yellow-500' : 
-                        'bg-red-500'
-                      }`}></div>
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Status</p>
-                        <p className="font-semibold text-white">{eventDetails.status}</p>
-                      </div>
-                    </div>
+                  {/* Close Button */}
+                  <button
+                    onClick={handleClosePopup}
+                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white transition-colors"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+
+                  {/* Header */}
+                  <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
+                      {eventDetails.title || eventDetails.type || "Détails de l'événement"}
+                    </h3>
                   </div>
-        
-                  {/* Date and Time */}
-                  {eventDetails.start && eventDetails.end && (
-                    <div className="flex items-center space-x-3">
-                      <Clock className="h-5 w-5 text-blue-500" />
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Date</p>
-                        <p className="font-semibold text-white">
-                          {new Date(eventDetails.start).toLocaleString("fr-FR", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                          {" - "}
-                          {new Date(eventDetails.end).toLocaleString("fr-FR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
+
+                  {/* Event Information Grid */}
+                  <div className="space-y-4">
+                    {/* Ticket and Status */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {eventDetails.ticket && (
+                        <div className="flex items-center space-x-2">
+                          <Clipboard className="h-5 w-5 text-blue-500" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Ticket</p>
+                            <p className="font-semibold text-white">{eventDetails.ticket}</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex items-center space-x-2">
+                        <div className={`h-3 w-3 rounded-full ${
+                          eventDetails.status === 'completed' ? 'bg-green-500' : 
+                          eventDetails.status === 'pending' ? 'bg-yellow-500' : 
+                          eventDetails.status === 'scheduled' ? 'bg-blue-500' : 
+                          'bg-red-500'
+                        }`}></div>
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Statut</p>
+                          <p className="font-semibold text-white">
+                            {eventDetails.status === 'pending'
+                              ? 'en attente'
+                              : eventDetails.status === 'scheduled'
+                              ? 'plannifier'
+                              : eventDetails.status === 'completed'
+                              ? 'complété'
+                              : eventDetails.status}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  )}
-        
-                  {/* Customer and Technician */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {eventDetails.customer && (
-                      <div className="flex items-center space-x-2">
-                        <User className="h-5 w-5 text-green-500" />
+
+                    {/* Date and Time */}
+                    {eventDetails.start && eventDetails.end && (
+                      <div className="flex items-center space-x-3">
+                        <Clock className="h-5 w-5 text-blue-500" />
                         <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">Client</p>
-                          <p className="font-semibold text-white">{eventDetails.customer}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Date</p>
+                          <p className="font-semibold text-white">
+                            {new Date(eventDetails.start).toLocaleString("fr-FR", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {" - "}
+                            {new Date(eventDetails.end).toLocaleString("fr-FR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
                         </div>
                       </div>
                     )}
-                    {eventDetails.technician && (
-                      <div className="flex items-center space-x-2">
-                        <User className="h-5 w-5 text-purple-500" />
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">Technicien</p>
-                          <p className="font-semibold text-white">{eventDetails.technician}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-        
-                  {/* Location */}
-                  {(eventDetails.address || eventDetails.location) && (
-                    <div className="flex items-center space-x-3">
-                      <MapPin className="h-5 w-5 text-red-500" />
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Lieu</p>
-                        <p className="font-semibold text-white">
-                          {eventDetails.address || eventDetails.location}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-        
-                  {/* Description */}
-                  {(eventDetails.notes || eventDetails.problem) && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Description</p>
-                      <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-                        <p className="text-gray-800 dark:text-gray-200">
-                          {eventDetails.notes || eventDetails.problem}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-        
-                  {/* Conversation */}
-                  {eventDetails.conversation && eventDetails.conversation.length > 0 && (
-                    <div>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <MessageCircle className="h-5 w-5 text-indigo-500" />
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Conversation</p>
-                      </div>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {eventDetails.conversation.map((msg, index) => (
-                          <div 
-                            key={index} 
-                            className="bg-gray-100 dark:bg-gray-700 p-2 rounded-lg"
-                          >
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                                {msg.sender}
-                              </span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {new Date(msg.timestamp).toLocaleString("fr-FR", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  day: "numeric",
-                                  month: "short",
-                                })}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                              {msg.content}
+
+                    {/* Customer and Technician */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {(eventDetails.customerFirstName || eventDetails.customerLastName) && (
+                        <div className="flex items-center space-x-2">
+                          <User className="h-5 w-5 text-green-500" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Client</p>
+                            <p className="font-semibold text-white">
+                              {`${eventDetails.customerFirstName} ${eventDetails.customerLastName}`}
                             </p>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
+                      {(eventDetails.technicianFirstName || eventDetails.technicianLastName) && (
+                        <div className="flex items-center space-x-2">
+                          <User className="h-5 w-5 text-purple-500" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Technicien</p>
+                            <p className="font-semibold text-white">
+                              {`${eventDetails.technicianFirstName} ${eventDetails.technicianLastName}`}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-        
-                {/* Close Button */}
-                <button
-                  onClick={handleClosePopup}
-                  className="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-lg 
-                             hover:bg-blue-700 transition-colors 
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                             dark:bg-blue-700 dark:hover:bg-blue-600"
-                >
-                  Fermer
-                </button>
-              </motion.div>
-            </div>
+
+                    {/* Location */}
+                    {(eventDetails.address || eventDetails.location) && (
+                      <div className="flex flex-col space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <MapPin className="h-5 w-5 text-red-500" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Lieu</p>
+                            <p className="font-semibold text-white">
+                              {eventDetails.address || eventDetails.location}
+                            </p>
+                          </div>
+                        </div>
+                        <iframe
+                          title="Map"
+                          src={`https://www.google.com/maps?q=${encodeURIComponent((eventDetails.address || eventDetails.location) as string)}&output=embed`}
+                          width="100%"
+                          height="300"
+                          allowFullScreen={true}
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          className="rounded-lg"
+                        ></iframe>
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    {(eventDetails.notes || eventDetails.problem) && (
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Description</p>
+                        <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                          <p className="text-gray-800 dark:text-gray-200">
+                            {eventDetails.notes || eventDetails.problem}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Conversation */}
+                    {eventDetails.conversation && eventDetails.conversation.length > 0 && (
+                      <div>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <MessageCircle className="h-5 w-5 text-indigo-500" />
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Conversation</p>
+                        </div>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {eventDetails.conversation.map((msg, index) => (
+                            <div 
+                              key={index} 
+                              className="bg-gray-100 dark:bg-gray-700 p-2 rounded-lg"
+                            >
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                                  {msg.sender}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {new Date(msg.timestamp).toLocaleString("fr-FR", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    day: "numeric",
+                                    month: "short",
+                                  })}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700 dark:text-gray-300">
+                                {msg.content}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Close Button */}
+                  <button
+                    onClick={handleClosePopup}
+                    className="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-lg 
+                              hover:bg-blue-700 transition-colors 
+                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                              dark:bg-blue-700 dark:hover:bg-blue-600"
+                  >
+                    Fermer
+                  </button>
+                </motion.div>
+              </div>
             )}
 
             {/* RIGHT: Enhanced Big Calendar (French) */}
