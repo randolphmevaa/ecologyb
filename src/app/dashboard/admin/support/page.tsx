@@ -5,6 +5,7 @@ import SignaturePad from 'signature_pad';
 import { useEffect, useState, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import NewTicketModal from './NewTicketModal';
+import NewEventModal from './NewEventModal';
 import {  subDays, eachDayOfInterval, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import axios from 'axios';
@@ -50,7 +51,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Calendar, momentLocalizer, Views} from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { CalendarDaysIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, PrinterIcon, SearchIcon, TrashIcon } from "lucide-react";
+import { CalendarDaysIcon, Clipboard, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, Clock, MapPin, MessageCircle, PencilIcon, PrinterIcon, SearchIcon, TrashIcon, User, X } from "lucide-react";
 
 
 // Define your types (adjust as needed)
@@ -66,7 +67,7 @@ export interface Ticket {
   _id?: string;
   id: string;
   createdAt: string;
-  ticket?: string;
+  ticket?: React.ReactNode;
   status: 'scheduled' | 'completed' | 'pending';
   statut: 'scheduled' | 'completed' | 'pending';
   priority: 'high' | 'medium' | 'low';
@@ -91,14 +92,12 @@ export interface Ticket {
 moment.locale("fr");
 const localizer = momentLocalizer(moment);
 
-// interface CalendarEvent extends SavEvent {
-//   title: string;
-//   start: Date;
-//   end: Date;
-//   allDay: boolean;
-// }
-
+// Define your event type
 interface SavEvent {
+  end: Date;
+  start: Date;
+  ticket?: React.ReactNode;
+  title: string | undefined;
   id: string | number;
   customerFirstName?: string;
   customerLastName?: string;
@@ -115,9 +114,9 @@ interface SavEvent {
   problem?: string;
   equipmentType?: string;
   notes?: string;
-  type?: string;         // Added to support conditional styling (e.g. 'réunion')
-  location?: string;     // Added if you want to show location details
-  participants?: string; // Added if you want to list participants
+  type?: string;         // Used for conditional styling and as a potential title
+  location?: string;     // To show location details
+  participants?: string; // To list participants
   conversation?: { sender: string; content: string; timestamp: string }[];
 }
 
@@ -1529,9 +1528,12 @@ export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showNewEventModal, setShowNewEventModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<SavEvent | null>(null);
+  const [activeEvent, setActiveEvent] = useState<SavEvent | null>(null);
   const [contact, setContact] = useState<Contact | null>(null);
+  const [eventDetails, setEventDetails] = useState<SavEvent | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<"month" | "week" | "day" | "agenda">(Views.MONTH);
   const [activeViewTab, setActiveViewTab] = useState("Mois");
@@ -1569,6 +1571,8 @@ export default function SupportPage() {
   const indexOfLastEvent = currentPage * itemsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - itemsPerPage;
   
+  // Handler to close the popup.
+  const handleClosePopup = () => setEventDetails(null);
 
   // For the S.A.V. filter tabs
   const [activeFilter, setActiveFilter] = useState<string>("all");
@@ -1817,6 +1821,17 @@ export default function SupportPage() {
               <AttestationModal/>
 
             </div>
+            {/* Créer un Nouvel Événement Conditionally render the modal */}
+            {showNewEventModal && (
+                        <NewEventModal
+                          isOpen={showNewEventModal}
+                          onClose={() => setShowNewEventModal(false)}
+                          onEventCreated={(eventData) => {
+                            console.log('New event created:', eventData);
+                            // Optionally handle the newly created ticket here
+                          }}
+                        />
+                      )}
           </div>
 
           {/* Metrics Overview Cards */}
@@ -2099,6 +2114,188 @@ export default function SupportPage() {
               />
             )}
 
+            {/* Calendrier S.A.V. Popup Modal */}
+            {eventDetails && (
+              <div className="fixed inset-0 flex items-center justify-center z-50">
+              {/* Semi-transparent background with blur effect */}
+              <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={handleClosePopup}
+              ></div>
+        
+              {/* Popup content */}
+              <motion.div
+                className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl z-10 max-w-md w-full mx-4 relative"
+                initial={{ opacity: 0, scale: 0.9, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 300, 
+                  damping: 20 
+                }}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={handleClosePopup}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+        
+                {/* Header */}
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+                  <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
+                    {eventDetails.title || eventDetails.type || "Détails de l'événement"}
+                  </h3>
+                </div>
+        
+                {/* Event Information Grid */}
+                <div className="space-y-4">
+                  {/* Ticket and Status */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {eventDetails.ticket && (
+                      <div className="flex items-center space-x-2">
+                        <Clipboard className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Ticket</p>
+                          <p className="font-semibold text-white">{eventDetails.ticket}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center space-x-2">
+                      <div className={`h-3 w-3 rounded-full ${
+                        eventDetails.status === 'completed' ? 'bg-green-500' : 
+                        eventDetails.status === 'pending' ? 'bg-yellow-500' : 
+                        'bg-red-500'
+                      }`}></div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">Status</p>
+                        <p className="font-semibold text-white">{eventDetails.status}</p>
+                      </div>
+                    </div>
+                  </div>
+        
+                  {/* Date and Time */}
+                  {eventDetails.start && eventDetails.end && (
+                    <div className="flex items-center space-x-3">
+                      <Clock className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">Date</p>
+                        <p className="font-semibold text-white">
+                          {new Date(eventDetails.start).toLocaleString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                          {" - "}
+                          {new Date(eventDetails.end).toLocaleString("fr-FR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+        
+                  {/* Customer and Technician */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {eventDetails.customer && (
+                      <div className="flex items-center space-x-2">
+                        <User className="h-5 w-5 text-green-500" />
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Client</p>
+                          <p className="font-semibold text-white">{eventDetails.customer}</p>
+                        </div>
+                      </div>
+                    )}
+                    {eventDetails.technician && (
+                      <div className="flex items-center space-x-2">
+                        <User className="h-5 w-5 text-purple-500" />
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Technicien</p>
+                          <p className="font-semibold text-white">{eventDetails.technician}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+        
+                  {/* Location */}
+                  {(eventDetails.address || eventDetails.location) && (
+                    <div className="flex items-center space-x-3">
+                      <MapPin className="h-5 w-5 text-red-500" />
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">Lieu</p>
+                        <p className="font-semibold text-white">
+                          {eventDetails.address || eventDetails.location}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+        
+                  {/* Description */}
+                  {(eventDetails.notes || eventDetails.problem) && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Description</p>
+                      <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                        <p className="text-gray-800 dark:text-gray-200">
+                          {eventDetails.notes || eventDetails.problem}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+        
+                  {/* Conversation */}
+                  {eventDetails.conversation && eventDetails.conversation.length > 0 && (
+                    <div>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <MessageCircle className="h-5 w-5 text-indigo-500" />
+                        <p className="text-sm text-gray-600 dark:text-gray-300">Conversation</p>
+                      </div>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {eventDetails.conversation.map((msg, index) => (
+                          <div 
+                            key={index} 
+                            className="bg-gray-100 dark:bg-gray-700 p-2 rounded-lg"
+                          >
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                                {msg.sender}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(msg.timestamp).toLocaleString("fr-FR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  day: "numeric",
+                                  month: "short",
+                                })}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                              {msg.content}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+        
+                {/* Close Button */}
+                <button
+                  onClick={handleClosePopup}
+                  className="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-lg 
+                             hover:bg-blue-700 transition-colors 
+                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                             dark:bg-blue-700 dark:hover:bg-blue-600"
+                >
+                  Fermer
+                </button>
+              </motion.div>
+            </div>
+            )}
+
             {/* RIGHT: Enhanced Big Calendar (French) */}
             <motion.div
               className="space-y-8"
@@ -2125,7 +2322,7 @@ export default function SupportPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    {/* <div className="flex items-center gap-3">
                       <div className="relative group">
                         <button className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors">
                           <BellIcon className="h-5 w-5" />
@@ -2145,10 +2342,11 @@ export default function SupportPage() {
                           <UserCircleIcon className="h-5 w-5" />
                         </button>
                       </div>
-                    </div>
+                    </div> */}
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-6 gap-4">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+                    {/* Left: Today and Navigation */}
+                    <div className="flex flex-wrap items-center gap-3">
                       <button
                         onClick={handleToday}
                         className="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors text-sm font-medium backdrop-blur-md flex items-center gap-2"
@@ -2171,25 +2369,31 @@ export default function SupportPage() {
                         </button>
                       </div>
                     </div>
-                    <h3 className="text-xl font-semibold text-white">
+
+                    {/* Center: Current Date Label */}
+                    <h3 className="text-xl font-semibold text-white whitespace-nowrap">
                       {currentDate.toLocaleString("fr-FR", { month: "long", year: "numeric" })}
                     </h3>
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                      <div className="relative flex-1 sm:flex-none">
+
+                    {/* Right: Search and New Event Button */}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                      <div className="relative w-full sm:w-64">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <SearchIcon className="h-4 w-4 text-white/60" />
                         </div>
                         <input
                           type="text"
                           placeholder="Rechercher un événement..."
-                          className="w-full sm:w-64 text-sm border-none bg-white/15 hover:bg-white/20 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all text-white placeholder-white/60"
+                          className="w-full text-sm border-none bg-white/15 hover:bg-white/20 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all text-white placeholder-white/60"
                         />
                       </div>
-                      <button className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#e2ffc2] to-[#c5f7a5] hover:opacity-90 text-[#1a365d] rounded-xl text-sm font-semibold transition-colors">
+                      <Button className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#e2ffc2] to-[#c5f7a5] hover:opacity-90 text-[#1a365d] rounded-xl text-sm font-semibold transition-colors"
+                      onClick={() => setShowNewEventModal(true)}>
                         <PlusIcon className="h-4 w-4" />
                         <span className="hidden sm:inline">Nouvel événement</span>
                         <span className="sm:hidden">Nouveau</span>
-                      </button>
+                      </Button>
+                      
                     </div>
                   </div>
                 </div>
@@ -2427,11 +2631,16 @@ export default function SupportPage() {
                       }}
                       popup
                       selectable
-                      onSelectEvent={(event) => console.log("Événement sélectionné:", event)}
+                      onSelectEvent={(event) => {
+                        console.log("Événement sélectionné:", event);
+                        setEventDetails(event);
+                      }}
                       onSelectSlot={(slotInfo) => console.log("Créneau sélectionné:", slotInfo)}
                       culture="fr"
                     />
                   </motion.div>
+
+
                 </div>
 
                 {/* Custom CSS */}
@@ -2654,6 +2863,7 @@ export default function SupportPage() {
                     </div>
                   </div>
                 </div>
+                
               </motion.div>
 
             </motion.div>
@@ -2673,9 +2883,9 @@ export default function SupportPage() {
                     Gestion complète des interventions
                   </p>
                 </div>
-                {selectedEvent && (
+                {activeEvent && (
                   <button
-                    onClick={() => setSelectedEvent(null)}
+                    onClick={() => setActiveEvent(null)}
                     className="text-white bg-white/10 hover:bg-white/20 border border-white/30 rounded-lg px-4 py-2 transition-all duration-300 flex items-center gap-2"
                   >
                     <span>Retour</span>
@@ -2690,7 +2900,7 @@ export default function SupportPage() {
             {/* Main Content Area */}
             <div className="flex flex-col lg:flex-row">
               {/* Left Panel - Event List (Hidden on mobile when an event is selected) */}
-              <div className={`border-r border-[#e5f1fd] ${selectedEvent ? 'hidden lg:block' : 'block'} lg:w-1/2`}>
+              <div className={`border-r border-[#e5f1fd] ${activeEvent ? 'hidden lg:block' : 'block'} lg:w-1/2`}>
                 <div className="p-4">
                   <div className="relative mb-4">
                     <input
@@ -2707,12 +2917,12 @@ export default function SupportPage() {
                       <motion.div
                         key={event.id}
                         className={`mb-3 bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition-all duration-300 cursor-pointer ${
-                          selectedEvent && selectedEvent.id === event.id
+                          activeEvent && activeEvent.id === event.id
                             ? 'border-[#213f5b] bg-[#f5faff]'
                             : 'border-[#bfddf9]'
                         }`}
                         whileHover={{ x: 5 }}
-                        onClick={() => setSelectedEvent(event)}
+                        onClick={() => setActiveEvent(event)}
                       >
                         <div className="flex items-start gap-3">
                           {/* Status indicator */}
@@ -2772,22 +2982,22 @@ export default function SupportPage() {
               </div>
 
               {/* Right Panel - Conversation View (Full width on mobile when an event is selected) */}
-              <div className={`${selectedEvent ? 'block' : 'hidden lg:block'} lg:w-1/2 bg-[#fafcff]`}>
-                {selectedEvent ? (
+              <div className={`${activeEvent ? 'block' : 'hidden lg:block'} lg:w-1/2 bg-[#fafcff]`}>
+                {activeEvent ? (
                   <div className="h-full flex flex-col">
                     <div className="p-4 border-b border-[#e5f1fd] bg-white">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className={`w-3 h-3 rounded-full ${
-                            selectedEvent.status === "completed"
+                            activeEvent.status === "completed"
                               ? "bg-green-500 ring-4 ring-green-100"
-                              : selectedEvent.status === "pending"
+                              : activeEvent.status === "pending"
                               ? "bg-amber-500 ring-4 ring-amber-100"
                               : "bg-blue-500 ring-4 ring-blue-100"
                           }`} />
                           <div>
-                            <h3 className="font-semibold text-[#213f5b]">{`${selectedEvent.customerFirstName} ${selectedEvent.customerLastName}`}</h3>
-                            <p className="text-sm text-[#5a6e87]">{selectedEvent.problem}</p>
+                            <h3 className="font-semibold text-[#213f5b]">{`${activeEvent.customerFirstName} ${activeEvent.customerLastName}`}</h3>
+                            <p className="text-sm text-[#5a6e87]">{activeEvent.problem}</p>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -2807,8 +3017,8 @@ export default function SupportPage() {
                     
                     {/* Conversation messages */}
                     <div className="flex-1 overflow-auto p-4 space-y-4">
-                      {selectedEvent.conversation && selectedEvent.conversation.length > 0 ? (
-                        selectedEvent.conversation.map((msg, index) => (
+                      {activeEvent.conversation && activeEvent.conversation.length > 0 ? (
+                        activeEvent.conversation.map((msg, index) => (
                           <div 
                             key={index} 
                             className={`max-w-[80%] ${
@@ -2876,6 +3086,7 @@ export default function SupportPage() {
                 )}
               </div>
             </div>
+
           </div>
 
         </main>
