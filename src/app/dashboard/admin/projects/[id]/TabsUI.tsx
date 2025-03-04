@@ -6,10 +6,11 @@ import {
   PhotoIcon,
   ChatBubbleLeftEllipsisIcon,
   LifebuoyIcon,
+  CurrencyEuroIcon, // using CurrencyEuroIcon instead of GavelIcon
 } from "@heroicons/react/24/outline";
 
 // Define a union type for the available tabs
-type TabType = "info" | "documents" | "photo" | "chat" | "sav";
+type TabType = "info" | "documents" | "photo" | "chat" | "sav" | "reglement";
 
 // Define the props interface for PremiumTabs
 interface PremiumTabsProps {
@@ -25,6 +26,7 @@ const tabs = [
   { id: "photo", label: "Photo d'installation", icon: PhotoIcon },
   { id: "chat", label: "Chat", icon: ChatBubbleLeftEllipsisIcon },
   { id: "sav", label: "S.A.V.", icon: LifebuoyIcon },
+  { id: "reglement", label: "Règlement", icon: CurrencyEuroIcon }, // new tab using CurrencyEuroIcon
 ];
 
 const PremiumTabs: FC<PremiumTabsProps> = ({ activeTab, setActiveTab, chatMessageCount }) => {

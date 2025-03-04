@@ -30,6 +30,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Header } from "@/components/Header";
 import PremiumTabs from "./TabsUI";
+import ReglementTab from "./ReglementTab";
 
 // Define the predefined document types in a shared scope.
 const predefinedTypes = [
@@ -952,7 +953,7 @@ export default function ProjectDetailPage() {
   });
   const [userList, setUserList] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<
-  "info" | "documents" | "photo" | "chat" | "sav"
+  "info" | "documents" | "photo" | "chat" | "sav" | "reglement"
 >("info");
   const searchParams = useSearchParams();
   // const { tab } = router.query;
@@ -1370,6 +1371,12 @@ export default function ProjectDetailPage() {
           {activeTab === "sav" && (
             <div id="sav" className="h-full">
               <SavTab contactId={dossier.contactId || ""}/>
+            </div>
+          )}
+
+          {activeTab === "reglement" && (
+            <div id="reglement" className="h-full">
+              <ReglementTab contactId={dossier.contactId || ""} />
             </div>
           )}
 
