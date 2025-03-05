@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ecologyb - Votre Interface Client Bientôt Disponible</title>
+  <title>Ecology'B - Votre Espace Client</title>
   <style>
     :root {
       --primary-color: #213f5b;
@@ -11,6 +11,7 @@
       --accent-green: #d2fcb2;
       --text-color: #213f5b;
       --white: #ffffff;
+      --overlay-bg: rgba(33, 63, 91, 0.85);
     }
 
     * {
@@ -21,9 +22,9 @@
 
     body {
       font-family: 'Inter', 'Arial', sans-serif;
-      background-color: var(--secondary-color);
-      line-height: 1.6;
       color: var(--text-color);
+      line-height: 1.6;
+      overflow: auto;
     }
 
     .modal-overlay {
@@ -32,7 +33,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(33, 63, 91, 0.85);
+      background-color: var(--overlay-bg);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -54,22 +55,31 @@
 
     .modal-header {
       background: linear-gradient(135deg, var(--accent-green), var(--secondary-color));
-      padding: 25px 20px 20px;
+      padding: 30px 20px;
       text-align: center;
       position: relative;
+      border-bottom: 2px solid var(--primary-color);
     }
 
     .modal-header img {
-      max-width: 140px;
+      max-width: 120px;
       margin-bottom: 15px;
       filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
     }
 
     .modal-header h2 {
       color: var(--primary-color);
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 700;
       letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+
+    .modal-header h3 {
+      color: var(--primary-color);
+      font-size: 16px;
+      font-weight: 400;
+      margin-top: 5px;
     }
 
     .close-btn {
@@ -78,20 +88,21 @@
       right: 15px;
       background: none;
       border: none;
-      font-size: 32px;
+      font-size: 28px;
       cursor: pointer;
       color: var(--primary-color);
       opacity: 0.7;
-      transition: opacity 0.3s;
+      transition: opacity 0.3s, transform 0.3s;
     }
 
     .close-btn:hover {
       opacity: 1;
+      transform: scale(1.1);
     }
 
     .modal-image {
       width: 100%;
-      height: 280px;
+      height: 250px;
       overflow: hidden;
     }
 
@@ -111,12 +122,12 @@
 
     .modal-body p {
       color: var(--primary-color);
-      font-size: 17px;
+      font-size: 18px;
       line-height: 1.7;
       margin-bottom: 30px;
     }
 
-    .cta-btn {
+    .cta-btn, .submit-email-btn {
       background-color: var(--primary-color);
       color: var(--white);
       padding: 15px 40px;
@@ -129,10 +140,27 @@
       box-shadow: 0 10px 20px rgba(33, 63, 91, 0.2);
     }
 
-    .cta-btn:hover {
+    .cta-btn:hover, .submit-email-btn:hover {
       background-color: #172b3d;
-      transform: translateY(-3px);
+      transform: translateY(-3px) scale(1.02);
       box-shadow: 0 12px 22px rgba(33, 63, 91, 0.3);
+    }
+
+    /* Email input container styling with spacing */
+    #emailInputContainer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+    }
+
+    #emailInputContainer input[type="email"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 60%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
 
     @keyframes fadeIn {
@@ -164,43 +192,82 @@
       .modal-body {
         padding: 25px;
       }
+      #emailInputContainer input[type="email"] {
+        width: 55%;
+      }
+    }
+
+    /* Hide the audio controls if you don't want them visible */
+    audio {
+      display: none;
     }
   </style>
 </head>
 <body>
+  <!-- Background Music -->
+  <audio id="bg-music" src="https://files.freemusicarchive.org/storage-freemusicarchive-org/tracks/FVy4BxwKgxzwcbZqZFikk7d0P4OTLsMfFiZGtRMo.mp3" autoplay loop></audio>
+
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <div class="modal-header">
         <button class="close-btn" id="closeBtn">&times;</button>
-        <img src="https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/661ecd30546087aec351f605_Design%20sans%20titre%20(8).png" alt="Logo Ecologyb">
-        <h2>Votre Espace Client Arrive</h2>
+        <img src="https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/661ecd30546087aec351f605_Design%20sans%20titre%20(8).png" alt="Logo Ecology'B">
+        <h2>Votre Espace Client</h2>
+        <h3>Bientôt Disponible – Gérez et suivez votre projet énergétique</h3>
       </div>
       <div class="modal-image">
         <img src="https://media.engie-homeservices.fr/cms/image_pac_illigo_320a2cd9fb_d3e789b2ee.webp" alt="Illustration énergie renouvelable">
       </div>
       <div class="modal-body">
         <p>
-          Bientôt, découvrez notre nouvel espace client 100% digital. 
-          Suivez en temps réel l'avancement de votre projet énergétique, 
-          consultez vos documents et restez connecté à vos solutions durables.
+          Un espace client dédié pour créer, piloter et suivre l'avancement de votre dossier énergétique avec Ecology'B. Restez connecté et soyez les premiers informés du lancement de notre plateforme innovante.
         </p>
-        <button class="cta-btn" id="ctaBtn">Tenez-moi informé</button>
+        <button class="cta-btn" id="ctaBtn">Soyez les Premiers Informés</button>
+        <!-- Email input container (hidden by default) -->
+        <div id="emailInputContainer" style="display: none;">
+          <input type="email" id="emailInput" placeholder="Votre adresse email">
+          <button class="submit-email-btn" id="submitEmailBtn">Envoyer</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
+    // Close modal on clicking close button
     document.getElementById('closeBtn').addEventListener('click', function() {
       document.getElementById('modalOverlay').style.display = 'none';
     });
 
+    // Show email input on clicking the CTA button
     document.getElementById('ctaBtn').addEventListener('click', function() {
-      alert("Merci ! Nous vous tiendrons informé de l'arrivée de notre nouvel espace client.");
+      this.style.display = 'none';
+      document.getElementById('emailInputContainer').style.display = 'flex';
     });
 
+    // Submit email action: alert and close the modal
+    document.getElementById('submitEmailBtn').addEventListener('click', function() {
+      var email = document.getElementById('emailInput').value;
+      if(email) {
+        alert("Merci ! Nous vous tiendrons informé de l'arrivée de notre nouvel espace client.");
+        // Hide the modal overlay to close the modal
+        document.getElementById('modalOverlay').style.display = 'none';
+      } else {
+        alert("Veuillez entrer une adresse email valide.");
+      }
+    });
+
+    // Close modal if clicking outside of it
     window.addEventListener('click', function(e) {
       if (e.target === document.getElementById('modalOverlay')) {
         document.getElementById('modalOverlay').style.display = 'none';
+      }
+    });
+
+    // Ensure background music plays on user interaction if autoplay is blocked.
+    document.body.addEventListener('click', function() {
+      const music = document.getElementById('bg-music');
+      if (music.paused) {
+        music.play();
       }
     });
   </script>

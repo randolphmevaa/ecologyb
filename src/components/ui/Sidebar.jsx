@@ -132,8 +132,8 @@ export function Sidebar({ role }) {
         children: [
           // { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
           // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
-          { name: "Clients & Organisations", href: "/dashboard/admin/projects", icon: UserCircleIcon },
           { name: "Prospects", href: "/dashboard/admin/leads", icon: SparklesIcon, badge: 12 },
+          { name: "Clients", href: "/dashboard/admin/projects", icon: UserCircleIcon },
           // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
         ]

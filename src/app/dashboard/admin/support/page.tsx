@@ -62,6 +62,9 @@ interface ConversationMessage {
 }
 
 export interface Ticket {
+  contactId: string;
+  technicianFirstName: string;
+  technicianLastName: string;
   customerLastName: string;
   customerFirstName: string;
   _id?: string;
@@ -82,7 +85,7 @@ export interface Ticket {
   allDay: boolean;
   type: string;
   location: string;
-  notes: string;
+  notes?: string;
   participants: string;
   equipmentType: string; // Added missing property
   conversation?: ConversationMessage[];
@@ -759,6 +762,7 @@ interface Contact {
 }
 
 interface Client {
+  contactId: string;
   _id: string;
   mailingAddress: string;
   firstName: string;
@@ -767,11 +771,10 @@ interface Client {
   // add other properties as needed
 }
 
-
 const AttestationModal: React.FC = () => {
   const [showAttestationModal, setShowAttestationModal] = useState<boolean>(false);
   const [clients, setClients] = useState<Client[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  // const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [attestationData, setAttestationData] = useState<AttestationData>({
     lastName: '',
     firstName: '',
@@ -789,6 +792,9 @@ const AttestationModal: React.FC = () => {
   });
   const [techSectionRevealed, setTechSectionRevealed] = useState(false);
   const [clientSectionRevealed, setClientSectionRevealed] = useState(false);
+  const [ , setTicketClientIds] = useState<string[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [selectedTicketId, setSelectedTicketId] = useState<string>('');
 
   // Références pour le conteneur, le canvas et l'instance de SignaturePad
   const signatureRef = useRef<HTMLDivElement>(null);
@@ -803,6 +809,72 @@ const AttestationModal: React.FC = () => {
       .catch((error) => console.error('Error fetching clients:', error));
   }, []);
 
+  // Once clients are loaded, for each client check if they have any tickets
+  useEffect(() => {
+    if (clients.length === 0) return;
+    
+    const fetchTicketClientIds = async () => {
+      const ids: string[] = [];
+      await Promise.all(
+        clients.map(async (client) => {
+          try {
+            const res = await fetch(`/api/tickets?contactId=${client.contactId}`);
+            const data = await res.json();
+            // Assuming the API returns an array of tickets
+            if (data && data.length > 0) {
+              ids.push(client._id);
+            }
+          } catch (error) {
+            console.error(`Error fetching tickets for client ${client.contactId}:`, error);
+          }
+        })
+      );
+      setTicketClientIds(ids);
+    };
+
+    fetchTicketClientIds();
+  }, [clients]);
+
+  // 2. Fetch tickets from your API on mount (or you may adjust this as needed):
+useEffect(() => {
+  fetch('/api/tickets')
+    .then((res) => res.json())
+    .then((data) => setTickets(data))
+    .catch((error) => console.error('Error fetching tickets:', error));
+}, []);
+
+// 3. Update the selection handler for a ticket:
+const handleTicketSelect = (ticketId: string) => {
+  setSelectedTicketId(ticketId);
+  const ticket = tickets.find((t) => t._id === ticketId);
+  if (ticket) {
+    // Start by updating from ticket information
+    let updatedData: Partial<AttestationData> = {
+      ticketId: String(ticket.ticket),
+      lastName: ticket.customerLastName,
+      firstName: ticket.customerFirstName,
+      address: ticket.location,
+      ...parseMailingAddress(ticket.location),
+    };    
+
+    // Optionally, if you want to override/update with client details, find the client via ticket.contactId
+    const client = clients.find((c) => c.contactId === ticket.contactId);
+    if (client) {
+      const clientAddressData = parseMailingAddress(client.mailingAddress);
+      updatedData = {
+        ...updatedData,
+        lastName: client.lastName,
+        firstName: client.firstName,
+        address: client.mailingAddress,
+        phone: client.phone,
+        postalCode: clientAddressData.postalCode,
+        city: clientAddressData.city,
+      };
+    }
+    setAttestationData(prev => ({ ...prev, ...updatedData }));
+  }
+};
+
   // Utility function to parse mailingAddress
   const parseMailingAddress = (mailingAddress: string) => {
     // Extract postal code (5 digits) and the rest as city from the mailing address string.
@@ -815,22 +887,22 @@ const AttestationModal: React.FC = () => {
   };
 
   // Update attestationData when a client is selected from dropdown
-  const handleClientSelect = (clientId: string) => {
-    setSelectedClientId(clientId);
-    const client = clients.find((c) => c._id === clientId);
-    if (client) {
-      const { postalCode, city } = parseMailingAddress(client.mailingAddress);
-      setAttestationData((prev) => ({
-        ...prev,
-        lastName: client.lastName,
-        firstName: client.firstName,
-        address: client.mailingAddress,
-        postalCode,
-        city,
-        phone: client.phone,
-      }));
-    }
-  };
+  // const handleClientSelect = (clientId: string) => {
+  //   setSelectedClientId(clientId);
+  //   const client = clients.find((c) => c._id === clientId);
+  //   if (client) {
+  //     const { postalCode, city } = parseMailingAddress(client.mailingAddress);
+  //     setAttestationData((prev) => ({
+  //       ...prev,
+  //       lastName: client.lastName,
+  //       firstName: client.firstName,
+  //       address: client.mailingAddress,
+  //       postalCode,
+  //       city,
+  //       phone: client.phone,
+  //     }));
+  //   }
+  // };
 
   // Fonction d'initialisation de la zone de signature
   const initializeSignaturePad = () => {
@@ -1267,21 +1339,21 @@ const AttestationModal: React.FC = () => {
             }}
             className="space-y-8"
           >
-            {/* Dropdown to choose a client */}
+            {/* Dropdown to choose a ticket */}
             <div className="mb-6">
-              <label htmlFor="clientSelect" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                Sélectionner un client
+              <label htmlFor="ticketSelect" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                Sélectionner un Ticket
               </label>
               <select
-                id="clientSelect"
-                value={selectedClientId}
-                onChange={(e) => handleClientSelect(e.target.value)}
+                id="ticketSelect"
+                value={selectedTicketId}
+                onChange={(e) => handleTicketSelect(e.target.value)}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
               >
-                <option value="">-- Choisir un client --</option>
-                {clients.map((client) => (
-                  <option key={client._id} value={client._id}>
-                    {client.firstName} {client.lastName}
+                <option value="">-- Choisir un ticket --</option>
+                {tickets.map((ticket) => (
+                  <option key={ticket._id} value={ticket._id}>
+                    {ticket.ticket} - {ticket.customerFirstName} {ticket.customerLastName} - {ticket.technicianFirstName} {ticket.technicianLastName}
                   </option>
                 ))}
               </select>
@@ -2110,8 +2182,9 @@ export default function SupportPage() {
                 }}
                 contact={contact}
                 onClose={() => setSelectedEvent(null)}
-                handleGenerateAttestation={handleGenerateAttestation}
-              />
+                handleGenerateAttestation={handleGenerateAttestation} formattedDate={''} formattedTime={''} setShowAttestationModal={function (): void {
+                  throw new Error('Function not implemented.');
+                } }              />
             )}
 
             {/* Calendrier S.A.V. Popup Modal */}

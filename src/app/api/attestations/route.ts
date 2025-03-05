@@ -4,6 +4,62 @@ import clientPromise from "@/lib/mongodb";
 import fs from "fs";
 import path from "path";
 
+// DELETE: Delete attestation by eventId
+export async function DELETE(request: Request) {
+  try {
+    // Parse query params
+    const { searchParams } = new URL(request.url);
+    const eventId = searchParams.get("eventId");
+
+    if (!eventId) {
+      return NextResponse.json(
+        { success: false, error: "Missing eventId" },
+        { status: 400 }
+      );
+    }
+
+    // Connect to the database
+    const client = await clientPromise;
+    const db = client.db("your_database_name"); // replace with your DB name
+    const collection = db.collection("attestations");
+
+    // Retrieve the attestation to get the pdfUrl (if any)
+    const attestation = await collection.findOne({ eventId });
+    if (!attestation) {
+      return NextResponse.json(
+        { success: false, error: "Attestation not found" },
+        { status: 404 }
+      );
+    }
+
+    // If the pdfUrl is a local file (starts with "/attestations/"),
+    // remove it from the public folder.
+    if (
+      attestation.pdfUrl &&
+      typeof attestation.pdfUrl === "string" &&
+      attestation.pdfUrl.startsWith("/attestations/")
+    ) {
+      const publicPath = path.join(process.cwd(), "public", "attestations");
+      const filePath = path.join(publicPath, path.basename(attestation.pdfUrl));
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Delete the document from MongoDB
+    const result = await collection.deleteOne({ eventId });
+
+    return NextResponse.json({ success: true, data: result });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred";
+    return NextResponse.json(
+      { success: false, error: errorMessage },
+      { status: 500 }
+    );
+  }
+}
+
 // GET: Fetch attestations (all or by eventId)
 export async function GET(request: Request) {
   try {

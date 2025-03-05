@@ -4,15 +4,18 @@ import { motion } from "framer-motion";
 import {
   XMarkIcon,
   DocumentTextIcon,
-  MapPinIcon,
+  // MapPinIcon,
   UserIcon,
   ClockIcon,
   CalendarIcon,
   WrenchIcon,
+  EnvelopeIcon,
+  PaperAirplaneIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button"; // Your custom Button component
 import { jsPDF } from "jspdf";
 import SignaturePad from "signature_pad";
+import { PencilIcon } from "lucide-react";
 
 interface AttestationData {
   lastName: string;
@@ -30,6 +33,7 @@ interface AttestationData {
 }
 
 interface Event {
+  notes?: string;
   _id: string;
   customerLastName: string;
   customerFirstName: string;
@@ -61,20 +65,46 @@ interface EventDetailsModalProps {
   contact: Contact | null;
   onClose: () => void;
   handleGenerateAttestation: () => void;
+  // selectedEvent: SelectedEvent;
+  // contact?: Contact;
+  formattedDate: string;
+  formattedTime: string;
+  // onClose: () => void;
+  setShowAttestationModal: (show: boolean) => void;
+  pdfPreviewUrl?: string;
+  onSendToTechnician?: () => void;
+  onSendToClient?: () => void;
 }
 
+// Define types for the component props
+// interface SelectedEvent {
+//   customerFirstName: string;
+//   customerLastName: string;
+//   problem?: string;
+//   technicianFirstName: string;
+//   technicianLastName: string;
+//   equipmentType?: string;
+//   notes?: string;
+// }
+
+interface Contact {
+  mailingAddress: string;
+}
 
 const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
-  title,
+  // title,
   selectedEvent,
   contact,
   onClose,
+  onSendToTechnician = () => {},
+  onSendToClient = () => {}
 }) => {
   // Main modal state for Event Details
   const [showAttestationModal, setShowAttestationModal] = useState<boolean>(false);
   const [ , setClients] = useState<Client[]>([]);
   // Removed selectedClientId if it is not used elsewhere
   const [signaturePadKey, setSignaturePadKey] = useState<number>(Date.now());
+  const [isHovered, setIsHovered] = useState<boolean>(false);
 
   // Attestation form state – allow editing later
   const [attestationData, setAttestationData] = useState<AttestationData>({
@@ -602,121 +632,134 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         onClick={onClose}
       >
         <motion.div
-          className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden relative"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden relative"
           onClick={(e) => e.stopPropagation()}
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-[#213f5b] to-[#1a324a] p-5">
+          {/* Gradient Header */}
+          <div className="bg-gradient-to-r from-[#213f5b] to-[#1a324a] p-5 shadow-md">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-white">
-                {title || "Détails de l'intervention"}
+              <h3 className="text-2xl font-bold text-white tracking-tight">
+                Détails de l&apos;intervention
               </h3>
               <button
                 onClick={onClose}
-                className="text-white hover:text-gray-300 focus:outline-none transition-colors"
+                className="text-white hover:text-red-300 focus:outline-none transition-all duration-300 ease-in-out transform hover:rotate-90"
                 aria-label="Fermer"
               >
-                <XMarkIcon className="h-6 w-6" />
+                <XMarkIcon className="h-7 w-7" />
               </button>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 gap-4 mb-6">
-              {/* Client info */}
-              <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                <UserIcon className="h-5 w-5 text-[#213f5b] mt-0.5 flex-shrink-0" />
-                <div>
+          <div className="p-6 space-y-6">
+            {/* Information Sections */}
+            <div className="space-y-4">
+              {/* Client Info */}
+              <div 
+                className="flex items-start space-x-4 p-4 bg-gray-100 rounded-xl hover:bg-gray-50 transition-all duration-300 group"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
+                <UserIcon className={`h-6 w-6 text-[#213f5b] mt-1 transition-transform ${isHovered ? 'scale-110' : ''}`} />
+                <div className="flex-1">
                   <div className="text-sm font-medium text-gray-500">Client</div>
-                  <div className="font-medium">
+                  <div className="font-semibold text-gray-800">
                     {`${selectedEvent.customerFirstName} ${selectedEvent.customerLastName}`}
                   </div>
                 </div>
               </div>
 
-              {/* Problem info */}
-              <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                <WrenchIcon className="h-5 w-5 text-[#213f5b] mt-0.5 flex-shrink-0" />
+              {/* Other Sections Similar to Above */}
+              <div className="flex items-start space-x-4 p-4 bg-gray-100 rounded-xl">
+                <WrenchIcon className="h-6 w-6 text-[#213f5b] mt-1" />
                 <div>
                   <div className="text-sm font-medium text-gray-500">Problème</div>
-                  <div className="font-medium">
+                  <div className="font-semibold text-gray-800">
                     {selectedEvent.problem || "Intervention programmée"}
                   </div>
                 </div>
               </div>
 
-              {/* Date and time */}
-              <div className="flex flex-row gap-3">
-                <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg flex-1">
-                  <CalendarIcon className="h-5 w-5 text-[#213f5b] mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Date</div>
-                    <div className="font-medium">{formattedDate}</div>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg flex-1">
-                  <ClockIcon className="h-5 w-5 text-[#213f5b] mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Heure</div>
-                    <div className="font-medium">{formattedTime}</div>
+              {/* Notes */}
+              <div className="flex items-start space-x-4 p-4 bg-gray-100 rounded-xl">
+                <PencilIcon className="h-6 w-6 text-[#213f5b] mt-1" />
+                <div>
+                  <div className="text-sm font-semibold text-gray-500">Notes</div>
+                  <div className="font-thin text-gray-800">
+                    {selectedEvent.notes || "Intervention programmée"}
                   </div>
                 </div>
               </div>
 
-              {/* Technician info */}
-              <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                <UserIcon className="h-5 w-5 text-[#213f5b] mt-0.5 flex-shrink-0" />
+              {/* Date and Time Row */}
+              <div className="flex space-x-4">
+                <div className="flex-1 flex items-start space-x-4 p-4 bg-gray-100 rounded-xl">
+                  <CalendarIcon className="h-6 w-6 text-[#213f5b] mt-1" />
+                  <div>
+                    <div className="text-sm font-medium text-gray-500">Date</div>
+                    <div className="font-semibold text-gray-800">{formattedDate}</div>
+                  </div>
+                </div>
+                <div className="flex-1 flex items-start space-x-4 p-4 bg-gray-100 rounded-xl">
+                  <ClockIcon className="h-6 w-6 text-[#213f5b] mt-1" />
+                  <div>
+                    <div className="text-sm font-medium text-gray-500">Heure</div>
+                    <div className="font-semibold text-gray-800">{formattedTime}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Technician Info */}
+              <div className="flex items-start space-x-4 p-4 bg-gray-100 rounded-xl">
+                <UserIcon className="h-6 w-6 text-[#213f5b] mt-1" />
                 <div>
                   <div className="text-sm font-medium text-gray-500">Technicien</div>
-                  <div className="font-medium">
+                  <div className="font-semibold text-gray-800">
                     {`${selectedEvent.technicianFirstName} ${selectedEvent.technicianLastName}`}
                   </div>
                 </div>
               </div>
-
-              {/* Address info */}
-              <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                <MapPinIcon className="h-5 w-5 text-[#213f5b] mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Adresse</div>
-                  <div className="font-medium">
-                    {contact ? contact.mailingAddress : "Chargement..."}
-                  </div>
-                </div>
-              </div>
-
-              {/* Equipment Type - Conditional */}
-              {selectedEvent.equipmentType && (
-                <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <DocumentTextIcon className="h-5 w-5 text-[#213f5b] mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">
-                      Type d&apos;équipement
-                    </div>
-                    <div className="font-medium">{selectedEvent.equipmentType}</div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              {/* Send to Technician Button */}
               <button
-                className="w-full bg-[#213f5b] hover:bg-[#1a324a] text-white rounded-lg px-4 py-3 font-medium transition-colors flex items-center justify-center space-x-2"
-                onClick={() => {
-                  setShowAttestationModal(true);
-                }}
+                onClick={onSendToTechnician}
+                className="flex items-center justify-center space-x-2 bg-[#213f5b] hover:bg-[#1a324a] text-white rounded-lg px-4 py-3 font-medium transition-colors group"
               >
-                <DocumentTextIcon className="h-5 w-5" />
-                <span>
-                  {pdfPreviewUrl ? "Voir Attestation" : "Générer une attestation"}
-                </span>
+                <PaperAirplaneIcon className="h-5 w-5 group-hover:rotate-45 transition-transform" />
+                <span>Envoyer au technicien</span>
               </button>
+
+              {/* Send to Client Button */}
+              <button
+                onClick={onSendToClient}
+                className="flex items-center justify-center space-x-2 bg-[#1a9c66] hover:bg-[#167a51] text-white rounded-lg px-4 py-3 font-medium transition-colors group"
+              >
+                <EnvelopeIcon className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                <span>Envoyer au client</span>
+              </button>
+
+              {/* Attestation Button */}
+              <div className="col-span-2 mt-2">
+                <button
+                  className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg px-4 py-3 font-medium transition-colors flex items-center justify-center space-x-2"
+                  onClick={() => {
+                    setShowAttestationModal(true);
+                  }}
+                >
+                  <DocumentTextIcon className="h-5 w-5" />
+                  <span>
+                    {pdfPreviewUrl ? "Voir Attestation" : "Générer une attestation"}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>

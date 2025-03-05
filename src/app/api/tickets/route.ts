@@ -13,15 +13,8 @@ export async function GET(request: Request) {
 
     let query = {};
     if (contactIdParam) {
-      // Attempt to convert the contactId to a number.
-      const numericContactId = parseInt(contactIdParam, 10);
-      // If the conversion is successful (not NaN), use the number.
-      if (!isNaN(numericContactId)) {
-        query = { contactId: numericContactId };
-      } else {
-        // Otherwise, use the original string value.
-        query = { contactId: contactIdParam };
-      }
+      // Use the string value directly without converting it to a number.
+      query = { contactId: contactIdParam };
     }
 
     const tickets = await db.collection("tickets").find(query).toArray();
@@ -31,6 +24,7 @@ export async function GET(request: Request) {
     return NextResponse.error();
   }
 }
+
 
 // POST: Insert new tickets into MongoDB
 export async function POST(request: Request) {

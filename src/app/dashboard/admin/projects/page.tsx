@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 // import Image from "next/image";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Header } from "@/components/Header";
 import {
   MagnifyingGlassIcon,
@@ -20,6 +20,70 @@ import {
   // StarIcon, // Added missing SearchIcon import
 } from "@heroicons/react/24/outline";
 import { ChevronLeftIcon, SearchIcon } from "lucide-react";
+// import { MagnifyingGlassIcon, ArrowPathIcon, ChartBarIcon, UserGroupIcon, BuildingOfficeIcon, MapPinIcon, PhoneIcon } from "@heroicons/react/24/outline";
+
+// Define your colors object
+const colors = {
+  darkBlue: "#213f5b",
+};
+
+// Example getStatusInfo function that maps a project's etape to status details.
+const getStatusInfo = (etape?: string) => {
+  if (!etape) {
+    return { color: "#ccc", textColor: "#000", icon: null };
+  }
+
+  const step = Number(etape.charAt(0));
+  let color = "#bfddf9";
+  let textColor = "#213f5b";
+  let icon = null;
+
+  switch (step) {
+    case 1:
+      color = "#bfddf9";
+      textColor = "#213f5b";
+      icon = <MagnifyingGlassIcon className="h-4 w-4 mr-1" />;
+      break;
+    case 2:
+      color = "#d2fcb2";
+      textColor = "#213f5b";
+      icon = <ArrowPathIcon className="h-4 w-4 mr-1" />;
+      break;
+    case 3:
+      color = "#f7b91b";
+      textColor = "#213f5b";
+      icon = <ChartBarIcon className="h-4 w-4 mr-1" />;
+      break;
+    case 4:
+      color = "#a6e4d0";
+      textColor = "#213f5b";
+      icon = <UserGroupIcon className="h-4 w-4 mr-1" />;
+      break;
+    case 5:
+      color = "#92d1e0";
+      textColor = "#213f5b";
+      icon = <BuildingOfficeIcon className="h-4 w-4 mr-1" />;
+      break;
+    case 6:
+      color = "#7aafc2";
+      textColor = "#213f5b";
+      icon = <MapPinIcon className="h-4 w-4 mr-1" />;
+      break;
+    case 7:
+      color = "#5d8ba3";
+      textColor = "#ffffff";
+      icon = <PhoneIcon className="h-4 w-4 mr-1" />;
+      break;
+    default:
+      color = "#ccc";
+      textColor = "#000";
+      icon = null;
+      break;
+  }
+
+  return { color, textColor, icon };
+};
+
 
 // ------------------------
 // Types
@@ -29,6 +93,10 @@ type Dossier = {
   numero: string;
   client: string;
   projet: string;
+  // numero: string;
+  typeDeLogement: string;
+  // solution: string;
+  surfaceChauffee: number;
   solution: string;
   etape: string;
   valeur: string;
@@ -61,23 +129,43 @@ type Contact = {
 };
 
 // Mapping for step colors - updated with brand colors
-const stepStyles: { [key: string]: { bg: string; text: string } } = {
-  "1": { bg: "bg-[#bfddf9]/30", text: "text-[#213f5b]" },
-  "2": { bg: "bg-[#bfddf9]/50", text: "text-[#213f5b]" },
-  "3": { bg: "bg-[#d2fcb2]/30", text: "text-[#213f5b]" },
-  "4": { bg: "bg-[#d2fcb2]/50", text: "text-[#213f5b]" },
-  "5": { bg: "bg-[#213f5b]/20", text: "text-[#213f5b]" },
-  "6": { bg: "bg-[#213f5b]/30", text: "text-[#213f5b]" },
-  "7": { bg: "bg-[#213f5b]/50", text: "text-white" },
-};
+// const stepStyles: { [key: string]: { bg: string; text: string } } = {
+//   "1": { bg: "bg-[#bfddf9]/30", text: "text-[#213f5b]" },
+//   "2": { bg: "bg-[#bfddf9]/50", text: "text-[#213f5b]" },
+//   "3": { bg: "bg-[#d2fcb2]/30", text: "text-[#213f5b]" },
+//   "4": { bg: "bg-[#d2fcb2]/50", text: "text-[#213f5b]" },
+//   "5": { bg: "bg-[#213f5b]/20", text: "text-[#213f5b]" },
+//   "6": { bg: "bg-[#213f5b]/30", text: "text-[#213f5b]" },
+//   "7": { bg: "bg-[#213f5b]/50", text: "text-white" },
+// };
+// Define your timeline steps
+const steps = [
+  "Prise de contact",
+  "En attente des documents",
+  "Instruction du dossier",
+  "Dossier Accepter",
+  "Installation",
+  "Contrôle",
+  "Dossier clôturé",
+];
+
+// type SlideOverProps = {
+//   selectedProject: Dossier | null;
+//   setSelectedProject: (project: Dossier | null) => void;
+// };
 
 export default function ProjectsPage() {
   // Data and loading
   const [projects, setProjects] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  
+
   // Fetched contacts (mapping contactId => contact data)
   const [contacts, setContacts] = useState<{ [id: string]: Contact }>({});
+  const [selectedProject, setSelectedProject] = useState<Dossier | null>(null);
+  // Extract the current step number from the etape string.
+  const currentStep = selectedProject ? parseInt(selectedProject.etape.split(" ")[0], 10) : 0;
 
   // Filtering state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -87,6 +175,44 @@ export default function ProjectsPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
+
+// Helper Functions with explicit types
+const getStepColor = (step: number): string => {
+  const colors: { [key: number]: string } = {
+    1: "#d2fcb2",   // business green
+    2: "#bfddf9",   // business light blue
+    3: "#f7b91b",   // business dark blue
+    4: "#a6e4d0",   // custom derived shade
+    5: "#92d1e0",   // custom derived shade
+    6: "#7aafc2",   // custom derived shade
+    7: "#5d8ba3",   // custom derived shade
+  };
+  return colors[step] || "#bfddf9";
+};
+
+const lightenColor = (color: string, percent: number): string => {
+  const num = parseInt(color.slice(1), 16);
+  const amt = Math.round(2.55 * percent);
+  let R = (num >> 16) + amt;
+  let G = ((num >> 8) & 0x00ff) + amt;
+  let B = (num & 0x0000ff) + amt;
+  R = R < 255 ? (R < 0 ? 0 : R) : 255;
+  G = G < 255 ? (G < 0 ? 0 : G) : 255;
+  B = B < 255 ? (B < 0 ? 0 : B) : 255;
+  return (
+    "#" +
+    ((1 << 24) + (R << 16) + (G << 8) + B)
+      .toString(16)
+      .slice(1)
+  );
+};
+
+const getGradientColorForStep = (step: number): string => {
+  const baseColor = getStepColor(step);
+  // Create a gradient from the base color to a 20% lighter version.
+  return `linear-gradient(90deg, ${baseColor}, ${lightenColor(baseColor, 20)})`;
+};
+
 
   // Fetch projects (dossiers)
   const fetchProjects = () => {
@@ -134,12 +260,12 @@ export default function ProjectsPage() {
   };
 
   // Helper: Get bg and text classes based on the step number
-  const getEtapeStyles = (etape?: string) => {
-    if (!etape) return "bg-gray-200 text-gray-800";
-    const digit = etape.charAt(0);
-    const style = stepStyles[digit];
-    return style ? `${style.bg} ${style.text}` : "bg-gray-200 text-gray-800";
-  };
+  // const getEtapeStyles = (etape?: string) => {
+  //   if (!etape) return "bg-gray-200 text-gray-800";
+  //   const digit = etape.charAt(0);
+  //   const style = stepStyles[digit];
+  //   return style ? `${style.bg} ${style.text}` : "bg-gray-200 text-gray-800";
+  // };
 
   // Filtering logic (ensuring string conversion)
   const filteredProjects = projects.filter((project) => {
@@ -548,44 +674,64 @@ export default function ProjectsPage() {
                           </div>
                         </div>
 
-                        {/* ETAPE DU PROJET Section - tighter spacing */}
-                        <div className="mb-3">
-                          <p className="text-xs font-bold text-[#213f5b]/70 uppercase mb-2 flex items-center">
-                            <span className="w-3 h-0.5 bg-[#d2fcb2] mr-1"></span>
-                            ETAPE DU PROJET
+                        {/* ÉTAPE DU PROJET Section - Advanced UI with Step-Specific Colors */}
+                        <div className="mb-4">
+                          <p className="text-xs font-bold text-[#213f5b] uppercase mb-2 flex items-center">
+                            <span className="w-4 h-0.5 bg-[#d2fcb2] mr-2"></span>
+                            ÉTAPE DU PROJET
                           </p>
-                          
-                          <div className="flex flex-col gap-2">
-                            {/* Progress Bar */}
-                            <div className="relative h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+                          <div className="space-y-3">
+                            {/* Progress Bar with Step-Based Gradient */}
+                            <div className="relative h-4 w-full bg-[#ffffff] border border-[#bfddf9] rounded-full overflow-hidden shadow-inner">
                               {project.etape && (
                                 <motion.div
                                   initial={{ width: 0 }}
-                                  animate={{ width: `${(Number(project.etape.charAt(0)) / 7) * 100}%` }}
-                                  transition={{ duration: 0.5 }}
-                                  className={`absolute h-full ${getEtapeStyles(project.etape).split(' ')[0]} rounded-full`}
+                                  animate={{
+                                    width: `${(Number(project.etape.charAt(0)) / 7) * 100}%`,
+                                  }}
+                                  transition={{ duration: 0.6 }}
+                                  className="absolute h-full rounded-full"
+                                  style={{
+                                    background: getGradientColorForStep(Number(project.etape.charAt(0))),
+                                  }}
                                 >
-                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10"></div>
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20"></div>
                                 </motion.div>
                               )}
                             </div>
 
-                            {/* Step Indicator */}
+                            {/* Step Indicator with Unique Colors per Step */}
                             <div className="flex justify-between items-center">
                               <span className="text-xs font-medium text-[#213f5b]">
                                 {formatEtape(project.etape)}
                               </span>
-                              <div className="flex items-center gap-1">
-                                {[...Array(7)].map((_, idx) => (
-                                  <div
-                                    key={idx}
-                                    className={`w-2 h-2 rounded-full ${
-                                      Number(project.etape?.charAt(0)) > idx
-                                        ? getEtapeStyles((idx + 1).toString()).split(' ')[0]
-                                        : "bg-gray-200"
-                                    }`}
-                                  />
-                                ))}
+                              <div className="flex items-center gap-2">
+                                {[...Array(7)].map((_, idx) => {
+                                  const stepNumber = idx + 1;
+                                  // Consider the step complete if the current etape is greater or equal to the step number.
+                                  const completed = Number(project.etape?.charAt(0)) >= stepNumber;
+                                  const stepColor = getStepColor(stepNumber);
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="w-6 h-6 flex items-center justify-center transition-transform transform hover:scale-110"
+                                      title={`Step ${stepNumber}`}
+                                    >
+                                      <div
+                                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                                          completed
+                                            ? ""
+                                            : "bg-[#ffffff] border border-[#bfddf9]"
+                                        }`}
+                                        style={completed ? { background: stepColor } : {}}
+                                      >
+                                        <span className="text-[10px] text-[#213f5b]">
+                                          {stepNumber}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           </div>
@@ -620,14 +766,18 @@ export default function ProjectsPage() {
 
                       {/* Action button - reduced padding */}
                       <div className="mt-auto">
-                        <Link
-                          href={`/dashboard/admin/projects/${project._id}`}
-                          className="group inline-flex items-center justify-center w-full py-2 px-4 bg-[#213f5b] text-white rounded-lg transition-all hover:bg-[#213f5b]/90 hover:shadow-md text-sm"
-                        >
-                          <span>Voir le détail</span>
-                          <ChevronRightIcon className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-                        </Link>
+                      <button
+                        onClick={() => setSelectedProject(project)}
+                        className="group inline-flex items-center justify-center w-full py-2 px-4 bg-[#213f5b] text-white rounded-lg transition-all hover:bg-[#213f5b]/90 hover:shadow-md text-sm"
+                      >
+                        <span>Voir le détail</span>
+                        <ChevronRightIcon className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                      </button>
+
                       </div>
+
+                      
+
                     </motion.div>
                   );
                 })}
@@ -689,6 +839,144 @@ export default function ProjectsPage() {
           </div>
         </main>
       </div>
+      {/* Project Detail Slide-Over Panel */}
+      <AnimatePresence>
+                        {selectedProject && (
+                          <motion.div 
+                            className="fixed inset-0 z-50"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                          >
+                            {/* Backdrop */}
+                            <motion.div 
+                              className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              onClick={() => setSelectedProject(null)}
+                            />
+                            
+                            {/* Slide-over panel */}
+                            <motion.div 
+                              className="absolute top-0 right-0 bottom-0 w-full max-w-md bg-white shadow-xl flex flex-col"
+                              initial={{ x: "100%" }}
+                              animate={{ x: 0 }}
+                              exit={{ x: "100%" }}
+                              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                            >
+                              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                                <h2 className="text-2xl font-bold text-[#213f5b]">Détails du projet</h2>
+                                <button 
+                                  onClick={() => setSelectedProject(null)}
+                                  className="text-gray-400 hover:text-gray-600"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+                              
+                              <div className="flex-1 overflow-auto p-6">
+                                {/* Project Header */}
+                                <div className="mb-8">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <span 
+                                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                                      style={{ 
+                                        backgroundColor: getStatusInfo(selectedProject.etape).color,
+                                        color: getStatusInfo(selectedProject.etape).textColor 
+                                      }}
+                                    >
+                                      {getStatusInfo(selectedProject.etape).icon}
+                                      {selectedProject.etape}
+                                    </span>
+                                    <span className="text-sm text-gray-500">#{selectedProject.numero}</span>
+                                  </div>
+                                  <h3 className="text-xl font-bold text-[#213f5b]">{selectedProject.typeDeLogement}</h3>
+                                </div>
+                                
+                                {/* Project Details */}
+                                <div className="space-y-6">
+                                  <div>
+                                    <h4 className="text-sm font-medium text-gray-500 mb-2">Solution</h4>
+                                    <p className="text-[#213f5b]">{selectedProject.solution}</p>
+                                  </div>
+                                  
+                                  <div>
+                                    <h4 className="text-sm font-medium text-gray-500 mb-2">Surface chauffée</h4>
+                                    <p className="text-[#213f5b]">{selectedProject.surfaceChauffee} m²</p>
+                                  </div>
+                                  
+                                  {/* Timeline using real data */}
+                                  <div className="mt-8">
+                                    <h4 className="text-sm font-medium text-gray-500 mb-4">Progression du projet</h4>
+                                    
+                                    <div className="relative">
+                                      <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200"></div>
+                                      
+                                      <div className="space-y-6">
+                                        {steps.map((step, index) => {
+                                          const stepNumber = index + 1;
+                                          let bgColor, icon;
+                                          if (stepNumber < currentStep) {
+                                            // Completed steps
+                                            bgColor = "bg-[#d2fcb2]";
+                                            // textColor = "text-[#213f5b]";
+                                            icon = (
+                                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#213f5b]" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                              </svg>
+                                            );
+                                          } else if (stepNumber === currentStep) {
+                                            // Current step
+                                            bgColor = "bg-[#bfddf9]";
+                                            // textColor = "text-[#213f5b]";
+                                            icon = (
+                                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#213f5b]" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                              </svg>
+                                            );
+                                          } else {
+                                            // Pending steps
+                                            bgColor = "bg-gray-200";
+                                            // textColor = "text-gray-500";
+                                            icon = <span className="text-xs font-medium">{stepNumber}</span>;
+                                          }
+                                          return (
+                                            <div className="flex" key={index}>
+                                              <div className={`flex-shrink-0 h-8 w-8 rounded-full ${bgColor} flex items-center justify-center relative z-10`}>
+                                                {icon}
+                                              </div>
+                                              <div className="ml-4">
+                                                <h5 className={`text-sm font-medium ${stepNumber <= currentStep ? "text-[#213f5b]" : "text-gray-400"}`}>{step}</h5>
+                                                {/* Optionally, add dates for each step if available */}
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="p-6 border-t border-gray-100">
+                                <Link href={`/dashboard/admin/projects/${selectedProject._id}`}>
+                                  <motion.button
+                                    className="w-full py-3 rounded-xl text-white font-medium"
+                                    style={{ backgroundColor: colors.darkBlue }}
+                                    whileHover={{ opacity: 0.9 }}
+                                    whileTap={{ scale: 0.98 }}
+                                  >
+                                    Voir tous les détails
+                                  </motion.button>
+                                </Link>
+                              </div>
+                            </motion.div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
     </div>
   );
 }
