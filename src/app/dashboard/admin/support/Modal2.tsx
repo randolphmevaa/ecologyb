@@ -1005,6 +1005,34 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                 </div>
               </div>
 
+              {/* Section Problème rencontré */}
+              <div className="relative pt-6 border-t dark:border-gray-700">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Problème rencontré
+                  </h3>
+                  <div>
+                    <label htmlFor="interventionDetails" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                    Détails du problème rencontré
+                    </label>
+                    <textarea
+                      id="interventionDetails"
+                      value={selectedEvent.notes}
+                      readOnly
+                      onChange={(e) =>
+                        setAttestationData((prev) => ({
+                          ...prev,
+                          interventionDetails: e.target.value,
+                        }))
+                      }
+                      rows={5}
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
+                      placeholder="Décrivez les détails de l'intervention technique..."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
               {/* Section équipe technique */}
               <div className="relative pt-6 border-t dark:border-gray-700">
                 {!techSectionRevealed && (

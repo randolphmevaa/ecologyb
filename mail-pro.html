@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenue sur l'Espace Collaborateur Ecology'B</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f6f9fc;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #4a4a4a;
+      }
+      .wrapper {
+        width: 100%;
+        table-layout: fixed;
+        background-color: #f6f9fc;
+        padding: 40px 0;
+      }
+      .main {
+        background-color: #ffffff;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 600px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      }
+      .header {
+        background: linear-gradient(135deg, #bfddf9 0%, #d2fcb2 100%);
+        padding: 35px 20px;
+        text-align: center;
+      }
+      .logo-container {
+        display: block;
+        margin-bottom: 20px;
+      }
+      .header img {
+        max-width: 140px;
+        height: auto;
+      }
+      .header h1 {
+        color: #213f5b;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .welcome-banner {
+        background-color: #f0f9ff;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 30px;
+        border-left: 5px solid #213f5b;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+      }
+      .welcome-banner h2 {
+        color: #213f5b;
+        font-size: 24px;
+        margin-top: 0;
+        margin-bottom: 12px;
+      }
+      .content p {
+        color: #4a4a4a;
+        font-size: 16px;
+        line-height: 1.7;
+        margin-bottom: 20px;
+      }
+      .password-container {
+        background-color: #f8fafc;
+        border: 1px dashed #d1d9e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 30px 0;
+        text-align: center;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.02);
+      }
+      .temp-password {
+        font-size: 22px;
+        color: #213f5b;
+        font-weight: bold;
+        letter-spacing: 1.2px;
+        display: block;
+        margin: 15px 0;
+        padding: 14px;
+        background-color: #fff;
+        border-radius: 6px;
+        border: 1px solid #e0e7ff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+      }
+      .button-container {
+        text-align: center;
+        margin: 35px 0;
+      }
+      .cta {
+        display: inline-block;
+        text-decoration: none;
+        background-color: #213f5b;
+        color: #ffffff;
+        padding: 16px 32px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
+      }
+      .cta:hover {
+        background-color: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(59, 130, 246, 0.3);
+      }
+      .solutions {
+        background-color: #f0fdf4;
+        padding: 25px;
+        border-radius: 10px;
+        margin-top: 35px;
+        border: 1px solid #dcfce7;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.02);
+      }
+      .solutions h3 {
+        margin-top: 0;
+        font-size: 20px;
+        color: #15803d;
+        margin-bottom: 20px;
+        text-align: center;
+        position: relative;
+      }
+      .solutions h3:after {
+        content: "";
+        display: block;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(to right, #86efac, #4ade80);
+        margin: 10px auto 0;
+        border-radius: 3px;
+      }
+      .solutions-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin: 0 -5px;
+      }
+      .solution-item {
+        flex: 1 0 calc(50% - 20px);
+        margin: 0 5px 10px;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        border-radius: 8px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s ease;
+      }
+      .solution-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+      }
+      .solution-item img {
+        width: 28px;
+        height: 28px;
+        vertical-align: middle;
+        margin-right: 10px;
+      }
+      .solution-item span {
+        color: #213f5b;
+        font-weight: 500;
+        vertical-align: middle;
+      }
+      .footer {
+        background-color: #f1f5f9;
+        padding: 30px;
+        text-align: center;
+      }
+      .divider {
+        height: 5px;
+        background: linear-gradient(to right, #bfddf9, #d2fcb2);
+        margin: 0;
+      }
+      @media screen and (max-width: 600px) {
+        .solution-item {
+          flex: 1 0 100%;
+        }
+        .content {
+          padding: 30px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <table class="main" cellpadding="0" cellspacing="0">
+        <tr>
+          <td class="header">
+            <div class="logo-container">
+              <img src="https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/661ecd30546087aec351f605_Design%20sans%20titre%20(8).png" alt="Ecology'b">
+            </div>
+            <h1>Votre Espace Collaborateur Ecology'B</h1>
+          </td>
+        </tr>
+        <tr>
+          <td class="divider"></td>
+        </tr>
+        <tr>
+          <td class="content">
+            <div class="welcome-banner">
+              <h2>Bienvenue dans votre Portail Professionnel !</h2>
+              <p>
+                Bonjour,<br>
+                Votre accès sécurisé au CRM est désormais activé. Vous faites partie intégrante d’une équipe dynamique et engagée, prête à relever les défis de la transition énergétique.
+              </p>
+            </div>
+            
+            <p>
+              Connectez-vous pour découvrir votre tableau de bord personnalisé, suivre vos missions et collaborer efficacement afin de faire avancer nos projets innovants.
+            </p>
+            
+            <div class="password-container">
+              <p style="margin-top: 0; font-weight: 600; color: #213f5b; font-size: 17px;">
+                Votre mot de passe temporaire :
+              </p>
+              <span class="temp-password">${tempPassword}</span>
+              <div class="alert-message">
+                <img src="https://www.svgrepo.com/show/374736/lock.svg" alt="Sécurité">
+                <span>
+                  Pour garantir la sécurité de votre compte, nous vous recommandons de modifier ce mot de passe dès votre première connexion.
+                </span>
+              </div>
+            </div>
+            
+            <div class="button-container">
+              <a href="https://www.your-domain.com" class="cta">
+                Accéder à mon espace collaborateur
+              </a>
+            </div>
+            
+            <div class="solutions">
+              <h3>Vos Rôles au sein du CRM</h3>
+              <div class="solutions-grid">
+                <div class="solution-item">
+                  <img src="https://www.svgrepo.com/show/349047/salesman.svg" alt="Commercial / Responsable de compte">
+                  <span>Commercial / Responsable de compte</span>
+                </div>
+                <div class="solution-item">
+                  <img src="https://www.svgrepo.com/show/223498/project-management.svg" alt="Chef de projet / Responsable installation">
+                  <span>Chef de projet / Responsable installation</span>
+                </div>
+                <div class="solution-item">
+                  <img src="https://www.svgrepo.com/show/136193/technician.svg" alt="Technicien / Installateur">
+                  <span>Technicien / Installateur</span>
+                </div>
+                <div class="solution-item">
+                  <img src="https://www.svgrepo.com/show/208512/customer-support.svg" alt="Support client / Service après-vente">
+                  <span>Support client / Service après-vente</span>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="divider"></td>
+        </tr>
+        <tr>
+          <td class="footer">
+            <div class="footer-logo">
+              <img src="https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/661ecd30546087aec351f605_Design%20sans%20titre%20(8).png" alt="Ecology'b">
+            </div>
+            <div class="contact-links">
+              <a href="mailto:contact@ecologyb.fr" class="contact-link">
+                <img src="https://www.svgrepo.com/show/502648/mail.svg" alt="Email">
+                contact@ecologyb.fr
+              </a>
+              <a href="tel:+33952028136" class="contact-link">
+                <img src="https://www.svgrepo.com/show/494080/phone.svg" alt="Téléphone">
+                +33 9 52 02 81 36
+              </a>
+            </div>
+            <p class="footer-text">&copy; 2025 Ecology'b. Tous droits réservés.</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>
