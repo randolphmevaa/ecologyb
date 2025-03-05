@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   HomeIcon,
   ClipboardDocumentCheckIcon,
@@ -24,25 +24,25 @@ import {
   // Cog6ToothIcon,
   UserGroupIcon,
   CodeBracketIcon,
-  ChevronDownIcon
-} from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
+import { cn } from "@/lib/utils";
 
-const springTransition = { type: 'spring', stiffness: 300, damping: 30 };
+const springTransition = { type: "spring", stiffness: 300, damping: 30 };
 
 export function Sidebar({ role }) {
   // Initialize activeItem from localStorage (or default to "Accueil")
   const [activeItem, setActiveItem] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('activeItem') || 'Accueil';
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("activeItem") || "Accueil";
     }
-    return 'Accueil';
+    return "Accueil";
   });
 
   // Initialize isCollapsed from localStorage (or default to false)
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('isCollapsed') === 'true';
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("isCollapsed") === "true";
     }
     return false;
   });
@@ -57,18 +57,18 @@ export function Sidebar({ role }) {
   const [openDropdowns, setOpenDropdowns] = useState({});
 
   // New state for profile info from localStorage
-  const [profileInfo, setProfileInfo] = useState({ email: '', role: '' });
+  const [profileInfo, setProfileInfo] = useState({ email: "", role: "" });
 
   // Load profile info from localStorage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedProInfo = localStorage.getItem('proInfo');
+    if (typeof window !== "undefined") {
+      const storedProInfo = localStorage.getItem("proInfo");
       if (storedProInfo) {
         try {
           const parsedProInfo = JSON.parse(storedProInfo);
           setProfileInfo(parsedProInfo);
         } catch (error) {
-          console.error('Error parsing proInfo from localStorage', error);
+          console.error("Error parsing proInfo from localStorage", error);
         }
       }
     }
@@ -83,7 +83,7 @@ export function Sidebar({ role }) {
       { name: "Opportunités", href: "/dashboard/sales/opportunities", icon: BriefcaseIcon },
       { name: "Clients & Organisations", href: "/dashboard/sales/contacts-organizations", icon: UserCircleIcon },
       { name: "Chat", href: "/dashboard/sales/emails", icon: EnvelopeIcon },
-      { name: "Agenda", href: "/dashboard/sales/calendar", icon: CalendarIcon }
+      { name: "Agenda", href: "/dashboard/sales/calendar", icon: CalendarIcon },
     ];
   } else if (role === "Project / Installation Manager") {
     navigation = [
@@ -126,8 +126,8 @@ export function Sidebar({ role }) {
     navigation = [
       { name: "Accueil", href: "/dashboard/admin", icon: HomeIcon },
       { name: "Tableaux de bord", href: "/dashboard/admin/dashboards", icon: ChartPieIcon },
-      { 
-        name: "Gestion", 
+      {
+        name: "Gestion",
         icon: BriefcaseIcon,
         children: [
           // { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
@@ -136,7 +136,7 @@ export function Sidebar({ role }) {
           { name: "Clients", href: "/dashboard/admin/projects", icon: UserCircleIcon },
           // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
-        ]
+        ],
       },
       { name: "Chat", href: "/dashboard/admin/emails", icon: EnvelopeIcon, badge: 24 },
       { name: "Agenda", href: "/dashboard/admin/calendar", icon: CalendarIcon },
@@ -150,12 +150,16 @@ export function Sidebar({ role }) {
     ];
   }
 
-  // Helper to recursively locate the active navigation item
+  // Normalize a path by removing any trailing slashes
+  const normalizePath = (path) => path.replace(/\/+$/, "");
+
+  // Helper to recursively locate the active navigation item using normalized paths
   const findActiveItem = (items, path) => {
+    const normalizedPath = normalizePath(path);
     for (const item of items) {
-      if (item.href && item.href === path) return item;
+      if (item.href && normalizePath(item.href) === normalizedPath) return item;
       if (item.children) {
-        const found = findActiveItem(item.children, path);
+        const found = findActiveItem(item.children, normalizedPath);
         if (found) return found;
       }
     }
@@ -164,18 +168,24 @@ export function Sidebar({ role }) {
 
   // Sync active item with current route and open dropdown if needed
   useEffect(() => {
-    const currentItem = findActiveItem(navigation, router.pathname);
+    console.log("Current normalized pathname:", normalizePath(pathname));
+    const currentItem = findActiveItem(navigation, pathname);
+    console.log("Found navigation item:", currentItem);
     if (currentItem && currentItem.name !== activeItem) {
       setActiveItem(currentItem.name);
-      localStorage.setItem('activeItem', currentItem.name);
+      localStorage.setItem("activeItem", currentItem.name);
+      console.log("Active item set to:", currentItem.name);
       // Open parent dropdown if the active item is within one
-      navigation.forEach(item => {
-        if (item.children && item.children.some(child => child.name === currentItem.name)) {
-          setOpenDropdowns(prev => ({ ...prev, [item.name]: true }));
+      navigation.forEach((item) => {
+        if (
+          item.children &&
+          item.children.some((child) => child.name === currentItem.name)
+        ) {
+          setOpenDropdowns((prev) => ({ ...prev, [item.name]: true }));
         }
       });
     }
-  }, [pathname, router.pathname]);
+  }, [pathname]);
 
   useEffect(() => {
     return () => {
@@ -191,9 +201,9 @@ export function Sidebar({ role }) {
 
   // Toggle dropdown open/close (if the item has children)
   const toggleDropdown = (name) => {
-    setOpenDropdowns(prev => ({
+    setOpenDropdowns((prev) => ({
       ...prev,
-      [name]: !prev[name]
+      [name]: !prev[name],
     }));
   };
 
@@ -202,7 +212,7 @@ export function Sidebar({ role }) {
     // For a parent with children, consider active if one of its children is active.
     const isActive = item.href
       ? activeItem === item.name
-      : (item.children && item.children.some(child => child.name === activeItem));
+      : item.children && item.children.some((child) => child.name === activeItem);
 
     return (
       <div
@@ -234,23 +244,23 @@ export function Sidebar({ role }) {
             className={cn(
               "flex items-center gap-x-3 rounded-xl p-3 cursor-pointer",
               "relative z-10 transition-colors duration-200",
-              isActive 
-                ? "bg-gray-800 shadow-inner"
-                : "hover:bg-primary/5"
+              isActive ? "bg-gray-800 shadow-inner" : "hover:bg-primary/5"
             )}
           >
             <motion.div
               animate={{
                 rotate: isActive ? [0, -10, 10, 0] : 0,
-                scale: isActive ? 1.1 : 1
+                scale: isActive ? 1.1 : 1,
               }}
               transition={{ duration: 0.4 }}
               className="relative"
             >
-              <item.icon className={cn(
-                "h-6 w-6 transition-colors",
-                isActive ? "text-primary" : "text-gray-600"
-              )} />
+              <item.icon
+                className={cn(
+                  "h-6 w-6 transition-colors",
+                  isActive ? "text-primary" : "text-gray-600"
+                )}
+              />
             </motion.div>
             <AnimatePresence initial={false}>
               {!isCollapsed && (
@@ -284,28 +294,28 @@ export function Sidebar({ role }) {
             href={item.href}
             onClick={() => {
               setActiveItem(item.name);
-              localStorage.setItem('activeItem', item.name);
+              localStorage.setItem("activeItem", item.name);
             }}
             className={cn(
               "flex items-center gap-x-3 rounded-xl p-3",
               "relative z-10 transition-colors duration-200",
-              isActive 
-                ? "bg-gray-800 shadow-inner"
-                : "hover:bg-primary/5"
+              isActive ? "bg-gray-800 shadow-inner" : "hover:bg-primary/5"
             )}
           >
             <motion.div
               animate={{
                 rotate: isActive ? [0, -10, 10, 0] : 0,
-                scale: isActive ? 1.1 : 1
+                scale: isActive ? 1.1 : 1,
               }}
               transition={{ duration: 0.4 }}
               className="relative"
             >
-              <item.icon className={cn(
-                "h-6 w-6 transition-colors",
-                isActive ? "text-primary" : "text-gray-600"
-              )} />
+              <item.icon
+                className={cn(
+                  "h-6 w-6 transition-colors",
+                  isActive ? "text-primary" : "text-gray-600"
+                )}
+              />
               {item.badge && (
                 <motion.span
                   initial={{ scale: 0 }}
@@ -313,9 +323,7 @@ export function Sidebar({ role }) {
                   className={cn(
                     "absolute -top-2 -right-2 flex items-center justify-center",
                     "h-5 w-5 rounded-full text-xs font-bold shadow-sm",
-                    isActive 
-                      ? "bg-primary text-white" 
-                      : "bg-secondary text-white"
+                    isActive ? "bg-primary text-white" : "bg-secondary text-white"
                   )}
                 >
                   {item.badge}
@@ -355,10 +363,10 @@ export function Sidebar({ role }) {
             exit="collapsed"
             variants={{
               open: { opacity: 1, height: "auto", transition: { duration: 0.3 } },
-              collapsed: { opacity: 0, height: 0, transition: { duration: 0.2 } }
+              collapsed: { opacity: 0, height: 0, transition: { duration: 0.2 } },
             }}
           >
-            {item.children.map(child => renderNavItem(child, true))}
+            {item.children.map((child) => renderNavItem(child, true))}
           </motion.div>
         )}
 
@@ -395,7 +403,7 @@ export function Sidebar({ role }) {
         onClick={() => {
           const newState = !isCollapsed;
           setIsCollapsed(newState);
-          localStorage.setItem('isCollapsed', newState);
+          localStorage.setItem("isCollapsed", newState);
         }}
         className={cn(
           "absolute -right-3.5 top-6 z-20 rounded-full p-2 bg-white",
@@ -413,14 +421,14 @@ export function Sidebar({ role }) {
 
       <div className="flex-1 overflow-y-auto py-6">
         <nav className="flex flex-col gap-y-1 px-2">
-          {navigation.map(item => renderNavItem(item))}
+          {navigation.map((item) => renderNavItem(item))}
         </nav>
       </div>
 
       {/* Profile Section */}
-      <motion.div 
+      <motion.div
         className="border-t border-gray-100 p-4"
-        animate={{ padding: isCollapsed ? '1rem 0.5rem' : '1rem' }}
+        animate={{ padding: isCollapsed ? "1rem 0.5rem" : "1rem" }}
         transition={springTransition}
       >
         <div className="flex items-center gap-x-3 overflow-hidden">
@@ -436,8 +444,8 @@ export function Sidebar({ role }) {
               {profileInfo.role === "Super Admin"
                 ? "SA"
                 : profileInfo.email
-                  ? profileInfo.email.charAt(0).toUpperCase()
-                  : "U"}
+                ? profileInfo.email.charAt(0).toUpperCase()
+                : "U"}
             </span>
           </motion.div>
 
