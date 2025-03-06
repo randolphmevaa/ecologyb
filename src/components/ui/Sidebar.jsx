@@ -93,6 +93,7 @@ export function Sidebar({ role }) {
       { name: "Clients & Organisations", href: "/dashboard/pm/contacts-organizations", icon: UserCircleIcon },
       { name: "Agenda", href: "/dashboard/pm/calendar", icon: CalendarIcon },
       { name: "Chat", href: "/dashboard/pm/emails", icon: EnvelopeIcon },
+      { name: "Facturation / Paiements", href: "/dashboard/pm/billing", icon: CreditCardIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/pm/documents", icon: DocumentIcon },
     ];
   } else if (role === "Technician / Installer") {

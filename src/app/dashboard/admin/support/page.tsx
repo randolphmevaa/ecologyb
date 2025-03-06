@@ -42,6 +42,8 @@ import {
   FunnelIcon,
   ArrowDownTrayIcon,
   Cog6ToothIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
 } from "@heroicons/react/24/outline";
 
 import DatePicker from "react-datepicker";
@@ -1909,99 +1911,121 @@ export default function SupportPage() {
           {/* Metrics Overview Cards */}
           <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
           >
             {/* Tickets Ouverts */}
-            <div className="bg-white rounded-2xl shadow-md border border-[#bfddf9]/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-red-100 rounded-xl">
-                    <LifebuoyIcon className="h-6 w-6 text-red-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#213f5b]">
-                      Tickets Ouverts
-                    </h3>
-                    <p className="text-2xl font-bold text-red-600">
-                      {openTickets}
-                    </p>
-                  </div>
+            <motion.div
+              className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-red-50 to-white border border-red-100 overflow-hidden"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-sm font-medium text-[#213f5b]">Tickets Ouverts</p>
+                <div className="p-2 rounded-full bg-white/80 shadow-sm">
+                  <LifebuoyIcon className="h-5 w-5 text-red-600" />
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-red-50 to-transparent h-1.5">
-                <div className="bg-red-500 h-full w-1/3" />
+              <div className="flex items-baseline justify-between">
+                <p className="text-2xl font-bold text-red-600">{openTickets}</p>
+                <p className="text-sm flex items-center gap-1 text-red-600">
+                  +12% <ArrowTrendingUpIcon className="h-3 w-3" />
+                </p>
               </div>
-            </div>
-
-            {/* Tickets en attente de traitement */}
-            <div className="bg-white rounded-2xl shadow-md border border-[#bfddf9]/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-yellow-100 rounded-xl">
-                    <ClockIcon className="h-6 w-6 text-yellow-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#213f5b]">
-                      Tickets en attente
-                    </h3>
-                    <p className="text-2xl font-bold text-yellow-600">
-                      {pendingTickets}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-yellow-50 to-transparent h-1.5">
-                <div className="bg-yellow-500 h-full w-1/4" />
-              </div>
-            </div>
-
-            {/* Tickets clôturés */}
-            <div className="bg-white rounded-2xl shadow-md border border-[#bfddf9]/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-green-100 rounded-xl">
-                    <CheckCircleIcon className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#213f5b]">
-                      Tickets clôturés
-                    </h3>
-                    <p className="text-2xl font-bold text-green-600">
-                      {closedTickets}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-green-50 to-transparent h-1.5">
-                <div className="bg-green-500 h-full w-3/4" />
-              </div>
-            </div>
-
-            {/* Résolution */}
-            <div className="bg-white rounded-2xl shadow-md border border-[#bfddf9]/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-[#213f5b]/10 rounded-xl">
-                    <ShieldCheckIcon className="h-6 w-6 text-[#213f5b]" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#213f5b]">
-                      Résolution
-                    </h3>
-                    <p className="text-2xl font-bold text-[#213f5b]">
-                      {resolutionRate}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-[#213f5b]/10 to-transparent h-1.5">
-                <div
-                  className="bg-[#213f5b] h-full"
-                  style={{ width: `${resolutionRate}%` }}
+              <div className="mt-4 w-full bg-red-100 rounded-full h-1.5">
+                <motion.div
+                  className="h-1.5 rounded-full bg-red-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: '35%' }}
+                  transition={{ duration: 0.8 }}
                 />
               </div>
-            </div>
+              <p className="text-xs text-gray-600 mt-2">Cette semaine vs semaine précédente</p>
+            </motion.div>
+
+            {/* Tickets en attente de traitement */}
+            <motion.div
+              className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-amber-50 to-white border border-amber-100 overflow-hidden"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-sm font-medium text-[#213f5b]">Tickets en attente</p>
+                <div className="p-2 rounded-full bg-white/80 shadow-sm">
+                  <ClockIcon className="h-5 w-5 text-amber-600" />
+                </div>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <p className="text-2xl font-bold text-amber-600">{pendingTickets}</p>
+                <p className="text-sm flex items-center gap-1 text-amber-600">
+                  -5% <ArrowTrendingDownIcon className="h-3 w-3" />
+                </p>
+              </div>
+              <div className="mt-4 w-full bg-amber-100 rounded-full h-1.5">
+                <motion.div
+                  className="h-1.5 rounded-full bg-amber-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: '25%' }}
+                  transition={{ duration: 0.8 }}
+                />
+              </div>
+              <p className="text-xs text-gray-600 mt-2">48h de délai moyen</p>
+            </motion.div>
+
+            {/* Tickets clôturés */}
+            <motion.div
+              className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-green-50 to-white border border-green-100 overflow-hidden"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-sm font-medium text-[#213f5b]">Tickets clôturés</p>
+                <div className="p-2 rounded-full bg-white/80 shadow-sm">
+                  <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                </div>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <p className="text-2xl font-bold text-green-600">{closedTickets}</p>
+                <p className="text-sm flex items-center gap-1 text-green-600">
+                  +8% <ArrowTrendingUpIcon className="h-3 w-3" />
+                </p>
+              </div>
+              <div className="mt-4 w-full bg-green-100 rounded-full h-1.5">
+                <motion.div
+                  className="h-1.5 rounded-full bg-green-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: '75%' }}
+                  transition={{ duration: 0.8 }}
+                />
+              </div>
+              <p className="text-xs text-gray-600 mt-2">Ce mois-ci</p>
+            </motion.div>
+
+            {/* Résolution */}
+            <motion.div
+              className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#bfddf9]/20 to-[#d2fcb2]/30 border border-[#bfddf9]/30 overflow-hidden"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-sm font-medium text-[#213f5b]">Taux de Résolution</p>
+                <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                  <ShieldCheckIcon className="h-5 w-5 text-[#213f5b]" />
+                </div>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <p className="text-2xl font-bold text-[#213f5b]">{resolutionRate}%</p>
+                <p className="text-sm flex items-center gap-1 text-[#213f5b]">
+                  +3% <ArrowTrendingUpIcon className="h-3 w-3" />
+                </p>
+              </div>
+              <div className="mt-4 w-full bg-[#bfddf9]/30 rounded-full h-1.5">
+                <motion.div
+                  className="h-1.5 rounded-full bg-[#213f5b]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${resolutionRate}%` }}
+                  transition={{ duration: 0.8 }}
+                />
+              </div>
+              <p className="text-xs text-gray-600 mt-2">Objectif: 95%</p>
+            </motion.div>
           </motion.div>
 
           {/* MAIN GRID: Left = S.A.V. Planning (List), Right = Calendar */}
