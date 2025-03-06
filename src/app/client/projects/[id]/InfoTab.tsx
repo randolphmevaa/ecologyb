@@ -49,6 +49,7 @@ interface DossierFormData {
 }
 
 interface User {
+  gender: string;
   _id: string;
   email: string;
   role: string;
@@ -240,7 +241,11 @@ export default function InfoTab({ dossier }: InfoTabProps) {
               <div className="relative">
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
                   <Image
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+                    src={
+                      assignedTeamUser.gender === 'Homme'
+                        ? "https://www.advancia-teleservices.com/wp-content/uploads/2023/11/Centre-dappels-tunisie.jpg"
+                        : "https://www.hotesse-interim.fr/ressources/images/ab4fec7ce0ed.jpg"
+                    }
                     alt={`${assignedTeamUser.firstName} ${assignedTeamUser.lastName}`}
                     width={64}
                     height={64}

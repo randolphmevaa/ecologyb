@@ -560,7 +560,7 @@ export default function ClientProjects() {
             </div>
             
             <div className="p-6 border-t border-gray-100">
-              <Link href={`/dashboard/admin/projects/${selectedProject._id}`}>
+              <Link href={`/client/projects/${selectedProject._id}`}>
                 <motion.button
                   className="w-full py-3 rounded-xl text-white font-medium"
                   style={{ backgroundColor: colors.darkBlue }}
