@@ -269,15 +269,28 @@ const getGradientColorForStep = (step: number): string => {
 
   // Filtering logic (ensuring string conversion)
   const filteredProjects = projects.filter((project) => {
+    // Only include steps 5, 6, 7
+    const includedSteps = [5, 6, 7];
+    const stepNumber = parseInt(project.etape?.charAt(0) ?? "0", 10);
+  
+    // If the project's etape is not 5, 6, or 7, exclude it
+    if (!includedSteps.includes(stepNumber)) {
+      return false;
+    }
+  
+    // Existing search & filter checks
     const query = searchQuery.toLowerCase();
     const matchesSearch =
       String(project.client || "").toLowerCase().includes(query) ||
       String(project.projet || "").toLowerCase().includes(query) ||
       String(project.numero || "").toLowerCase().includes(query);
+  
     const matchesSolution =
-      filter === "Tous" || project.solution.toLowerCase() === filter.toLowerCase();
+      filter === "Tous" ||
+      (project.solution?.toLowerCase() === filter.toLowerCase());
+  
     return matchesSearch && matchesSolution;
-  });
+  });  
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredProjects.length / pageSize);
@@ -292,20 +305,43 @@ const getGradientColorForStep = (step: number): string => {
     setCurrentPage(1);
   };
 
+  // 2. Compute *all stats* from the filteredProjects array.
+const totalClientsCount = filteredProjects.length;
+
+// For stageStats
+const stageStats = filteredProjects.reduce((acc, project) => {
+  const stageNumber = project.etape?.charAt(0) || "N/A";
+  acc[stageNumber] = (acc[stageNumber] || 0) + 1;
+  return acc;
+}, {} as { [key: string]: number });
+
+// For solutions
+const solutionCounts = filteredProjects.reduce((acc, project) => {
+  const sol = project.solution || "Autres";
+  acc[sol] = (acc[sol] || 0) + 1;
+  return acc;
+}, {} as { [key: string]: number });
+
+// Sort solutions, show only the top ones
+const sortedSolutions = Object.entries(solutionCounts)
+  .filter(([key]) => key !== "Autres")
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 2);
+
   // -------------------------------
   // Stats Calculations
   // -------------------------------
   // We'll use the total number of projects as "Total Clients"
-  const totalClientsCount = projects.length;
-  const solutionCounts = projects.reduce((acc, project) => {
-    const sol = project.solution || "Autres";
-    acc[sol] = (acc[sol] || 0) + 1;
-    return acc;
-  }, {} as { [key: string]: number });
-  const sortedSolutions = Object.entries(solutionCounts)
-    .filter(([key]) => key !== "Autres")
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 2);
+  // const totalClientsCount = projects.length;
+  // const solutionCounts = projects.reduce((acc, project) => {
+  //   const sol = project.solution || "Autres";
+  //   acc[sol] = (acc[sol] || 0) + 1;
+  //   return acc;
+  // }, {} as { [key: string]: number });
+  // const sortedSolutions = Object.entries(solutionCounts)
+  //   .filter(([key]) => key !== "Autres")
+  //   .sort(([, a], [, b]) => b - a)
+  //   .slice(0, 2);
 
   // Define solution filter options
   const solutionOptions = [
@@ -317,11 +353,11 @@ const getGradientColorForStep = (step: number): string => {
   ];
 
   // Calculate stage statistics
-  const stageStats = projects.reduce((acc, project) => {
-    const stageNumber = project.etape?.charAt(0) || "N/A";
-    acc[stageNumber] = (acc[stageNumber] || 0) + 1;
-    return acc;
-  }, {} as { [key: string]: number });
+  // const stageStats = projects.reduce((acc, project) => {
+  //   const stageNumber = project.etape?.charAt(0) || "N/A";
+  //   acc[stageNumber] = (acc[stageNumber] || 0) + 1;
+  //   return acc;
+  // }, {} as { [key: string]: number });
 
   if (loading) {
     return (
@@ -404,7 +440,7 @@ const getGradientColorForStep = (step: number): string => {
               <div className="flex items-start md:items-center justify-between flex-col md:flex-row">
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-white">
-                    Liste des Projets
+                    Liste des Clients
                   </h1>
                   <p className="mt-2 md:mt-4 text-base md:text-lg text-[#d2fcb2]">
                     Gérez et consultez tous les dossiers projets pour des solutions
@@ -433,9 +469,7 @@ const getGradientColorForStep = (step: number): string => {
               <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#213f5b] hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs md:text-sm text-gray-500">
-                      Total Clients
-                    </p>
+                    <p className="text-xs md:text-sm text-gray-500">Total Clients</p>
                     <h3 className="text-xl md:text-2xl font-bold text-[#213f5b]">
                       {totalClientsCount}
                     </h3>
@@ -450,11 +484,10 @@ const getGradientColorForStep = (step: number): string => {
               <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#d2fcb2] hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs md:text-sm text-gray-500">
-                      Projets Actifs
-                    </p>
+                    <p className="text-xs md:text-sm text-gray-500">Projets Actifs</p>
                     <h3 className="text-xl md:text-2xl font-bold text-[#213f5b]">
-                      {stageStats["3"] + (stageStats["4"] || 0) + (stageStats["5"] || 0) || 0}
+                      {/* If you want "active" to be steps 5 or 6 only, do something like: */}
+                      {(stageStats["5"] ?? 0) + (stageStats["6"] ?? 0)}
                     </h3>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-[#d2fcb2]/20">
@@ -467,9 +500,7 @@ const getGradientColorForStep = (step: number): string => {
               {sortedSolutions[0] && (
                 <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#bfddf9] hover:shadow-lg transition-shadow">
                   <div>
-                    <p className="text-xs md:text-sm text-gray-500">
-                      Solution Principale
-                    </p>
+                    <p className="text-xs md:text-sm text-gray-500">Solution Principale</p>
                     <h3 className="text-lg font-bold text-[#213f5b] truncate">
                       {sortedSolutions[0][0]}
                     </h3>
@@ -489,13 +520,11 @@ const getGradientColorForStep = (step: number): string => {
                 </div>
               )}
 
-              {/* Completed Projects */}
+              {/* Completed Projects (Step 7) */}
               <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#213f5b] hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs md:text-sm text-gray-500">
-                      Projets Complétés
-                    </p>
+                    <p className="text-xs md:text-sm text-gray-500">Projets Complétés</p>
                     <h3 className="text-xl md:text-2xl font-bold text-[#213f5b]">
                       {stageStats["7"] || 0}
                     </h3>
