@@ -48,7 +48,7 @@ export default function ClientDashboard() {
   const [isHovering, setIsHovering] = useState<number | null>(null);
   const clientName = "Jean Dupont";
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [ , setActiveIndex] = useState<number | null>(null);
   const logoRefs = useRef<(HTMLDivElement | null)[]>([]);
 
 
@@ -100,19 +100,124 @@ export default function ClientDashboard() {
     contact: "contact@ecologyb.fr | 04 75 00 00 00",
   };
 
-  const logos = [
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
-    "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
-    
-  ];
+
+  // Logos for small screens (10 logos)
+const smallLogos = [
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
+];
+
+// Logos for large screens (20 logos)
+const largeLogos = [
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e127bb448192250758f_5-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e106c719b8d8987889c_1-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0e104124092fcd025b_3-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e0ff66aba8d2cab97b0_2-p-500.png",
+  "https://cdn.prod.website-files.com/6619ad18a61a234e323d241a/66264e10c36c9cc7022cf83b_4-p-500.png",
+];
+
+function useIsLargeScreen() {
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  useEffect(() => {
+    function checkScreenSize() {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    }
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+  return isLargeScreen;
+}
+
+const InfiniteMarquee = () => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const logoRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const isLargeScreen = useIsLargeScreen();
+  const logos = isLargeScreen ? largeLogos : smallLogos;
+
+  // Continuously update activeIndex based on which logo is closest to the container's center
+  useEffect(() => {
+    let animationFrameId: number;
+    const updateActiveIndex = () => {
+      if (containerRef.current) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const containerCenter = containerRect.left + containerRect.width / 2;
+        let closestIndex = 0;
+        let closestDistance = Infinity;
+        logoRefs.current.forEach((logo, index) => {
+          if (logo) {
+            const logoRect = logo.getBoundingClientRect();
+            const logoCenter = logoRect.left + logoRect.width / 2;
+            const distance = Math.abs(containerCenter - logoCenter);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = index;
+            }
+          }
+        });
+        setActiveIndex(closestIndex);
+      }
+      animationFrameId = requestAnimationFrame(updateActiveIndex);
+    };
+    animationFrameId = requestAnimationFrame(updateActiveIndex);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
+
+  return (
+    <div
+      className="mt-16 overflow-hidden relative 
+        before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-24 before:bg-gradient-to-r before:from-white before:to-transparent 
+        after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-24 after:bg-gradient-to-l after:from-white after:to-transparent"
+      ref={containerRef}
+    >
+      <div className="flex animate-infinite-scroll hover:paused">
+        {logos.map((url, index) => (
+          <div
+            key={index}
+            ref={(el) => { logoRefs.current[index] = el; }}
+            className={`flex-shrink-0 mx-8 transition-all duration-300 transform ${
+              activeIndex === index
+                ? "scale-150 opacity-100 grayscale-0"
+                : "scale-70 opacity-70 grayscale"
+            }`}
+          >
+            <Image
+              src={url.trim()}
+              alt="Partner brand"
+              width={90}
+              height={74}
+              className="h-16 object-contain"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
   useEffect(() => {
     const container = containerRef.current;
@@ -1036,7 +1141,7 @@ export default function ClientDashboard() {
             </div>
 
             {/* Infinite Marquee */}
-            <div
+            {/* <div
               className="mt-16 overflow-hidden relative before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-24 before:bg-gradient-to-r before:from-white before:to-transparent after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-24 after:bg-gradient-to-l after:from-white after:to-transparent"
               ref={containerRef}
             >
@@ -1061,7 +1166,9 @@ export default function ClientDashboard() {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
+            <InfiniteMarquee/>
+
           </motion.div>
         </section>
 
@@ -1129,7 +1236,7 @@ export default function ClientDashboard() {
           whileTap={{ scale: 0.95 }}
         >
           <div className="relative h-12 w-12">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#213f5b] to-[#1e81b0] rounded-full" />
             <div className="absolute inset-0 flex items-center justify-center">
               <svg
                 className="h-6 w-6 text-white"

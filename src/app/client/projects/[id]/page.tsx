@@ -435,7 +435,7 @@ export default function ProjectDetailPage() {
           whileTap={{ scale: 0.95 }}
         >
           <div className="relative h-12 w-12">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#213f5b] to-[#1e81b0] rounded-full" />
             <div className="absolute inset-0 flex items-center justify-center">
               <svg
                 className="h-6 w-6 text-white"
@@ -455,14 +455,14 @@ export default function ProjectDetailPage() {
         </motion.button>
       )}
       
-            {/* --- 2) Chat Widget (visible if showChatWidget === true) --- */}
-            {showChatWidget && (
-              <ChatWidget
-                onClose={() => {
-                  setShowChatWidget(false);
-                }}
-              />
-            )}
+      {/* --- 2) Chat Widget (visible if showChatWidget === true) --- */}
+      {showChatWidget && (
+        <ChatWidget
+          onClose={() => {
+            setShowChatWidget(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { 
   ChevronRightIcon, 
-  ChatBubbleLeftRightIcon,
+  // ChatBubbleLeftRightIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   PlusIcon
@@ -30,6 +30,19 @@ export default function ClientProjects() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [sortBy, setSortBy] = useState<keyof Project>("etape");
   const [sortDirection, setSortDirection] = useState("asc");
+
+  // Real data for timeline steps (could be fetched from an API as well)
+  const steps = [
+    "Prise de contact",
+    "En attente des documents",
+    "Instruction du dossier",
+    "Dossier Accepter",
+    "Installation",
+    "Contrôle",
+    "Dossier clôturé",
+  ];
+  // currentStep might be a value like 2 (meaning the project is on the second step)
+  const currentStep = selectedProject ? parseInt(selectedProject.etape.split(" ")[0], 10) : 0;
   
   // Brand colors
   const colors = {
@@ -172,7 +185,7 @@ export default function ClientProjects() {
               Suivez l&apos;avancement de vos projets d&apos;installations énergétiques en temps réel.
             </p>
           </div>
-          <Link href="/client/projects">
+          <Link href="/client/contacts">
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -389,160 +402,179 @@ export default function ClientProjects() {
         )}
       </main>
 
-      {/* Chat Widget Button */}
-      {!showChatWidget && (
-        <motion.button
-          onClick={() => setShowChatWidget(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-white text-[#213f5b] rounded-full z-50 flex items-center justify-center"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.3)" }}
-          style={{ 
-            boxShadow: "0 5px 15px rgba(33, 63, 91, 0.2)",
-            transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
-          }}
-        >
-          <ChatBubbleLeftRightIcon className="h-6 w-6" />
-        </motion.button>
-      )}
-      
-      {/* Chat Widget */}
-      {showChatWidget && (
-        <ChatWidget onClose={() => setShowChatWidget(false)} />
-      )}
+      {/* Enhanced Chat Button */}
+            {!showChatWidget && (
+              <motion.button
+                onClick={() => setShowChatWidget(true)}
+                className="fixed bottom-8 right-8 bg-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all z-50 border border-gray-200 backdrop-blur-lg bg-opacity-80"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="relative h-12 w-12">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#213f5b] to-[#1e81b0] rounded-full" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg
+                      className="h-6 w-6 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </motion.button>
+            )}
+            
+            {/* --- 2) Chat Widget (visible if showChatWidget === true) --- */}
+            {showChatWidget && (
+              <ChatWidget
+                onClose={() => {
+                  setShowChatWidget(false);
+                }}
+              />
+            )}
 
       {/* Project Detail Slide-Over Panel */}
       <AnimatePresence>
-        {selectedProject && (
+      {selectedProject && (
+        <motion.div 
+          className="fixed inset-0 z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {/* Backdrop */}
           <motion.div 
-            className="fixed inset-0 z-50"
+            className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => setSelectedProject(null)}
+          />
+          
+          {/* Slide-over panel */}
+          <motion.div 
+            className="absolute top-0 right-0 bottom-0 w-full max-w-md bg-white shadow-xl flex flex-col"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
           >
-            {/* Backdrop */}
-            <motion.div 
-              className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedProject(null)}
-            />
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-2xl font-bold text-[#213f5b]">Détails du projet</h2>
+              <button 
+                onClick={() => setSelectedProject(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             
-            {/* Slide-over panel */}
-            <motion.div 
-              className="absolute top-0 right-0 bottom-0 w-full max-w-md bg-white shadow-xl flex flex-col"
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            >
-              <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                <h2 className="text-2xl font-bold text-[#213f5b]">Détails du projet</h2>
-                <button 
-                  onClick={() => setSelectedProject(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+            <div className="flex-1 overflow-auto p-6">
+              {/* Project Header */}
+              <div className="mb-8">
+                <div className="flex items-center space-x-2 mb-1">
+                  <span 
+                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                    style={{ 
+                      backgroundColor: getStatusInfo(selectedProject.etape).color,
+                      color: getStatusInfo(selectedProject.etape).textColor 
+                    }}
+                  >
+                    {getStatusInfo(selectedProject.etape).icon}
+                    {selectedProject.etape}
+                  </span>
+                  <span className="text-sm text-gray-500">#{selectedProject.numero}</span>
+                </div>
+                <h3 className="text-xl font-bold text-[#213f5b]">{selectedProject.typeDeLogement}</h3>
               </div>
               
-              <div className="flex-1 overflow-auto p-6">
-                {/* Project Header */}
-                <div className="mb-8">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span 
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-                      style={{ 
-                        backgroundColor: getStatusInfo(selectedProject.etape).color,
-                        color: getStatusInfo(selectedProject.etape).textColor 
-                      }}
-                    >
-                      {getStatusInfo(selectedProject.etape).icon}
-                      {selectedProject.etape}
-                    </span>
-                    <span className="text-sm text-gray-500">#{selectedProject.numero}</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-[#213f5b]">{selectedProject.typeDeLogement}</h3>
+              {/* Project Details */}
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Solution</h4>
+                  <p className="text-[#213f5b]">{selectedProject.solution}</p>
                 </div>
                 
-                {/* Project Details */}
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">Solution</h4>
-                    <p className="text-[#213f5b]">{selectedProject.solution}</p>
-                  </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Surface chauffée</h4>
+                  <p className="text-[#213f5b]">{selectedProject.surfaceChauffee} m²</p>
+                </div>
+                
+                {/* Timeline using real data */}
+                <div className="mt-8">
+                  <h4 className="text-sm font-medium text-gray-500 mb-4">Progression du projet</h4>
                   
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">Surface chauffée</h4>
-                    <p className="text-[#213f5b]">{selectedProject.surfaceChauffee} m²</p>
-                  </div>
-                  
-                  {/* Timeline (mockup) */}
-                  <div className="mt-8">
-                    <h4 className="text-sm font-medium text-gray-500 mb-4">Progression du projet</h4>
+                  <div className="relative">
+                    <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200"></div>
                     
-                    <div className="relative">
-                      <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200"></div>
-                      
-                      <div className="space-y-6">
-                        <div className="flex">
-                          <div className="flex-shrink-0 h-8 w-8 rounded-full bg-[#d2fcb2] flex items-center justify-center relative z-10">
+                    <div className="space-y-6">
+                      {steps.map((step, index) => {
+                        const stepNumber = index + 1;
+                        let bgColor, icon;
+                        if (stepNumber < currentStep) {
+                          // Completed steps
+                          bgColor = "bg-[#d2fcb2]";
+                          icon = (
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#213f5b]" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
-                          </div>
-                          <div className="ml-4">
-                            <h5 className="text-sm font-medium text-[#213f5b]">Demande initiale</h5>
-                            <p className="text-xs text-gray-500 mt-1">12 Février 2025</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex">
-                          <div className="flex-shrink-0 h-8 w-8 rounded-full bg-[#bfddf9] flex items-center justify-center relative z-10">
+                          );
+                        } else if (stepNumber === currentStep) {
+                          // Current step
+                          bgColor = "bg-[#bfddf9]";
+                          icon = (
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#213f5b]" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
+                          );
+                        } else {
+                          // Pending steps
+                          bgColor = "bg-gray-200";
+                          icon = <span className="text-xs font-medium">{stepNumber}</span>;
+                        }
+                        return (
+                          <div className="flex" key={index}>
+                            <div className={`flex-shrink-0 h-8 w-8 rounded-full ${bgColor} flex items-center justify-center relative z-10`}>
+                              {icon}
+                            </div>
+                            <div className="ml-4">
+                              <h5 className={`text-sm font-medium ${stepNumber <= currentStep ? "text-[#213f5b]" : "text-gray-400"}`}>{step}</h5>
+                              {/* You can optionally include dates or additional details for each step */}
+                            </div>
                           </div>
-                          <div className="ml-4">
-                            <h5 className="text-sm font-medium text-[#213f5b]">Étude technique</h5>
-                            <p className="text-xs text-gray-500 mt-1">18 Février 2025</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex">
-                          <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center relative z-10">
-                            <span className="text-xs font-medium text-gray-500">3</span>
-                          </div>
-                          <div className="ml-4">
-                            <h5 className="text-sm font-medium text-gray-400">Installation</h5>
-                            <p className="text-xs text-gray-500 mt-1">Prévu pour Mars 2025</p>
-                          </div>
-                        </div>
-                      </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
               </div>
-              
-              <div className="p-6 border-t border-gray-100">
-                <Link href={`/client/projects/${selectedProject._id}`}>
-                  <motion.button
-                    className="w-full py-3 rounded-xl text-white font-medium"
-                    style={{ backgroundColor: colors.darkBlue }}
-                    whileHover={{ opacity: 0.9 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    Voir tous les détails
-                  </motion.button>
-                </Link>
-              </div>
-            </motion.div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-100">
+              <Link href={`/dashboard/admin/projects/${selectedProject._id}`}>
+                <motion.button
+                  className="w-full py-3 rounded-xl text-white font-medium"
+                  style={{ backgroundColor: colors.darkBlue }}
+                  whileHover={{ opacity: 0.9 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Voir tous les détails
+                </motion.button>
+              </Link>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>
     </div>
   );
 }

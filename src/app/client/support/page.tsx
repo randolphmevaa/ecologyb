@@ -15,14 +15,6 @@ import {
 import { Header } from "@/components/Header";
 import { useEffect, useState } from "react";
 
-// Brand colors
-// const brandColors = {
-//   white: "#ffffff",
-//   lightBlue: "#bfddf9",
-//   lightGreen: "#d2fcb2",
-//   navyBlue: "#213f5b",
-// };
-
 // Sample tickets data
 const tickets = [
   {
