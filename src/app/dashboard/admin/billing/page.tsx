@@ -5,7 +5,6 @@ import { Header } from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BanknotesIcon,
-  // DocumentTextIcon,
   CheckBadgeIcon,
   CheckCircleIcon,
   XCircleIcon,
@@ -14,31 +13,20 @@ import {
   ArrowDownTrayIcon,
   ClockIcon,
   ArrowsUpDownIcon,
-  // ArrowLongUpIcon,
-  // ArrowLongDownIcon,
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
   ExclamationTriangleIcon,
-  UserIcon,
+  // Removed UserIcon from display,
   CalendarIcon,
-  // TagIcon,
   ChartBarIcon,
 } from "@heroicons/react/24/outline";
 
-// 1. Define TypeScript interfaces for your data
+// ---------- TYPE DEFINITIONS ----------
 interface Regie {
   id: number;
   name: string;
   email: string;
   region: string;
-}
-
-interface Client {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
 }
 
 interface Solution {
@@ -53,7 +41,7 @@ interface Invoice {
   id: string;
   date_creation: string;
   date_reception: string;
-  client_id: number;
+  // Removed client_id from display logic, no longer shown
   solution_id: number;
   regie_id: number;
   montant_ht: number;
@@ -65,19 +53,11 @@ interface Invoice {
   commentaire_admin: string;
 }
 
-// 2. Example data typed with the interfaces
+// ---------- SAMPLE DATA ----------
 const regies: Regie[] = [
   { id: 1, name: "Martin Laurent", email: "martin.l@regie.com", region: "Île-de-France" },
   { id: 2, name: "Caroline Dubois", email: "c.dubois@regie.com", region: "Auvergne-Rhône-Alpes" },
   { id: 3, name: "Philippe Moreau", email: "p.moreau@regie.com", region: "Provence-Alpes-Côte d'Azur" },
-];
-
-const clients: Client[] = [
-  { id: 1, name: "Durand Martin", email: "durand.martin@example.com", phone: "06 12 34 56 78", address: "15 Rue des Lilas, 75001 Paris" },
-  { id: 2, name: "Dubois Sophie", email: "dubois.sophie@example.com", phone: "06 23 45 67 89", address: "25 Avenue Victor Hugo, 69002 Lyon" },
-  { id: 3, name: "Bernard Thomas", email: "bernard.thomas@example.com", phone: "06 34 56 78 90", address: "8 Rue de la Paix, 33000 Bordeaux" },
-  { id: 4, name: "Petit Julie", email: "petit.julie@example.com", phone: "06 45 67 89 01", address: "42 Boulevard Haussmann, 44000 Nantes" },
-  { id: 5, name: "Robert Philippe", email: "robert.philippe@example.com", phone: "06 56 78 90 12", address: "3 Place Bellecour, 13001 Marseille" },
 ];
 
 const solutions: Solution[] = [
@@ -88,12 +68,13 @@ const solutions: Solution[] = [
   { id: 5, name: "Poêle à bois", base_price: 1800 },
 ];
 
+// Example factures with minimal mention of client for data – 
+// but we won't show them in the UI
 const factures: Invoice[] = [
   {
     id: "FACT-2025-001",
     date_creation: "2025-03-01",
     date_reception: "2025-03-01",
-    client_id: 1,
     solution_id: 1,
     regie_id: 1,
     montant_ht: 5800,
@@ -108,7 +89,6 @@ const factures: Invoice[] = [
     id: "FACT-2025-002",
     date_creation: "2025-03-02",
     date_reception: "2025-03-02",
-    client_id: 2,
     solution_id: 2,
     regie_id: 2,
     montant_ht: 3200,
@@ -123,7 +103,6 @@ const factures: Invoice[] = [
     id: "FACT-2025-003",
     date_creation: "2025-03-03",
     date_reception: "2025-03-03",
-    client_id: 3,
     solution_id: 3,
     regie_id: 3,
     montant_ht: 2800,
@@ -138,7 +117,6 @@ const factures: Invoice[] = [
     id: "FACT-2025-004",
     date_creation: "2025-03-04",
     date_reception: "2025-03-04",
-    client_id: 4,
     solution_id: 4,
     regie_id: 1,
     montant_ht: 7500,
@@ -153,7 +131,6 @@ const factures: Invoice[] = [
     id: "FACT-2025-005",
     date_creation: "2025-03-05",
     date_reception: "2025-03-05",
-    client_id: 5,
     solution_id: 5,
     regie_id: 2,
     montant_ht: 1800,
@@ -164,42 +141,12 @@ const factures: Invoice[] = [
     date_paiement: null,
     commentaire_admin: "",
   },
-  {
-    id: "FACT-2025-006",
-    date_creation: "2025-03-06",
-    date_reception: "2025-03-06",
-    client_id: 1,
-    solution_id: 3,
-    regie_id: 3,
-    montant_ht: 2800,
-    tva: 20,
-    montant_ttc: 3360,
-    statut: "En attente d'approbation",
-    date_approbation: null,
-    date_paiement: null,
-    commentaire_admin: "",
-  },
-  {
-    id: "FACT-2025-007",
-    date_creation: "2025-03-06",
-    date_reception: "2025-03-06",
-    client_id: 2,
-    solution_id: 1,
-    regie_id: 1,
-    montant_ht: 5800,
-    tva: 20,
-    montant_ttc: 6960,
-    statut: "Approuvée",
-    date_approbation: "2025-03-07",
-    date_paiement: "2025-03-10",
-    commentaire_admin: "Paiement reçu",
-  },
 ];
 
-// 3. Utility functions with typed parameters
-const getClientName = (clientId: number): string => {
-  const client = clients.find((c) => c.id === clientId);
-  return client ? client.name : "Client inconnu";
+// ---------- UTILITY FUNCTIONS ----------
+const getRegieName = (regieId: number): string => {
+  const regie = regies.find((r) => r.id === regieId);
+  return regie ? regie.name : "Régie inconnue";
 };
 
 const getSolutionName = (solutionId: number): string => {
@@ -207,45 +154,35 @@ const getSolutionName = (solutionId: number): string => {
   return solution ? solution.name : "Solution inconnue";
 };
 
-const getRegieName = (regieId: number): string => {
-  const regie = regies.find((r) => r.id === regieId);
-  return regie ? regie.name : "Régie inconnue";
-};
-
 const formatMontant = (montant: number): string => {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(montant);
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(montant);
 };
 
 const formatDate = (dateString: string | null): string => {
   if (!dateString) return "-";
   const date = new Date(dateString);
-
-  // Cast the options to `Intl.DateTimeFormatOptions`
-  const options = {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  } as Intl.DateTimeFormatOptions;
-
+  const options = { year: "numeric", month: "long", day: "numeric" } as Intl.DateTimeFormatOptions;
   return new Intl.DateTimeFormat("fr-FR", options).format(date);
 };
 
-// 4. Main component with typed state
+// ---------- MAIN COMPONENT ----------
 export default function AdminFacturationPage() {
-  // We allow "Toutes" plus the three InvoiceStatus strings
   const [filter, setFilter] = useState<InvoiceStatus | "Toutes">("Toutes");
-  const [ , setCurrentDate] = useState<string>("");
-  const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState<boolean>(false);
+  const [ , setCurrentDate] = useState("");
+  const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [sortBy, setSortBy] = useState<"date_reception" | "client" | "regie" | "montant" | "statut">("date_reception");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"date_reception" | "regie" | "montant" | "statut">("date_reception");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [invoiceComment, setInvoiceComment] = useState<string>("");
-  const [showAlert, setShowAlert] = useState<boolean>(false);
-  const [alertMessage, setAlertMessage] = useState<string>("");
+  const [invoiceComment, setInvoiceComment] = useState("");
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState<"success" | "error">("success");
 
-  // Compute stats
+  // Stats
   const statsData = {
     totalApproved: factures.filter((f) => f.statut === "Approuvée").length,
     totalPending: factures.filter((f) => f.statut === "En attente d'approbation").length,
@@ -260,9 +197,7 @@ export default function AdminFacturationPage() {
 
   // Region data
   const regionData = regies.map((regie) => {
-    const regieInvoices = factures.filter(
-      (f) => f.regie_id === regie.id && f.statut === "Approuvée"
-    );
+    const regieInvoices = factures.filter((f) => f.regie_id === regie.id && f.statut === "Approuvée");
     return {
       region: regie.region,
       count: regieInvoices.length,
@@ -273,7 +208,7 @@ export default function AdminFacturationPage() {
   useEffect(() => {
     const now = new Date();
     const options = {
-      weekday: "long", // Make sure to cast if needed
+      weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -287,7 +222,10 @@ export default function AdminFacturationPage() {
     }
   }, [selectedInvoice]);
 
-  // Filter invoices
+  // NEW: Only show invoices that come from known regie IDs
+  const validRegieIds = regies.map((r) => r.id);
+
+  // Filter
   const filteredInvoices = factures
     .filter((invoice) => {
       if (filter === "Toutes") return true;
@@ -295,29 +233,25 @@ export default function AdminFacturationPage() {
     })
     .filter((invoice) => {
       if (!searchTerm) return true;
-      const client = getClientName(invoice.client_id).toLowerCase();
-      const solution = getSolutionName(invoice.solution_id).toLowerCase();
-      const regie = getRegieName(invoice.regie_id).toLowerCase();
+      // Searching only on invoice.id, regieName, solutionName
+      const solName = getSolutionName(invoice.solution_id).toLowerCase();
+      const regieName = getRegieName(invoice.regie_id).toLowerCase();
       const id = invoice.id.toLowerCase();
       const search = searchTerm.toLowerCase();
       return (
-        client.includes(search) ||
-        solution.includes(search) ||
-        regie.includes(search) ||
+        solName.includes(search) ||
+        regieName.includes(search) ||
         id.includes(search)
       );
-    });
+    })
+    .filter((invoice) => validRegieIds.includes(invoice.regie_id));
 
-  // Sort the invoices
+  // Sort
   const sortedInvoices = [...filteredInvoices].sort((a, b) => {
     let comparison = 0;
-
     switch (sortBy) {
       case "date_reception":
         comparison = new Date(a.date_reception).getTime() - new Date(b.date_reception).getTime();
-        break;
-      case "client":
-        comparison = getClientName(a.client_id).localeCompare(getClientName(b.client_id));
         break;
       case "regie":
         comparison = getRegieName(a.regie_id).localeCompare(getRegieName(b.regie_id));
@@ -328,10 +262,7 @@ export default function AdminFacturationPage() {
       case "statut":
         comparison = a.statut.localeCompare(b.statut);
         break;
-      default:
-        comparison = 0;
     }
-
     return sortOrder === "asc" ? comparison : -comparison;
   });
 
@@ -341,9 +272,7 @@ export default function AdminFacturationPage() {
     setShowInvoiceDetailModal(true);
   };
 
-  const handleSort = (
-    field: "date_reception" | "client" | "regie" | "montant" | "statut"
-  ) => {
+  const handleSort = (field: "date_reception" | "regie" | "montant" | "statut") => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
@@ -352,6 +281,7 @@ export default function AdminFacturationPage() {
     }
   };
 
+  // Approve
   const handleApproveInvoice = () => {
     if (!selectedInvoice) return;
 
@@ -362,23 +292,21 @@ export default function AdminFacturationPage() {
         invoice.commentaire_admin = invoiceComment;
       }
     });
-
     setSelectedInvoice({
       ...selectedInvoice,
       statut: "Approuvée",
       date_approbation: new Date().toISOString().split("T")[0],
       commentaire_admin: invoiceComment,
     });
-
     setAlertMessage("La facture a été approuvée avec succès.");
     setAlertType("success");
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 5000);
   };
 
+  // Reject
   const handleRejectInvoice = () => {
     if (!selectedInvoice) return;
-
     if (!invoiceComment.trim()) {
       setAlertMessage("Veuillez fournir un motif de rejet.");
       setAlertType("error");
@@ -386,59 +314,52 @@ export default function AdminFacturationPage() {
       setTimeout(() => setShowAlert(false), 5000);
       return;
     }
-
     factures.forEach((invoice) => {
       if (invoice.id === selectedInvoice.id) {
         invoice.statut = "Rejetée";
         invoice.commentaire_admin = invoiceComment;
       }
     });
-
     setSelectedInvoice({
       ...selectedInvoice,
       statut: "Rejetée",
       commentaire_admin: invoiceComment,
     });
-
     setAlertMessage("La facture a été rejetée.");
     setAlertType("success");
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 5000);
   };
 
+  // Mark as paid
   const handleMarkAsPaid = () => {
     if (!selectedInvoice) return;
-
     factures.forEach((invoice) => {
       if (invoice.id === selectedInvoice.id) {
         invoice.date_paiement = new Date().toISOString().split("T")[0];
         invoice.commentaire_admin = invoiceComment || "Paiement enregistré";
       }
     });
-
     setSelectedInvoice({
       ...selectedInvoice,
       date_paiement: new Date().toISOString().split("T")[0],
       commentaire_admin: invoiceComment || "Paiement enregistré",
     });
-
     setAlertMessage("Le paiement de la facture a été enregistré.");
     setAlertType("success");
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 5000);
   };
 
-  // Render
+  // JSX
   return (
     <div className="flex h-screen bg-white">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
-
         <main
           className="flex-1 overflow-y-auto px-8 py-6 space-y-6"
           style={{
-            background:
-              "linear-gradient(135deg, rgba(191,221,249,0.1) 0%, rgba(210,252,178,0.05) 100%)",
+            background: "linear-gradient(135deg, rgba(191,221,249,0.1) 0%, rgba(210,252,178,0.05) 100%)",
           }}
         >
           <AnimatePresence>
@@ -460,11 +381,7 @@ export default function AdminFacturationPage() {
                   ) : (
                     <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mr-3" />
                   )}
-                  <p
-                    className={
-                      alertType === "success" ? "text-green-700" : "text-red-700"
-                    }
-                  >
+                  <p className={alertType === "success" ? "text-green-700" : "text-red-700"}>
                     {alertMessage}
                   </p>
                   <button
@@ -494,7 +411,7 @@ export default function AdminFacturationPage() {
           </div>
 
           <div className="grid grid-cols-12 gap-6">
-            {/* -- Statistiques -- */}
+            {/* -- Stats row -- */}
             <motion.div
               className="col-span-12 grid grid-cols-1 gap-5 md:grid-cols-4"
               initial={{ opacity: 0 }}
@@ -506,9 +423,7 @@ export default function AdminFacturationPage() {
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex justify-between items-center mb-3">
-                  <p className="text-sm font-medium text-[#213f5b]">
-                    Total Approuvé
-                  </p>
+                  <p className="text-sm font-medium text-[#213f5b]">Total Approuvé</p>
                   <div className="p-2 rounded-full bg-white/60">
                     <CheckBadgeIcon className="h-5 w-5 text-[#213f5b]" />
                   </div>
@@ -544,9 +459,7 @@ export default function AdminFacturationPage() {
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex justify-between items-center mb-3">
-                  <p className="text-sm font-medium text-[#213f5b]">
-                    Taux d&apos;Approbation
-                  </p>
+                  <p className="text-sm font-medium text-[#213f5b]">Taux d&apos;Approbation</p>
                   <div className="p-2 rounded-full bg-white/60">
                     <ChartBarIcon className="h-5 w-5 text-[#213f5b]" />
                   </div>
@@ -554,10 +467,7 @@ export default function AdminFacturationPage() {
                 <p className="text-2xl font-bold text-[#213f5b]">
                   {Math.round(
                     (statsData.totalApproved /
-                      (statsData.totalApproved +
-                        statsData.totalRejected +
-                        statsData.totalPending || 1)) *
-                      100
+                      (statsData.totalApproved + statsData.totalRejected + statsData.totalPending || 1)) * 100
                   )}
                   %
                 </p>
@@ -571,9 +481,7 @@ export default function AdminFacturationPage() {
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex justify-between items-center mb-3">
-                  <p className="text-sm font-medium text-[#213f5b]">
-                    Délai Moyen
-                  </p>
+                  <p className="text-sm font-medium text-[#213f5b]">Délai Moyen</p>
                   <div className="p-2 rounded-full bg-white/60">
                     <CalendarIcon className="h-5 w-5 text-[#213f5b]" />
                   </div>
@@ -603,7 +511,7 @@ export default function AdminFacturationPage() {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#213f5b] sm:w-64"
-                      placeholder="Rechercher une facture, client, régie..."
+                      placeholder="Rechercher par N° Facture, solution, régie..."
                     />
                   </div>
                   <div className="relative">
@@ -633,9 +541,7 @@ export default function AdminFacturationPage() {
                                   : ""
                               }`}
                               onClick={() => {
-                                setFilter(
-                                  status as InvoiceStatus | "Toutes"
-                                );
+                                setFilter(status as InvoiceStatus | "Toutes");
                                 document
                                   .getElementById("filterDropdown")
                                   ?.classList.add("hidden");
@@ -675,6 +581,7 @@ export default function AdminFacturationPage() {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
+                        {/* Col: N° Facture / Date */}
                         <th
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -691,22 +598,8 @@ export default function AdminFacturationPage() {
                             )}
                           </div>
                         </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort("client")}
-                        >
-                          <div className="flex items-center gap-1">
-                            Client / Solution
-                            {sortBy === "client" && (
-                              <ArrowsUpDownIcon
-                                className={`h-3.5 w-3.5 ${
-                                  sortOrder === "asc" ? "rotate-180" : ""
-                                }`}
-                              />
-                            )}
-                          </div>
-                        </th>
+
+                        {/* Col: Régie */}
                         <th
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -723,6 +616,8 @@ export default function AdminFacturationPage() {
                             )}
                           </div>
                         </th>
+
+                        {/* Col: Montant */}
                         <th
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -739,6 +634,8 @@ export default function AdminFacturationPage() {
                             )}
                           </div>
                         </th>
+
+                        {/* Col: Statut */}
                         <th
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -755,6 +652,8 @@ export default function AdminFacturationPage() {
                             )}
                           </div>
                         </th>
+
+                        {/* Col: Actions */}
                         <th
                           scope="col"
                           className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -769,6 +668,7 @@ export default function AdminFacturationPage() {
                           key={invoice.id}
                           className="hover:bg-gray-50 transition-colors"
                         >
+                          {/* Cell: N° Facture / Date */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="font-medium text-[#213f5b]">
                               {invoice.id}
@@ -777,14 +677,8 @@ export default function AdminFacturationPage() {
                               Reçue le {formatDate(invoice.date_reception)}
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="font-medium text-[#213f5b]">
-                              {getClientName(invoice.client_id)}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {getSolutionName(invoice.solution_id)}
-                            </div>
-                          </td>
+
+                          {/* Cell: Régie */}
                           <td className="px-6 py-4">
                             <div className="font-medium text-[#213f5b]">
                               {getRegieName(invoice.regie_id)}
@@ -793,6 +687,8 @@ export default function AdminFacturationPage() {
                               Créée le {formatDate(invoice.date_creation)}
                             </div>
                           </td>
+
+                          {/* Cell: Montant */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="font-medium text-[#213f5b]">
                               {formatMontant(invoice.montant_ttc)}
@@ -801,6 +697,8 @@ export default function AdminFacturationPage() {
                               TVA: {invoice.tva}%
                             </div>
                           </td>
+
+                          {/* Cell: Statut */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -819,6 +717,8 @@ export default function AdminFacturationPage() {
                               </div>
                             )}
                           </td>
+
+                          {/* Cell: Actions */}
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end gap-3">
                               <button
@@ -898,11 +798,7 @@ export default function AdminFacturationPage() {
                         <motion.div
                           className="h-2 rounded-full bg-[#213f5b]"
                           initial={{ width: 0 }}
-                          animate={{
-                            width: `${
-                              (region.amount / statsData.totalAmount) * 100
-                            }%`,
-                          }}
+                          animate={{ width: `${(region.amount / statsData.totalAmount) * 100}%` }}
                           transition={{ duration: 0.8 }}
                         />
                       </div>
@@ -942,7 +838,6 @@ export default function AdminFacturationPage() {
                             {invoice.id}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {getClientName(invoice.client_id)} -{" "}
                             {getSolutionName(invoice.solution_id)}
                           </div>
                           <div className="text-xs text-gray-500">
@@ -969,7 +864,7 @@ export default function AdminFacturationPage() {
         </main>
       </div>
 
-      {/* -- Modal Détails Facture -- */}
+      {/* -- MODAL: Détails Facture (NO 'Informations Client') -- */}
       <AnimatePresence>
         {showInvoiceDetailModal && selectedInvoice && (
           <motion.div
@@ -1007,12 +902,6 @@ export default function AdminFacturationPage() {
                         {selectedInvoice.id}
                       </div>
                       <div className="text-sm text-gray-500 mt-4">
-                        Date d&apos;émission
-                      </div>
-                      <div className="font-medium">
-                        {formatDate(selectedInvoice.date_creation)}
-                      </div>
-                      <div className="text-sm text-gray-500 mt-2">
                         Date de réception
                       </div>
                       <div className="font-medium">
@@ -1025,8 +914,7 @@ export default function AdminFacturationPage() {
                         className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           selectedInvoice.statut === "Approuvée"
                             ? "bg-green-100 text-green-800"
-                            : selectedInvoice.statut ===
-                              "En attente d'approbation"
+                            : selectedInvoice.statut === "En attente d'approbation"
                             ? "bg-yellow-100 text-yellow-800"
                             : "bg-red-100 text-red-800"
                         }`}
@@ -1057,46 +945,8 @@ export default function AdminFacturationPage() {
                   </div>
                 </div>
 
+                {/* Only showing "Informations Régie" + "Informations Admin" */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <h3 className="text-md font-semibold text-[#213f5b] mb-3">
-                      Informations Client
-                    </h3>
-                    <div className="bg-gray-50 p-4 rounded-lg h-full">
-                      {clients.find((c) => c.id === selectedInvoice.client_id) && (
-                        <>
-                          <div className="flex items-center gap-2 mb-2">
-                            <UserIcon className="h-4 w-4 text-gray-500" />
-                            <div className="font-semibold">
-                              {getClientName(selectedInvoice.client_id)}
-                            </div>
-                          </div>
-                          <div className="text-sm text-gray-500 ml-6 mb-2">
-                            {
-                              clients.find(
-                                (c) => c.id === selectedInvoice.client_id
-                              )?.address
-                            }
-                          </div>
-                          <div className="text-sm text-gray-500 ml-6 mb-1">
-                            {
-                              clients.find(
-                                (c) => c.id === selectedInvoice.client_id
-                              )?.email
-                            }
-                          </div>
-                          <div className="text-sm text-gray-500 ml-6">
-                            {
-                              clients.find(
-                                (c) => c.id === selectedInvoice.client_id
-                              )?.phone
-                            }
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
                   <div>
                     <h3 className="text-md font-semibold text-[#213f5b] mb-3">
                       Informations Régie
@@ -1104,29 +954,39 @@ export default function AdminFacturationPage() {
                     <div className="bg-gray-50 p-4 rounded-lg h-full">
                       {regies.find((r) => r.id === selectedInvoice.regie_id) && (
                         <>
-                          <div className="flex items-center gap-2 mb-2">
-                            <UserIcon className="h-4 w-4 text-gray-500" />
-                            <div className="font-semibold">
-                              {getRegieName(selectedInvoice.regie_id)}
-                            </div>
+                          <div className="font-semibold mb-1">
+                            {getRegieName(selectedInvoice.regie_id)}
                           </div>
-                          <div className="text-sm text-gray-500 ml-6 mb-1">
+                          <div className="text-sm text-gray-500 mb-1">
                             {
-                              regies.find(
-                                (r) => r.id === selectedInvoice.regie_id
-                              )?.email
+                              regies.find((r) => r.id === selectedInvoice.regie_id)
+                                ?.email
                             }
                           </div>
-                          <div className="text-sm text-gray-500 ml-6">
+                          <div className="text-sm text-gray-500">
                             Région:{" "}
                             {
-                              regies.find(
-                                (r) => r.id === selectedInvoice.regie_id
-                              )?.region
+                              regies.find((r) => r.id === selectedInvoice.regie_id)
+                                ?.region
                             }
                           </div>
                         </>
                       )}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-md font-semibold text-[#213f5b] mb-3">
+                      Informations Admin
+                    </h3>
+                    <div className="bg-gray-50 p-4 rounded-lg h-full">
+                      {/* Hardcode or replace with real "Admin" data */}
+                      <div className="font-semibold mb-1">Nom Admin</div>
+                      <div className="text-sm text-gray-500 mb-1">
+                        admin@example.com
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Rôle: Administration Facturation
+                      </div>
                     </div>
                   </div>
                 </div>
