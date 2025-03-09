@@ -6,24 +6,15 @@ import { Header } from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
-  // UserIcon,
-  // CloudIcon,
   NewspaperIcon,
   XMarkIcon,
-  // ExclamationTriangleIcon,
   InformationCircleIcon,
   ArrowRightIcon,
-  // ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 // import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import ChatWidget from "@/components/ChatWidget";
-
-
-
-// Fix leaflet icons
-
 
 // Multi‑step progress bar steps
 const progressSteps = [
@@ -36,21 +27,48 @@ const progressSteps = [
   "Dossier clôturé",
 ];
 
+interface Contact {
+  contactId: string;
+  firstName: string;
+  lastName: string;
+  gestionnaireSuivi: string;
+  // Add any additional fields as needed.
+}
+
+interface AccountManager {
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  image: string;
+}
+
+interface Dossier {
+  etape: string;
+  // Add any additional fields as needed.
+}
+
 export default function ClientDashboard() {
+  // 1) State for fetched contact data
+  const [contact, setContact] = useState<Contact | null>(null);
+  // 2) Loading state to show a spinner or placeholder while fetching
+  const [isLoading, setIsLoading] = useState(true);
   const [showChatWidget, setShowChatWidget] = useState(false);
+  const [accountManager, setAccountManager] = useState<AccountManager | null>(null);
+  // 2. Add a state for dossier data
+  const [dossier, setDossier] = useState<Dossier | null>(null);
   const [showPromo, setShowPromo] = useState(() => {
     return localStorage.getItem('promoDismissed') !== 'true';
   });
-  const [progressionGlobale ] = useState<number>(50); // example percentage
+  // const [progressionGlobale ] = useState<number>(50); // example percentage
   const etapesProgression: string[] = progressSteps; // you can use your progressSteps here
-  const [etapeActuelle ] = useState<number>(2); // example: current step index
+  // const [etapeActuelle ] = useState<number>(2); // example: current step index
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(true);
   const [isHovering, setIsHovering] = useState<number | null>(null);
-  const clientName = "Jean Dupont";
+  // const clientName = `${contact.firstName} ${contact.lastName}`;
   const containerRef = useRef<HTMLDivElement>(null);
   const [ , setActiveIndex] = useState<number | null>(null);
   const logoRefs = useRef<(HTMLDivElement | null)[]>([]);
-
 
   const documents = [
     { id: 1, nom: "Contrat signé", statut: "manquant" },
@@ -58,13 +76,13 @@ export default function ClientDashboard() {
     { id: 3, nom: "Attestation", statut: "approuvé" }
   ];
 
-  const accountManager = {
-    name: "Marie Dupont",
-    title: "Chargée de compte",
-    email: "marie.dupont@ecologyb.com",
-    phone: "+33 1 23 45 67 89",
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
-  };
+  // const accountManager = {
+  //   name: "Marie Dupont",
+  //   title: "Chargée de compte",
+  //   email: "marie.dupont@ecologyb.com",
+  //   phone: "+33 1 23 45 67 89",
+  //   image: "https://randomuser.me/api/portraits/women/44.jpg",
+  // };
 
   const weatherData = {
     temp: 22,
@@ -250,6 +268,93 @@ const InfiniteMarquee = () => {
     requestAnimationFrame(updateActiveLogo);
   }, []);
 
+  // ========== 2) Fetch the data from /api/contacts on mount ==========
+  useEffect(() => {
+    (async () => {
+      try {
+        // Retrieve clientInfo from localStorage
+        const clientInfoStr = localStorage.getItem("clientInfo");
+        if (!clientInfoStr) {
+          console.error("No clientInfo found in localStorage");
+          return;
+        }
+        const clientInfo = JSON.parse(clientInfoStr);
+        const contactId = clientInfo.contact.contactId;
+        
+        // Fetch the contact details using the contactId
+        const res = await fetch(`/api/contacts/${contactId}`);
+        const data = await res.json();
+        setContact(data);
+      } catch (error) {
+        console.error("Failed to load contact data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  // 2. Fetch account manager details once the contact is loaded
+  useEffect(() => {
+    if (contact && contact.gestionnaireSuivi) {
+      (async () => {
+        try {
+          const res = await fetch(`/api/users?id=${contact.gestionnaireSuivi}`);
+          const data = await res.json();
+          // Choose the image based on gender
+          const managerImage =
+            data.gender === "Homme"
+              ? "https://www.advancia-teleservices.com/wp-content/uploads/2023/11/Centre-dappels-tunisie.jpg"
+              : "https://www.hotesse-interim.fr/ressources/images/ab4fec7ce0ed.jpg";
+  
+          // Set account manager data with the chosen image
+          setAccountManager({
+            name: `${data.firstName} ${data.lastName}`,
+            title: data.role,
+            email: data.email,
+            phone: data.phone,
+            image: managerImage,
+          });
+        } catch (error) {
+          console.error("Error fetching account manager:", error);
+        }
+      })();
+    }
+  }, [contact]);  
+
+  // Fetch dossier data based on the contact's ID
+useEffect(() => {
+  if (contact && contact.contactId) {
+    (async () => {
+      try {
+        const res = await fetch(`/api/dossiers?contactId=${contact.contactId}`);
+        const data = await res.json();
+        // data is an array, so select the first dossier if available
+        if (Array.isArray(data) && data.length > 0) {
+          setDossier(data[0]);
+        } else {
+          setDossier(null);
+        }
+      } catch (error) {
+        console.error("Error fetching dossier data:", error);
+      }
+    })();
+  }
+}, [contact]);
+
+// Compute the current step (etapeActuelle) based on dossier.etape
+let etapeActuelle = 0;
+if (dossier && dossier.etape) {
+  // For example, dossier.etape is "4 Dossier Accepter"
+  const match = dossier.etape.match(/^(\d+)/);
+  if (match) {
+    etapeActuelle = parseInt(match[1], 10) - 1; // Convert to zero-indexed
+  }
+}
+
+// Calculate overall progress based on the number of steps
+const progressionGlobale = ((etapeActuelle + 1) / progressSteps.length) * 100;
+
+  
   useEffect(() => {
     // This code will only run on the client
     delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
@@ -269,6 +374,18 @@ const InfiniteMarquee = () => {
       localStorage.setItem('promoDismissed', 'true');
     }
   }, [showPromo]);
+
+  if (isLoading) {
+    // Show a simple loader or skeleton
+    return <div className="h-screen flex items-center justify-center">Chargement...</div>;
+  }
+
+  if (!contact) {
+    // If there's no contact in data
+    return <div className="h-screen flex items-center justify-center">Aucun contact trouvé</div>;
+  }
+
+  const clientName = `${contact.firstName} ${contact.lastName}`;
 
   return (
     <div className="flex h-screen bg-white relative">
@@ -897,97 +1014,88 @@ const InfiniteMarquee = () => {
               {/* Dynamic Background Elements */}
               <div className="absolute inset-0 opacity-10 mix-blend-overlay" 
                   style={{ background: 'radial-gradient(circle at 70% 20%, #d2fcb2 0%, transparent 40%)' }} />
-              
-              {/* Availability Ribbon */}
-              {/* <div className="absolute -right-8 top-6 rotate-45 bg-[#d2fcb2] px-8 py-1 shadow-md">
-                <span className="text-xs font-bold text-[#213f5b]">EN LIGNE</span>
-              </div> */}
 
-              <div className="relative space-y-6">
-                {/* Header Section */}
-                <div className="space-y-3">
-                  <h2 className="text-3xl font-black tracking-tight text-[#213f5b]">
-                    Votre Conseiller Commercial
-                    <span className="block h-1 w-16 mt-2 bg-[#d2fcb2] rounded-full" />
-                  </h2>
-                  <p className="text-[15px] text-[#213f5b]/90 leading-relaxed pr-16">
-                    Stratégies sur-mesure et accompagnement premium pour maximiser vos ventes
-                  </p>
-                </div>
+<div className="relative space-y-6">
+  {/* Header Section */}
+  <div className="space-y-3">
+    <h2 className="text-3xl font-black tracking-tight text-[#213f5b]">
+      Votre Conseiller Commercial
+      <span className="block h-1 w-16 mt-2 bg-[#d2fcb2] rounded-full" />
+    </h2>
+    <p className="text-[15px] text-[#213f5b]/90 leading-relaxed pr-16">
+      Stratégies sur-mesure et accompagnement premium pour maximiser vos ventes
+    </p>
+  </div>
 
-                {/* Profile Section */}
-                <div className="flex items-start gap-6">
-                  {/* Image Container */}
-                  <motion.div 
-                    className="relative z-10"
-                    whileHover={{ rotate: 2 }}
-                  >
-                    <div className="absolute inset-0 bg-[#d2fcb2] rounded-full blur-lg opacity-40 -z-10" />
-                    <div className="h-24 w-24 rounded-full border-4 border-white ring-[3px] ring-[#213f5b]/10 shadow-xl overflow-hidden">
-                      <Image
-                        src={accountManager.image}
-                        alt="Conseiller commercial"
-                        layout="fill"
-                        className="object-cover grayscale-[15%]"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#213f5b]/30" />
-                    </div>
-                  </motion.div>
+  {/* Profile Section */}
+  <div className="flex items-start gap-6">
+    {/* Image Container */}
+    <motion.div 
+      className="relative z-10"
+      whileHover={{ rotate: 2 }}
+    >
+      <div className="absolute inset-0 bg-[#d2fcb2] rounded-full blur-lg opacity-40 -z-10" />
+      <div className="h-24 w-24 rounded-full border-4 border-white ring-[3px] ring-[#213f5b]/10 shadow-xl overflow-hidden">
+        {accountManager ? (
+          <Image
+            src={accountManager.image}
+            alt="Conseiller commercial"
+            layout="fill"
+            className="object-cover grayscale-[15%]"
+          />
+        ) : (
+          // Placeholder while loading the image
+          <div className="w-full h-full bg-gray-200" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#213f5b]/30" />
+      </div>
+    </motion.div>
 
-                  {/* Profile Info */}
-                  <div className="flex-1 space-y-3">
-                    <div>
-                      <h3 className="text-2xl font-black text-[#213f5b] tracking-tight">
-                        {accountManager.name}
-                      </h3>
-                      <p className="text-sm text-[#213f5b]/80 font-medium uppercase tracking-wider">
-                        {accountManager.title}
-                      </p>
-                    </div>
+    {/* Profile Info */}
+    <div className="flex-1 space-y-3">
+      <div>
+        <h3 className="text-2xl font-black text-[#213f5b] tracking-tight">
+          {accountManager ? accountManager.name : "Chargement..."}
+        </h3>
+        <p className="text-sm text-[#213f5b]/80 font-medium uppercase tracking-wider">
+        Chargé de compte
+        </p>
+      </div>
 
-                    {/* Expertise Tags */}
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1 bg-[#213f5b]/5 text-[#213f5b] rounded-full text-xs font-bold">
-                        Suivi Personnalisé
-                      </span>
-                    </div>
-                  </div>
-                </div>
+      {/* Expertise Tags */}
+      <div className="flex flex-wrap gap-2">
+        <span className="px-3 py-1 bg-[#213f5b]/5 text-[#213f5b] rounded-full text-xs font-bold">
+          Suivi Personnalisé
+        </span>
+      </div>
+    </div>
+  </div>
 
-                {/* Contact Panel */}
-                <motion.div 
-                  className="p-4 rounded-xl bg-white/50 backdrop-blur-sm border border-white"
-                  whileHover={{ backgroundColor: '#ffffff' }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold text-[#213f5b] mb-1">Contact Rapide</h4>
-                      <p className="text-xs text-[#213f5b]/80">Réponse garantie sous 15 minutes</p>
-                      <p className="text-xs text-[#213f5b]/80 mt-2">Pour toute demande, veuillez utiliser le chat.</p>
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-2 px-5 py-3 rounded-lg bg-[#213f5b] text-white shadow-lg hover:shadow-xl transition-all"
-                    >
-                      <ChatBubbleLeftIcon className="h-5 w-5" />
-                      <span className="text-sm font-bold">Chat</span>
-                    </motion.button>
-                  </div>
-                </motion.div>
+  {/* Contact Panel */}
+  <motion.div 
+    className="p-4 rounded-xl bg-white/50 backdrop-blur-sm border border-white"
+    whileHover={{ backgroundColor: '#ffffff' }}
+  >
+    <div className="flex items-center gap-4">
+      <div className="flex-1">
+        <h4 className="text-sm font-bold text-[#213f5b] mb-1">Contact Rapide</h4>
+        <p className="text-xs text-[#213f5b]/80">Réponse garantie sous 15 minutes</p>
+        <p className="text-xs text-[#213f5b]/80 mt-2">Pour toute demande, veuillez utiliser le chat.</p>
+      </div>
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="flex items-center gap-2 px-5 py-3 rounded-lg bg-[#213f5b] text-white shadow-lg hover:shadow-xl transition-all"
+      >
+        <ChatBubbleLeftIcon className="h-5 w-5" />
+        <span className="text-sm font-bold">Chat</span>
+      </motion.button>
+    </div>
+  </motion.div>
 
-                {/* Removed interactive features: Documents and Agenda */}
-              </div>
+  {/* Removed interactive features: Documents and Agenda */}
+</div>
 
-              {/* Floating Action */}
-              {/* <motion.button 
-                className="absolute bottom-6 right-6"
-                whileHover={{ rotate: 10 }}
-              >
-                <div className="p-2 bg-[#d2fcb2] rounded-full shadow-lg">
-                  <ArrowTopRightOnSquareIcon className="h-6 w-6 text-[#213f5b]" />
-                </div>
-              </motion.button> */}
             </motion.div>
 
             {/* Premium Weather Card */}
@@ -1141,32 +1249,6 @@ const InfiniteMarquee = () => {
             </div>
 
             {/* Infinite Marquee */}
-            {/* <div
-              className="mt-16 overflow-hidden relative before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-24 before:bg-gradient-to-r before:from-white before:to-transparent after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-24 after:bg-gradient-to-l after:from-white after:to-transparent"
-              ref={containerRef}
-            >
-              <div className="flex animate-infinite-scroll hover:paused">
-                {logos.map((url, index) => (
-                  <div
-                    key={index}
-                    ref={(el) => { logoRefs.current[index] = el; }}
-                    className={`flex-shrink-0 mx-8 transition-all duration-300 transform ${
-                      activeIndex === index
-                        ? "scale-150 opacity-100 grayscale-0"
-                        : "scale-70 opacity-70 grayscale"
-                    }`}
-                  >
-                    <Image
-                      src={url.trim()}
-                      alt="Partner brand"
-                      width={90}
-                      height={74}
-                      className="h-16 object-contain"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div> */}
             <InfiniteMarquee/>
 
           </motion.div>
