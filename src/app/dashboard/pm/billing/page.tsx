@@ -34,6 +34,7 @@ interface Contact {
   mailingAddress: string;
   phone?: string;
   email?: string;
+  projet?: string[];
 }
 
 interface Solution {
@@ -51,19 +52,20 @@ type InvoiceStatus =
   | "Brouillon"
   | "Annulé";
 
-interface Invoice {
-  _id?: string;
-  id: string;
-  date_creation: string;
-  contact_ids: string[];
-  solution_id: string;
-  montant_ht: number;
-  tva: number;
-  montant_ttc: number;
-  statut: InvoiceStatus;
-  date_paiement: string | null;
-  postedByUserId?: string | null;
-}
+  interface Invoice {
+    _id?: string;
+    id: string;
+    date_creation: string;
+    contact_ids: string[];
+    solution_id: string;
+    montant_ht: number;
+    tva: number;
+    montant_ttc: number;
+    statut: InvoiceStatus;
+    date_paiement: string | null;
+    postedByUserId?: string | null;
+    projets?: string[]; // Add field to track project types
+  }
 
 /** ---------------------
  *     MAIN COMPONENT
@@ -77,13 +79,288 @@ export default function FacturationPage() {
     window.print();
   };
 
-  const handleDownloadPDF = (invoice: Invoice) => {
-    const doc = new jsPDF();
+  const handleDownloadPDF = (invoice: Invoice, contacts: Contact[], solutions: Solution[]): void => {
+    // Initialize PDF document in portrait mode (A4)
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // Set default font
+    doc.setFont("helvetica");
+    
+    // Colors
+    const primaryColor = "#213f5b";
+    // const secondaryColor = "#f8fafc";
+    const accentColor = "#bfddf9";
+    
+    // Dimensions
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+    
+    // Helper functions
+    const formatDate = (dateString: string | null): string => {
+      if (!dateString) return "-";
+      const date = new Date(dateString);
+      return date.toLocaleDateString("fr-FR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    };
+    
+    const formatMontant = (montant: number): string => {
+      return new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency: "EUR",
+        minimumFractionDigits: 2
+      }).format(montant);
+    };
+    
+    const getContactName = (contactId: string): string => {
+      const contact = contacts.find((c: Contact) => c.id === contactId || c._id === contactId);
+      if (!contact) return "Contact inconnu";
+      return `${contact.firstName} ${contact.lastName}`;
+    };
+    
+    const getSolutionName = (solutionId: string): string => {
+      const solution = solutions.find((s: Solution) => s.id === solutionId);
+      return solution ? solution.name : "Solution inconnue";
+    };
+    
+    const getStatusColor = (statut: InvoiceStatus): string => {
+      if (statut === "Payée") return "#10b981"; // green
+      if (statut === "Envoyée") return "#3b82f6"; // blue
+      if (statut === "En attente de validation") return "#8b5cf6"; // purple
+      if (statut === "Brouillon") return "#f59e0b"; // orange
+      if (statut === "Annulé") return "#ef4444"; // red
+      return "#6b7280"; // gray
+    };
+    
+    // Draw background header
+    doc.setFillColor(primaryColor);
+    doc.rect(0, 0, pageWidth, 40, "F");
+    
+    // Add company logo placeholder
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(margin, 12, 40, 16, 2, 2, "F");
+    doc.setTextColor(primaryColor);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("LOGO", margin + 20, 22, { align: "center" });
+    
+    // Add company name
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Ma Régie SARL", pageWidth - margin, 22, { align: "right" });
+    
+    // Add invoice title and number
+    doc.setFillColor(accentColor);
+    doc.rect(0, 40, pageWidth, 15, "F");
+    doc.setTextColor(primaryColor);
     doc.setFontSize(14);
-    doc.text(`Facture: ${invoice.id}`, 10, 10);
-    doc.text(`Date de création: ${invoice.date_creation}`, 10, 20);
-    doc.text(`Statut: ${invoice.statut}`, 10, 30);
-    doc.text(`Montant TTC: ${invoice.montant_ttc} €`, 10, 40);
+    doc.text(`FACTURE N° ${invoice.id}`, margin, 50);
+    
+    // Add status badge
+    const statusText = invoice.statut.toUpperCase();
+    const statusColor = getStatusColor(invoice.statut);
+    doc.setFillColor(statusColor);
+    const statusWidth = doc.getTextWidth(statusText) + 10;
+    doc.roundedRect(pageWidth - margin - statusWidth, 43, statusWidth, 8, 2, 2, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.text(statusText, pageWidth - margin - statusWidth/2, 48, { align: "center" });
+    
+    // Left column - Company Info
+    doc.setTextColor(primaryColor);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORMATIONS SOCIÉTÉ", margin, 70);
+    doc.setDrawColor(accentColor);
+    doc.line(margin, 72, margin + 60, 72);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Ma Régie SARL", margin, 80);
+    doc.text("123 Avenue des Énergies Renouvelables", margin, 85);
+    doc.text("75000 Paris, France", margin, 90);
+    doc.text("Tél: 01 23 45 67 89", margin, 95);
+    doc.text("Email: regie-contact@example.com", margin, 100);
+    doc.text("SIRET: 123 456 789 00012", margin, 105);
+    
+    // Right column - Bill To
+    doc.setTextColor(primaryColor);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("FACTURER À", pageWidth - margin - 60, 70);
+    doc.setDrawColor(accentColor);
+    doc.line(pageWidth - margin - 60, 72, pageWidth - margin, 72);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    
+    // If we have contacts, display them
+    if (invoice.contact_ids && invoice.contact_ids.length > 0) {
+      const contactNames = invoice.contact_ids.map(getContactName);
+      const primaryContact = contacts.find((c: Contact) => c.id === invoice.contact_ids[0] || c._id === invoice.contact_ids[0]);
+      
+      if (primaryContact) {
+        doc.text(`${primaryContact.firstName} ${primaryContact.lastName}`, pageWidth - margin - 60, 80);
+        doc.text(primaryContact.mailingAddress || "Adresse non spécifiée", pageWidth - margin - 60, 85);
+        doc.text(primaryContact.email || "", pageWidth - margin - 60, 90);
+        doc.text(primaryContact.phone || "", pageWidth - margin - 60, 95);
+      } else {
+        doc.text(contactNames.join(", "), pageWidth - margin - 60, 80);
+      }
+    } else {
+      doc.text("Pas de contacts spécifiés", pageWidth - margin - 60, 80);
+    }
+    
+    // Invoice Details
+    doc.setTextColor(primaryColor);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("DÉTAILS FACTURE", margin, 120);
+    doc.setDrawColor(accentColor);
+    doc.line(margin, 122, pageWidth - margin, 122);
+    
+    // Invoice details table
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Numéro de Facture:", margin, 130);
+    doc.text(invoice.id, margin + 70, 130);
+    
+    doc.text("Date d'émission:", margin, 135);
+    doc.text(formatDate(invoice.date_creation), margin + 70, 135);
+    
+    if (invoice.date_paiement) {
+      doc.text("Date de paiement:", margin, 140);
+      doc.text(formatDate(invoice.date_paiement), margin + 70, 140);
+    }
+    
+    doc.text("Solution:", margin, 145);
+    doc.text(getSolutionName(invoice.solution_id), margin + 70, 145);
+    
+    // Item table header
+    const tableTop = 160;
+    doc.setFillColor(primaryColor);
+    doc.rect(margin, tableTop, contentWidth, 10, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.text("DESCRIPTION", margin + 5, tableTop + 6);
+    doc.text("QTÉ", margin + contentWidth * 0.6, tableTop + 6);
+    doc.text("PRIX UNITAIRE", margin + contentWidth * 0.7, tableTop + 6);
+    doc.text("TOTAL", margin + contentWidth * 0.9, tableTop + 6);
+    
+    // Table content
+    doc.setTextColor(primaryColor);
+    doc.setFont("helvetica", "normal");
+    
+    const solution = solutions.find((s: Solution) => s.id === invoice.solution_id);
+    const qty = invoice.contact_ids.length || 1;
+    const unitPrice = solution ? solution.base_price : invoice.montant_ht / qty;
+    
+    let y = tableTop + 15;
+    
+    // Solution item row
+    doc.text(getSolutionName(invoice.solution_id), margin + 5, y);
+    doc.text(qty.toString(), margin + contentWidth * 0.6, y);
+    doc.text(formatMontant(unitPrice), margin + contentWidth * 0.7, y);
+    doc.text(formatMontant(invoice.montant_ht), margin + contentWidth * 0.9, y);
+    
+    y += 10;
+    
+    // Optional: Add contact details or additional line items here
+    if (invoice.contact_ids && invoice.contact_ids.length > 0) {
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Contacts inclus:", margin + 5, y);
+      y += 5;
+      
+      // List contacts (max 5 to avoid overflow)
+      const maxContactsToShow = 5;
+      const displayedContacts = invoice.contact_ids.slice(0, maxContactsToShow);
+      
+      displayedContacts.forEach((contactId: string) => {
+        doc.text(`• ${getContactName(contactId)}`, margin + 10, y);
+        y += 4;
+      });
+      
+      if (invoice.contact_ids.length > maxContactsToShow) {
+        doc.text(`... et ${invoice.contact_ids.length - maxContactsToShow} autre(s)`, margin + 10, y);
+        y += 4;
+      }
+      
+      doc.setFontSize(9);
+      doc.setTextColor(primaryColor);
+      y += 5;
+    }
+    
+    // Draw line
+    doc.setDrawColor(220, 220, 220);
+    doc.line(margin, y, margin + contentWidth, y);
+    y += 10;
+    
+    // Totals section
+    doc.setFont("helvetica", "normal");
+    doc.text("Sous-total:", margin + contentWidth * 0.7, y);
+    doc.text(formatMontant(invoice.montant_ht), margin + contentWidth * 0.9, y);
+    y += 6;
+    
+    doc.text(`TVA (${invoice.tva}%):`, margin + contentWidth * 0.7, y);
+    doc.text(formatMontant(invoice.montant_ht * (invoice.tva / 100)), margin + contentWidth * 0.9, y);
+    y += 6;
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("Total TTC:", margin + contentWidth * 0.7, y);
+    doc.text(formatMontant(invoice.montant_ttc), margin + contentWidth * 0.9, y);
+    
+    // Payment Information
+    y += 20;
+    doc.setFillColor(primaryColor);
+    doc.setTextColor(255, 255, 255);
+    doc.rect(margin, y, contentWidth, 10, "F");
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORMATIONS DE PAIEMENT", margin + 5, y + 6);
+    
+    y += 15;
+    doc.setTextColor(primaryColor);
+    doc.setFont("helvetica", "normal");
+    doc.text("Mode de paiement:", margin + 5, y);
+    doc.text("Virement bancaire", margin + 70, y);
+    y += 6;
+    
+    doc.text("IBAN:", margin + 5, y);
+    doc.text("FR76 1234 5678 9012 3456 7890 123", margin + 70, y);
+    y += 6;
+    
+    doc.text("BIC:", margin + 5, y);
+    doc.text("REGIEFRPP", margin + 70, y);
+    y += 6;
+    
+    // Terms and conditions
+    y += 10;
+    doc.setFontSize(8);
+    doc.text("Conditions de Paiement: Cette facture est payable dans les 30 jours suivant la date d'émission.", margin, y);
+    y += 4;
+    doc.text("Tout retard de paiement entraînera des pénalités de retard au taux annuel de 5%.", margin, y);
+    
+    // Footer
+    doc.setDrawColor(primaryColor);
+    doc.setFillColor(primaryColor);
+    doc.rect(0, pageHeight - 12, pageWidth, 12, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.text("Ma Régie SARL - SIRET 123 456 789 00012", pageWidth / 2, pageHeight - 5, { align: "center" });
+    
+    // Page numbers
+    doc.text(`Page 1/1`, pageWidth - margin, pageHeight - 5, { align: "right" });
+    
+    // Save the PDF
     doc.save(`Facture_${invoice.id}.pdf`);
   };
 
@@ -1384,7 +1661,7 @@ const handleDeselectAllContacts = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDownloadPDF(selectedInvoice)}
+                    onClick={() => handleDownloadPDF(selectedInvoice, contacts, solutions)}
                     className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   >
                     <ArrowDownTrayIcon className="h-4 w-4" />
