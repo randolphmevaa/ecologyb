@@ -27,6 +27,7 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
+import { SettingsIcon } from "lucide-react";
 
 const springTransition = { type: "spring", stiffness: 300, damping: 30 };
 
@@ -95,6 +96,7 @@ export function Sidebar({ role }) {
       { name: "Chat", href: "/dashboard/pm/emails", icon: EnvelopeIcon },
       { name: "Facturation / Paiements", href: "/dashboard/pm/billing", icon: CreditCardIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/pm/documents", icon: DocumentIcon },
+      { name: "Paramètres de la Régie", href: "/dashboard/pm/reglages", icon: SettingsIcon },
     ];
   } else if (role === "Technician / Installer") {
     navigation = [
@@ -147,6 +149,7 @@ export function Sidebar({ role }) {
       { name: "Support & Tickets", href: "/dashboard/admin/support", icon: LifebuoyIcon },
       // { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
       { name: "Mes Utilisateurs", href: "/dashboard/admin/administration", icon: UserGroupIcon },
+      { name: "Paramètres de l'Administrateur", href: "/dashboard/admin/reglages", icon: SettingsIcon }
       // { name: "Intégrations / API", href: "/dashboard/admin/integrations", icon: CodeBracketIcon }
     ];
   }

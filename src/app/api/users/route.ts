@@ -4,8 +4,12 @@ import { hash } from "bcryptjs";
 import sgMail from "@sendgrid/mail";
 import { ObjectId } from "mongodb";
 
-// Set the SendGrid API Key
-sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
+// Set the SendGrid API Key if available
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+} else {
+  console.warn("SENDGRID_API_KEY is not set. Emails will not be sent.");
+}
 
 // Helper function to generate a temporary password
 function generateTemporaryPassword(length = 8): string {
@@ -439,10 +443,16 @@ function generateEmailTemplate(tempPassword: string): string {
 
 // Helper function to send a greeting email via SendGrid with an improved UI
 async function sendGreetingEmail(email: string, tempPassword: string) {
+  // If there's no API key, skip sending email
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn("SENDGRID_API_KEY is not set. Skipping email sending.");
+    return;
+  }
+  
   const htmlContent = generateEmailTemplate(tempPassword);
   const msg = {
     to: email,
-    from: "noreply@uberplan.fr", // Assurez-vous que cette adresse est vérifiée dans SendGrid
+    from: "noreply@uberplan.fr", // Ensure this address is verified in SendGrid
     subject: "Bienvenue sur Ecology'b CRM !",
     text: `Bonjour,
 
@@ -456,7 +466,16 @@ L'équipe Ecology'b`,
     html: htmlContent,
   };
 
-  await sgMail.send(msg);
+  try {
+    await sgMail.send(msg);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error sending email:", error.message);
+  } else {
+    console.error("Error sending email:", error);
+  }
+    // Optionally, you could choose not to throw an error so the user creation proceeds
+  }
 }
 
 // Define an interface for the new user object
@@ -477,8 +496,7 @@ interface NewUser {
 
 export async function POST(request: NextRequest) {
   try {
-    // Extraction du corps de la requête incluant email, role, firstName, lastName, phone, gender,
-    // et, pour la régie, siret et raisonSocial.
+    // Extract fields from the request body
     const {
       email,
       role,
@@ -497,7 +515,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Si le rôle est "Project / Installation Manager", vérifier que les champs supplémentaires sont fournis.
+    // Check additional required fields for specific role
     if (role === "Project / Installation Manager" && (!siret || !raisonSocial)) {
       return NextResponse.json(
         {
@@ -509,35 +527,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Rôles autorisés pour cet endpoint
-    const allowedRoles = [
-      "Sales Representative / Account Executive",
-      "Project / Installation Manager",
-      "Technician / Installer",
-      "Customer Support / Service Representative",
-      "Super Admin",
-      // Optionnel : ajoutez ce rôle si vous souhaitez gérer les clients ici
-      "Client / Customer (Client Portal)",
-    ];
-
-    if (!allowedRoles.includes(role)) {
-      return NextResponse.json(
-        { success: false, message: "Rôle non autorisé pour cet endpoint." },
-        { status: 400 }
-      );
-    }
-
-    // Génération du mot de passe temporaire
+    // Generate a temporary password
     const tempPassword = generateTemporaryPassword();
 
-    // Génération d'un identifiant unique pour l'utilisateur
+    // Generate a unique identifier for the user
     const newUserId = crypto.randomUUID();
 
-    // Connexion à MongoDB
+    // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
-    // Vérification si un utilisateur existe déjà avec cet email
+    // Check if a user already exists with this email
     const existingUser = await db.collection("users").findOne({ email });
     if (existingUser) {
       return NextResponse.json(
@@ -546,24 +546,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hachage du mot de passe temporaire
+    // Hash the temporary password
     const hashedPassword = await hash(tempPassword, 10);
 
-    // Préparation du nouvel utilisateur avec les champs communs
+    // Prepare the new user data
     const newUser: NewUser = {
       id: newUserId,
       email,
-      password: hashedPassword,  // Mot de passe haché pour l'authentification
-      realPassword: tempPassword, // Mot de passe en clair (à éviter si possible)
+      password: hashedPassword,  // Hashed password for authentication
+      realPassword: tempPassword, // Plain text temporary password (use with caution)
       role,
       firstName,
       lastName,
       phone,
-      gender, // Sauvegarde du genre
+      gender,
       createdAt: new Date(),
     };
 
-    // Ajout des champs supplémentaires pour le rôle "Project / Installation Manager"
+    // Include additional fields for specific role
     if (role === "Project / Installation Manager") {
       newUser.siret = siret;
       newUser.raisonSocial = raisonSocial;
@@ -571,7 +571,7 @@ export async function POST(request: NextRequest) {
 
     await db.collection("users").insertOne(newUser);
 
-    // Envoi de l'email de bienvenue
+    // Attempt to send the welcome email. This is wrapped in a try/catch in case of errors.
     await sendGreetingEmail(email, tempPassword);
 
     return NextResponse.json(
@@ -595,25 +595,25 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Parse query parameters from the URL using request.nextUrl
     const { searchParams } = request.nextUrl;
     const id = searchParams.get("id");
     const email = searchParams.get("email");
+    const role = searchParams.get("role");
 
     const client = await clientPromise;
     const db = client.db("yourdbname");
 
     if (id) {
-      // Validate that the id is a valid ObjectId
-      if (!ObjectId.isValid(id)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid user id provided." },
-          { status: 400 }
-        );
+      let user;
+      // Check if the provided id is a valid ObjectId
+      if (ObjectId.isValid(id)) {
+        // Try finding by _id first
+        user = await db.collection("users").findOne({ _id: new ObjectId(id) });
       }
-      const user = await db
-        .collection("users")
-        .findOne({ _id: new ObjectId(id) });
+      // If not found by _id or the id is not a valid ObjectId, try the custom id field
+      if (!user) {
+        user = await db.collection("users").findOne({ id: id });
+      }
       if (!user) {
         return NextResponse.json(
           { success: false, message: "User not found." },
@@ -622,7 +622,6 @@ export async function GET(request: NextRequest) {
       }
       return NextResponse.json(user);
     } else if (email) {
-      // Fetch the user by email
       const user = await db.collection("users").findOne({ email });
       if (!user) {
         return NextResponse.json(
@@ -631,13 +630,104 @@ export async function GET(request: NextRequest) {
         );
       }
       return NextResponse.json(user);
+    } else if (role) {
+      const users = await db.collection("users").find({ role }).toArray();
+      return NextResponse.json(users);
     } else {
-      // Otherwise, return all users
       const users = await db.collection("users").find({}).toArray();
       return NextResponse.json(users);
     }
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.error();
+  }
+}
+
+// Define an interface for update data in PATCH requests
+interface UserUpdateData {
+  profile?: Record<string, unknown>;
+  notificationPreferences?: unknown;
+  appearanceSettings?: unknown;
+  password?: string;
+  lastPasswordChange?: string;
+}
+
+// PATCH request handler to update user data
+export async function PATCH(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+    const id = searchParams.get("id");
+    
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const requestData = await request.json();
+    const updateData: UserUpdateData = {};
+    
+    if (requestData.profile) {
+      updateData.profile = requestData.profile;
+    }
+    
+    if (requestData.notificationPreferences) {
+      updateData.notificationPreferences = requestData.notificationPreferences;
+    }
+    
+    if (requestData.appearanceSettings) {
+      updateData.appearanceSettings = requestData.appearanceSettings;
+    }
+    
+    // Handle password change with proper hashing
+    if (requestData.passwordChange) {
+      const hashedPassword = await hash(requestData.passwordChange.newPassword, 10);
+      updateData.password = hashedPassword;
+      updateData.lastPasswordChange = new Date().toISOString();
+    }
+    
+    const client = await clientPromise;
+    const db = client.db("yourdbname");
+    
+    let result;
+    if (ObjectId.isValid(id)) {
+      result = await db.collection("users").updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData }
+      );
+      
+      if (result.matchedCount === 0) {
+        result = await db.collection("users").updateOne(
+          { id: id },
+          { $set: updateData }
+        );
+      }
+    } else {
+      result = await db.collection("users").updateOne(
+        { id: id },
+        { $set: updateData }
+      );
+    }
+    
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      message: "User updated successfully",
+      modifiedCount: result.modifiedCount
+    });
+    
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return NextResponse.json(
+      { success: false, message: "Error updating user", error: String(error) },
+      { status: 500 }
+    );
   }
 }

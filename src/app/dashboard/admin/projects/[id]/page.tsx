@@ -31,6 +31,7 @@ import {
 import { Header } from "@/components/Header";
 import PremiumTabs from "./TabsUI";
 import ReglementTab from "./ReglementTab";
+import FacturationTab from "./FacturationTab"
 
 // Define the predefined document types in a shared scope.
 const predefinedTypes = [
@@ -953,7 +954,7 @@ export default function ProjectDetailPage() {
   });
   const [userList, setUserList] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<
-  "info" | "documents" | "photo" | "chat" | "sav" | "reglement"
+  "info" | "documents" | "photo" | "chat" | "sav" | "reglement" | "facturation"
 >("info");
   const searchParams = useSearchParams();
   // const { tab } = router.query;
@@ -1377,6 +1378,12 @@ export default function ProjectDetailPage() {
           {activeTab === "reglement" && (
             <div id="reglement" className="h-full">
               <ReglementTab contactId={dossier.contactId || ""} />
+            </div>
+          )}
+
+          {activeTab === "facturation" && (
+            <div id="facturation" className="h-full">
+              <FacturationTab contactId={dossier.contactId || ""} />
             </div>
           )}
 

@@ -190,6 +190,10 @@ export function EditUserModal({
     }
     setLoading(true);
     setError(null);
+    
+    // Store the original role to compare later
+    const previousRole = user.role;
+  
     try {
       const res = await fetch(`/api/users/${user._id}`, {
         method: "PATCH",
@@ -212,6 +216,32 @@ export function EditUserModal({
       }
       const updatedUser: User = await res.json();
       onUserUpdated(updatedUser);
+      
+      // If the role has changed, log the activity
+      if (previousRole !== role) {
+        // Retrieve admin info from localStorage
+        const proInfoStr = localStorage.getItem("proInfo");
+        const proInfo = proInfoStr ? JSON.parse(proInfoStr) : {};
+      
+        // Format the current time as "15h30" (example)
+        const now = new Date();
+        const formattedTime =
+          now.getHours() + "h" + (now.getMinutes() < 10 ? "0" : "") + now.getMinutes();
+      
+        const logDetails = `Changement de ${previousRole} → ${role}`;
+      
+        await fetch("/api/activity-logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "Modification de rôle utilisateur",
+            details: logDetails,
+            time: formattedTime,
+            user: proInfo.email || "unknown", // Changed from email to user
+          }),
+        });
+      }      
+      
       onClose();
       // Refresh the page to see the full update
       window.location.reload();
@@ -239,6 +269,31 @@ export function EditUserModal({
         const data = await res.json();
         throw new Error(data.message || "Erreur lors de la suppression de l'utilisateur");
       }
+      
+      // Log the deletion action
+      // Retrieve admin info from localStorage
+      const proInfoStr = localStorage.getItem("proInfo");
+      const proInfo = proInfoStr ? JSON.parse(proInfoStr) : {};
+      
+      // Format the current time as "13h45" (example)
+      const now = new Date();
+      const formattedTime =
+        now.getHours() + "h" + (now.getMinutes() < 10 ? "0" : "") + now.getMinutes();
+      
+      // Create details message with the deleted user's email
+      const logDetails = `${user.email} supprimé`;
+  
+      await fetch("/api/activity-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "Suppression d'utilisateur",
+          details: logDetails,
+          time: formattedTime,
+          user: proInfo.email || "unknown",
+        }),
+      });
+      
       onUserDeleted(user._id);
       onClose();
     } catch (err) {
@@ -250,7 +305,7 @@ export function EditUserModal({
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   if (!isOpen) return null;
 

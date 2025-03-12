@@ -133,15 +133,15 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+  
     if (!validateSection(currentSection)) {
       return;
     }
-    
+  
     setIsSubmitting(true);
     const { prenom, nom, email, telephone, role, gender, siret, raisonSocial } = formData;
-    
     const endpoint = role === "Client / Customer (Client Portal)" ? "/api/contacts" : "/api/users";
+  
     try {
       const response = await fetch(endpoint, {
         method: "POST",
@@ -159,12 +159,45 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
           ...(role === "Project / Installation Manager" && { siret, raisonSocial }),
         }),
       });
-      
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+  
       const data = await response.json();
+  
+      // Log the creation action in activity logs
+      const proInfoStr = localStorage.getItem("proInfo");
+      const proInfo = proInfoStr ? JSON.parse(proInfoStr) : {};
+  
+      // Format the current time as "14h15" (example)
+      const now = new Date();
+      const formattedTime =
+        now.getHours() + "h" + (now.getMinutes() < 10 ? "0" : "") + now.getMinutes();
+  
+      // Map the role to a short label for the log details
+      const roleMapping: Record<string, string> = {
+        "Sales Representative / Account Executive": "Commercial",
+        "Project / Installation Manager": "Régie",
+        "Technician / Installer": "Technicien",
+        "Customer Support / Service Representative": "Support client",
+        "Super Admin": "Super administrateur",
+        "Client / Customer (Client Portal)": "Client",
+      };
+      const roleLabel = roleMapping[role] || role;
+      const logDetails = `${email} ajouté comme ${roleLabel}`;
+  
+      await fetch("/api/activity-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "Nouvel utilisateur créé",
+          details: logDetails,
+          time: formattedTime,
+          user: proInfo.email || "unknown",
+        }),
+      });
+  
       setIsSubmitting(false);
       onUserAdded(data);
       onClose();
@@ -175,7 +208,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
       setIsSubmitting(false);
       showNotification("Erreur lors de l'ajout du contact", "error");
     }
-  };
+  };  
 
   const showNotification = (message: string, type: 'success' | 'error') => {
     // Implementation would depend on your notification system

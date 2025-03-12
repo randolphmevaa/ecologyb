@@ -3,12 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
-import { jsPDF } from "jspdf";  // <---- Import jsPDF here
+import { jsPDF } from "jspdf";
 
 import {
   BanknotesIcon,
   DocumentTextIcon,
-  CheckCircleIcon,
   PlusCircleIcon,
   EyeIcon,
   PaperAirplaneIcon,
@@ -25,20 +24,21 @@ import {
  *    TYPE DEFINITIONS
  *  --------------------- */
 interface Contact {
+  prix: string;
+  assignedRegie: string;
   _id?: string;
-  id?: string;           // e.g. "b84d023e-85bf-4fcf-b047-3890d2e7218d"
+  id?: string;
   name?: string;
   firstName: string;
   lastName: string;
   mailingAddress: string;
   phone?: string;
   email?: string;
-  // ...any other fields
 }
 
 interface Solution {
   _id?: string;
-  id: string;            // now a string (UUID)
+  id: string;
   name: string;
   base_price: number;
   postedByUserId?: string | null;
@@ -46,17 +46,17 @@ interface Solution {
 
 type InvoiceStatus =
   | "Payée"
-  | "En attente"
+  | "En attente de validation"
   | "Envoyée"
   | "Brouillon"
-  | "En attente de validation";
+  | "Annulé";
 
 interface Invoice {
   _id?: string;
-  id: string;               // e.g. "FACT-2025-001"
-  date_creation: string;    // e.g. "2025-03-01"
-  contact_ids: string[];    // array of Contact.id
-  solution_id: string;      // references a solution (string UUID)
+  id: string;
+  date_creation: string;
+  contact_ids: string[];
+  solution_id: string;
   montant_ht: number;
   tva: number;
   montant_ttc: number;
@@ -69,70 +69,52 @@ interface Invoice {
  *     MAIN COMPONENT
  *  --------------------- */
 export default function FacturationPage() {
-  // 1) Local state for data fetched from the API
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [factures, setFactures] = useState<Invoice[]>([]);
+
   const handlePrint = () => {
-    // This will print the entire page by default:
     window.print();
   };
-  
+
   const handleDownloadPDF = (invoice: Invoice) => {
     const doc = new jsPDF();
-  
-    // Just a bare-bones example. You can get more elaborate:
     doc.setFontSize(14);
     doc.text(`Facture: ${invoice.id}`, 10, 10);
     doc.text(`Date de création: ${invoice.date_creation}`, 10, 20);
     doc.text(`Statut: ${invoice.statut}`, 10, 30);
     doc.text(`Montant TTC: ${invoice.montant_ttc} €`, 10, 40);
-  
-    // Download the file
     doc.save(`Facture_${invoice.id}.pdf`);
   };
 
-  // 1) Define a handler that receives the invoice to update
+  // Primary action: if invoice is in "Brouillon", send it ("Envoyée"); otherwise mark it as paid.
   const handlePrimaryActionClick = async (invoice: Invoice) => {
     try {
-      // Prepare the updated fields
       let updatedFields: Partial<Invoice> = {};
-      
       if (invoice.statut === "Brouillon") {
-        // "Envoyer": update status and assign to admin
         updatedFields = {
           statut: "Envoyée",
           postedByUserId: "67a365fff299ca9cb60a6ab4",
         };
-      } else if (invoice.statut === "En attente") {
-        // "Relancer": you may trigger a reminder without changing the status,
-        // or update a specific field if needed.
-        updatedFields = { statut: "En attente" };
-      } else if (invoice.statut === "En attente de validation") {
-        // "Valider": change the status accordingly
-        updatedFields = { statut: "En attente" };
       } else {
-        // "Marquer comme payée": update status and add payment date
         updatedFields = {
           statut: "Payée",
           date_paiement: new Date().toISOString(),
         };
       }
-  
-      // Send the PATCH request to update the invoice
+
       const res = await fetch(`/api/factures/${invoice._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedFields),
       });
-  
+
       if (!res.ok) {
         throw new Error(`Failed to update invoice: ${res.statusText}`);
       }
-  
+
       const updatedInvoice = (await res.json()) as Invoice;
-  
-      // Update your local state
+
       setFactures((prev) =>
         prev.map((f) => (f._id === updatedInvoice._id ? updatedInvoice : f))
       );
@@ -144,9 +126,115 @@ export default function FacturationPage() {
       alert("Could not update invoice status.");
     }
   };
+
+  // New cancellation handler to update invoice status to "Annulé"
+  const handleCancelInvoice = async (invoice: Invoice) => {
+    try {
+      const updatedFields: Partial<Invoice> = { statut: "Annulé" };
+      const res = await fetch(`/api/factures/${invoice._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFields),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to cancel invoice: ${res.statusText}`);
+      }
+      const updatedInvoice = (await res.json()) as Invoice;
+      setFactures((prev) =>
+        prev.map((f) => (f._id === updatedInvoice._id ? updatedInvoice : f))
+      );
+      if (selectedInvoice && selectedInvoice._id === updatedInvoice._id) {
+        setSelectedInvoice(updatedInvoice);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Could not cancel invoice.");
+    }
+  };
+
+  // const getFilteredContactsByRegie = (contactsList: Contact[], regieId: string): Contact[] => {
+  //   if (!regieId) return [];
+    
+  //   return contactsList.filter((contact: Contact) => 
+  //     contact.assignedRegie === regieId
+  //   );
+  // };
+
+  // New function to calculate total price from selected contacts
+const calculateTotalPriceFromContacts = (contactIds: string[], contactsList: Contact[]): number => {
+  let totalPrice = 0;
   
-  // Track the logged-in user
-  const [userInfo, setUserInfo] = useState<{ _id: string; email: string } | null>(null);
+  contactIds.forEach(contactId => {
+    const contact = contactsList.find(c => (c.id === contactId || c._id === contactId));
+    if (contact && contact.prix) {
+      // Convert to number because prix might be stored as string
+      const contactPrice = parseFloat(contact.prix);
+      if (!isNaN(contactPrice)) {
+        totalPrice += contactPrice;
+      }
+    }
+  });
+  
+  return totalPrice;
+};
+
+// Update the checkbox onChange handler for contacts
+const handleContactCheckboxChange = (contactKey: string, isChecked: boolean) => {
+  let newContactIds: string[];
+  
+  if (isChecked) {
+    // Remove the contact
+    newContactIds = newInvoice.contact_ids.filter(cid => cid !== contactKey);
+  } else {
+    // Add the contact
+    newContactIds = [...newInvoice.contact_ids, contactKey];
+  }
+  
+  // Calculate the new total price
+  const totalPrice = calculateTotalPriceFromContacts(newContactIds, contacts);
+  
+  // Update the invoice state with new contact ids and price
+  setNewInvoice(prev => ({
+    ...prev,
+    contact_ids: newContactIds,
+    montant_ht: totalPrice
+  }));
+};
+
+// Update the "Tout sélectionner" button click handler
+const handleSelectAllContacts = () => {
+  const filteredContacts = userInfo 
+    ? contacts.filter((contact: Contact) => 
+        contact.assignedRegie === userInfo.id || 
+        contact.assignedRegie === userInfo.id?.toString())
+    : [];
+  
+  const contactIds = filteredContacts
+    .map((c) => c.id || c._id)
+    .filter((key): key is string => key !== undefined);
+  
+  // Calculate total price for all selected contacts
+  const totalPrice = calculateTotalPriceFromContacts(contactIds, contacts);
+  
+  setNewInvoice((prev) => ({
+    ...prev,
+    contact_ids: contactIds,
+    montant_ht: totalPrice
+  }));
+};
+
+// Update the "Tout désélectionner" button click handler
+const handleDeselectAllContacts = () => {
+  setNewInvoice((prev) => ({
+    ...prev,
+    contact_ids: [],
+    montant_ht: 0
+  }));
+};
+
+  const [userInfo, setUserInfo] = useState<{
+    id: unknown; _id: string; email: string 
+} | null>(null);
   useEffect(() => {
     const proInfo = localStorage.getItem("proInfo");
     if (proInfo) {
@@ -154,7 +242,6 @@ export default function FacturationPage() {
     }
   }, []);
 
-  // 2) Fetch data on mount
   useEffect(() => {
     async function fetchData() {
       try {
@@ -163,16 +250,17 @@ export default function FacturationPage() {
           fetch("/api/solutions"),
           fetch("/api/factures"),
         ]);
-
+  
         const [contactsData, solutionsData, facturesData] = await Promise.all([
           contactsRes.json(),
           solutionsRes.json(),
           facturesRes.json(),
         ]);
-
+  
         const contactsArray = Array.isArray(contactsData)
           ? contactsData
           : contactsData.contacts;
+          
         setContacts(contactsArray);
         setSolutions(solutionsData);
         setFactures(facturesData);
@@ -183,7 +271,6 @@ export default function FacturationPage() {
     fetchData();
   }, []);
 
-  // A second fetch for contacts (could be merged, but leaving as is)
   useEffect(() => {
     async function fetchData() {
       try {
@@ -202,7 +289,6 @@ export default function FacturationPage() {
     fetchData();
   }, []);
 
-  // Fetch solutions for the current user
   useEffect(() => {
     async function fetchSolutions() {
       if (!userInfo) return;
@@ -217,29 +303,21 @@ export default function FacturationPage() {
     fetchSolutions();
   }, [userInfo]);
 
-  // Somewhere in your component body, after you have both solutions and userInfo:
-const userFilteredSolutions = userInfo
-? solutions.filter((solution) => solution.postedByUserId === userInfo._id)
-: solutions;
+  // const userFilteredSolutions = userInfo
+  //   ? solutions.filter((solution) => solution.postedByUserId === userInfo._id)
+  //   : solutions;
 
-
-  // Filter, searching, sorting
   const [filter, setFilter] = useState<InvoiceStatus | "Toutes">("Toutes");
   const [, setCurrentDate] = useState("");
   const [showNewInvoiceModal, setShowNewInvoiceModal] = useState(false);
   const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState(false);
-
-  // A separate modal for creating a new solution
   const [showNewSolutionModal, setShowNewSolutionModal] = useState(false);
-
-  // Track the invoice selected for viewing
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] =
     useState<"date" | "contact" | "montant" | "statut">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // "newInvoice" defaults
   const [newInvoice, setNewInvoice] = useState<Invoice>({
     id: "",
     date_creation: new Date().toISOString().split("T")[0],
@@ -252,14 +330,12 @@ const userFilteredSolutions = userInfo
     date_paiement: null,
   });
 
-  // For creating a new solution
   const [newSolution, setNewSolution] = useState<{
     id?: string;
     name: string;
     base_price: number;
   }>({ name: "", base_price: 0 });
 
-  // Store currentUserId
   const [ , setCurrentUserId] = useState<string | null>(null);
   useEffect(() => {
     const storedUser = localStorage.getItem("proInfo");
@@ -269,20 +345,17 @@ const userFilteredSolutions = userInfo
     }
   }, []);
 
-  /** Helper: get a contact's name */
   const getContactName = (contactId: string): string => {
     const contact = contacts.find((c) => c.id === contactId);
     if (!contact) return "Contact inconnu";
     return `${contact.firstName} ${contact.lastName}`;
   };
 
-  /** Helper: get a solution name by ID */
   const getSolutionName = (solutionId: string): string => {
     const solution = solutions.find((s) => s.id === solutionId);
     return solution ? solution.name : "Solution inconnue";
   };
 
-  /** Format currency */
   const formatMontant = (montant: number): string => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
@@ -290,7 +363,6 @@ const userFilteredSolutions = userInfo
     }).format(montant);
   };
 
-  /** Format date */
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return "-";
     const date = new Date(dateString);
@@ -302,7 +374,6 @@ const userFilteredSolutions = userInfo
     }).format(date);
   };
 
-  // Recompute montant_ttc whenever montant_ht or tva changes
   useEffect(() => {
     setNewInvoice((prev) => ({
       ...prev,
@@ -310,23 +381,19 @@ const userFilteredSolutions = userInfo
     }));
   }, [newInvoice.montant_ht, newInvoice.tva]);
 
-  // Recompute montant_ht if either solution_id or contact_ids changes
-  // so that if user changes contacts after selecting a solution, it updates.
-  useEffect(() => {
-    const solution = solutions.find((s) => s.id === newInvoice.solution_id);
-    if (solution) {
-      // If no contacts selected, default to 1
-      const contactCount = newInvoice.contact_ids.length || 1;
-      setNewInvoice((prev) => ({
-        ...prev,
-        montant_ht: solution.base_price * contactCount,
-      }));
-    } else {
-      setNewInvoice((prev) => ({ ...prev, montant_ht: 0 }));
-    }
-  }, [newInvoice.solution_id, newInvoice.contact_ids, solutions]);
+  // useEffect(() => {
+  //   const solution = solutions.find((s) => s.id === newInvoice.solution_id);
+  //   if (solution) {
+  //     const contactCount = newInvoice.contact_ids.length || 1;
+  //     setNewInvoice((prev) => ({
+  //       ...prev,
+  //       montant_ht: solution.base_price * contactCount,
+  //     }));
+  //   } else {
+  //     setNewInvoice((prev) => ({ ...prev, montant_ht: 0 }));
+  //   }
+  // }, [newInvoice.solution_id, newInvoice.contact_ids, solutions]);
 
-  // Just to show current date in French
   useEffect(() => {
     const now = new Date();
     const options: Intl.DateTimeFormatOptions = {
@@ -338,7 +405,6 @@ const userFilteredSolutions = userInfo
     setCurrentDate(now.toLocaleDateString("fr-FR", options));
   }, []);
 
-  /** Filter & search logic */
   const filteredInvoices = factures
     .filter((invoice) => {
       if (filter === "Toutes") return true;
@@ -360,7 +426,6 @@ const userFilteredSolutions = userInfo
       );
     });
 
-  /** Sorting */
   const sortedInvoices = [...filteredInvoices].sort((a, b) => {
     let comparison = 0;
     switch (sortBy) {
@@ -385,13 +450,11 @@ const userFilteredSolutions = userInfo
     return sortOrder === "asc" ? comparison : -comparison;
   });
 
-  /** Viewing an invoice detail */
   const handleViewInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setShowInvoiceDetailModal(true);
   };
 
-  /** Create a new invoice -> POST /api/factures */
   const handleCreateInvoice = async () => {
     try {
       const res = await fetch("/api/factures", {
@@ -405,9 +468,7 @@ const userFilteredSolutions = userInfo
       const data = await res.json();
       const createdInvoice = data.invoiceDoc as Invoice;
 
-      // 1) Close modal
       setShowNewInvoiceModal(false);
-      // 2) Clear form
       setNewInvoice({
         id: "",
         date_creation: new Date().toISOString().split("T")[0],
@@ -419,7 +480,6 @@ const userFilteredSolutions = userInfo
         statut: "Brouillon",
         date_paiement: null,
       });
-      // 3) Update our local list
       setFactures((prev) => [createdInvoice, ...prev]);
     } catch (error) {
       console.error(error);
@@ -427,16 +487,11 @@ const userFilteredSolutions = userInfo
     }
   };
 
-  /** Create a new solution -> POST /api/solutions */
   const handleCreateSolution = async () => {
     try {
       const storedUser = localStorage.getItem("proInfo");
       const userInfo = storedUser ? JSON.parse(storedUser) : null;
-
-      // Use _id if available; otherwise fallback to email.
       const postedByUserId = userInfo?._id || userInfo?.email || null;
-
-      // Build the payload
       const solutionPayload = {
         ...newSolution,
         postedByUserId,
@@ -454,13 +509,8 @@ const userFilteredSolutions = userInfo
       const data = await response.json();
       const createdSolution = data.solutionDoc as Solution;
 
-      // Add the newly created solution to the local array
       setSolutions((prev) => [...prev, createdSolution]);
-
-      // Reset form
       setNewSolution({ name: "", base_price: 0 });
-
-      // Close modal
       setShowNewSolutionModal(false);
     } catch (err) {
       console.error(err);
@@ -468,7 +518,6 @@ const userFilteredSolutions = userInfo
     }
   };
 
-  /** Handle sorting */
   const handleSort = (field: "date" | "contact" | "montant" | "statut") => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -476,6 +525,17 @@ const userFilteredSolutions = userInfo
       setSortBy(field);
       setSortOrder("asc");
     }
+  };
+
+  // Utility to determine status color classes
+  const getStatusClasses = (statut: InvoiceStatus) => {
+    if (statut === "Brouillon") return "bg-orange-100 text-orange-800";
+    if (statut === "En attente de validation")
+      return "bg-purple-100 text-purple-800";
+    if (statut === "Envoyée") return "bg-blue-100 text-blue-800";
+    if (statut === "Payée") return "bg-green-100 text-green-800";
+    if (statut === "Annulé") return "bg-red-100 text-red-800";
+    return "bg-gray-100 text-gray-800";
   };
 
   return (
@@ -521,7 +581,6 @@ const userFilteredSolutions = userInfo
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              {/* Paiements en Attente */}
               <motion.div
                 className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#d2fcb2]/20 to-[#bfddf9]/30 border border-[#bfddf9]/30"
                 whileHover={{ scale: 1.02 }}
@@ -535,14 +594,13 @@ const userFilteredSolutions = userInfo
                   </div>
                 </div>
                 <p className="text-2xl font-bold text-[#213f5b]">
-                  {factures.filter((f) => f.statut === "En attente").length}
+                  {factures.filter((f) => f.statut === "En attente de validation").length}
                 </p>
                 <p className="text-xs text-gray-600 mt-1">
                   Montant encore non encaissé
                 </p>
               </motion.div>
 
-              {/* À Facturer */}
               <motion.div
                 className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#bfddf9]/20 to-[#d2fcb2]/30 border border-[#bfddf9]/30"
                 whileHover={{ scale: 1.02 }}
@@ -567,7 +625,6 @@ const userFilteredSolutions = userInfo
                 </p>
               </motion.div>
 
-              {/* Payé */}
               <motion.div
                 className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#bfddf9]/30 to-[#d2fcb2]/20 border border-[#bfddf9]/30"
                 whileHover={{ scale: 1.02 }}
@@ -632,10 +689,9 @@ const userFilteredSolutions = userInfo
                         {[
                           "Toutes",
                           "Brouillon",
-                          "En attente",
+                          "En attente de validation",
                           "Envoyée",
                           "Payée",
-                          "En attente de validation",
                         ].map((status) => (
                           <div
                             key={status}
@@ -792,18 +848,9 @@ const userFilteredSolutions = userInfo
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
-                              className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                invoice.statut === "Payée"
-                                  ? "bg-green-100 text-green-800"
-                                  : invoice.statut === "En attente"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : invoice.statut === "Envoyée"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : invoice.statut ===
-                                    "En attente de validation"
-                                  ? "bg-purple-100 text-purple-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
+                              className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
+                                invoice.statut
+                              )}`}
                             >
                               {invoice.statut}
                             </span>
@@ -825,22 +872,12 @@ const userFilteredSolutions = userInfo
                                   </span>
                                 </button>
                               )}
-                              {[
-                                "Brouillon",
-                                "En attente de validation",
-                              ].includes(invoice.statut) && (
-                                <button className="text-green-600 hover:text-green-900 flex items-center gap-1">
-                                  <CheckCircleIcon className="h-4 w-4" />
-                                  <span className="hidden sm:inline">
-                                    Valider
-                                  </span>
-                                </button>
-                              )}
-                              {[
-                                "Brouillon",
-                                "En attente de validation",
-                              ].includes(invoice.statut) && (
-                                <button className="text-red-600 hover:text-red-900 flex items-center gap-1">
+                              {(invoice.statut === "Brouillon" ||
+                                invoice.statut === "En attente de validation") && (
+                                <button
+                                  onClick={() => handleCancelInvoice(invoice)}
+                                  className="text-red-600 hover:text-red-900 flex items-center gap-1"
+                                >
                                   <XCircleIcon className="h-4 w-4" />
                                   <span className="hidden sm:inline">
                                     Annuler
@@ -876,7 +913,6 @@ const userFilteredSolutions = userInfo
               exit={{ scale: 0.9, opacity: 0 }}
             >
               <div className="p-6">
-                {/* Title & close */}
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-bold text-[#213f5b]">
                     Nouvelle Facture
@@ -889,9 +925,7 @@ const userFilteredSolutions = userInfo
                   </button>
                 </div>
 
-                {/* Form Content */}
                 <div className="space-y-6">
-                  {/* Invoice ID & Date */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -925,91 +959,75 @@ const userFilteredSolutions = userInfo
                     </div>
                   </div>
 
-                  {/* CONTACTS CHECKBOXES */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Contacts à Facturer
-                    </label>
-                    <div className="border border-gray-300 rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
-                      {contacts.length === 0 && (
-                        <p className="text-sm text-gray-500">
-                          Aucun contact trouvé.
-                        </p>
-                      )}
-                      {contacts.map((contact) => {
-                        const contactKey = contact.id || contact._id;
-                        if (!contactKey) return null;
-                        const isChecked =
-                          newInvoice.contact_ids.includes(contactKey);
-                        const displayName =
-                          contact.firstName && contact.lastName
-                            ? `${contact.firstName} ${contact.lastName}`
-                            : contact.name || "Sans nom";
-                        return (
-                          <label
-                            key={contactKey}
-                            className="flex items-center space-x-2"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => {
-                                if (isChecked) {
-                                  setNewInvoice((prev) => ({
-                                    ...prev,
-                                    contact_ids: prev.contact_ids.filter(
-                                      (cid) => cid !== contactKey
-                                    ),
-                                  }));
-                                } else {
-                                  setNewInvoice((prev) => ({
-                                    ...prev,
-                                    contact_ids: [
-                                      ...prev.contact_ids,
-                                      contactKey,
-                                    ],
-                                  }));
-                                }
-                              }}
-                            />
-                            <span className="text-sm text-gray-700">
-                              {displayName} – {contact.mailingAddress}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-
-                    <div className="mt-2 flex gap-2">
-                      <button
-                        onClick={() =>
-                          setNewInvoice((prev) => ({
-                            ...prev,
-                            contact_ids: contacts
-                              .map((c) => c.id || c._id)
-                              .filter((key): key is string => key !== undefined),
-                          }))
-                        }
-                        className="text-xs text-blue-600 underline"
-                      >
-                        Tout sélectionner
-                      </button>
-                      <button
-                        onClick={() =>
-                          setNewInvoice((prev) => ({
-                            ...prev,
-                            contact_ids: [],
-                          }))
-                        }
-                        className="text-xs text-blue-600 underline"
-                      >
-                        Tout désélectionner
-                      </button>
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Contacts à Facturer
+                  </label>
+                  <div className="border border-gray-300 rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
+                    {contacts.length === 0 && (
+                      <p className="text-sm text-gray-500">
+                        Aucun contact trouvé.
+                      </p>
+                    )}
+                    
+                    {userInfo && contacts.filter((contact: Contact) => 
+                      contact.assignedRegie === userInfo.id || contact.assignedRegie === userInfo.id?.toString()
+                    ).length === 0 ? (
+                      <p className="text-sm text-gray-500">
+                        Aucun contact assigné à votre régie.
+                      </p>
+                    ) : (
+                      contacts
+                        .filter((contact: Contact) => userInfo && (contact.assignedRegie === userInfo.id || contact.assignedRegie === userInfo.id?.toString()))
+                        .map((contact) => {
+                          const contactKey = contact.id || contact._id;
+                          if (!contactKey) return null;
+                          const isChecked = newInvoice.contact_ids.includes(contactKey);
+                          const displayName =
+                            contact.firstName && contact.lastName
+                              ? `${contact.firstName} ${contact.lastName}`
+                              : contact.name || "Sans nom";
+                          
+                          // Add price display
+                          const price = contact.prix ? parseFloat(contact.prix) : 0;
+                          const formattedPrice = price ? formatMontant(price) : "N/A";
+                          
+                          return (
+                            <label
+                              key={contactKey}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleContactCheckboxChange(contactKey, isChecked)}
+                              />
+                              <span className="text-sm text-gray-700">
+                                {displayName} – {contact.mailingAddress} – <span className="font-medium">{formattedPrice}</span>
+                              </span>
+                            </label>
+                          );
+                        })
+                    )}
                   </div>
+                  
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      onClick={handleSelectAllContacts}
+                      className="text-xs text-blue-600 underline"
+                    >
+                      Tout sélectionner
+                    </button>
+                    <button
+                      onClick={handleDeselectAllContacts}
+                      className="text-xs text-blue-600 underline"
+                    >
+                      Tout désélectionner
+                    </button>
+                  </div>
+                </div>
 
-                  {/* SOLUTION SELECT + Add new solution button */}
-                  <div>
+                  {/* <div>
                     <div className="flex justify-between items-center mb-1">
                       <label className="block text-sm font-medium text-gray-700">
                         Solution / Prestation
@@ -1027,7 +1045,6 @@ const userFilteredSolutions = userInfo
                       value={newInvoice.solution_id}
                       onChange={(e) => {
                         const solutionId = e.target.value;
-                        // Immediately set solution_id
                         setNewInvoice((prev) => ({
                           ...prev,
                           solution_id: solutionId,
@@ -1042,9 +1059,8 @@ const userFilteredSolutions = userInfo
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
 
-                  {/* MONTANT HT / TVA / TTC */}
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1101,7 +1117,6 @@ const userFilteredSolutions = userInfo
                     </div>
                   </div>
 
-                  {/* STATUT INITIAL */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Statut Initial
@@ -1120,13 +1135,11 @@ const userFilteredSolutions = userInfo
                       <option value="En attente de validation">
                         En attente de validation
                       </option>
-                      <option value="En attente">En attente</option>
                       <option value="Envoyée">Envoyée</option>
                     </select>
                   </div>
                 </div>
 
-                {/* Buttons */}
                 <div className="mt-8 flex justify-end gap-3">
                   <button
                     type="button"
@@ -1140,7 +1153,9 @@ const userFilteredSolutions = userInfo
                     onClick={handleCreateInvoice}
                     className="inline-flex justify-center rounded-md border border-transparent bg-[#213f5b] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#213f5b]/90"
                   >
-                    Créer Facture
+                    {newInvoice.statut === "En attente de validation"
+                      ? "Envoyé Facture"
+                      : "Créer Facture"}
                   </button>
                 </div>
               </div>
@@ -1188,18 +1203,9 @@ const userFilteredSolutions = userInfo
                         {formatDate(selectedInvoice.date_creation)}
                       </p>
                       <div
-                        className={`mt-2 px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${
-                          selectedInvoice.statut === "Payée"
-                            ? "bg-green-100 text-green-800"
-                            : selectedInvoice.statut === "En attente"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : selectedInvoice.statut === "Envoyée"
-                            ? "bg-blue-100 text-blue-800"
-                            : selectedInvoice.statut ===
-                              "En attente de validation"
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                        className={`mt-2 px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${getStatusClasses(
+                          selectedInvoice.statut
+                        )}`}
                       >
                         {selectedInvoice.statut}
                       </div>
@@ -1219,7 +1225,6 @@ const userFilteredSolutions = userInfo
                     </div>
                   </div>
 
-                  {/* *** RÉGIE + ADMIN Info *** */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <h4 className="font-semibold text-gray-600">
@@ -1385,22 +1390,21 @@ const userFilteredSolutions = userInfo
                     <ArrowDownTrayIcon className="h-4 w-4" />
                     Télécharger
                   </button>
-                  {selectedInvoice.statut !== "Payée" && (
-                    <button
-                      type="button"
-                      onClick={() => handlePrimaryActionClick(selectedInvoice)}
-                      className="inline-flex items-center gap-1 rounded-md bg-[#213f5b] px-4 py-2 text-sm font-medium text-white hover:bg-[#213f5b]/90"
-                    >
-                      <PaperAirplaneIcon className="h-4 w-4" />
-                      {selectedInvoice.statut === "Brouillon"
-                        ? "Envoyer"
-                        : selectedInvoice.statut === "En attente"
-                        ? "Relancer"
-                        : selectedInvoice.statut === "En attente de validation"
-                        ? "Valider"
-                        : "Marquer comme payée"}
-                    </button>
-                  )}
+                  {selectedInvoice.statut !== "Payée" &&
+                    selectedInvoice.statut !== "Annulé" && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handlePrimaryActionClick(selectedInvoice)
+                        }
+                        className="inline-flex items-center gap-1 rounded-md bg-[#213f5b] px-4 py-2 text-sm font-medium text-white hover:bg-[#213f5b]/90"
+                      >
+                        <PaperAirplaneIcon className="h-4 w-4" />
+                        {selectedInvoice.statut === "Brouillon"
+                          ? "Envoyer"
+                          : "Marquer comme payée"}
+                      </button>
+                    )}
                 </div>
               </div>
             </motion.div>

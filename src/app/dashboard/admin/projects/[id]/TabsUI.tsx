@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 // Define a union type for the available tabs
-type TabType = "info" | "documents" | "photo" | "chat" | "sav" | "reglement";
+type TabType = "info" | "documents" | "photo" | "chat" | "sav" | "reglement" | "facturation";
 
 // Define the props interface for PremiumTabs
 interface PremiumTabsProps {
@@ -27,6 +27,7 @@ const tabs = [
   { id: "chat", label: "Chat", icon: ChatBubbleLeftEllipsisIcon },
   { id: "sav", label: "S.A.V.", icon: LifebuoyIcon },
   { id: "reglement", label: "Règlement", icon: CurrencyEuroIcon }, // new tab using CurrencyEuroIcon
+  { id: "facturation", label: "Facturation", icon: CurrencyEuroIcon },
 ];
 
 const PremiumTabs: FC<PremiumTabsProps> = ({ activeTab, setActiveTab, chatMessageCount }) => {

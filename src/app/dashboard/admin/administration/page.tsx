@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import {
   Cog6ToothIcon,
   UserCircleIcon,
-  EllipsisHorizontalIcon,
+  // EllipsisHorizontalIcon,
   DocumentArrowDownIcon,
   ShieldCheckIcon,
   DocumentTextIcon,
@@ -78,32 +78,43 @@ const roleTranslations: Record<RoleKey, string> = {
 const defaultRoleConfig = { color: "#6b7280", icon: UserCircleIcon };
 
 // Sample activity logs
-const activityLogs = [
-  {
-    id: 1,
-    action: "Modification de rôle utilisateur",
-    details: "Changement de Super Admin → Commercial",
-    time: "15h30",
-    user: "admin@entreprise.com",
-    icon: DocumentTextIcon
-  },
-  {
-    id: 2,
-    action: "Nouvel utilisateur créé",
-    details: "tech@exemple.com ajouté comme Technicien",
-    time: "14h15",
-    user: "admin@entreprise.com",
-    icon: PlusIcon
-  },
-  {
-    id: 3,
-    action: "Suppression d'utilisateur",
-    details: "client@ancien.com supprimé",
-    time: "13h45",
-    user: "admin@entreprise.com",
-    icon: TrashIcon
-  }
-];
+// const activityLogs = [
+//   {
+//     id: 1,
+//     action: "Modification de rôle utilisateur",
+//     details: "Changement de Super Admin → Commercial",
+//     time: "15h30",
+//     user: "admin@entreprise.com",
+//     icon: DocumentTextIcon
+//   },
+//   {
+//     id: 2,
+//     action: "Nouvel utilisateur créé",
+//     details: "tech@exemple.com ajouté comme Technicien",
+//     time: "14h15",
+//     user: "admin@entreprise.com",
+//     icon: PlusIcon
+//   },
+//   {
+//     id: 3,
+//     action: "Suppression d'utilisateur",
+//     details: "client@ancien.com supprimé",
+//     time: "13h45",
+//     user: "admin@entreprise.com",
+//     icon: TrashIcon
+//   }
+// ];
+
+interface ActivityLog {
+  id: string;
+  action: string;
+  details: string;
+  time: string;
+  user: string;
+  // If your log includes an icon, you can optionally define it like this:
+  icon?: React.FC<React.SVGProps<SVGSVGElement>>;
+}
+
 
 export default function AdministrationPage() {
   const [users, setUsers] = useState<IUser[]>([]);
@@ -111,10 +122,24 @@ export default function AdministrationPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
 
   // États pour afficher les modaux
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<IUser | null>(null);
+
+  // Add this state at the top of your component along with the other useState declarations:
+  const [showAllActivities ] = useState(false);
+
+  // Create a sorted copy of your activityLogs array (assuming the 'time' field is parseable):
+  const sortedActivityLogs = [...activityLogs].sort(
+    (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+  );
+
+  // Determine which logs to display:
+  const visibleActivityLogs = showAllActivities ? sortedActivityLogs : sortedActivityLogs.slice(0, 4);
+
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -128,6 +153,15 @@ export default function AdministrationPage() {
     commercial: 0,
     tech: 0
   });
+
+  // Define a helper function at the top of your component:
+const getLogIcon = (action: string) => {
+  if (action === "Nouvel utilisateur créé") return PlusIcon;
+  if (action === "Suppression d'utilisateur") return TrashIcon;
+  // Default for "Modification de rôle utilisateur" and any other action:
+  return DocumentTextIcon;
+};
+
 
   // Récupération des utilisateurs via l'API
   useEffect(() => {
@@ -161,6 +195,31 @@ export default function AdministrationPage() {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    async function fetchActivityLogs() {
+      try {
+        const res = await fetch("/api/activity-logs");
+        if (!res.ok) {
+          throw new Error("Failed to fetch activity logs");
+        }
+        const data = await res.json();
+        // Update your state with the fetched logs
+        setActivityLogs(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchActivityLogs();
+  }, []);
+
+
+  // Function to trigger CSV export
+  const exportCSV = () => {
+    // Redirect the browser to the API route with the export query param
+    window.location.href = "/api/activity-logs?export=csv";
+  };
+  
+
   // Filtrage des utilisateurs selon le terme de recherche
   const filteredUsers = users.filter((user) => {
     const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
@@ -172,35 +231,35 @@ export default function AdministrationPage() {
   });
 
   // Fonction pour mettre à jour le rôle (et l'email) d'un utilisateur
-  const handleRoleChange = async (userId: string, email: string, newRole: string) => {
-    try {
-      const res = await fetch(`/api/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role: newRole }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Erreur lors de la mise à jour du rôle");
-      }
-      const updatedUser: IUser = await res.json();
-      setUsers((prev) => prev.map((u) => (u._id === userId ? updatedUser : u)));
+  // const handleRoleChange = async (userId: string, email: string, newRole: string) => {
+  //   try {
+  //     const res = await fetch(`/api/users/${userId}`, {
+  //       method: "PATCH",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ email, role: newRole }),
+  //     });
+  //     if (!res.ok) {
+  //       const data = await res.json();
+  //       throw new Error(data.message || "Erreur lors de la mise à jour du rôle");
+  //     }
+  //     const updatedUser: IUser = await res.json();
+  //     setUsers((prev) => prev.map((u) => (u._id === userId ? updatedUser : u)));
   
-      // Log the activity after a successful role change
-      await fetch("/api/activity-logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: "Modification de rôle utilisateur",
-          details: `Changement de rôle pour ${email} vers ${newRole}`,
-          user: "admin@entreprise.com", // Replace with the actual admin user info if available
-        }),
-      });
-    } catch (error) {
-      console.error(error);
-      alert("La mise à jour du rôle a échoué");
-    }
-  };
+  //     // Log the activity after a successful role change
+  //     await fetch("/api/activity-logs", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         title: "Modification de rôle utilisateur",
+  //         details: `Changement de rôle pour ${email} vers ${newRole}`,
+  //         user: "admin@entreprise.com", // Replace with the actual admin user info if available
+  //       }),
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("La mise à jour du rôle a échoué");
+  //   }
+  // };
 
   // Calculate the indices for slicing the users array:
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -508,7 +567,7 @@ export default function AdministrationPage() {
                                       <PencilIcon className="h-4 w-4" />
                                     </Button>
                                     
-                                    <Button
+                                    {/* <Button
                                       variant="ghost"
                                       size="icon"
                                       className="text-gray-400 hover:text-gray-700"
@@ -541,7 +600,7 @@ export default function AdministrationPage() {
                                       }}
                                     >
                                       <EllipsisHorizontalIcon className="h-5 w-5" />
-                                    </Button>
+                                    </Button> */}
                                   </div>
                                 </div>
                               </div>
@@ -637,6 +696,7 @@ export default function AdministrationPage() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={exportCSV}
                         className="text-gray-700 hover:bg-gray-100 flex items-center gap-1"
                       >
                         <DocumentArrowDownIcon className="h-4 w-4" />
@@ -644,40 +704,123 @@ export default function AdministrationPage() {
                       </Button>
                     </div>
                   </div>
-                  
+
                   <div className="divide-y divide-gray-100">
-                    {activityLogs.map((log) => (
-                      <div
-                        key={log.id}
-                        className="p-4 hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
-                            <log.icon className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900">{log.action}</h4>
-                            <p className="text-sm text-gray-500 mt-0.5">{log.details}</p>
-                            <div className="flex items-center text-xs text-gray-500 mt-1">
-                              <span>{log.time}</span>
-                              <span className="mx-1.5">•</span>
-                              <span className="truncate">{log.user}</span>
+                    {loading && (
+                      <div className="p-4 text-center text-gray-500">Chargement...</div>
+                    )}
+
+                    {error && (
+                      <div className="p-4 text-center text-red-500">{error}</div>
+                    )}
+
+                    {!loading && !error && sortedActivityLogs.length === 0 && (
+                      <div className="p-4 text-center text-gray-500">
+                        Aucun journal d&apos;activité trouvé
+                      </div>
+                    )}
+
+                    {!loading && !error && visibleActivityLogs.map((log) => {
+                      const Icon = getLogIcon(log.action);
+                      return (
+                        <motion.div
+                          key={log.id}
+                          className="p-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
+                              <Icon className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-gray-900">{log.action}</h4>
+                              <p className="text-sm text-gray-500 mt-0.5">{log.details}</p>
+                              <div className="flex items-center text-xs text-gray-500 mt-1">
+                                <span>{log.time}</span>
+                                <span className="mx-1.5">•</span>
+                                <span className="truncate">{log.user}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                   </div>
-                  
+
                   <div className="p-4 border-t border-gray-100 bg-gray-50 text-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                    >
-                      Voir toutes les activités
-                    </Button>
+                    {sortedActivityLogs.length > 4 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                        onClick={() => setIsActivityModalOpen(true)}
+                      >
+                        Voir toutes les activités
+                      </Button>
+                    )}
                   </div>
+                  <AnimatePresence>
+                    {isActivityModalOpen && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                      >
+                        <motion.div
+                          initial={{ scale: 0.9 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0.9 }}
+                          className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+                        >
+                          <div className="p-6 border-b flex justify-between items-center">
+                            <h2 className="text-xl font-semibold text-gray-900">Journal d&apos;activité</h2>
+                            <Button variant="ghost" size="sm" onClick={() => setIsActivityModalOpen(false)}>
+                              Fermer
+                            </Button>
+                          </div>
+                          <div className="divide-y divide-gray-100">
+                            {loading && (
+                              <div className="p-4 text-center text-gray-500">Chargement...</div>
+                            )}
+                            {error && (
+                              <div className="p-4 text-center text-red-500">{error}</div>
+                            )}
+                            {!loading && !error && sortedActivityLogs.length === 0 && (
+                              <div className="p-4 text-center text-gray-500">
+                                Aucun journal d&apos;activité trouvé
+                              </div>
+                            )}
+                            {!loading && !error && sortedActivityLogs.map((log) => {
+                              const Icon = getLogIcon(log.action);
+                              return (
+                                <motion.div
+                                  key={log.id}
+                                  className="p-4 hover:bg-gray-50 transition-colors"
+                                >
+                                  <div className="flex items-start gap-3">
+                                    <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
+                                      <Icon className="h-5 w-5 text-blue-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-medium text-gray-900">{log.action}</h4>
+                                      <p className="text-sm text-gray-500 mt-0.5">{log.details}</p>
+                                      <div className="flex items-center text-xs text-gray-500 mt-1">
+                                        <span>{log.time}</span>
+                                        <span className="mx-1.5">•</span>
+                                        <span className="truncate">{log.user}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                 </div>
 
                 {/* Quick Actions Panel */}

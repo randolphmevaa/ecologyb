@@ -1212,7 +1212,7 @@ useEffect(() => {
             />
             <EditableField
               label="Système de chauffage"
-              value={dossier?.projet || ""}
+              value={dossier?.informationLogement?.systemeChauffage || ""}
               onChange={() => {}}
               icon={FireIcon}
               inputType="text"
@@ -1563,7 +1563,7 @@ useEffect(() => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Chauffage</p>
-                <p className="font-semibold text-gray-700">{dossier?.projet ?? "N/A"}</p>
+                <p className="font-semibold text-gray-700">{dossier?.informationLogement?.systemeChauffage ?? "N/A"}</p>
               </div>
             </div>
             {/* MaPrimeRénov */}

@@ -221,3 +221,102 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    // Extract the ID from the query parameters
+    const { searchParams } = new URL(request.url);
+    const idParam = searchParams.get("id");
+    
+    if (!idParam) {
+      return NextResponse.json(
+        { success: false, message: "L'ID du contact est requis" },
+        { status: 400 }
+      );
+    }
+    
+    // Parse the request body
+    const requestBody = await request.json();
+    console.log("PATCH request body:", requestBody);
+    
+    // Connect to MongoDB
+    const client = await clientPromise;
+    const db = client.db("yourdbname");
+    
+    // Build the query to find the contact
+    let query;
+    if (/^\d+$/.test(idParam)) {
+      query = { $or: [{ id: idParam }, { id: Number(idParam) }] };
+    } else {
+      query = { id: idParam };
+    }
+    
+    // Define interface for the update fields
+    interface UpdateFields {
+      assignedRegie?: string;
+      projet?: string[] | string;
+      prix?: string;
+      statut?: string;
+      description?: string;
+    }
+    
+    // Build the update object with the fields from the request
+    const updateFields: UpdateFields = {};
+    
+    // Handle assignedRegie
+    if (requestBody.assignedRegie !== undefined) {
+      updateFields.assignedRegie = requestBody.assignedRegie;
+    }
+    
+    // Handle projet (project types)
+    if (requestBody.projet !== undefined) {
+      updateFields.projet = requestBody.projet;
+    }
+    
+    // Handle prix (price)
+    if (requestBody.prix !== undefined) {
+      updateFields.prix = requestBody.prix;
+    }
+    
+    // Handle statut (status)
+    if (requestBody.statut !== undefined) {
+      updateFields.statut = requestBody.statut;
+    }
+    
+    // Handle description
+    if (requestBody.description !== undefined) {
+      updateFields.description = requestBody.description;
+    }
+    
+    // Log the fields being updated
+    console.log("Updating contact with fields:", updateFields);
+    
+    // Update the contact in the database
+    const result = await db.collection("contacts").updateOne(
+      query,
+      { $set: updateFields }
+    );
+    
+    // Check if the update was successful
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: "Contact non trouvé" },
+        { status: 404 }
+      );
+    }
+    
+    // Fetch the updated contact
+    const updatedContact = await db.collection("contacts").findOne(query);
+    
+    return NextResponse.json({
+      success: true,
+      message: "Contact mis à jour avec succès",
+      contact: updatedContact
+    });
+    
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Une erreur inconnue est survenue.";
+    console.error("Erreur lors de la mise à jour du contact:", error);
+    return NextResponse.json({ success: false, message }, { status: 500 });
+  }
+}
