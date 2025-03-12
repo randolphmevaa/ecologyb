@@ -149,10 +149,16 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-
-      {/* Main container with Calendar Navigation and Calendar */}
+    <div className="flex h-screen bg-white">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Header />
+        <main
+          className="flex-1 overflow-y-auto px-8 py-6 space-y-6"
+          style={{
+            background: "linear-gradient(135deg, rgba(191,221,249,0.1) 0%, rgba(210,252,178,0.05) 100%)",
+          }}
+        >
+          {/* Main container with Calendar Navigation and Calendar */}
       <div className="flex flex-col">
         {/* Navigation Header */}
         <div className="bg-gradient-to-r from-[#1a365d] to-[#0f2942] p-7 text-white">
@@ -538,6 +544,9 @@ export default function CalendarPage() {
             />
           </motion.div>
         </div>
+      </div>
+        </main>
+        
       </div>
 
       {/* Calendrier S.A.V. Popup Modal */}
