@@ -105,43 +105,47 @@ export default function ReglagesPage() {
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [showTooltip, setShowTooltip] = useState<string>("");
   
-  // Company information state
+  // Company information state with empty initial values
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
-    name: "Ma Régie SARL",
-    address: "123 Avenue des Énergies Renouvelables",
-    cityZip: "75000 Paris, France",
-    email: "regie-contact@example.com",
-    phone: "01 23 45 67 89",
-    siret: "123 456 789 00012",
+    name: "",
+    address: "",
+    cityZip: "",
+    email: "",
+    phone: "",
+    siret: "",
     logo: null, // For future logo upload
-    website: "www.maregie.example.com",
-    tvaNumber: "FR 01 123456789",
+    website: "",
+    tvaNumber: "",
   });
 
-  // Payment information state
+  // Payment information state with empty initial values
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
-    method: "Virement bancaire",
-    iban: "FR76 1234 5678 9012 3456 7890 123",
-    bic: "REGIEFRPP",
-    bankName: "Banque Nationale",
-    accountName: "Ma Régie SARL",
-    paymentDeadline: 30, // Days
-    latePaymentRate: 5, // Percentage
+    method: "",
+    iban: "",
+    bic: "",
+    bankName: "",
+    accountName: "",
+    paymentDeadline: 0, // Days
+    latePaymentRate: 0, // Percentage
   });
   
-  // Invoice terms state
+  // Invoice terms state with empty initial values
   const [invoiceTerms, setInvoiceTerms] = useState<InvoiceTerms>({
-    paymentTerms: "Cette facture est payable dans les 30 jours suivant la date d'émission. Tout retard de paiement entraînera des pénalités de retard au taux annuel de 5%.",
-    legalNotice: "TVA non applicable, art. 293 B du CGI. Le paiement de cette facture vaut acceptation de nos conditions générales de vente.",
-    thankYouMessage: "Nous vous remercions de votre confiance.",
-    footerNote: "Ma Régie SARL - Capital social: 10 000€ - RCS Paris 123 456 789",
+    paymentTerms: "",
+    legalNotice: "",
+    thankYouMessage: "",
+    footerNote: "",
   });
   
   // Load user info from localStorage
   useEffect(() => {
     const proInfo = localStorage.getItem("proInfo");
     if (proInfo) {
-      setUserInfo(JSON.parse(proInfo));
+      const parsedInfo = JSON.parse(proInfo);
+      console.log("User info from localStorage:", parsedInfo);
+      setUserInfo(parsedInfo);
+    } else {
+      console.log("No user info found in localStorage");
     }
   }, []);
 
@@ -152,7 +156,8 @@ export default function ReglagesPage() {
     async function fetchReglagesData() {
       try {
         setLoading(true);
-        // You would replace this with your actual API endpoint
+        console.log("Fetching user settings with ID:", userInfo?._id);
+        // Fetch data from the API
         const response = await fetch(`/api/users?id=${userInfo?._id}`);
         
         if (!response.ok) {
@@ -160,22 +165,27 @@ export default function ReglagesPage() {
         }
         
         const data = await response.json();
+        console.log("API Response:", data);
+        console.log("Profile data:", data.profile);
         
-        // If you have actual data from API, use it instead of the default values
-        if (data.companyInfo) {
-          setCompanyInfo(data.companyInfo);
+        // Data is nested under the profile object
+        if (data.profile && data.profile.companyInfo) {
+          console.log("Setting company info:", data.profile.companyInfo);
+          setCompanyInfo(data.profile.companyInfo);
         }
         
-        if (data.paymentInfo) {
-          setPaymentInfo(data.paymentInfo);
+        if (data.profile && data.profile.paymentInfo) {
+          console.log("Setting payment info:", data.profile.paymentInfo);
+          setPaymentInfo(data.profile.paymentInfo);
         }
         
-        if (data.invoiceTerms) {
-          setInvoiceTerms(data.invoiceTerms);
+        if (data.profile && data.profile.invoiceTerms) {
+          console.log("Setting invoice terms:", data.profile.invoiceTerms);
+          setInvoiceTerms(data.profile.invoiceTerms);
         }
       } catch (error) {
         console.error("Error fetching settings:", error);
-        // Keep using the default values if fetch fails
+        // Fields remain empty if fetch fails
       } finally {
         setLoading(false);
       }
@@ -184,38 +194,55 @@ export default function ReglagesPage() {
     fetchReglagesData();
   }, [userInfo]);
 
-  // Handle company info changes
+  // Handle form field changes - simple implementation to maintain focus
   const handleCompanyInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setCompanyInfo((prev) => ({
+    setCompanyInfo(prev => ({
       ...prev,
       [name]: value,
     }));
-    setHasChanges(true);
+    
+    // Use a timeout to delay setting hasChanges
+    if (!hasChanges) {
+      setTimeout(() => {
+        setHasChanges(true);
+      }, 100);
+    }
   };
 
-  // Handle payment info changes
+  // Handle payment info changes - simple implementation to maintain focus
   const handlePaymentInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const processedValue = name === 'paymentDeadline' || name === 'latePaymentRate' 
-      ? parseFloat(value) 
+      ? (value === '' ? '' : parseFloat(value) || 0) 
       : value;
       
-    setPaymentInfo((prev) => ({
+    setPaymentInfo(prev => ({
       ...prev,
       [name]: processedValue,
     }));
-    setHasChanges(true);
+    
+    if (!hasChanges) {
+      setTimeout(() => {
+        setHasChanges(true);
+      }, 100);
+    }
   };
   
-  // Handle invoice terms changes
+  // Handle invoice terms changes - simple implementation to maintain focus
   const handleInvoiceTermsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setInvoiceTerms((prev) => ({
+    setInvoiceTerms(prev => ({
       ...prev,
       [name]: value,
     }));
-    setHasChanges(true);
+    
+    // Use a timeout to delay setting hasChanges
+    if (!hasChanges) {
+      setTimeout(() => {
+        setHasChanges(true);
+      }, 100);
+    }
   };
 
   // Handle form submission
@@ -271,6 +298,9 @@ const handleSubmit = async (e?: React.FormEvent) => {
     setSaveStatus('success');
     setHasChanges(false);
     
+    // Enable auto-save after the first manual save
+    setAutoSaveEnabled(true);
+    
     // Reset status after a delay
     setTimeout(() => {
       setSaveStatus(null);
@@ -284,16 +314,19 @@ const handleSubmit = async (e?: React.FormEvent) => {
   }
 };
   
-  // Auto-save when changes are made (with debounce)
+  // Add a state to track if auto-save should be enabled
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(false);
+  
+  // Auto-save when changes are made (with debounce) - only if enabled
   useEffect(() => {
-    if (!hasChanges) return;
+    if (!hasChanges || !autoSaveEnabled) return;
     
     const timer = setTimeout(() => {
       handleSubmit();
-    }, 2000); // Auto-save after 2 seconds of inactivity
+    }, 8000); // Auto-save after 2 seconds of inactivity
     
     return () => clearTimeout(timer);
-  }, [companyInfo, paymentInfo, invoiceTerms, hasChanges]);
+  }, [companyInfo, paymentInfo, invoiceTerms, hasChanges, autoSaveEnabled]);
   
   // Status notification component
   const StatusNotification = () => {
@@ -316,31 +349,34 @@ const handleSubmit = async (e?: React.FormEvent) => {
         )}
         <span>
           {saveStatus === 'success' 
-            ? 'Paramètres enregistrés avec succès' 
+            ? `Paramètres enregistrés avec succès ${autoSaveEnabled ? '(Auto-save activé)' : ''}` 
             : 'Erreur lors de l\'enregistrement des paramètres'}
         </span>
       </motion.div>
     );
   };
   
-  // Tooltip component
+  // Tooltip component with improved mobile support
   const Tooltip = ({ id, text }: TooltipProps) => {
     if (showTooltip !== id) return null;
     
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
+      <div
         className="absolute z-10 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg"
-        style={{ transform: 'translateY(-100%)', marginTop: '-8px' }}
+        style={{ 
+          transform: 'translateY(-100%)', 
+          marginTop: '-8px',
+          maxWidth: '90vw',  // Ensure tooltip doesn't go off-screen on mobile
+          right: '0'         // Align to the right for better mobile viewing
+        }}
       >
         {text}
-        <div className="absolute -bottom-1 left-4 w-3 h-3 bg-gray-800 rotate-45" />
-      </motion.div>
+        <div className="absolute -bottom-1 right-4 w-3 h-3 bg-gray-800 rotate-45" />
+      </div>
     );
   };
   
-  // Input field with label component
+  // Input field with label component - improved for mobile, focus handling
   const FormField = ({ 
     label, 
     name, 
@@ -367,6 +403,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
               className="relative inline-block"
               onMouseEnter={() => setShowTooltip(name)}
               onMouseLeave={() => setShowTooltip("")}
+              onClick={() => setShowTooltip(showTooltip === name ? "" : name)} // Toggle on mobile touch
             >
               <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-gray-600 cursor-help" />
               <Tooltip id={name} text={tooltip} />
@@ -390,20 +427,18 @@ const handleSubmit = async (e?: React.FormEvent) => {
             max={max}
             step={step}
             required={required}
-            className={`block w-full rounded-lg border-gray-300 ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 
+            className={`block w-full rounded-lg border-gray-300 ${icon ? 'pl-10' : 'pl-3'} pr-3 py-3 
               focus:border-[#213f5b] focus:ring focus:ring-[#213f5b]/20 focus:ring-opacity-50 
               transition-all duration-200 ease-in-out
-              placeholder:text-gray-400 text-gray-800 bg-white
-              hover:border-gray-400
-              ${hasChanges ? 'border-amber-300' : ''}
-            `}
+              placeholder:text-gray-400 text-gray-800 bg-white text-base
+              hover:border-gray-400`}
           />
         </div>
       </div>
     );
   };
   
-  // Textarea field component
+  // Textarea field component - improved for mobile, focus handling
   const TextareaField = ({ 
     label, 
     name, 
@@ -426,6 +461,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
               className="relative inline-block"
               onMouseEnter={() => setShowTooltip(name)}
               onMouseLeave={() => setShowTooltip("")}
+              onClick={() => setShowTooltip(showTooltip === name ? "" : name)} // Toggle on mobile touch
             >
               <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-gray-600 cursor-help" />
               <Tooltip id={name} text={tooltip} />
@@ -440,13 +476,11 @@ const handleSubmit = async (e?: React.FormEvent) => {
           rows={rows}
           placeholder={placeholder}
           required={required}
-          className={`block w-full rounded-lg border-gray-300 p-3
+          className="block w-full rounded-lg border-gray-300 p-3 text-base
             focus:border-[#213f5b] focus:ring focus:ring-[#213f5b]/20 focus:ring-opacity-50 
             transition-all duration-200 ease-in-out
             placeholder:text-gray-400 text-gray-800 bg-white
-            hover:border-gray-400
-            ${hasChanges ? 'border-amber-300' : ''}
-          `}
+            hover:border-gray-400"
         />
       </div>
     );
@@ -468,96 +502,98 @@ const handleSubmit = async (e?: React.FormEvent) => {
     preview: <CreditCardIcon className="h-5 w-5" />
   };
 
-  // Preview component
+  // Preview component with responsive improvements and handling of empty values
   const InvoicePreview = () => (
-    <div className="bg-white rounded-xl shadow-md p-8 mt-4">
-      <div className="flex justify-between mb-8">
-        <div>
-          <div className="h-16 w-16 bg-gray-200 rounded-md flex items-center justify-center text-gray-400">
-            Logo
-          </div>
-          <div className="mt-2">
-            <h3 className="font-bold">{companyInfo.name}</h3>
-            <p className="text-sm text-gray-600">{companyInfo.address}</p>
-            <p className="text-sm text-gray-600">{companyInfo.cityZip}</p>
-            <p className="text-sm text-gray-600">
-              Tél: {companyInfo.phone} | Email: {companyInfo.email}
-            </p>
-            <p className="text-sm text-gray-600">SIRET: {companyInfo.siret}</p>
-            {companyInfo.tvaNumber && <p className="text-sm text-gray-600">TVA: {companyInfo.tvaNumber}</p>}
-          </div>
-        </div>
-        <div className="text-right">
-          <h2 className="text-2xl font-bold text-gray-800">FACTURE</h2>
-          <p className="text-gray-600">N° XXXXXX</p>
-          <p className="text-gray-600">Date: {new Date().toLocaleDateString('fr-FR')}</p>
-        </div>
-      </div>
-      
-      <div className="border-t border-b py-4 my-4">
-        <h3 className="font-medium">Client</h3>
-        <p>Nom du Client</p>
-        <p>Adresse du Client</p>
-        <p>Code Postal, Ville</p>
-      </div>
-      
-      <table className="min-w-full mt-8">
-        <thead>
-          <tr className="border-b">
-            <th className="text-left py-2">Description</th>
-            <th className="text-right py-2">Prix unitaire</th>
-            <th className="text-right py-2">Quantité</th>
-            <th className="text-right py-2">Total HT</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b">
-            <td className="py-2">Prestation exemple</td>
-            <td className="text-right">1 000,00 €</td>
-            <td className="text-right">1</td>
-            <td className="text-right">1 000,00 €</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colSpan={3} className="text-right py-2 font-medium">Total HT</td>
-            <td className="text-right">1 000,00 €</td>
-          </tr>
-          <tr>
-            <td colSpan={3} className="text-right py-2 font-medium">TVA (20%)</td>
-            <td className="text-right">200,00 €</td>
-          </tr>
-          <tr className="font-bold">
-            <td colSpan={3} className="text-right py-2">Total TTC</td>
-            <td className="text-right">1 200,00 €</td>
-          </tr>
-        </tfoot>
-      </table>
-      
-      <div className="mt-8 pt-4 border-t">
-        <h4 className="font-medium mb-2">Conditions de paiement</h4>
-        <p className="text-sm">{invoiceTerms.paymentTerms}</p>
-      </div>
-      
-      <div className="mt-4 pt-2">
-        <p className="text-sm">{invoiceTerms.thankYouMessage}</p>
-      </div>
-      
-      <div className="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        <p>{invoiceTerms.legalNotice}</p>
-        <p className="mt-2">{invoiceTerms.footerNote}</p>
-      </div>
-      
-      <div className="mt-4 pt-2 border-t">
-        <div className="flex justify-between text-sm text-gray-600">
+    <div className="bg-white rounded-xl shadow-md p-4 sm:p-8 mt-4 overflow-x-auto">
+      <div className="min-w-[600px]"> {/* Set minimum width to ensure readability */}
+        <div className="flex justify-between mb-8">
           <div>
-            <p>Mode de paiement: {paymentInfo.method}</p>
-            <p>IBAN: {paymentInfo.iban}</p>
-            <p>BIC: {paymentInfo.bic}</p>
+            <div className="h-16 w-16 bg-gray-200 rounded-md flex items-center justify-center text-gray-400">
+              Logo
+            </div>
+            <div className="mt-2">
+              <h3 className="font-bold">{companyInfo.name || 'Nom de l\'entreprise'}</h3>
+              <p className="text-sm text-gray-600">{companyInfo.address || 'Adresse'}</p>
+              <p className="text-sm text-gray-600">{companyInfo.cityZip || 'Code postal, Ville'}</p>
+              <p className="text-sm text-gray-600">
+                {companyInfo.phone ? `Tél: ${companyInfo.phone}` : 'Tél: -'} | {companyInfo.email ? `Email: ${companyInfo.email}` : 'Email: -'}
+              </p>
+              <p className="text-sm text-gray-600">SIRET: {companyInfo.siret || '-'}</p>
+              {companyInfo.tvaNumber && <p className="text-sm text-gray-600">TVA: {companyInfo.tvaNumber}</p>}
+            </div>
           </div>
           <div className="text-right">
-            <p>{companyInfo.website}</p>
-            <p>{companyInfo.email}</p>
+            <h2 className="text-2xl font-bold text-gray-800">FACTURE</h2>
+            <p className="text-gray-600">N° XXXXXX</p>
+            <p className="text-gray-600">Date: {new Date().toLocaleDateString('fr-FR')}</p>
+          </div>
+        </div>
+        
+        <div className="border-t border-b py-4 my-4">
+          <h3 className="font-medium">Client</h3>
+          <p>Nom du Client</p>
+          <p>Adresse du Client</p>
+          <p>Code Postal, Ville</p>
+        </div>
+        
+        <table className="min-w-full mt-8">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2">Description</th>
+              <th className="text-right py-2">Prix unitaire</th>
+              <th className="text-right py-2">Quantité</th>
+              <th className="text-right py-2">Total HT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b">
+              <td className="py-2">Prestation exemple</td>
+              <td className="text-right">1 000,00 €</td>
+              <td className="text-right">1</td>
+              <td className="text-right">1 000,00 €</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={3} className="text-right py-2 font-medium">Total HT</td>
+              <td className="text-right">1 000,00 €</td>
+            </tr>
+            <tr>
+              <td colSpan={3} className="text-right py-2 font-medium">TVA (20%)</td>
+              <td className="text-right">200,00 €</td>
+            </tr>
+            <tr className="font-bold">
+              <td colSpan={3} className="text-right py-2">Total TTC</td>
+              <td className="text-right">1 200,00 €</td>
+            </tr>
+          </tfoot>
+        </table>
+        
+        <div className="mt-8 pt-4 border-t">
+          <h4 className="font-medium mb-2">Conditions de paiement</h4>
+          <p className="text-sm">{invoiceTerms.paymentTerms || 'Aucune condition de paiement spécifiée'}</p>
+        </div>
+        
+        <div className="mt-4 pt-2">
+          <p className="text-sm">{invoiceTerms.thankYouMessage || ''}</p>
+        </div>
+        
+        <div className="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
+          <p>{invoiceTerms.legalNotice || 'Aucune mention légale spécifiée'}</p>
+          <p className="mt-2">{invoiceTerms.footerNote || ''}</p>
+        </div>
+        
+        <div className="mt-4 pt-2 border-t">
+          <div className="flex justify-between text-sm text-gray-600">
+            <div>
+              <p>Mode de paiement: {paymentInfo.method || '-'}</p>
+              <p>IBAN: {paymentInfo.iban || '-'}</p>
+              <p>BIC: {paymentInfo.bic || '-'}</p>
+            </div>
+            <div className="text-right">
+              <p>{companyInfo.website || '-'}</p>
+              <p>{companyInfo.email || '-'}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -601,21 +637,21 @@ const handleSubmit = async (e?: React.FormEvent) => {
         </AnimatePresence>
         
         <main
-          className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6"
+          className="flex-1 overflow-y-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6"
           style={{
             background:
               "linear-gradient(135deg, rgba(191,221,249,0.1) 0%, rgba(210,252,178,0.05) 100%)",
             backgroundAttachment: "fixed",
           }}
         >
-          {/* Mobile tab navigation */}
-          <div className="lg:hidden mb-6 overflow-x-auto">
-            <div className="flex space-x-2 pb-1">
+          {/* Mobile tab navigation - Improved for better usability */}
+          <div className="lg:hidden mb-6">
+            <div className="grid grid-cols-2 gap-2 pb-1">
               {(Object.keys(sectionTitles) as TabKey[]).map(key => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap
+                  className={`flex items-center justify-center px-3 py-3 rounded-lg text-sm font-medium
                     ${activeTab === key 
                       ? 'bg-[#213f5b] text-white shadow-md' 
                       : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}
@@ -625,7 +661,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
                   <span className={`mr-1.5 ${activeTab === key ? 'text-white' : 'text-[#213f5b]'}`}>
                     {sectionIcons[key]}
                   </span>
-                  {sectionTitles[key]}
+                  <span className="text-xs sm:text-sm">{sectionTitles[key]}</span>
                 </button>
               ))}
             </div>
@@ -639,45 +675,80 @@ const handleSubmit = async (e?: React.FormEvent) => {
             transition={{ duration: 0.3 }}
           >
             <div className="max-w-5xl mx-auto">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-[#213f5b]">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#213f5b]">
                     {sectionTitles[activeTab]}
                   </h1>
-                  <p className="text-gray-600 mt-1">
-                    {activeTab === "company" && "Gérez les informations de votre régie affichées sur les factures"}
-                    {activeTab === "payment" && "Configurez vos préférences et informations de paiement"}
-                    {activeTab === "invoice" && "Personnalisez les conditions et mentions légales de vos factures"}
-                    {activeTab === "preview" && "Aperçu de vos factures avec les paramètres actuels"}
+                  <p className="text-sm text-gray-600 mt-1">
+                    {activeTab === "company" && "Gérez les informations de votre régie"}
+                    {activeTab === "payment" && "Configurez vos préférences de paiement"}
+                    {activeTab === "invoice" && "Personnalisez les conditions de vos factures"}
+                    {activeTab === "preview" && "Aperçu de vos factures"}
                   </p>
                 </div>
                 
-                {activeTab !== "preview" && (
-                  <button
-                    onClick={handleSubmit}
-                    className={`px-4 py-2 rounded-lg shadow-sm text-sm font-medium transition-all
-                      ${hasChanges 
-                        ? 'bg-gradient-to-br from-[#213f5b] to-[#0f2b47] text-white hover:shadow-md active:shadow-inner' 
-                        : 'bg-gray-100 text-gray-500'}
-                    `}
-                  >
-                    {loading ? (
-                      <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        <CheckCircleIcon className="h-4 w-4" />
-                        Enregistrer
-                      </span>
-                    )}
-                  </button>
-                )}
+                <div className="flex items-center gap-3 mt-3 sm:mt-0">
+                  {/* Auto-save toggle for non-preview tabs */}
+                  {activeTab !== "preview" && (
+                    <div className="flex items-center mr-2">
+                      <label className="flex items-center cursor-pointer">
+                        <span className="mr-2 text-sm text-gray-600">Auto-save</span>
+                        <div className="relative">
+                          <input 
+                            type="checkbox" 
+                            className="sr-only" 
+                            checked={autoSaveEnabled}
+                            onChange={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                          />
+                          <div className={`block w-10 h-6 rounded-full ${autoSaveEnabled ? 'bg-green-400' : 'bg-gray-300'}`}></div>
+                          <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${autoSaveEnabled ? 'transform translate-x-4' : ''}`}></div>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                
+                  {activeTab !== "preview" && (
+                    <button
+                      onClick={handleSubmit}
+                      className={`px-4 py-2 rounded-lg shadow-sm text-sm font-medium transition-all
+                        ${hasChanges 
+                          ? 'bg-gradient-to-br from-[#213f5b] to-[#0f2b47] text-white hover:shadow-md active:shadow-inner' 
+                          : 'bg-gray-100 text-gray-500'}
+                      `}
+                    >
+                      {loading ? (
+                        <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircleIcon className="h-4 w-4" />
+                          Enregistrer
+                        </span>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
               
               {/* Company Information Tab */}
               {activeTab === "company" && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 sm:p-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div className="p-4 sm:p-6 md:p-8">
+                    {/* Info message when no company data is found */}
+                    {!companyInfo.name && !companyInfo.address && !companyInfo.siret && (
+                      <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div className="flex items-start">
+                          <InformationCircleIcon className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                          <div>
+                            <h4 className="text-sm font-medium text-blue-800">Pas d&apos;informations trouvées</h4>
+                            <p className="mt-1 text-sm text-blue-600">
+                              Veuillez remplir les informations de votre entreprise pour les afficher sur vos factures.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-6">
                       <FormField
                         label="Nom de l'entreprise"
                         name="name"
@@ -753,7 +824,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
                       />
                     </div>
                     
-                    <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-100">
                       <div className="flex items-start">
                         <InformationCircleIcon className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
                         <div>
@@ -779,8 +850,22 @@ const handleSubmit = async (e?: React.FormEvent) => {
               {/* Payment Information Tab */}
               {activeTab === "payment" && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 sm:p-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                  <div className="p-4 sm:p-6 md:p-8">
+                    {/* Info message when no payment data is found */}
+                    {!paymentInfo.method && !paymentInfo.iban && !paymentInfo.bankName && (
+                      <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div className="flex items-start">
+                          <InformationCircleIcon className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                          <div>
+                            <h4 className="text-sm font-medium text-blue-800">Pas d&apos;informations de paiement trouvées</h4>
+                            <p className="mt-1 text-sm text-blue-600">
+                              Veuillez remplir vos informations de paiement pour faciliter les règlements de vos factures.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-6">
                       <FormField
                         label="Mode de paiement"
                         name="method"
@@ -860,7 +945,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
                       />
                     </div>
                     
-                    <div className="mt-8 p-4 bg-amber-50 rounded-lg border border-amber-100">
+                    <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-amber-50 rounded-lg border border-amber-100">
                       <div className="flex items-start">
                         <InformationCircleIcon className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
                         <div>
@@ -879,8 +964,22 @@ const handleSubmit = async (e?: React.FormEvent) => {
               {/* Invoice Terms Tab */}
               {activeTab === "invoice" && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 sm:p-8">
-                    <div className="space-y-6">
+                  <div className="p-4 sm:p-6 md:p-8">
+                    {/* Info message when no invoice terms are found */}
+                    {!invoiceTerms.paymentTerms && !invoiceTerms.legalNotice && (
+                      <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div className="flex items-start">
+                          <InformationCircleIcon className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                          <div>
+                            <h4 className="text-sm font-medium text-blue-800">Pas de conditions de facturation trouvées</h4>
+                            <p className="mt-1 text-sm text-blue-600">
+                              Veuillez définir vos conditions de facturation et mentions légales pour les afficher sur vos factures.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div className="space-y-4 sm:space-y-6">
                       <TextareaField
                         label="Conditions de paiement"
                         name="paymentTerms"
@@ -922,7 +1021,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
                       />
                     </div>
                     
-                    <div className="mt-8 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-indigo-50 rounded-lg border border-indigo-100">
                       <div className="flex items-start">
                         <InformationCircleIcon className="h-5 w-5 text-indigo-600 mt-0.5 mr-3 flex-shrink-0" />
                         <div>
@@ -942,46 +1041,80 @@ const handleSubmit = async (e?: React.FormEvent) => {
               {/* Preview Tab */}
               {activeTab === "preview" && (
                 <div>
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-                    <div className="flex items-center justify-between">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <h3 className="text-lg font-medium text-gray-800">Aperçu de la facture</h3>
-                      <div className="flex items-center gap-3">
-                        <button className="px-3 py-1.5 text-sm rounded-lg bg-gray-100 text-gray-700 flex items-center gap-1.5 hover:bg-gray-200 transition-colors">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <button className="px-3 py-1.5 text-xs sm:text-sm rounded-lg bg-gray-100 text-gray-700 flex items-center gap-1.5 hover:bg-gray-200 transition-colors">
                           <PrinterIcon className="h-4 w-4" />
-                          Imprimer
+                          <span className="hidden xs:inline">Imprimer</span>
                         </button>
-                        <button className="px-3 py-1.5 text-sm rounded-lg bg-[#213f5b] text-white flex items-center gap-1.5 hover:bg-[#152a3f] transition-colors">
+                        <button className="px-3 py-1.5 text-xs sm:text-sm rounded-lg bg-[#213f5b] text-white flex items-center gap-1.5 hover:bg-[#152a3f] transition-colors">
                           <ArrowPathIcon className="h-4 w-4" />
-                          Actualiser
+                          <span className="hidden xs:inline">Actualiser</span>
                         </button>
                       </div>
                     </div>
+                    
+                    {/* Auto-save toggle */}
+                    <div className="mt-4 flex items-center justify-end">
+                      <label className="flex items-center cursor-pointer">
+                        <span className="mr-2 text-sm text-gray-600">Auto-save</span>
+                        <div className="relative">
+                          <input 
+                            type="checkbox" 
+                            className="sr-only" 
+                            checked={autoSaveEnabled}
+                            onChange={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                          />
+                          <div className={`block w-10 h-6 rounded-full ${autoSaveEnabled ? 'bg-green-400' : 'bg-gray-300'}`}></div>
+                          <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${autoSaveEnabled ? 'transform translate-x-4' : ''}`}></div>
+                        </div>
+                      </label>
+                    </div>
+                    
+                    {/* Warning when important data is missing */}
+                    {(!companyInfo.name || !companyInfo.siret) && (
+                      <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                        <div className="flex items-start">
+                          <InformationCircleIcon className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
+                          <div>
+                            <h4 className="text-sm font-medium text-amber-800">Données incomplètes</h4>
+                            <p className="mt-1 text-sm text-amber-600">
+                              Certaines informations importantes manquent pour générer une facture complète. 
+                              Veuillez compléter les onglets précédents pour un aperçu plus précis.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="bg-gray-100 border border-gray-200 rounded-xl p-4 sm:p-8">
+                  <div className="bg-gray-100 border border-gray-200 rounded-xl p-2 sm:p-4 md:p-8">
                     <InvoicePreview />
                   </div>
                 </div>
               )}
               
-              {/* Floating save button for non-preview tabs */}
+              {/* Floating save button for non-preview tabs - Improved for mobile */}
               {activeTab !== "preview" && hasChanges && (
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 50 }}
-                  className="fixed bottom-6 right-6 z-40"
+                  className="fixed bottom-4 right-4 z-40"
                 >
                   <button
                     onClick={handleSubmit}
-                    className="rounded-full bg-[#213f5b] text-white h-12 px-6 shadow-lg flex items-center justify-center gap-2 hover:bg-[#152a3f] transition-all hover:shadow-xl active:scale-95"
+                    className="rounded-full bg-[#213f5b] text-white h-10 sm:h-12 px-4 sm:px-6 shadow-lg flex items-center justify-center gap-2 hover:bg-[#152a3f] transition-all hover:shadow-xl active:scale-95"
                   >
                     {loading ? (
                       <ArrowPathIcon className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
                         <CheckCircleIcon className="h-5 w-5" />
-                        <span>Enregistrer les modifications</span>
+                        <span className="hidden sm:inline">Enregistrer les modifications</span>
+                        <span className="sm:hidden">Enregistrer</span>
                       </>
                     )}
                   </button>

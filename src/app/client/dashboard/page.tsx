@@ -572,7 +572,7 @@ const progressionGlobale = ((etapeActuelle + 1) / progressSteps.length) * 100;
           animate={{ opacity: 1, x: 0 }}
         >
           <button className="bg-[#213f5b] hover:bg-[#1a334d] text-white px-6 py-3 rounded-full font-medium flex items-center space-x-2 transition-all duration-300 shadow-md hover:shadow-lg">
-            <span>Voir le projet complet</span>
+            <span>Voir le projet en cours</span>
             <ArrowRightIcon className="h-5 w-5" />
           </button>
         </motion.div>

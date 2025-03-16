@@ -67,6 +67,56 @@ type InvoiceStatus =
     projets?: string[]; // Add field to track project types
   }
 
+  interface CompanyInfo {
+    name: string;
+    address: string;
+    cityZip: string;
+    email: string;
+    phone: string;
+    siret: string;
+    logo: string | null;
+    website?: string;
+    tvaNumber?: string;
+  }
+  
+  interface PaymentInfo {
+    method: string;
+    iban: string;
+    bic: string;
+    bankName?: string;
+    accountName?: string;
+    paymentDeadline: number;
+    latePaymentRate: number;
+  }
+  
+  interface InvoiceTerms {
+    paymentTerms: string;
+    legalNotice?: string;
+    thankYouMessage?: string;
+    footerNote?: string;
+  }
+
+  interface Profile {
+    companyInfo: CompanyInfo;
+    paymentInfo: PaymentInfo;
+    invoiceTerms: InvoiceTerms;
+  }
+
+  interface UserProfile {
+    _id: string;
+    id: string;
+    email: string;
+    role?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    gender?: string;
+    createdAt?: string;
+    siret?: string;
+    raisonSocial?: string;
+    profile: Profile;
+  }
+
 /** ---------------------
  *     MAIN COMPONENT
  *  --------------------- */
@@ -74,12 +124,25 @@ export default function FacturationPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [factures, setFactures] = useState<Invoice[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userInfo, setUserInfo] = useState<{
+    id: unknown; _id: string; email: string 
+} | null>(null);
+
 
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownloadPDF = (invoice: Invoice, contacts: Contact[], solutions: Solution[]): void => {
+    // Early return if no user profile data
+    if (!userProfile?.profile) {
+      console.error('User profile data not available');
+      return;
+    }
+    
+    const { companyInfo, paymentInfo, invoiceTerms } = userProfile.profile;
+    
     // Initialize PDF document in portrait mode (A4)
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -92,7 +155,6 @@ export default function FacturationPage() {
     
     // Colors
     const primaryColor = "#213f5b";
-    // const secondaryColor = "#f8fafc";
     const accentColor = "#bfddf9";
     
     // Dimensions
@@ -113,11 +175,14 @@ export default function FacturationPage() {
     };
     
     const formatMontant = (montant: number): string => {
-      return new Intl.NumberFormat("fr-FR", {
-        style: "currency",
-        currency: "EUR",
-        minimumFractionDigits: 2
-      }).format(montant);
+      // Format the number with 2 decimal places
+      const numberParts = montant.toFixed(2).split('.');
+      
+      // Add thousand separators
+      const integerPart = numberParts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      
+      // Combine with decimal part and add currency symbol
+      return `${integerPart},${numberParts[1]} €`;
     };
     
     const getContactName = (contactId: string): string => {
@@ -144,19 +209,11 @@ export default function FacturationPage() {
     doc.setFillColor(primaryColor);
     doc.rect(0, 0, pageWidth, 40, "F");
     
-    // Add company logo placeholder
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(margin, 12, 40, 16, 2, 2, "F");
-    doc.setTextColor(primaryColor);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("LOGO", margin + 20, 22, { align: "center" });
-    
     // Add company name
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("Ma Régie SARL", pageWidth - margin, 22, { align: "right" });
+    doc.text(companyInfo.name, pageWidth - margin, 22, { align: "right" });
     
     // Add invoice title and number
     doc.setFillColor(accentColor);
@@ -185,12 +242,15 @@ export default function FacturationPage() {
     
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text("Ma Régie SARL", margin, 80);
-    doc.text("123 Avenue des Énergies Renouvelables", margin, 85);
-    doc.text("75000 Paris, France", margin, 90);
-    doc.text("Tél: 01 23 45 67 89", margin, 95);
-    doc.text("Email: regie-contact@example.com", margin, 100);
-    doc.text("SIRET: 123 456 789 00012", margin, 105);
+    doc.text(companyInfo.name, margin, 80);
+    doc.text(companyInfo.address, margin, 85);
+    doc.text(companyInfo.cityZip, margin, 90);
+    doc.text(`Tél: ${companyInfo.phone}`, margin, 95);
+    doc.text(`Email: ${companyInfo.email}`, margin, 100);
+    doc.text(`SIRET: ${companyInfo.siret}`, margin, 105);
+    if (companyInfo.tvaNumber) {
+      doc.text(`TVA: ${companyInfo.tvaNumber}`, margin, 110);
+    }
     
     // Right column - Bill To
     doc.setTextColor(primaryColor);
@@ -202,23 +262,12 @@ export default function FacturationPage() {
     
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    
-    // If we have contacts, display them
-    if (invoice.contact_ids && invoice.contact_ids.length > 0) {
-      const contactNames = invoice.contact_ids.map(getContactName);
-      const primaryContact = contacts.find((c: Contact) => c.id === invoice.contact_ids[0] || c._id === invoice.contact_ids[0]);
-      
-      if (primaryContact) {
-        doc.text(`${primaryContact.firstName} ${primaryContact.lastName}`, pageWidth - margin - 60, 80);
-        doc.text(primaryContact.mailingAddress || "Adresse non spécifiée", pageWidth - margin - 60, 85);
-        doc.text(primaryContact.email || "", pageWidth - margin - 60, 90);
-        doc.text(primaryContact.phone || "", pageWidth - margin - 60, 95);
-      } else {
-        doc.text(contactNames.join(", "), pageWidth - margin - 60, 80);
-      }
-    } else {
-      doc.text("Pas de contacts spécifiés", pageWidth - margin - 60, 80);
-    }
+  
+    // Use ECOLOGY'B info instead of contacts
+    doc.text("ECOLOGY'B", pageWidth - margin - 60, 80);
+    doc.text("52 Av. du 8 Mai 1945, 95200 Sarcelles", pageWidth - margin - 60, 85);
+    doc.text("contact@ecologyb.fr", pageWidth - margin - 60, 90);
+    doc.text("09 52 02 81 36", pageWidth - margin - 60, 95);
     
     // Invoice Details
     doc.setTextColor(primaryColor);
@@ -331,23 +380,21 @@ export default function FacturationPage() {
     doc.setTextColor(primaryColor);
     doc.setFont("helvetica", "normal");
     doc.text("Mode de paiement:", margin + 5, y);
-    doc.text("Virement bancaire", margin + 70, y);
+    doc.text(paymentInfo.method, margin + 70, y);
     y += 6;
     
     doc.text("IBAN:", margin + 5, y);
-    doc.text("FR76 1234 5678 9012 3456 7890 123", margin + 70, y);
+    doc.text(paymentInfo.iban, margin + 70, y);
     y += 6;
     
     doc.text("BIC:", margin + 5, y);
-    doc.text("REGIEFRPP", margin + 70, y);
+    doc.text(paymentInfo.bic, margin + 70, y);
     y += 6;
     
     // Terms and conditions
     y += 10;
     doc.setFontSize(8);
-    doc.text("Conditions de Paiement: Cette facture est payable dans les 30 jours suivant la date d'émission.", margin, y);
-    y += 4;
-    doc.text("Tout retard de paiement entraînera des pénalités de retard au taux annuel de 5%.", margin, y);
+    doc.text(invoiceTerms.paymentTerms, margin, y, { maxWidth: contentWidth });
     
     // Footer
     doc.setDrawColor(primaryColor);
@@ -355,7 +402,7 @@ export default function FacturationPage() {
     doc.rect(0, pageHeight - 12, pageWidth, 12, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8);
-    doc.text("Ma Régie SARL - SIRET 123 456 789 00012", pageWidth / 2, pageHeight - 5, { align: "center" });
+    doc.text(invoiceTerms.footerNote || `${companyInfo.name} - SIRET ${companyInfo.siret}`, pageWidth / 2, pageHeight - 5, { align: "center" });
     
     // Page numbers
     doc.text(`Page 1/1`, pageWidth - margin, pageHeight - 5, { align: "right" });
@@ -508,16 +555,32 @@ const handleDeselectAllContacts = () => {
     montant_ht: 0
   }));
 };
-
-  const [userInfo, setUserInfo] = useState<{
-    id: unknown; _id: string; email: string 
-} | null>(null);
+  
   useEffect(() => {
     const proInfo = localStorage.getItem("proInfo");
     if (proInfo) {
       setUserInfo(JSON.parse(proInfo));
     }
   }, []);
+
+  
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (!userInfo?._id) return;
+      
+      try {
+        const res = await fetch(`/api/users?id=${userInfo._id}`);
+        if (!res.ok) throw new Error('Failed to fetch user profile');
+        
+        const userData = await res.json();
+        setUserProfile(userData);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    }
+    
+    fetchUserProfile();
+  }, [userInfo]);
 
   useEffect(() => {
     async function fetchData() {
@@ -1441,253 +1504,291 @@ const handleDeselectAllContacts = () => {
         )}
       </AnimatePresence>
 
-      {/* Modal Détails Facture */}
-      <AnimatePresence>
-        {showInvoiceDetailModal && selectedInvoice && (
+     {/* Modal Détails Facture */}
+    <AnimatePresence>
+      {showInvoiceDetailModal && selectedInvoice && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
           >
-            <motion.div
-              className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-            >
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-[#213f5b]">
-                    Détails de la Facture
-                  </h2>
-                  <button
-                    onClick={() => setShowInvoiceDetailModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    ×
-                  </button>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-[#213f5b]">
+                  Détails de la Facture
+                </h2>
+                <button
+                  onClick={() => setShowInvoiceDetailModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h3 className="text-2xl font-bold text-[#213f5b]">
+                      {selectedInvoice.id}
+                    </h3>
+                    <p className="text-gray-500">
+                      Date d&apos;émission:{" "}
+                      {formatDate(selectedInvoice.date_creation)}
+                    </p>
+                    <div
+                      className={`mt-2 px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${getStatusClasses(
+                        selectedInvoice.statut
+                      )}`}
+                    >
+                      {selectedInvoice.statut}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <div className="text-sm text-gray-500">
+                      Total à payer:
+                    </div>
+                    <div className="text-2xl font-bold text-[#213f5b]">
+                      {formatMontant(selectedInvoice.montant_ttc)}
+                    </div>
+                    {selectedInvoice.date_paiement && (
+                      <div className="text-sm text-green-600 mt-1">
+                        Payé le {formatDate(selectedInvoice.date_paiement)}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
-                  <div className="flex justify-between items-start mb-8">
-                    <div>
-                      <h3 className="text-2xl font-bold text-[#213f5b]">
-                        {selectedInvoice.id}
-                      </h3>
-                      <p className="text-gray-500">
-                        Date d&apos;émission:{" "}
-                        {formatDate(selectedInvoice.date_creation)}
-                      </p>
-                      <div
-                        className={`mt-2 px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${getStatusClasses(
-                          selectedInvoice.statut
-                        )}`}
-                      >
-                        {selectedInvoice.statut}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <div className="text-sm text-gray-500">
-                        Total à payer:
-                      </div>
-                      <div className="text-2xl font-bold text-[#213f5b]">
-                        {formatMontant(selectedInvoice.montant_ttc)}
-                      </div>
-                      {selectedInvoice.date_paiement && (
-                        <div className="text-sm text-green-600 mt-1">
-                          Payé le {formatDate(selectedInvoice.date_paiement)}
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-600">
+                      Informations de la Régie
+                    </h4>
+                    <div className="border-t pt-2 text-sm">
+                      {userProfile?.profile?.companyInfo ? (
+                        <>
+                          <p className="font-medium">{userProfile.profile.companyInfo.name}</p>
+                          <p>{userProfile.profile.companyInfo.address}</p>
+                          <p>{userProfile.profile.companyInfo.cityZip}</p>
+                          <p>Email: {userProfile.profile.companyInfo.email}</p>
+                          <p>Tél: {userProfile.profile.companyInfo.phone}</p>
+                          <p>SIRET: {userProfile.profile.companyInfo.siret}</p>
+                          {userProfile.profile.companyInfo.tvaNumber && (
+                            <p>TVA: {userProfile.profile.companyInfo.tvaNumber}</p>
+                          )}
+                          {userProfile.profile.companyInfo.website && (
+                            <p>Web: {userProfile.profile.companyInfo.website}</p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-medium">Ma Régie SARL</p>
+                          <p>123 Avenue des Énergies Renouvelables</p>
+                          <p>75000 Paris, France</p>
+                          <p>regie-contact@example.com</p>
+                          <p>Tél: 01 23 45 67 89</p>
+                          <p>SIRET: 123 456 789 00012</p>
+                        </>
                       )}
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-gray-600">
-                        Informations de la Régie
-                      </h4>
-                      <div className="border-t pt-2 text-sm">
-                        <p className="font-medium">Ma Régie SARL</p>
-                        <p>123 Avenue des Énergies Renouvelables</p>
-                        <p>75000 Paris, France</p>
-                        <p>regie-contact@example.com</p>
-                        <p>Tél: 01 23 45 67 89</p>
-                        <p>SIRET: 123 456 789 00012</p>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-gray-600">
-                        Informations Administrateur
-                      </h4>
-                      <div className="border-t pt-2 text-sm">
-                        <p className="font-medium">Nom Admin</p>
-                        <p>Email: admin@example.com</p>
-                        <p>Tél: 06 01 02 03 04</p>
-                        <p>Rôle: Admin &amp; Facturation</p>
-                      </div>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-600">
+                      Informations Administrateur
+                    </h4>
+                    <div className="border-t pt-2 text-sm">
+                      <p className="font-medium">ECOLOGY&apos;B</p>
+                      <p>Email: contact@ecologyb.fr</p>
+                      <p>Tél: 09 52 02 81 36</p>
+                      <p>52 Av. du 8 Mai 1945, 95200 Sarcelles</p>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="mb-6">
-                  <h4 className="font-semibold text-gray-600 mb-4">
-                    Détails Prestation
-                  </h4>
-                  <div className="overflow-x-auto border rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Description
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Prix unitaire
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Quantité
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Total HT
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {getSolutionName(selectedInvoice.solution_id)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                            {formatMontant(
-                              solutions.find(
-                                (s) => s.id === selectedInvoice.solution_id
-                              )?.base_price || 0
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            {selectedInvoice.contact_ids.length}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                            {formatMontant(selectedInvoice.montant_ht)}
-                          </td>
-                        </tr>
-                      </tbody>
-                      <tfoot className="bg-gray-50">
-                        <tr>
-                          <td
-                            colSpan={3}
-                            className="px-6 py-3 text-right text-sm font-medium text-gray-500"
-                          >
-                            Total HT
-                          </td>
-                          <td className="px-6 py-3 text-right text-sm font-medium text-gray-900">
-                            {formatMontant(selectedInvoice.montant_ht)}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            colSpan={3}
-                            className="px-6 py-3 text-right text-sm font-medium text-gray-500"
-                          >
-                            TVA ({selectedInvoice.tva}%)
-                          </td>
-                          <td className="px-6 py-3 text-right text-sm font-medium text-gray-900">
-                            {formatMontant(
-                              selectedInvoice.montant_ht *
-                                (selectedInvoice.tva / 100)
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            colSpan={3}
-                            className="px-6 py-3 text-right text-sm font-medium text-gray-900"
-                          >
-                            Total TTC
-                          </td>
-                          <td className="px-6 py-3 text-right text-sm font-medium text-gray-900 font-bold">
-                            {formatMontant(selectedInvoice.montant_ttc)}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
+              <div className="mb-6">
+                <h4 className="font-semibold text-gray-600 mb-4">
+                  Détails Prestation
+                </h4>
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Description
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Prix unitaire
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Quantité
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Total HT
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      <tr>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {getSolutionName(selectedInvoice.solution_id)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                          {formatMontant(
+                            solutions.find(
+                              (s) => s.id === selectedInvoice.solution_id
+                            )?.base_price || 0
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          {selectedInvoice.contact_ids.length}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                          {formatMontant(selectedInvoice.montant_ht)}
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot className="bg-gray-50">
+                      <tr>
+                        <td
+                          colSpan={3}
+                          className="px-6 py-3 text-right text-sm font-medium text-gray-500"
+                        >
+                          Total HT
+                        </td>
+                        <td className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                          {formatMontant(selectedInvoice.montant_ht)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td
+                          colSpan={3}
+                          className="px-6 py-3 text-right text-sm font-medium text-gray-500"
+                        >
+                          TVA ({selectedInvoice.tva}%)
+                        </td>
+                        <td className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                          {formatMontant(
+                            selectedInvoice.montant_ht *
+                              (selectedInvoice.tva / 100)
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td
+                          colSpan={3}
+                          className="px-6 py-3 text-right text-sm font-medium text-gray-900"
+                        >
+                          Total TTC
+                        </td>
+                        <td className="px-6 py-3 text-right text-sm font-medium text-gray-900 font-bold">
+                          {formatMontant(selectedInvoice.montant_ttc)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
+              </div>
 
-                <div className="mb-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-semibold text-gray-600 mb-2">
-                    Conditions de Paiement
-                  </h4>
+              <div className="mb-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h4 className="font-semibold text-gray-600 mb-2">
+                  Conditions de Paiement
+                </h4>
+                {userProfile?.profile?.invoiceTerms ? (
+                  <p className="text-sm text-gray-600">
+                    {userProfile.profile.invoiceTerms.paymentTerms}
+                  </p>
+                ) : (
                   <p className="text-sm text-gray-600">
                     Cette facture est payable dans les 30 jours suivant la date
                     d&apos;émission. Tout retard de paiement entraînera des
                     pénalités de retard au taux annuel de 5%.
                   </p>
-                  <div className="mt-3 text-sm">
-                    <p>Mode de paiement: Virement bancaire</p>
-                    <p>IBAN: FR76 1234 5678 9012 3456 7890 123</p>
-                    <p>BIC: REGIEFRPP</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowInvoiceDetailModal(false)}
-                    className="inline-flex items-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-                  >
-                    <XCircleIcon className="h-4 w-4" />
-                    Fermer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handlePrint}
-                    className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-                  >
-                    <PrinterIcon className="h-4 w-4" />
-                    Imprimer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDownloadPDF(selectedInvoice, contacts, solutions)}
-                    className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-                  >
-                    <ArrowDownTrayIcon className="h-4 w-4" />
-                    Télécharger
-                  </button>
-                  {selectedInvoice.statut !== "Payée" &&
-                    selectedInvoice.statut !== "Annulé" && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handlePrimaryActionClick(selectedInvoice)
-                        }
-                        className="inline-flex items-center gap-1 rounded-md bg-[#213f5b] px-4 py-2 text-sm font-medium text-white hover:bg-[#213f5b]/90"
-                      >
-                        <PaperAirplaneIcon className="h-4 w-4" />
-                        {selectedInvoice.statut === "Brouillon"
-                          ? "Envoyer"
-                          : "Marquer comme payée"}
-                      </button>
-                    )}
+                )}
+                <div className="mt-3 text-sm">
+                  {userProfile?.profile?.paymentInfo ? (
+                    <>
+                      <p>Mode de paiement: {userProfile.profile.paymentInfo.method}</p>
+                      <p>IBAN: {userProfile.profile.paymentInfo.iban}</p>
+                      <p>BIC: {userProfile.profile.paymentInfo.bic}</p>
+                      {userProfile.profile.paymentInfo.bankName && (
+                        <p>Banque: {userProfile.profile.paymentInfo.bankName}</p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <p>Mode de paiement: Virement bancaire</p>
+                      <p>IBAN: FR76 1234 5678 9012 3456 7890 123</p>
+                      <p>BIC: REGIEFRPP</p>
+                    </>
+                  )}
                 </div>
               </div>
-            </motion.div>
+
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowInvoiceDetailModal(false)}
+                  className="inline-flex items-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                >
+                  <XCircleIcon className="h-4 w-4" />
+                  Fermer
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                >
+                  <PrinterIcon className="h-4 w-4" />
+                  Imprimer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadPDF(selectedInvoice, contacts, solutions)}
+                  className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                >
+                  <ArrowDownTrayIcon className="h-4 w-4" />
+                  Télécharger
+                </button>
+                {selectedInvoice.statut !== "Payée" &&
+                  selectedInvoice.statut !== "Annulé" && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handlePrimaryActionClick(selectedInvoice)
+                      }
+                      className="inline-flex items-center gap-1 rounded-md bg-[#213f5b] px-4 py-2 text-sm font-medium text-white hover:bg-[#213f5b]/90"
+                    >
+                      <PaperAirplaneIcon className="h-4 w-4" />
+                      {selectedInvoice.statut === "Brouillon"
+                        ? "Envoyer"
+                        : "Marquer comme payée"}
+                    </button>
+                  )}
+              </div>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>
 
       {/* Modal Nouvelle Solution */}
       <AnimatePresence>

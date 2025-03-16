@@ -31,6 +31,11 @@ export default function Home() {
   // --- SLIDER SETUP FOR LEFT PANEL ---
   const slides = [
     {
+      image: "/Group 77.png",
+      // title: "Votre Nouveau Slide",
+      // description: "Description de votre nouveau slide.",
+    },
+    {
       image:
         "https://images.blush.design/8b20777ff46a2fdeed929f4ed34239ce?w=920&auto=compress&cs=srgb",
       title: "Planification Stratégique",
@@ -221,7 +226,7 @@ export default function Home() {
               <div className="mb-4 flex justify-center">
                 <Image
                   src={slides[currentSlide].image}
-                  alt={slides[currentSlide].title}
+                  alt={slides[currentSlide].title ?? "Slide image"}
                   width={600}
                   height={600}
                   className="object-contain"
