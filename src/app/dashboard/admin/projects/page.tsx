@@ -393,23 +393,6 @@ const sortedSolutions = Object.entries(solutionCounts)
 
   return (
     <div className="flex h-screen bg-white">
-      {/* Sidebar placeholder */}
-      {/* <motion.div
-        className="relative border-r border-[#bfddf9]/30 bg-white w-16 md:w-64"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-
-        <div className="p-4 hidden md:block">
-          <div className="h-10 w-full bg-[#213f5b]/10 rounded-lg animate-pulse"></div>
-          <div className="mt-8 space-y-4">
-            <div className="h-8 w-full bg-[#bfddf9]/20 rounded-lg"></div>
-            <div className="h-8 w-full bg-[#bfddf9]/20 rounded-lg"></div>
-            <div className="h-8 w-full bg-[#213f5b]/10 rounded-lg"></div>
-          </div>
-        </div>
-      </motion.div> */}
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

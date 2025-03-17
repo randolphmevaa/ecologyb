@@ -19,6 +19,7 @@ import {
   ShoppingBagIcon,
   CreditCardIcon,
   ChartBarIcon,
+  WrenchScrewdriverIcon,
   LifebuoyIcon,
   DocumentIcon,
   // Cog6ToothIcon,
@@ -120,7 +121,7 @@ export function Sidebar({ role }) {
     navigation = [
       { name: "Accueil", href: "/client/dashboard", icon: HomeIcon },
       { name: "Mes Projets / Suivi des Projets", href: "/client/projects", icon: FolderIcon },
-      // { name: "Facturation / Paiements", href: "/client/billing", icon: CreditCardIcon },
+      { name: "Installation", href: '/client/installation', icon: WrenchScrewdriverIcon },
       { name: "Support / Tickets", href: "/client/support", icon: LifebuoyIcon },
       { name: "Documents", href: "/client/documents", icon: DocumentIcon },
       { name: "Chat / Mon Conseiller", href: "/client/contacts", icon: UserCircleIcon },
