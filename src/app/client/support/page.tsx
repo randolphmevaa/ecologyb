@@ -28,7 +28,10 @@ import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false });
+const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), {
+  ssr: false,
+  loading: () => <p>Loading PDF components...</p>
+});
 
 {/* Type definitions */}
 interface PriorityBadgeProps {
