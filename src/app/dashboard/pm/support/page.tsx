@@ -799,6 +799,19 @@ interface Client {
   // add other properties as needed
 }
 
+interface Attestation {
+  assignedRegie?: string;
+  id?: string;
+  // Add other properties that might be in your attestation objects
+  // These are just examples based on common patterns in your code
+  createdAt?: string;
+  customerId?: string;
+  technicianId?: string;
+  status?: string;
+  date?: string;
+  // Add any other properties you're using from attestation objects
+}
+
 const AttestationModal: React.FC = () => {
   const [showAttestationModal, setShowAttestationModal] = useState<boolean>(false);
   const [clients, setClients] = useState<Client[]>([]);
@@ -1689,7 +1702,7 @@ export default function SupportPage() {
         if (response.data.success) {
           // Filter attestations by assignedRegie if currentUserRegieId exists
           const filteredAttestations = currentUserRegieId 
-            ? response.data.data.filter((attestation: any) => attestation.assignedRegie === currentUserRegieId)
+            ? response.data.data.filter((attestation: Attestation) => attestation.assignedRegie === currentUserRegieId)
             : response.data.data;
           
           // Set the count to the number of filtered items
