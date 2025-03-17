@@ -13,19 +13,14 @@ import {
   MapPinIcon,
   UserIcon,
   PaperAirplaneIcon,
-  // DocumentArrowDownIcon,
-  // DocumentCheckIcon,
   ArrowPathIcon,
   XMarkIcon,
-  // ChevronDownIcon,
-  // ArrowDownTrayIcon,
   DocumentTextIcon,
-  // BellAlertIcon,
   CloudArrowDownIcon,
   ArrowTopRightOnSquareIcon
 } from "@heroicons/react/24/outline";
 import { Header } from "@/components/Header";
-import { useEffect, useState, useRef, JSX } from "react";
+import { useEffect, useState, useRef } from "react";
 import { TicketIcon, Check, FileText, FileSignature } from "lucide-react";
 import SignatureCanvas from 'react-signature-canvas';
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer';
@@ -95,6 +90,7 @@ interface ApiTicket {
 
 // Define the UI ticket type.
 interface Ticket {
+  id: string;
   title: string;
   ticket: string;
   type: string;
@@ -109,7 +105,6 @@ interface Ticket {
   customerFirstName: string;
   customerLastName: string;
   problem: string;
-  id: string;
   ticketNumber: string;
   subject: string;
   solution: string;
@@ -122,7 +117,13 @@ interface Ticket {
   attestations: AttestationDocument[];
 }
 
-// Sample attestation data to inject
+// PDF Document props interface
+interface AttestationPDFProps {
+  attestation: AttestationDocument;
+  ticketData: Ticket;
+}
+
+// Sample attestation data
 const sampleAttestations: AttestationDocument[] = [
   {
     id: "att-001",
@@ -255,6 +256,132 @@ const sampleAttestations: AttestationDocument[] = [
         </div>
       </div>
     `
+  }
+];
+
+// Sample API tickets to use instead of real API data
+const sampleApiTickets: ApiTicket[] = [
+  {
+    _id: "sample-123",
+    ticket: "SAV-2025-0123",
+    status: "in progress",
+    priority: "medium",
+    contactId: "contact-123",
+    customerFirstName: "Marie",
+    customerLastName: "Dubois",
+    problem: "Dysfonctionnement du système de chauffage",
+    notes: "Le client signale que son système de chauffage ne fonctionne pas correctement depuis 3 jours. La température ne monte pas au-dessus de 17°C malgré les réglages.",
+    technicianId: "tech-456",
+    technicianFirstName: "Thomas",
+    technicianLastName: "Martin",
+    createdAt: "2025-03-10T09:30:00Z",
+    end: "2025-03-18T16:00:00Z",
+    location: "15 Rue des Fleurs, 75001 Paris, France",
+    participants: "Thomas Martin, Marie Dubois",
+    start: "2025-03-15T14:00:00Z",
+    title: "Réparation système de chauffage",
+    type: "Intervention technique",
+    conversation: [
+      {
+        message: "Bonjour, je confirme ma disponibilité pour l'intervention ce samedi.",
+        sender: "technicien",
+        timestamp: Date.now() - 86400000 * 3
+      },
+      {
+        message: "Parfait, je serai présent. Merci de votre réactivité.",
+        sender: "client",
+        timestamp: Date.now() - 86400000 * 2
+      }
+    ],
+    attestations: [sampleAttestations[0], sampleAttestations[1]] // First two attestations
+  },
+  {
+    _id: "sample-124",
+    ticket: "SAV-2025-0124",
+    status: "open",
+    priority: "high",
+    contactId: "contact-123",
+    customerFirstName: "Jean",
+    customerLastName: "Michel",
+    problem: "Panne électrique dans tout l'appartement",
+    notes: "Le client signale une coupure totale d'électricité dans son appartement depuis ce matin. Il a vérifié le disjoncteur principal qui semble fonctionnel.",
+    technicianId: "tech-789",
+    technicianFirstName: "Sophie",
+    technicianLastName: "Leclerc",
+    createdAt: "2025-03-15T11:45:00Z",
+    end: "2025-03-16T18:00:00Z",
+    location: "8 Avenue Victor Hugo, 75016 Paris, France",
+    participants: "Sophie Leclerc, Jean Michel",
+    start: "2025-03-16T15:00:00Z",
+    title: "Dépannage électrique urgent",
+    type: "Intervention d'urgence",
+    conversation: [
+      {
+        message: "Bonjour, suite à votre appel, je peux intervenir demain à 15h.",
+        sender: "technicien",
+        timestamp: Date.now() - 86400000 * 1
+      },
+      {
+        message: "Merci beaucoup, c'est urgent car nous n'avons plus d'électricité du tout.",
+        sender: "client",
+        timestamp: Date.now() - 86400000 * 1 + 3600000
+      },
+      {
+        message: "Je comprends l'urgence. Avez-vous essayé de vérifier le tableau électrique?",
+        sender: "technicien",
+        timestamp: Date.now() - 86400000 * 1 + 3900000
+      },
+      {
+        message: "Oui, j'ai vérifié et réarmé tous les disjoncteurs, sans résultat.",
+        sender: "client",
+        timestamp: Date.now() - 86400000 * 1 + 4200000
+      }
+    ],
+    attestations: [] // No attestations for this ticket
+  },
+  {
+    _id: "sample-125",
+    ticket: "SAV-2025-0125",
+    status: "closed",
+    priority: "low",
+    contactId: "contact-123",
+    customerFirstName: "Laure",
+    customerLastName: "Dupont",
+    problem: "Configuration du thermostat intelligent",
+    notes: "La cliente a récemment fait installer un thermostat intelligent et souhaite une assistance pour sa configuration correcte et optimisation énergétique.",
+    technicianId: "tech-101",
+    technicianFirstName: "Antoine",
+    technicianLastName: "Bernard",
+    createdAt: "2025-03-05T10:00:00Z",
+    end: "2025-03-08T11:30:00Z",
+    location: "25 Rue de la République, 69002 Lyon, France",
+    participants: "Antoine Bernard, Laure Dupont",
+    start: "2025-03-08T10:00:00Z",
+    title: "Configuration thermostat intelligent",
+    type: "Assistance technique",
+    conversation: [
+      {
+        message: "Bonjour Madame Dupont, je serai chez vous ce samedi à 10h pour la configuration de votre thermostat.",
+        sender: "technicien",
+        timestamp: Date.now() - 86400000 * 10
+      },
+      {
+        message: "Merci beaucoup, j'ai hâte de pouvoir utiliser ce nouveau système correctement.",
+        sender: "client",
+        timestamp: Date.now() - 86400000 * 9
+      },
+      {
+        message: "L'intervention a été réalisée avec succès. Je vous ai envoyé par email un guide d'utilisation.",
+        sender: "technicien",
+        timestamp: Date.now() - 86400000 * 7
+      },
+      {
+        message: "Merci pour votre intervention efficace et le guide! Tout fonctionne parfaitement maintenant.",
+        sender: "client",
+        timestamp: Date.now() - 86400000 * 7 + 3600000
+      }
+    ],
+    attestations: [sampleAttestations[2]] // Third attestation for this ticket
   }
 ];
 
@@ -501,25 +628,19 @@ const ClockIcon: React.FC<IconProps> = ({ className }) => (
   </svg>
 );
 
-interface AttestationPDFProps {
-  attestation: AttestationDocument;
-  ticketData: Ticket;
-}
-
 export default function SAV() {
-  const [showWelcome, setShowWelcome] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("Tous");
-  const [selectedPriority, setSelectedPriority] = useState<string>("Tous");
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("Tous");
+  const [selectedPriority, setSelectedPriority] = useState("Tous");
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [contactId, setContactId] = useState<string>("");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [mapType, setMapType] = useState('roadmap');
   const [activeTab, setActiveTab] = useState('details');
   const [showNewBadge, setShowNewBadge] = useState(true);
   const [selectedAttestation, setSelectedAttestation] = useState<AttestationDocument | null>(null);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
-  const signaturePadRef = useRef<SignatureCanvas>(null);
+  const signaturePadRef = useRef<SignatureCanvas | null>(null);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   
   // Simulate having new attestations
@@ -529,88 +650,18 @@ export default function SAV() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Retrieve clientInfo from localStorage to get contactId.
-  useEffect(() => {
-    const clientInfoStr = localStorage.getItem("clientInfo");
-    if (clientInfoStr) {
-      try {
-        const clientInfo = JSON.parse(clientInfoStr);
-        // Extract contactId from the nested contact object.
-        const id = clientInfo.contact?.contactId;
-        if (id) {
-          setContactId(id);
-        }
-      } catch (err) {
-        console.error("Error parsing clientInfo from localStorage:", err);
-      }
-    }
-  }, []);
-
   // Hide the welcome message after 5 seconds.
   useEffect(() => {
     const timer = setTimeout(() => setShowWelcome(false), 5000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch tickets from the API once we have a contactId.
+  // Use sample data instead of API call
   useEffect(() => {
-    if (!contactId) return;
-    async function fetchTickets() {
-      try {
-        const res = await fetch(`/api/tickets?contactId=${contactId}`);
-        const data: ApiTicket[] = await res.json();
-        
-        // Add sample attestation data to the first ticket for demo purposes
-        if (data.length > 0) {
-          data[0].attestations = sampleAttestations;
-        }
-        
-        const transformedTickets = data.map(transformTicket);
-        setTickets(transformedTickets);
-      } catch (error) {
-        console.error("Error fetching tickets:", error);
-        
-        // If fetch fails, create sample data for demo purposes
-        const sampleApiTicket: ApiTicket = {
-          _id: "sample-123",
-          ticket: "SAV-2025-0123",
-          status: "in progress",
-          priority: "medium",
-          contactId: "contact-123",
-          customerFirstName: "Marie",
-          customerLastName: "Dubois",
-          problem: "Dysfonctionnement du système de chauffage",
-          notes: "Le client signale que son système de chauffage ne fonctionne pas correctement depuis 3 jours. La température ne monte pas au-dessus de 17°C malgré les réglages.",
-          technicianId: "tech-456",
-          technicianFirstName: "Thomas",
-          technicianLastName: "Martin",
-          createdAt: "2025-03-10T09:30:00Z",
-          end: "2025-03-18T16:00:00Z",
-          location: "15 Rue des Fleurs, 75001 Paris, France",
-          participants: "Thomas Martin, Marie Dubois",
-          start: "2025-03-15T14:00:00Z",
-          title: "Réparation système de chauffage",
-          type: "Intervention technique",
-          conversation: [
-            {
-              message: "Bonjour, je confirme ma disponibilité pour l'intervention ce samedi.",
-              sender: "technicien",
-              timestamp: Date.now() - 86400000 * 3
-            },
-            {
-              message: "Parfait, je serai présent. Merci de votre réactivité.",
-              sender: "client",
-              timestamp: Date.now() - 86400000 * 2
-            }
-          ],
-          attestations: sampleAttestations
-        };
-        
-        setTickets([transformTicket(sampleApiTicket)]);
-      }
-    }
-    fetchTickets();
-  }, [contactId]);
+    // Transform the sample data
+    const transformedTickets = sampleApiTickets.map(transformTicket);
+    setTickets(transformedTickets);
+  }, []);
 
   // Filter tickets based on search query, status, and priority.
   const filteredTickets = tickets.filter((ticket) => {
@@ -634,7 +685,7 @@ export default function SAV() {
     }
   };
 
-  const getPriorityIcon = (priority: string): JSX.Element => {
+  const getPriorityIcon = (priority: string) => {
     const iconStyle = "h-5 w-5";
     switch (priority) {
       case "Haute":
@@ -704,7 +755,7 @@ export default function SAV() {
             if (att.id === selectedAttestation.id) {
               return {
                 ...att,
-                status: 'signed' as "signed",
+                status: 'signed' as 'pending' | 'signed' | 'verified',
                 signedDate: new Date().toISOString()
               };
             }
@@ -727,7 +778,7 @@ export default function SAV() {
           if (att.id === selectedAttestation.id) {
             return {
               ...att,
-              status: 'signed' as "signed",
+              status: 'signed' as 'pending' | 'signed' | 'verified',
               signedDate: new Date().toISOString()
             };
           }
@@ -756,7 +807,7 @@ export default function SAV() {
     setShowPdfPreview(true);
   };
   
-  const hasUnsignedAttestations = (ticket: Ticket) => {
+  const hasUnsignedAttestations = (ticket: Ticket): boolean => {
     return ticket.attestations && ticket.attestations.some(att => att.status === 'pending');
   };
 
@@ -1605,6 +1656,7 @@ export default function SAV() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
               onClick={() => setShowSignatureModal(false)}
             />
             
@@ -1654,7 +1706,7 @@ export default function SAV() {
                     />
                   </div>
                   <div className="flex justify-end mt-2">
-                                          <button 
+                    <button 
                       onClick={clearSignature}
                       className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
                     >
