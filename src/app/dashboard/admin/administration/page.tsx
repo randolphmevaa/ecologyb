@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import {
   Cog6ToothIcon,
   UserCircleIcon,
-  // EllipsisHorizontalIcon,
   DocumentArrowDownIcon,
   ShieldCheckIcon,
   DocumentTextIcon,
@@ -15,7 +14,7 @@ import {
   LifebuoyIcon,
   MagnifyingGlassIcon,
   UserGroupIcon,
-  TrashIcon,
+  // TrashIcon,
   PencilIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -56,12 +55,12 @@ export type RoleKey =
 
 /* --- Configuration des rôles (valeurs envoyées au backend) --- */
 const rolesConfig: Record<RoleKey, { color: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }> = {
-  "Sales Representative / Account Executive": { color: "#f59e0b", icon: UserGroupIcon },
-  "Project / Installation Manager": { color: "#10b981", icon: Cog6ToothIcon },
-  "Technician / Installer": { color: "#2a75c7", icon: Cog6ToothIcon },
-  "Customer Support / Service Representative": { color: "#8b5cf6", icon: LifebuoyIcon },
-  "Super Admin": { color: "#ef4444", icon: ShieldCheckIcon },
-  "Client / Customer (Client Portal)": { color: "#6b7280", icon: UserCircleIcon },
+  "Sales Representative / Account Executive": { color: "#bfddf9", icon: UserGroupIcon },
+  "Project / Installation Manager": { color: "#d2fcb2", icon: Cog6ToothIcon },
+  "Technician / Installer": { color: "#89c4f7", icon: Cog6ToothIcon },
+  "Customer Support / Service Representative": { color: "#b3f99c", icon: LifebuoyIcon },
+  "Super Admin": { color: "#213f5b", icon: ShieldCheckIcon },
+  "Client / Customer (Client Portal)": { color: "#abd4f6", icon: UserCircleIcon },
 };
 
 /* --- Traductions des rôles pour l'affichage en français --- */
@@ -75,76 +74,25 @@ const roleTranslations: Record<RoleKey, string> = {
 };
 
 /* --- Configuration par défaut si le rôle n'est pas reconnu --- */
-const defaultRoleConfig = { color: "#6b7280", icon: UserCircleIcon };
-
-// Sample activity logs
-// const activityLogs = [
-//   {
-//     id: 1,
-//     action: "Modification de rôle utilisateur",
-//     details: "Changement de Super Admin → Commercial",
-//     time: "15h30",
-//     user: "admin@entreprise.com",
-//     icon: DocumentTextIcon
-//   },
-//   {
-//     id: 2,
-//     action: "Nouvel utilisateur créé",
-//     details: "tech@exemple.com ajouté comme Technicien",
-//     time: "14h15",
-//     user: "admin@entreprise.com",
-//     icon: PlusIcon
-//   },
-//   {
-//     id: 3,
-//     action: "Suppression d'utilisateur",
-//     details: "client@ancien.com supprimé",
-//     time: "13h45",
-//     user: "admin@entreprise.com",
-//     icon: TrashIcon
-//   }
-// ];
-
-interface ActivityLog {
-  id: string;
-  action: string;
-  details: string;
-  time: string;
-  user: string;
-  // If your log includes an icon, you can optionally define it like this:
-  icon?: React.FC<React.SVGProps<SVGSVGElement>>;
-}
-
+const defaultRoleConfig = { color: "#bfddf9", icon: UserCircleIcon };
 
 export default function AdministrationPage() {
+  // Global theme settings for consistent UI
+
   const [users, setUsers] = useState<IUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
-  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
 
   // États pour afficher les modaux
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<IUser | null>(null);
 
-  // Add this state at the top of your component along with the other useState declarations:
-  const [showAllActivities ] = useState(false);
-
-  // Create a sorted copy of your activityLogs array (assuming the 'time' field is parseable):
-  const sortedActivityLogs = [...activityLogs].sort(
-    (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
-  );
-
-  // Determine which logs to display:
-  const visibleActivityLogs = showAllActivities ? sortedActivityLogs : sortedActivityLogs.slice(0, 4);
-
-  
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [roleFilter, setRoleFilter] = useState<string>("");
-  const itemsPerPage = 8;
+  const itemsPerPage = 12; // Increased to show more cards per page
 
   // Stats counter
   const [stats, setStats] = useState({
@@ -153,15 +101,6 @@ export default function AdministrationPage() {
     commercial: 0,
     tech: 0
   });
-
-  // Define a helper function at the top of your component:
-const getLogIcon = (action: string) => {
-  if (action === "Nouvel utilisateur créé") return PlusIcon;
-  if (action === "Suppression d'utilisateur") return TrashIcon;
-  // Default for "Modification de rôle utilisateur" and any other action:
-  return DocumentTextIcon;
-};
-
 
   // Récupération des utilisateurs via l'API
   useEffect(() => {
@@ -195,31 +134,6 @@ const getLogIcon = (action: string) => {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    async function fetchActivityLogs() {
-      try {
-        const res = await fetch("/api/activity-logs");
-        if (!res.ok) {
-          throw new Error("Failed to fetch activity logs");
-        }
-        const data = await res.json();
-        // Update your state with the fetched logs
-        setActivityLogs(data);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    fetchActivityLogs();
-  }, []);
-
-
-  // Function to trigger CSV export
-  const exportCSV = () => {
-    // Redirect the browser to the API route with the export query param
-    window.location.href = "/api/activity-logs?export=csv";
-  };
-  
-
   // Filtrage des utilisateurs selon le terme de recherche
   const filteredUsers = users.filter((user) => {
     const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
@@ -229,37 +143,6 @@ const getLogIcon = (action: string) => {
     const matchesRole = roleFilter ? user.role === roleFilter : true;
     return matchesSearch && matchesRole;
   });
-
-  // Fonction pour mettre à jour le rôle (et l'email) d'un utilisateur
-  // const handleRoleChange = async (userId: string, email: string, newRole: string) => {
-  //   try {
-  //     const res = await fetch(`/api/users/${userId}`, {
-  //       method: "PATCH",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ email, role: newRole }),
-  //     });
-  //     if (!res.ok) {
-  //       const data = await res.json();
-  //       throw new Error(data.message || "Erreur lors de la mise à jour du rôle");
-  //     }
-  //     const updatedUser: IUser = await res.json();
-  //     setUsers((prev) => prev.map((u) => (u._id === userId ? updatedUser : u)));
-  
-  //     // Log the activity after a successful role change
-  //     await fetch("/api/activity-logs", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         title: "Modification de rôle utilisateur",
-  //         details: `Changement de rôle pour ${email} vers ${newRole}`,
-  //         user: "admin@entreprise.com", // Replace with the actual admin user info if available
-  //       }),
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //     alert("La mise à jour du rôle a échoué");
-  //   }
-  // };
 
   // Calculate the indices for slicing the users array:
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -277,29 +160,61 @@ const getLogIcon = (action: string) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gradient-to-b from-[#f8fafc] to-[#f0f7ff]">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto px-0 sm:px-2">
             {/* Dashboard Header with Stats */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-6">Administration</h1>
+            <div className="mb-10">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                <div className="relative">
+                  <div className="absolute -left-3 md:-left-5 top-1 w-1.5 h-12 bg-gradient-to-b from-[#bfddf9] to-[#d2fcb2] rounded-full"></div>
+                  <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#213f5b] to-[#2c5681] mb-2 pl-2">Administration</h1>
+                  <p className="text-[#213f5b] opacity-75 pl-2">Gérez vos utilisateurs et leur accès à la plateforme</p>
+                  <div className="absolute -z-10 -top-10 -left-10 w-40 h-40 bg-[#bfddf9] opacity-10 rounded-full blur-3xl"></div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-green-500 border-2 border-white shadow-md flex items-center justify-center text-white text-xs font-bold">JD</div>
+                    <div className="w-8 h-8 rounded-full bg-[#bfddf9] border-2 border-white shadow-md -ml-2 flex items-center justify-center text-[#213f5b] text-xs font-bold">AL</div>
+                    <div className="w-8 h-8 rounded-full bg-[#d2fcb2] border-2 border-white shadow-md -ml-2 flex items-center justify-center text-[#213f5b] text-xs font-bold">MC</div>
+                    <div className="w-8 h-8 rounded-full bg-[#213f5b] border-2 border-white shadow-md -ml-2 flex items-center justify-center text-white text-xs font-bold">+2</div>
+                  </div>
+                  <div className="h-8 w-px bg-gray-200 mx-2"></div>
+                  <Button
+                    onClick={() => {/* Handle action */}}
+                    className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-colors rounded-lg px-4 py-2 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Nouvelle Équipe
+                  </Button>
+                </div>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+                  transition={{ delay: 0.1, duration: 0.4 }}
+                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
+                  whileHover={{ scale: 1.02 }}
                 >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#bfddf9] to-[#d2fcb2] group-hover:h-1.5 transition-all"></div>
+                  <div className="absolute -z-10 right-0 bottom-0 w-32 h-32 bg-[#bfddf9] opacity-5 rounded-full blur-2xl group-hover:opacity-10 transition-opacity"></div>
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">Total Utilisateurs</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">{stats.totalUsers}</p>
+                      <p className="text-sm text-[#213f5b] font-medium">Total Utilisateurs</p>
+                      <div className="flex items-center">
+                        <p className="text-4xl font-bold text-[#213f5b] mt-1">{stats.totalUsers}</p>
+                        <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">+5%</span>
+                      </div>
+                      <p className="text-xs text-[#213f5b] opacity-60 mt-1">depuis le mois dernier</p>
                     </div>
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <UserGroupIcon className="h-6 w-6 text-blue-600" />
+                    <div className="p-3 bg-[#bfddf9] rounded-xl">
+                      <UserGroupIcon className="h-6 w-6 text-[#213f5b]" />
                     </div>
                   </div>
                 </motion.div>
@@ -307,16 +222,23 @@ const getLogIcon = (action: string) => {
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
+                  whileHover={{ scale: 1.02 }}
                 >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-[#213f5b] group-hover:h-1.5 transition-all"></div>
+                  <div className="absolute -z-10 right-0 bottom-0 w-32 h-32 bg-[#213f5b] opacity-5 rounded-full blur-2xl group-hover:opacity-10 transition-opacity"></div>
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">Administrateurs</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">{stats.admins}</p>
+                      <p className="text-sm text-[#213f5b] font-medium">Administrateurs</p>
+                      <div className="flex items-center">
+                        <p className="text-4xl font-bold text-[#213f5b] mt-1">{stats.admins}</p>
+                        <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">Limité</span>
+                      </div>
+                      <p className="text-xs text-[#213f5b] opacity-60 mt-1">privilèges complets</p>
                     </div>
-                    <div className="p-3 bg-red-50 rounded-lg">
-                      <ShieldCheckIcon className="h-6 w-6 text-red-600" />
+                    <div className="p-3 bg-[#213f5b] rounded-xl">
+                      <ShieldCheckIcon className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </motion.div>
@@ -324,16 +246,23 @@ const getLogIcon = (action: string) => {
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+                  transition={{ delay: 0.3, duration: 0.4 }}
+                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
+                  whileHover={{ scale: 1.02 }}
                 >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-[#d2fcb2] group-hover:h-1.5 transition-all"></div>
+                  <div className="absolute -z-10 right-0 bottom-0 w-32 h-32 bg-[#d2fcb2] opacity-5 rounded-full blur-2xl group-hover:opacity-10 transition-opacity"></div>
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">Commerciaux</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">{stats.commercial}</p>
+                      <p className="text-sm text-[#213f5b] font-medium">Commerciaux</p>
+                      <div className="flex items-center">
+                        <p className="text-4xl font-bold text-[#213f5b] mt-1">{stats.commercial}</p>
+                        <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">+12%</span>
+                      </div>
+                      <p className="text-xs text-[#213f5b] opacity-60 mt-1">équipe en expansion</p>
                     </div>
-                    <div className="p-3 bg-amber-50 rounded-lg">
-                      <UserGroupIcon className="h-6 w-6 text-amber-600" />
+                    <div className="p-3 bg-[#d2fcb2] rounded-xl">
+                      <UserGroupIcon className="h-6 w-6 text-[#213f5b]" />
                     </div>
                   </div>
                 </motion.div>
@@ -341,16 +270,23 @@ const getLogIcon = (action: string) => {
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+                  transition={{ delay: 0.4, duration: 0.4 }}
+                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
+                  whileHover={{ scale: 1.02 }}
                 >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-[#bfddf9] group-hover:h-1.5 transition-all"></div>
+                  <div className="absolute -z-10 right-0 bottom-0 w-32 h-32 bg-[#bfddf9] opacity-5 rounded-full blur-2xl group-hover:opacity-10 transition-opacity"></div>
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">Techniciens</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">{stats.tech}</p>
+                      <p className="text-sm text-[#213f5b] font-medium">Techniciens</p>
+                      <div className="flex items-center">
+                        <p className="text-4xl font-bold text-[#213f5b] mt-1">{stats.tech}</p>
+                        <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">Stable</span>
+                      </div>
+                      <p className="text-xs text-[#213f5b] opacity-60 mt-1">support technique</p>
                     </div>
-                    <div className="p-3 bg-cyan-50 rounded-lg">
-                      <Cog6ToothIcon className="h-6 w-6 text-cyan-600" />
+                    <div className="p-3 bg-[#bfddf9] rounded-xl">
+                      <Cog6ToothIcon className="h-6 w-6 text-[#213f5b]" />
                     </div>
                   </div>
                 </motion.div>
@@ -358,40 +294,60 @@ const getLogIcon = (action: string) => {
             </div>
           
             {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Panneau de Gestion des Utilisateurs */}
+            <div className="grid grid-cols-1 gap-6">
+              {/* Full Width Users Management Section */}
               <motion.div
-                className="lg:col-span-2 space-y-6"
+                className="space-y-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
               >
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-                  <div className="p-6 border-b border-gray-100">
+                <div className="bg-white backdrop-blur-sm bg-opacity-95 rounded-2xl shadow-[0_10px_35px_-15px_rgba(33,63,91,0.1)] overflow-hidden border border-[#f0f0f0] relative">
+                  <div className="absolute -z-10 right-0 top-0 w-96 h-96 bg-[#bfddf9] opacity-5 rounded-full blur-3xl"></div>
+                  <div className="absolute -z-10 left-0 bottom-0 w-96 h-96 bg-[#d2fcb2] opacity-5 rounded-full blur-3xl"></div>
+                  <div className="p-8 border-b border-[#f0f0f0] bg-gradient-to-r from-white to-[#f8fafc]">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                      <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                        <UserGroupIcon className="h-5 w-5 text-blue-600" />
-                        Gestion des Utilisateurs
-                      </h2>
-                      <Button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white transition-colors rounded-lg px-4 py-2 flex items-center"
-                      >
-                        <PlusIcon className="h-4 w-4 mr-2" />
-                        Nouvel Utilisateur
-                      </Button>
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="h-8 w-1 rounded-full bg-[#213f5b]"></div>
+                          <h2 className="text-2xl font-bold text-[#213f5b] flex items-center gap-2">
+                            Gestion des Utilisateurs
+                          </h2>
+                        </div>
+                        <p className="text-[#213f5b] opacity-70 ml-3 pl-3">Ajoutez, modifiez ou supprimez des utilisateurs de votre plateforme</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {/* Handle Import */}}
+                          className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9] transition-colors rounded-lg px-4 py-2 flex items-center"
+                        >
+                          <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
+                          Importer
+                        </Button>
+                        <Button
+                          onClick={() => setIsAddModalOpen(true)}
+                          className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
+                        >
+                          <PlusIcon className="h-4 w-4 mr-2" />
+                          Nouvel Utilisateur
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   
                   {/* Search and Filter Toolbar */}
-                  <div className="p-4 bg-gray-50 border-b border-gray-100">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex-1 min-w-[240px] relative">
-                        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                  <div className="p-6 bg-white border-b border-[#f0f0f0]">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <div className="flex-1 min-w-[300px] relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <MagnifyingGlassIcon className="h-5 w-5 text-[#213f5b] opacity-50" />
+                        </div>
                         <input
                           type="text"
-                          placeholder="Rechercher par email, nom..."
-                          className="pl-10 pr-4 py-2 w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                          placeholder="Rechercher par email, nom, rôle..."
+                          className="pl-10 pr-12 py-3 w-full rounded-xl border-[#eaeaea] focus:border-[#bfddf9] focus:ring-2 focus:ring-[#bfddf9] shadow-sm transition-all"
                           value={searchTerm}
                           onChange={(e) => {
                             setSearchTerm(e.target.value);
@@ -401,35 +357,90 @@ const getLogIcon = (action: string) => {
                         {searchTerm && (
                           <button 
                             onClick={() => setSearchTerm("")}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#213f5b] hover:text-[#152a3d] bg-[#f0f0f0] hover:bg-[#e0e0e0] rounded-full p-1 transition-colors"
                           >
                             <XMarkIcon className="h-4 w-4" />
                           </button>
                         )}
                       </div>
                       
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-                        className="flex items-center gap-1 text-gray-700 border-gray-200 hover:bg-gray-100"
-                      >
-                        <FunnelIcon className="h-4 w-4" />
-                        Filtres
-                        {roleFilter && <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full ml-1">1</span>}
-                      </Button>
+                      <div className="flex items-center gap-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+                          className="flex items-center gap-2 text-[#213f5b] border-[#eaeaea] hover:border-[#bfddf9] hover:bg-[#f8fafc] rounded-xl py-3 px-4 shadow-sm transition-all"
+                        >
+                          <FunnelIcon className="h-4 w-4" />
+                          <span>Filtres</span>
+                          {roleFilter && (
+                            <span className="flex items-center justify-center h-5 w-5 bg-[#d2fcb2] text-[#213f5b] text-xs font-medium rounded-full">
+                              1
+                            </span>
+                          )}
+                        </Button>
+                        
+                        <div className="h-8 border-r border-[#eaeaea]"></div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="flex items-center justify-center rounded-full h-9 w-9 text-[#213f5b] hover:bg-[#f0f0f0]"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                            </svg>
+                          </Button>
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="flex items-center justify-center rounded-full h-9 w-9 text-[#213f5b] hover:bg-[#f0f0f0]"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                       
-                      {(roleFilter || searchTerm) && (
+                    {(roleFilter || searchTerm) && (
+                      <div className="mt-3 flex items-center">
+                        <div className="text-sm text-[#213f5b] mr-2">Filtres actifs:</div>
+                        {roleFilter && (
+                          <div className="flex items-center bg-[#f0f0f0] text-[#213f5b] text-sm rounded-full px-3 py-1 mr-2">
+                            <span className="mr-1">Rôle: {roleTranslations[roleFilter as RoleKey]}</span>
+                            <button 
+                              onClick={() => setRoleFilter("")}
+                              className="text-[#213f5b] hover:text-[#152a3d]"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
+                        {searchTerm && (
+                          <div className="flex items-center bg-[#f0f0f0] text-[#213f5b] text-sm rounded-full px-3 py-1">
+                            <span className="mr-1">Recherche: {searchTerm}</span>
+                            <button 
+                              onClick={() => setSearchTerm("")}
+                              className="text-[#213f5b] hover:text-[#152a3d]"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
                         <Button 
                           variant="ghost" 
                           size="sm" 
                           onClick={clearFilters}
-                          className="text-gray-500 hover:text-gray-700"
+                          className="text-[#213f5b] hover:text-[#152a3d] ml-2 text-sm"
                         >
-                          Effacer les filtres
+                          Tout effacer
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     
                     {/* Expanded Filters */}
                     <AnimatePresence>
@@ -440,17 +451,17 @@ const getLogIcon = (action: string) => {
                           exit={{ height: 0, opacity: 0 }}
                           className="mt-3 overflow-hidden"
                         >
-                          <div className="pt-3 border-t border-gray-200">
+                          <div className="pt-3 border-t border-[#bfddf9]">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1">Rôle</label>
                                 <select
                                   value={roleFilter}
                                   onChange={(e) => {
                                     setRoleFilter(e.target.value);
                                     setCurrentPage(1);
                                   }}
-                                  className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                  className="w-full rounded-lg border-[#bfddf9] focus:border-[#213f5b] focus:ring-1 focus:ring-[#213f5b]"
                                 >
                                   <option value="">Tous les rôles</option>
                                   {(Object.keys(rolesConfig) as RoleKey[]).map((r) => (
@@ -467,25 +478,38 @@ const getLogIcon = (action: string) => {
                     </AnimatePresence>
                   </div>
     
-                  {/* User List */}
-                  <div className="overflow-hidden">
+                  {/* User Grid */}
+                  <div className="p-4 md:p-6 lg:p-8 bg-white">
                     {/* Loading, Error, and Empty States */}
                     {loading && (
-                      <div className="flex justify-center items-center p-12">
-                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
+                      <div className="flex flex-col justify-center items-center p-12">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#bfddf9] to-[#d2fcb2] rounded-full blur opacity-30 animate-pulse"></div>
+                          <div className="relative animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#213f5b]"></div>
+                        </div>
+                        <p className="mt-4 text-[#213f5b] animate-pulse">Chargement des utilisateurs...</p>
                       </div>
                     )}
                     
                     {error && (
                       <div className="p-6 text-center">
-                        <div className="bg-red-50 p-4 rounded-lg inline-block">
-                          <p className="text-red-700 font-medium">Erreur: {error}</p>
+                        <div className="bg-gradient-to-r from-red-50 to-red-100 p-6 rounded-xl inline-block shadow-md border border-red-200 max-w-md mx-auto">
+                          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center text-red-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-semibold text-red-800 mb-2">Erreur de chargement</h3>
+                          <p className="text-red-700 mb-4">{error}</p>
                           <Button 
                             variant="outline" 
-                            size="sm" 
-                            className="mt-2 text-red-600 border-red-200 hover:bg-red-50"
+                            size="lg" 
+                            className="mt-2 text-red-600 border-red-300 hover:bg-red-100 rounded-xl py-2.5 px-5 shadow-sm transition-all hover:shadow"
                             onClick={() => window.location.reload()}
                           >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
                             Rafraîchir la page
                           </Button>
                         </div>
@@ -493,33 +517,42 @@ const getLogIcon = (action: string) => {
                     )}
                     
                     {!loading && !error && filteredUsers.length === 0 && (
-                      <div className="p-12 text-center">
-                        <UserGroupIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-1">Aucun utilisateur trouvé</h3>
-                        <p className="text-gray-500 mb-4">Modifiez vos filtres ou ajoutez un nouvel utilisateur</p>
-                        <div className="flex justify-center gap-3">
-                          <Button 
-                            variant="outline" 
-                            onClick={clearFilters}
-                            className="border-gray-200 text-gray-700 hover:bg-gray-50"
-                          >
-                            Effacer les filtres
-                          </Button>
-                          <Button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                          >
-                            <PlusIcon className="h-4 w-4 mr-2" />
-                            Nouvel Utilisateur
-                          </Button>
+                      <div className="p-8 md:p-12 text-center">
+                        <div className="max-w-md mx-auto">
+                          <div className="relative mx-auto mb-6 w-24 h-24">
+                            <div className="absolute inset-0 bg-[#bfddf9] opacity-20 rounded-full animate-pulse"></div>
+                            <div className="absolute inset-4 bg-[#bfddf9] opacity-20 rounded-full animate-pulse delay-150"></div>
+                            <UserGroupIcon className="h-24 w-24 text-[#bfddf9] relative z-10" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-[#213f5b] mb-2">Aucun utilisateur trouvé</h3>
+                          <p className="text-[#213f5b] opacity-75 mb-6 max-w-xs mx-auto">Aucun utilisateur ne correspond à vos critères de recherche. Modifiez vos filtres ou ajoutez un nouvel utilisateur.</p>
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <Button 
+                              variant="outline" 
+                              onClick={clearFilters}
+                              className="border-[#bfddf9] bg-white text-[#213f5b] hover:bg-[#bfddf9] transition-all rounded-xl py-2.5 px-5 w-full sm:w-auto"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              Effacer les filtres
+                            </Button>
+                            <Button
+                              onClick={() => setIsAddModalOpen(true)}
+                              className="bg-[#213f5b] hover:bg-[#152a3d] text-white shadow-md hover:shadow-lg transition-all rounded-xl py-2.5 px-5 w-full sm:w-auto"
+                            >
+                              <PlusIcon className="h-4 w-4 mr-2" />
+                              Nouvel Utilisateur
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     )}
     
-                    {/* User List */}
+                    {/* User Grid Layout */}
                     {!loading && !error && currentUsers.length > 0 && (
-                      <div className="divide-y divide-gray-100">
-                        {currentUsers.map((user) => {
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+                        {currentUsers.map((user, index) => {
                           const roleConfig =
                             user.role in rolesConfig
                               ? rolesConfig[user.role as RoleKey]
@@ -529,79 +562,141 @@ const getLogIcon = (action: string) => {
                             ? `${user.firstName} ${user.lastName}`
                             : user.email;
                             
+                          // Generate initials for avatar
+                          const initials = user.firstName && user.lastName
+                            ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+                            : user.email[0].toUpperCase();
+                            
                           return (
                             <motion.div
                               key={user._id}
-                              className="p-4 hover:bg-gray-50 transition-colors"
-                              whileHover={{ x: 5 }}
+                              className="group bg-white backdrop-blur-sm bg-opacity-95 border border-[#eaeaea] hover:border-[#bfddf9] rounded-2xl overflow-hidden shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] hover:shadow-[0_15px_35px_-15px_rgba(33,63,91,0.25)] transition-all duration-300"
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ 
+                                delay: 0.05 * index, 
+                                duration: 0.3,
+                                ease: [0.22, 1, 0.36, 1]
+                              }}
+                              whileHover={{ y: -8, scale: 1.02 }}
                             >
-                              <div className="flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-4 flex-1 min-w-0">
-                                  <div className="p-2 rounded-full" style={{ backgroundColor: `${color}20` }}>
-                                    <Icon className="h-5 w-5" style={{ color }} />
+                              {/* Card Top Gradient */}
+                              <div 
+                                className="h-2 group-hover:h-3 transition-all duration-300"
+                                style={{ 
+                                  background: `linear-gradient(90deg, ${color} 0%, #ffffff 150%)` 
+                                }}
+                              />
+                              
+                              {/* User Avatar & Role */}
+                              <div className="px-4 sm:px-6 pt-6 pb-4 flex items-start justify-between">
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                  <div 
+                                    className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-full text-white font-bold text-lg sm:text-xl shadow-md transform group-hover:scale-110 transition-transform duration-300 overflow-hidden relative"
+                                    style={{ 
+                                      background: `linear-gradient(135deg, ${color} 0%, #213f5b 100%)` 
+                                    }}
+                                  >
+                                    {initials}
+                                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-medium text-gray-900 truncate">{displayName}</h4>
-                                    <div className="flex items-center text-sm text-gray-500 mt-0.5">
-                                      <span className="truncate">{user.email}</span>
-                                      <span className="mx-1.5">•</span>
-                                      <span className="whitespace-nowrap">Créé le {new Date(user.createdAt).toLocaleDateString()}</span>
+                                  <div>
+                                    <h4 className="font-bold text-[#213f5b] text-base sm:text-lg leading-tight truncate max-w-[120px] sm:max-w-[150px]">{displayName}</h4>
+                                    <div 
+                                      className="inline-flex items-center px-2.5 py-1 mt-1 rounded-full text-xs font-medium"
+                                      style={{ backgroundColor: `${color}40`, color: '#213f5b' }}
+                                    >
+                                      <Icon className="h-3 w-3 mr-1" />
+                                      <span className="truncate max-w-[100px] sm:max-w-full">
+                                        {roleTranslations[user.role as RoleKey] || user.role}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                  <span
-                                    className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                    style={{ backgroundColor: `${color}15`, color }}
-                                  >
-                                    {roleTranslations[user.role as RoleKey] || user.role}
+                                
+                                {/* Badge - Can be used for status */}
+                                <div className="flex items-center">
+                                  <span className="inline-flex h-2.5 w-2.5 relative">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
                                   </span>
-                                  
-                                  <div className="flex items-center">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => setSelectedUserForEdit(user)}
-                                      className="text-gray-400 hover:text-gray-700"
-                                    >
-                                      <PencilIcon className="h-4 w-4" />
-                                    </Button>
-                                    
-                                    {/* <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-gray-400 hover:text-gray-700"
-                                      onClick={() => {
-                                        const menu = document.createElement('select');
-                                        menu.className = 'absolute z-50 opacity-0';
-                                        menu.style.top = '0';
-                                        menu.style.left = '0';
-                                        
-                                        (Object.keys(rolesConfig) as RoleKey[]).forEach(role => {
-                                          const option = document.createElement('option');
-                                          option.value = role;
-                                          option.textContent = roleTranslations[role];
-                                          option.selected = role === user.role;
-                                          menu.appendChild(option);
-                                        });
-                                        
-                                        menu.addEventListener('change', (e) => {
-                                          const target = e.target as HTMLSelectElement;
-                                          handleRoleChange(user._id, user.email, target.value);
-                                          document.body.removeChild(menu);
-                                        });
-                                        
-                                        menu.addEventListener('blur', () => {
-                                          document.body.removeChild(menu);
-                                        });
-                                        
-                                        document.body.appendChild(menu);
-                                        menu.focus();
-                                      }}
-                                    >
-                                      <EllipsisHorizontalIcon className="h-5 w-5" />
-                                    </Button> */}
+                                </div>
+                              </div>
+                              
+                              {/* Contact Info */}
+                              <div className="px-4 sm:px-6 py-3 bg-gradient-to-r from-[#f8fafc] to-white relative overflow-hidden">
+                                <div className="absolute -right-10 -bottom-10 w-20 h-20 rounded-full bg-[#bfddf9] opacity-10 blur-xl"></div>
+                                <div className="flex flex-col gap-2 relative">
+                                  <div className="relative group/email">
+                                    <p className="text-xs sm:text-sm text-[#213f5b] truncate flex items-center">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[#213f5b] opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                      </svg>
+                                      <span className="truncate">{user.email}</span>
+                                    </p>
+                                    <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#bfddf9] group-hover/email:w-full transition-all duration-300 ml-6"></div>
                                   </div>
+                                  {user.phone && (
+                                    <div className="relative group/phone">
+                                      <p className="text-xs sm:text-sm text-[#213f5b] truncate flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[#213f5b] opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                        <span className="truncate">{user.phone}</span>
+                                      </p>
+                                      <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#bfddf9] group-hover/phone:w-full transition-all duration-300 ml-6"></div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Card Footer with Actions */}
+                              <div className="px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between border-t border-[#eaeaea] gap-2">
+                                <div className="text-xs text-[#213f5b] opacity-70 flex items-center bg-[#f8fafc] px-2 py-1 rounded-full">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-[#213f5b] opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  {new Date(user.createdAt).toLocaleDateString('fr-FR', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })}
+                                </div>
+                                
+                                <div className="flex gap-1.5 sm:gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {/* Handle action */}}
+                                    className="rounded-full p-1.5 sm:p-2 h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center text-[#213f5b] hover:bg-[#bfddf9] hover:text-[#213f5b] transition-colors relative group/tooltip"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                    <span className="absolute -top-10 left-1/2 transform -translate-x-1/2 text-xs bg-[#213f5b] text-white px-2 py-1 rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                                      Contacter
+                                    </span>
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setSelectedUserForEdit(user)}
+                                    className="rounded-full p-1.5 sm:p-2 h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center text-[#213f5b] hover:bg-[#bfddf9] hover:text-[#213f5b] transition-colors relative group/tooltip"
+                                  >
+                                    <PencilIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                    <span className="absolute -top-10 left-1/2 transform -translate-x-1/2 text-xs bg-[#213f5b] text-white px-2 py-1 rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                                      Modifier
+                                    </span>
+                                  </Button>
+                                  
+                                  <Button
+                                    className="rounded-full text-xs font-medium px-2 sm:px-3 py-1 h-7 sm:h-8 bg-gradient-to-r from-[#213f5b] to-[#2c5681] text-white hover:shadow-md transition-all hover:from-[#152a3d] hover:to-[#213f5b] relative overflow-hidden"
+                                    onClick={() => setSelectedUserForEdit(user)}
+                                  >
+                                    <span className="relative z-10">Gérer</span>
+                                    <div className="absolute inset-0 bg-white opacity-0 hover:opacity-10 transition-opacity"></div>
+                                  </Button>
                                 </div>
                               </div>
                             </motion.div>
@@ -613,27 +708,27 @@ const getLogIcon = (action: string) => {
     
                   {/* Pagination */}
                   {filteredUsers.length > itemsPerPage && (
-                    <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50">
-                      <div className="text-sm text-gray-700">
-                        Affichage de <span className="font-medium">{indexOfFirstItem + 1}</span> à{" "}
-                        <span className="font-medium">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 md:p-6 border-t border-[#eaeaea] bg-white">
+                      <div className="text-sm text-[#213f5b] opacity-75 mb-4 sm:mb-0 text-center sm:text-left">
+                        Affichage de <span className="font-semibold text-[#213f5b]">{indexOfFirstItem + 1}</span> à{" "}
+                        <span className="font-semibold text-[#213f5b]">
                           {Math.min(indexOfLastItem, filteredUsers.length)}
                         </span>{" "}
-                        sur <span className="font-medium">{filteredUsers.length}</span> utilisateurs
+                        sur <span className="font-semibold text-[#213f5b]">{filteredUsers.length}</span> utilisateurs
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center justify-center gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                           disabled={currentPage === 1}
-                          className="flex items-center gap-1 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center justify-center gap-1 text-[#213f5b] disabled:opacity-40 disabled:cursor-not-allowed rounded-xl px-4 py-2 hover:bg-[#f0f0f0] transition-colors"
                         >
                           <ArrowLeftIcon className="h-4 w-4" />
-                          Préc
+                          <span className="hidden sm:inline">Précédent</span>
                         </Button>
                         
-                        <div className="hidden sm:flex gap-1">
+                        <div className="hidden md:flex gap-2">
                           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                             let pageNum;
                             if (totalPages <= 5) {
@@ -646,14 +741,16 @@ const getLogIcon = (action: string) => {
                               pageNum = currentPage - 2 + i;
                             }
                             
+                            const isActive = currentPage === pageNum;
+                            
                             return (
                               <Button
                                 key={pageNum}
                                 onClick={() => setCurrentPage(pageNum)}
-                                className={`rounded-md w-9 h-9 flex items-center justify-center ${
-                                  currentPage === pageNum
-                                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                                    : "bg-white text-gray-700 hover:bg-gray-100"
+                                className={`rounded-xl w-10 h-10 flex items-center justify-center transition-all ${
+                                  isActive
+                                    ? "bg-[#213f5b] text-white hover:bg-[#152a3d] shadow-md transform scale-110"
+                                    : "bg-white text-[#213f5b] hover:bg-[#f0f0f0] border border-[#eaeaea]"
                                 }`}
                               >
                                 {pageNum}
@@ -662,14 +759,20 @@ const getLogIcon = (action: string) => {
                           })}
                         </div>
                         
+                        <div className="flex sm:hidden items-center gap-2 px-3">
+                          <span className="text-sm font-medium text-[#213f5b]">{currentPage}</span>
+                          <span className="text-[#213f5b] opacity-50">sur</span>
+                          <span className="text-sm font-medium text-[#213f5b]">{totalPages}</span>
+                        </div>
+                        
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                           disabled={currentPage === totalPages}
-                          className="flex items-center gap-1 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center justify-center gap-1 text-[#213f5b] disabled:opacity-40 disabled:cursor-not-allowed rounded-xl px-4 py-2 hover:bg-[#f0f0f0] transition-colors"
                         >
-                          Suiv
+                          <span className="hidden sm:inline">Suivant</span>
                           <ArrowRightIcon className="h-4 w-4" />
                         </Button>
                       </div>
@@ -678,215 +781,164 @@ const getLogIcon = (action: string) => {
                 </div>
               </motion.div>
     
-              {/* Right Sidebar */}
+              {/* Quick Actions & Tips (2-column layout) */}
               <motion.div
-                className="space-y-6"
+                className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
+                transition={{ delay: 0.6, duration: 0.4 }}
               >
-                {/* Activity Log Panel */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <DocumentTextIcon className="h-5 w-5 text-blue-600" />
-                        Journal d&apos;activité
-                      </h2>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={exportCSV}
-                        className="text-gray-700 hover:bg-gray-100 flex items-center gap-1"
-                      >
-                        <DocumentArrowDownIcon className="h-4 w-4" />
-                        Exporter
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="divide-y divide-gray-100">
-                    {loading && (
-                      <div className="p-4 text-center text-gray-500">Chargement...</div>
-                    )}
-
-                    {error && (
-                      <div className="p-4 text-center text-red-500">{error}</div>
-                    )}
-
-                    {!loading && !error && sortedActivityLogs.length === 0 && (
-                      <div className="p-4 text-center text-gray-500">
-                        Aucun journal d&apos;activité trouvé
-                      </div>
-                    )}
-
-                    {!loading && !error && visibleActivityLogs.map((log) => {
-                      const Icon = getLogIcon(log.action);
-                      return (
-                        <motion.div
-                          key={log.id}
-                          className="p-4 hover:bg-gray-50 transition-colors"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
-                              <Icon className="h-5 w-5 text-blue-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-gray-900">{log.action}</h4>
-                              <p className="text-sm text-gray-500 mt-0.5">{log.details}</p>
-                              <div className="flex items-center text-xs text-gray-500 mt-1">
-                                <span>{log.time}</span>
-                                <span className="mx-1.5">•</span>
-                                <span className="truncate">{log.user}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="p-4 border-t border-gray-100 bg-gray-50 text-center">
-                    {sortedActivityLogs.length > 4 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                        onClick={() => setIsActivityModalOpen(true)}
-                      >
-                        Voir toutes les activités
-                      </Button>
-                    )}
-                  </div>
-                  <AnimatePresence>
-                    {isActivityModalOpen && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-                      >
-                        <motion.div
-                          initial={{ scale: 0.9 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0.9 }}
-                          className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
-                        >
-                          <div className="p-6 border-b flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-gray-900">Journal d&apos;activité</h2>
-                            <Button variant="ghost" size="sm" onClick={() => setIsActivityModalOpen(false)}>
-                              Fermer
-                            </Button>
-                          </div>
-                          <div className="divide-y divide-gray-100">
-                            {loading && (
-                              <div className="p-4 text-center text-gray-500">Chargement...</div>
-                            )}
-                            {error && (
-                              <div className="p-4 text-center text-red-500">{error}</div>
-                            )}
-                            {!loading && !error && sortedActivityLogs.length === 0 && (
-                              <div className="p-4 text-center text-gray-500">
-                                Aucun journal d&apos;activité trouvé
-                              </div>
-                            )}
-                            {!loading && !error && sortedActivityLogs.map((log) => {
-                              const Icon = getLogIcon(log.action);
-                              return (
-                                <motion.div
-                                  key={log.id}
-                                  className="p-4 hover:bg-gray-50 transition-colors"
-                                >
-                                  <div className="flex items-start gap-3">
-                                    <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
-                                      <Icon className="h-5 w-5 text-blue-600" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <h4 className="font-medium text-gray-900">{log.action}</h4>
-                                      <p className="text-sm text-gray-500 mt-0.5">{log.details}</p>
-                                      <div className="flex items-center text-xs text-gray-500 mt-1">
-                                        <span>{log.time}</span>
-                                        <span className="mx-1.5">•</span>
-                                        <span className="truncate">{log.user}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                          </div>
-
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                </div>
-
                 {/* Quick Actions Panel */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <Cog6ToothIcon className="h-5 w-5 text-blue-600" />
-                      Actions rapides
-                    </h2>
+                <div className="bg-white backdrop-blur-sm bg-opacity-95 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] border border-[#f0f0f0] overflow-hidden relative group">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-[#213f5b] group-hover:h-1.5 transition-all"></div>
+                  <div className="absolute -z-10 right-0 bottom-0 w-64 h-64 bg-[#bfddf9] opacity-5 rounded-full blur-3xl"></div>
+
+                  <div className="p-6 md:p-8 border-b border-[#eaeaea]">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-xl bg-[#213f5b] bg-opacity-10 flex items-center justify-center">
+                        <Cog6ToothIcon className="h-5 w-5 text-[#213f5b]" />
+                      </div>
+                      <h2 className="text-xl font-bold text-[#213f5b]">
+                        Actions rapides
+                      </h2>
+                    </div>
+                    <p className="text-sm text-[#213f5b] opacity-75 ml-13 pl-0">Accédez rapidement aux fonctionnalités essentielles</p>
                   </div>
                   
-                  <div className="p-4 grid grid-cols-1 gap-3">
-                    <button className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-left">
-                      <div className="p-2 bg-green-50 rounded-lg">
-                        <UserGroupIcon className="h-5 w-5 text-green-600" />
+                  <div className="p-5 md:p-6 grid grid-cols-1 gap-4">
+                    <motion.button
+                      className="flex items-center gap-4 p-4 rounded-xl border border-[#eaeaea] hover:border-[#bfddf9] shadow-sm hover:shadow-md bg-white hover:bg-gradient-to-r hover:from-white hover:to-[#f8fafc] transition-all duration-300 text-left group relative overflow-hidden"
+                      whileHover={{ y: -2 }}
+                    >
+                      <div className="absolute top-0 left-0 w-0 h-full bg-[#bfddf9] opacity-10 group-hover:w-full transition-all duration-700 ease-out"></div>
+                      <div className="relative p-3 bg-[#d2fcb2] bg-opacity-50 rounded-xl group-hover:bg-opacity-80 transition-colors">
+                        <UserGroupIcon className="h-6 w-6 text-[#213f5b]" />
                       </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">Inviter des utilisateurs</h4>
-                        <p className="text-sm text-gray-500">Envoyez des invitations par e-mail</p>
+                      <div className="relative">
+                        <h4 className="font-semibold text-[#213f5b] text-base md:text-lg mb-1 group-hover:text-[#152a3d] transition-colors">Inviter des utilisateurs</h4>
+                        <p className="text-xs md:text-sm text-[#213f5b] opacity-75 group-hover:opacity-100 transition-opacity">Envoyez des invitations par e-mail</p>
                       </div>
-                    </button>
+                      <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </motion.button>
                     
-                    <button className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-left">
-                      <div className="p-2 bg-purple-50 rounded-lg">
-                        <DocumentTextIcon className="h-5 w-5 text-purple-600" />
+                    <motion.button
+                      className="flex items-center gap-4 p-4 rounded-xl border border-[#eaeaea] hover:border-[#bfddf9] shadow-sm hover:shadow-md bg-white hover:bg-gradient-to-r hover:from-white hover:to-[#f8fafc] transition-all duration-300 text-left group relative overflow-hidden"
+                      whileHover={{ y: -2 }}
+                    >
+                      <div className="absolute top-0 left-0 w-0 h-full bg-[#bfddf9] opacity-10 group-hover:w-full transition-all duration-700 ease-out"></div>
+                      <div className="relative p-3 bg-[#bfddf9] bg-opacity-50 rounded-xl group-hover:bg-opacity-80 transition-colors">
+                        <DocumentTextIcon className="h-6 w-6 text-[#213f5b]" />
                       </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">Rapport d&apos;utilisation</h4>
-                        <p className="text-sm text-gray-500">Générer des statistiques d&apos;activité</p>
+                      <div className="relative">
+                        <h4 className="font-semibold text-[#213f5b] text-base md:text-lg mb-1 group-hover:text-[#152a3d] transition-colors">Rapport d&apos;utilisation</h4>
+                        <p className="text-xs md:text-sm text-[#213f5b] opacity-75 group-hover:opacity-100 transition-opacity">Générer des statistiques d&apos;activité</p>
                       </div>
-                    </button>
+                      <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </motion.button>
                     
-                    <button className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-left">
-                      <div className="p-2 bg-amber-50 rounded-lg">
-                        <ShieldCheckIcon className="h-5 w-5 text-amber-600" />
+                    <motion.button
+                      className="flex items-center gap-4 p-4 rounded-xl border border-[#eaeaea] hover:border-[#bfddf9] shadow-sm hover:shadow-md bg-white hover:bg-gradient-to-r hover:from-white hover:to-[#f8fafc] transition-all duration-300 text-left group relative overflow-hidden"
+                      whileHover={{ y: -2 }}
+                    >
+                      <div className="absolute top-0 left-0 w-0 h-full bg-[#bfddf9] opacity-10 group-hover:w-full transition-all duration-700 ease-out"></div>
+                      <div className="relative p-3 bg-[#213f5b] bg-opacity-90 rounded-xl group-hover:bg-opacity-100 transition-colors">
+                        <ShieldCheckIcon className="h-6 w-6 text-white" />
                       </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">Paramètres de sécurité</h4>
-                        <p className="text-sm text-gray-500">Gérer les politiques de sécurité</p>
+                      <div className="relative">
+                        <h4 className="font-semibold text-[#213f5b] text-base md:text-lg mb-1 group-hover:text-[#152a3d] transition-colors">Paramètres de sécurité</h4>
+                        <p className="text-xs md:text-sm text-[#213f5b] opacity-75 group-hover:opacity-100 transition-opacity">Gérer les politiques de sécurité</p>
                       </div>
-                    </button>
+                      <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </motion.button>
                   </div>
                 </div>
                 
                 {/* Tips Panel */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm border border-blue-200 overflow-hidden">
-                  <div className="p-6">
-                    <h2 className="text-lg font-semibold text-blue-900 mb-3">Conseils d&apos;administration</h2>
-                    <p className="text-sm text-blue-700 mb-4">
-                      La gestion efficace des utilisateurs est essentielle pour maintenir la sécurité de votre plateforme.
-                    </p>
+                <div className="relative rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#bfddf9] via-[#c7e8fa] to-[#d2fcb2] group-hover:from-[#add6f8] group-hover:via-[#c0e4f9] group-hover:to-[#c5f599] transition-colors duration-700"></div>
+                  <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik0yOS41IDE0LjVMNDQgMjlsLTE0LjUgMTQuNUwxNSAyOSAyOS41IDE0LjV6IiBzdHJva2U9IiMyMTNmNWIiIHN0cm9rZS1vcGFjaXR5PSIuMDUiIGZpbGw9Im5vbmUiLz4KPC9zdmc+')]"></div>
+                  
+                  <div className="relative p-6 md:p-8">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-white bg-opacity-30 backdrop-blur-sm flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-xl font-bold text-[#213f5b]">
+                        Conseils d&apos;administration
+                      </h2>
+                    </div>
                     
-                    <ul className="space-y-2">
-                      <li className="flex items-start gap-2">
-                        <CheckIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-blue-800">Vérifiez régulièrement les journaux d&apos;activité</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-blue-800">Attribuez les rôles appropriés aux utilisateurs</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-blue-800">Supprimez rapidement les comptes inactifs</span>
-                      </li>
+                    <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-xl p-4 md:p-5 mb-5 shadow-sm">
+                      <p className="text-sm text-[#213f5b] font-medium leading-relaxed">
+                        La gestion efficace des utilisateurs est essentielle pour maintenir la sécurité de votre plateforme et optimiser l&apos;expérience utilisateur.
+                      </p>
+                    </div>
+                    
+                    <ul className="space-y-3">
+                      <motion.li 
+                        className="flex items-start gap-3 bg-white bg-opacity-40 backdrop-blur-sm rounded-xl p-3 shadow-sm hover:bg-opacity-60 transition-all group/item"
+                        whileHover={{ x: 5 }}
+                      >
+                        <div className="p-2 bg-[#213f5b] bg-opacity-10 rounded-full mt-0.5">
+                          <CheckIcon className="h-4 w-4 text-[#213f5b]" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-[#213f5b] group-hover/item:text-[#152a3d] transition-colors">Vérifiez régulièrement les journaux d&apos;activité</span>
+                          <p className="text-xs text-[#213f5b] opacity-75 mt-1">Identifiez les comportements suspects</p>
+                        </div>
+                      </motion.li>
+                      
+                      <motion.li 
+                        className="flex items-start gap-3 bg-white bg-opacity-40 backdrop-blur-sm rounded-xl p-3 shadow-sm hover:bg-opacity-60 transition-all group/item"
+                        whileHover={{ x: 5 }}
+                      >
+                        <div className="p-2 bg-[#213f5b] bg-opacity-10 rounded-full mt-0.5">
+                          <CheckIcon className="h-4 w-4 text-[#213f5b]" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-[#213f5b] group-hover/item:text-[#152a3d] transition-colors">Attribuez les rôles appropriés aux utilisateurs</span>
+                          <p className="text-xs text-[#213f5b] opacity-75 mt-1">Principe du moindre privilège</p>
+                        </div>
+                      </motion.li>
+                      
+                      <motion.li 
+                        className="flex items-start gap-3 bg-white bg-opacity-40 backdrop-blur-sm rounded-xl p-3 shadow-sm hover:bg-opacity-60 transition-all group/item"
+                        whileHover={{ x: 5 }}
+                      >
+                        <div className="p-2 bg-[#213f5b] bg-opacity-10 rounded-full mt-0.5">
+                          <CheckIcon className="h-4 w-4 text-[#213f5b]" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-[#213f5b] group-hover/item:text-[#152a3d] transition-colors">Supprimez rapidement les comptes inactifs</span>
+                          <p className="text-xs text-[#213f5b] opacity-75 mt-1">Réduisez la surface d&apos;attaque</p>
+                        </div>
+                      </motion.li>
                     </ul>
+                    
+                    <motion.button
+                      className="mt-5 w-full bg-white bg-opacity-50 hover:bg-opacity-70 text-[#213f5b] font-medium py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all relative overflow-hidden group-hover:shadow-md"
+                      whileHover={{ y: -2 }}
+                    >
+                      <span>En savoir plus</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                    </motion.button>
                   </div>
                 </div>
               </motion.div>

@@ -23,9 +23,12 @@ import { Header } from "@/components/Header";
 import { useEffect, useState, useRef } from "react";
 import { TicketIcon, Check, FileText, FileSignature } from "lucide-react";
 import SignatureCanvas from 'react-signature-canvas';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer';
+import dynamic from 'next/dynamic';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false });
 
 {/* Type definitions */}
 interface PriorityBadgeProps {
