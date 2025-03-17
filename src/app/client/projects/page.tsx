@@ -6,12 +6,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { 
   ChevronRightIcon, 
-  // ChatBubbleLeftRightIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  PlusIcon
+
+  PlusIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon
 } from "@heroicons/react/24/outline";
 import ChatWidget from '@/components/ChatWidget';
+import { 
+
+  MapPinIcon,
+
+} from "@heroicons/react/24/outline";
 
 interface Project {
   _id: string;
@@ -28,8 +33,8 @@ export default function ClientProjects() {
   const [showChatWidget, setShowChatWidget] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [sortBy, setSortBy] = useState<keyof Project>("etape");
-  const [sortDirection, setSortDirection] = useState("asc");
+  const [sortBy] = useState<keyof Project>("etape");
+  const [sortDirection] = useState("asc");
 
   // Real data for timeline steps (could be fetched from an API as well)
   const steps = [
@@ -79,14 +84,7 @@ export default function ClientProjects() {
   }, []);
 
   // Handle sorting
-  const handleSort = (field: keyof Project) => {
-    if (sortBy === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortDirection("asc");
-    }
-  };
+
 
   // Filter and sort projects
   const filteredAndSortedProjects = projects
@@ -151,6 +149,53 @@ export default function ClientProjects() {
     }
   };
 
+  // Helper functions for the new card design
+  const getStepColor = (step: number): string => {
+    const colors: { [key: number]: string } = {
+      1: "#d2fcb2",   // Light green
+      2: "#bfddf9",   // Light blue
+      3: "#f7b91b",   // Amber
+      4: "#a6e4d0",   // Mint
+      5: "#92d1e0",   // Sky blue
+      6: "#7aafc2",   // Steel blue
+      7: "#5d8ba3",   // Blue gray
+    };
+    return colors[step] || "#bfddf9";
+  };
+
+  const lightenColor = (color: string, percent: number): string => {
+    const num = parseInt(color.slice(1), 16);
+    const amt = Math.round(2.55 * percent);
+    let R = (num >> 16) + amt;
+    let G = ((num >> 8) & 0x00ff) + amt;
+    let B = (num & 0x0000ff) + amt;
+    R = R < 255 ? (R < 0 ? 0 : R) : 255;
+    G = G < 255 ? (G < 0 ? 0 : G) : 255;
+    B = B < 255 ? (B < 0 ? 0 : B) : 255;
+    return (
+      "#" +
+      ((1 << 24) + (R << 16) + (G << 8) + B)
+        .toString(16)
+        .slice(1)
+    );
+  };
+
+  const getGradientColorForStep = (step: number): string => {
+    const baseColor = getStepColor(step);
+    // Create a gradient from the base color to a 20% lighter version
+    return `linear-gradient(90deg, ${baseColor}, ${lightenColor(baseColor, 20)})`;
+  };
+
+  // Format etape for display
+  const formatEtape = (etape?: string) => {
+    if (!etape) return "N/A";
+    const parts = etape.split(" ");
+    if (parts.length > 1 && !isNaN(Number(parts[0]))) {
+      return `Etape ${parts[0]} - ${parts.slice(1).join(" ")}`;
+    }
+    return etape;
+  };
+
   // Animation variants
   const containerVariants = {
     hidden: {},
@@ -162,6 +207,11 @@ export default function ClientProjects() {
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+  };
+
+  // Get project initials for display
+  const getProjectInitials = (project: Project) => {
+    return project.typeDeLogement.slice(0, 2).toUpperCase();
   };
 
   return (
@@ -203,41 +253,30 @@ export default function ClientProjects() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mb-10"
+          className="mb-6"
         >
           <div className="relative max-w-lg">
+            <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" />
             <input
               type="text"
               placeholder="Rechercher un projet..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-6 py-4 bg-white border-none rounded-xl shadow-sm focus:ring-2 focus:ring-[#bfddf9] placeholder-gray-400 text-[#213f5b]"
+              className="w-full pl-12 pr-10 py-4 bg-white border-none rounded-xl shadow-sm focus:ring-2 focus:ring-[#bfddf9] placeholder-gray-400 text-[#213f5b]"
               style={{ boxShadow: "0 2px 10px rgba(191, 221, 249, 0.15)" }}
             />
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-5 w-5 text-gray-400 absolute right-5 top-1/2 transform -translate-y-1/2" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke={colors.darkBlue}
-              opacity="0.6"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
             {searchTerm && (
               <button 
                 onClick={() => setSearchTerm("")}
-                className="absolute right-12 top-1/2 transform -translate-y-1/2 text-[#213f5b] opacity-60 hover:opacity-100"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#213f5b] opacity-60 hover:opacity-100"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
+                <XMarkIcon className="h-5 w-5" />
               </button>
             )}
           </div>
         </motion.div>
 
-        {/* Projects List - Apple-inspired with subtle interactions */}
+        {/* Projects Grid - Card-based layout */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="relative w-20 h-20">
@@ -248,131 +287,141 @@ export default function ClientProjects() {
         ) : (
           <>
             {filteredAndSortedProjects.length > 0 ? (
-              <div className="bg-white rounded-xl overflow-hidden shadow-sm" style={{ boxShadow: "0 4px 20px rgba(191, 221, 249, 0.15)" }}>
-                {/* Table Header */}
-                <div className="grid grid-cols-12 gap-3 p-4 border-b border-gray-100 bg-[#f8fafd]">
-                  <div 
-                    className="col-span-1 flex items-center cursor-pointer"
-                    onClick={() => handleSort('numero')}
-                  >
-                    <span className="font-medium text-[#213f5b] text-sm">N°</span>
-                    {sortBy === 'numero' && (
-                      <span className="ml-1">
-                        {sortDirection === 'asc' ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />}
-                      </span>
-                    )}
-                  </div>
-                  <div 
-                    className="col-span-3 sm:col-span-3 flex items-center cursor-pointer"
-                    onClick={() => handleSort('typeDeLogement')}
-                  >
-                    <span className="font-medium text-[#213f5b] text-sm">Type</span>
-                    {sortBy === 'typeDeLogement' && (
-                      <span className="ml-1">
-                        {sortDirection === 'asc' ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />}
-                      </span>
-                    )}
-                  </div>
-                  <div className="hidden sm:flex col-span-4 items-center cursor-pointer"
-                       onClick={() => handleSort('solution')}>
-                    <span className="font-medium text-[#213f5b] text-sm">Solution</span>
-                    {sortBy === 'solution' && (
-                      <span className="ml-1">
-                        {sortDirection === 'asc' ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />}
-                      </span>
-                    )}
-                  </div>
-                  <div className="col-span-2 hidden sm:flex items-center cursor-pointer" 
-                       onClick={() => handleSort('surfaceChauffee')}>
-                    <span className="font-medium text-[#213f5b] text-sm">Surface</span>
-                    {sortBy === 'surfaceChauffee' && (
-                      <span className="ml-1">
-                        {sortDirection === 'asc' ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />}
-                      </span>
-                    )}
-                  </div>
-                  <div className="col-span-6 sm:col-span-2 flex items-center cursor-pointer" 
-                       onClick={() => handleSort('etape')}>
-                    <span className="font-medium text-[#213f5b] text-sm">Statut</span>
-                    {sortBy === 'etape' && (
-                      <span className="ml-1">
-                        {sortDirection === 'asc' ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Table Body */}
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  variants={containerVariants}
-                  className="divide-y divide-gray-50"
-                >
-                  {filteredAndSortedProjects.map((project) => (
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {filteredAndSortedProjects.map((project) => {
+                  // Get step number from etape
+                  const stepNumber = parseInt(project.etape.charAt(0), 10);
+                  
+                  return (
                     <motion.div
                       key={project._id}
                       variants={itemVariants}
-                      whileHover={{ backgroundColor: "rgba(191, 221, 249, 0.05)" }}
-                      className="grid grid-cols-12 gap-3 p-4 items-center transition-all cursor-pointer relative group"
-                      onClick={() => {
-                        setSelectedProject(project);
-                      }}
+                      whileHover={{ y: -5, boxShadow: "0 10px 25px rgba(33, 63, 91, 0.1)" }}
+                      className="relative bg-white rounded-xl p-4 shadow-md transition-all duration-300 flex flex-col overflow-hidden cursor-pointer"
+                      onClick={() => setSelectedProject(project)}
                     >
-                      {/* Project status indicator bar */}
-                      <div 
-                        className="absolute left-0 top-0 bottom-0 w-1"
-                        style={{ backgroundColor: getStatusInfo(project.etape).color }}
-                      ></div>
+                      {/* Decorative elements */}
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#bfddf9]/20 rounded-bl-full z-0"></div>
+                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-[#d2fcb2]/15 rounded-tr-full z-0"></div>
                       
-                      {/* Number */}
-                      <div className="col-span-1 pl-3">
-                        <span className="text-[#213f5b] font-medium">{project.numero}</span>
+                      {/* Project Header with Initials */}
+                      <div className="flex items-center gap-3 mb-3 relative z-10">
+                        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-[#213f5b] to-[#bfddf9] text-white text-lg font-bold shadow-md">
+                          {getProjectInitials(project)}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-[#213f5b] truncate">
+                            {project.typeDeLogement}
+                          </h3>
+                          {project.numero && (
+                            <p className="text-xs text-gray-500">
+                              #{project.numero}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       
-                      {/* Type */}
-                      <div className="col-span-3 sm:col-span-3">
-                        <span className="text-[#213f5b]">{project.typeDeLogement}</span>
+                      {/* Project info section */}
+                      <div className="bg-gradient-to-br from-white to-[#bfddf9]/10 rounded-lg p-3 mb-3 border border-[#bfddf9]/30">
+                        {/* Solution */}
+                        <div className="mb-2">
+                          <p className="text-xs font-bold text-[#213f5b]/70 uppercase mb-1 flex items-center">
+                            <span className="w-3 h-0.5 bg-[#d2fcb2] mr-1"></span>
+                            SOLUTION
+                          </p>
+                          <div className="bg-[#bfddf9]/10 p-2 rounded-lg inline-block border border-[#bfddf9]/30">
+                            <span className="text-xs font-medium text-[#213f5b]">
+                              {project.solution}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Project Progress */}
+                        <div className="mb-2">
+                          <p className="text-xs font-bold text-[#213f5b] uppercase mb-2 flex items-center">
+                            <span className="w-4 h-0.5 bg-[#d2fcb2] mr-2"></span>
+                            ÉTAPE DU PROJET
+                          </p>
+                          
+                          {/* Progress Bar */}
+                          <div className="relative h-3 w-full bg-[#ffffff] border border-[#bfddf9] rounded-full overflow-hidden shadow-inner mb-2">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(stepNumber / 7) * 100}%` }}
+                              transition={{ duration: 0.6 }}
+                              className="absolute h-full rounded-full"
+                              style={{ background: getGradientColorForStep(stepNumber) }}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20"></div>
+                            </motion.div>
+                          </div>
+                          
+                          {/* Step Indicator */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-medium text-[#213f5b]">
+                              {formatEtape(project.etape)}
+                            </span>
+                            
+                            {/* Step Dots */}
+                            <div className="flex items-center gap-1">
+                              {[...Array(7)].map((_, idx) => {
+                                const dotStepNumber = idx + 1;
+                                const completed = stepNumber >= dotStepNumber;
+                                const stepColor = getStepColor(dotStepNumber);
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="w-4 h-4 flex items-center justify-center"
+                                    title={`Étape ${dotStepNumber}`}
+                                  >
+                                    <div
+                                      className={`w-2.5 h-2.5 rounded-full ${
+                                        completed
+                                          ? ""
+                                          : "bg-[#ffffff] border border-[#bfddf9]"
+                                      }`}
+                                      style={completed ? { background: stepColor } : {}}
+                                    ></div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       
-                      {/* Solution */}
-                      <div className="hidden sm:block col-span-4 truncate">
-                        <span className="text-gray-600">{project.solution}</span>
-                      </div>
-                      
-                      {/* Surface */}
-                      <div className="hidden sm:block col-span-2">
-                        <span className="text-gray-600">{project.surfaceChauffee} m²</span>
-                      </div>
-                      
-                      {/* Status */}
-                      <div className="col-span-6 sm:col-span-2 flex justify-between items-center">
-                        <span 
-                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-                          style={{ 
-                            backgroundColor: getStatusInfo(project.etape).color,
-                            color: getStatusInfo(project.etape).textColor 
-                          }}
-                        >
-                          {getStatusInfo(project.etape).icon}
-                          {project.etape}
+                      {/* Surface Information */}
+                      <div className="flex items-center gap-2 p-2 mb-2 hover:bg-[#bfddf9]/5 rounded-lg transition-colors">
+                        <div className="bg-[#213f5b]/5 p-1.5 rounded-full">
+                          <MapPinIcon className="h-3.5 w-3.5 text-[#213f5b]" />
+                        </div>
+                        <span className="text-sm text-gray-700">
+                          Surface: {project.surfaceChauffee} m²
                         </span>
-
-                        {/* View Details Button - appears on hover */}
-                        <Link href={`/client/projects/${project._id}`}>
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            whileHover={{ opacity: 1, scale: 1 }}
-                            className="hidden sm:flex group-hover:opacity-100 group-hover:transform items-center justify-center h-8 w-8 rounded-full bg-[#213f5b] text-white"
-                          >
-                            <ChevronRightIcon className="h-4 w-4" />
-                          </motion.div>
-                        </Link>
+                      </div>
+                      
+                      {/* View Details Button */}
+                      <div className="mt-auto pt-2">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering the parent onClick
+                            setSelectedProject(project);
+                          }}
+                          className="group inline-flex items-center justify-center w-full py-2 px-4 bg-[#213f5b] text-white rounded-lg transition-all hover:bg-[#213f5b]/90 hover:shadow-md text-sm"
+                        >
+                          <span>Voir le détail</span>
+                          <ChevronRightIcon className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                        </button>
                       </div>
                     </motion.div>
-                  ))}
-                </motion.div>
-              </div>
+                  );
+                })}
+              </motion.div>
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -403,42 +452,42 @@ export default function ClientProjects() {
       </main>
 
       {/* Enhanced Chat Button */}
-            {!showChatWidget && (
-              <motion.button
-                onClick={() => setShowChatWidget(true)}
-                className="fixed bottom-8 right-8 bg-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all z-50 border border-gray-200 backdrop-blur-lg bg-opacity-80"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+      {!showChatWidget && (
+        <motion.button
+          onClick={() => setShowChatWidget(true)}
+          className="fixed bottom-8 right-8 bg-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all z-50 border border-gray-200 backdrop-blur-lg bg-opacity-80"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <div className="relative h-12 w-12">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#213f5b] to-[#1e81b0] rounded-full" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg
+                className="h-6 w-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <div className="relative h-12 w-12">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#213f5b] to-[#1e81b0] rounded-full" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg
-                      className="h-6 w-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </motion.button>
-            )}
-            
-            {/* --- 2) Chat Widget (visible if showChatWidget === true) --- */}
-            {showChatWidget && (
-              <ChatWidget
-                onClose={() => {
-                  setShowChatWidget(false);
-                }}
-              />
-            )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+            </div>
+          </div>
+        </motion.button>
+      )}
+      
+      {/* Chat Widget (visible if showChatWidget === true) */}
+      {showChatWidget && (
+        <ChatWidget
+          onClose={() => {
+            setShowChatWidget(false);
+          }}
+        />
+      )}
 
       {/* Project Detail Slide-Over Panel */}
       <AnimatePresence>
@@ -548,7 +597,6 @@ export default function ClientProjects() {
                             </div>
                             <div className="ml-4">
                               <h5 className={`text-sm font-medium ${stepNumber <= currentStep ? "text-[#213f5b]" : "text-gray-400"}`}>{step}</h5>
-                              {/* You can optionally include dates or additional details for each step */}
                             </div>
                           </div>
                         );
