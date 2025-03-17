@@ -17,6 +17,7 @@ interface Ticket {
   customerLastName: string;
   technicianFirstName: string;
   technicianLastName: string;
+  assignedRegie?: string; // Added to match the requirement
   // other fields as needed
 }
 
@@ -24,6 +25,7 @@ interface Contact {
   _id?: string;
   id?: string;
   mailingAddress: string;
+  assignedRegie?: string; // Added to match the requirement
   // other fields as needed
 }
 
@@ -38,6 +40,7 @@ interface NewEventModalProps {
     type: string;
     startTime: string;
     endTime: string;
+    assignedRegie?: string; // Added to match the requirement
   }) => void;
 }
 
@@ -57,6 +60,9 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
   
+  // Add state for current user's regie ID
+  const [currentUserRegieId, setCurrentUserRegieId] = useState<string | null>(null);
+  
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
@@ -66,25 +72,53 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
     'Réunion', 'Conférence', 'Atelier', 'Présentation', 'Formation', 'Autre'
   ];
 
-  // Fetch tickets and contacts when modal opens
+  // Get user info from localStorage on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const proInfoString = localStorage.getItem('proInfo');
+        if (proInfoString) {
+          const proInfo = JSON.parse(proInfoString);
+          setCurrentUserRegieId(proInfo.id || null);
+        }
+      } catch (error) {
+        console.error("Error parsing proInfo from localStorage:", error);
+      }
+    }
+  }, []);
+
+  // Fetch tickets and contacts when modal opens - filtered by assignedRegie
   useEffect(() => {
     if (isOpen) {
       fetch('/api/tickets')
         .then((res) => res.json())
-        .then((data) => setTickets(data))
+        .then((data) => {
+          // Filter tickets by assignedRegie if currentUserRegieId exists
+          const filteredData = currentUserRegieId 
+            ? data.filter((ticket: Ticket) => ticket.assignedRegie === currentUserRegieId)
+            : data;
+          setTickets(filteredData);
+        })
         .catch((err) => {
           console.error(err);
           setError('Impossible de charger les tickets');
         });
+      
       fetch('/api/contacts')
         .then((res) => res.json())
-        .then((data) => setContacts(data))
+        .then((data) => {
+          // Filter contacts by assignedRegie if currentUserRegieId exists
+          const filteredData = currentUserRegieId 
+            ? data.filter((contact: Contact) => contact.assignedRegie === currentUserRegieId)
+            : data;
+          setContacts(filteredData);
+        })
         .catch((err) => {
           console.error(err);
           setError('Impossible de charger les contacts');
         });
     }
-  }, [isOpen]);
+  }, [isOpen, currentUserRegieId]);
 
   // Auto-fill Participant and Lieu based on the selected Ticket and matching Contact
   useEffect(() => {
@@ -147,6 +181,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
         type: finalEventType,
         startTime,
         endTime,
+        assignedRegie: currentUserRegieId || undefined, // Add the current user's regie ID
       };
   
       // Example of updating the ticket with additional event fields:
@@ -160,6 +195,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
           title,
           type: finalEventType,
           location, // if you also need to update the location
+          assignedRegie: currentUserRegieId || undefined, // Add the current user's regie ID
         }),
       });
   
@@ -247,6 +283,11 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                   );
                 })}
               </select>
+              {tickets.length === 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Aucun ticket disponible. Veuillez vérifier vos autorisations ou contacter un administrateur.
+                </p>
+              )}
             </div>
 
             {/* Title with Enhanced Input and Placeholder */}

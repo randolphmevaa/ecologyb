@@ -91,6 +91,7 @@ export interface Ticket {
   participants: string;
   equipmentType: string; // Added missing property
   conversation?: ConversationMessage[];
+  assignedRegie?: string; // Added to match the requirement
 }
 
 // Ensure moment is using French
@@ -123,6 +124,7 @@ interface SavEvent {
   location?: string;     // To show location details
   participants?: string; // To list participants
   conversation?: { sender: string; content: string; timestamp: string }[];
+  assignedRegie?: string; // Added to match the requirement
 }
 
 // A mapping for different equipment types (optional icons/colors).
@@ -163,6 +165,7 @@ function processTicketData(
 }
 
 function SAVStatistics() {
+  // Rest of the SAVStatistics component... (unchanged)
   // State management
   const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().setDate(new Date().getDate() - 30)),
@@ -645,17 +648,37 @@ interface SavEventCardProps {
 
 const SavEventCard: React.FC<SavEventCardProps> = ({ event, setSelectedEvent }) => {
   const [mailingAddress, setMailingAddress] = useState<string>("");
+  // State for current user's regie ID
+  const [currentUserRegieId, setCurrentUserRegieId] = useState<string | null>(null);
+
+  // Get user info from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const proInfoString = localStorage.getItem('proInfo');
+        if (proInfoString) {
+          const proInfo = JSON.parse(proInfoString);
+          setCurrentUserRegieId(proInfo.id || null);
+        }
+      } catch (error) {
+        console.error('Error parsing proInfo from localStorage:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (event.contactId) {
       fetch(`/api/contacts/${event.contactId}`)
         .then((res) => res.json())
         .then((data) => {
-          setMailingAddress(data.mailingAddress);
+          // Only set mailing address if contact belongs to current user's regie
+          if (!currentUserRegieId || data.assignedRegie === currentUserRegieId) {
+            setMailingAddress(data.mailingAddress);
+          }
         })
         .catch((err) => console.error("Failed to fetch contact:", err));
     }
-  }, [event.contactId]);
+  }, [event.contactId, currentUserRegieId]);
 
   const customerName = event.customerFirstName
     ? `${event.customerFirstName} ${event.customerLastName}`
@@ -760,6 +783,8 @@ const SavEventCard: React.FC<SavEventCardProps> = ({ event, setSelectedEvent }) 
 interface Contact {
   mailingAddress: string;
   phone: string;
+  email?: string;
+  assignedRegie?: string; // Added to match the requirement
   // add other properties if needed
 }
 
@@ -770,6 +795,7 @@ interface Client {
   firstName: string;
   lastName: string;
   phone: string;
+  assignedRegie?: string; // Added to match the requirement
   // add other properties as needed
 }
 
@@ -797,19 +823,41 @@ const AttestationModal: React.FC = () => {
   const [ , setTicketClientIds] = useState<string[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicketId, setSelectedTicketId] = useState<string>('');
+  const [currentUserRegieId, setCurrentUserRegieId] = useState<string | null>(null);
 
   // Références pour le conteneur, le canvas et l'instance de SignaturePad
   const signatureRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const signaturePadRef = useRef<SignaturePad | null>(null);
 
-  // Fetch client contacts from API on mount
+  // Get user info from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const proInfoString = localStorage.getItem('proInfo');
+        if (proInfoString) {
+          const proInfo = JSON.parse(proInfoString);
+          setCurrentUserRegieId(proInfo.id || null);
+        }
+      } catch (error) {
+        console.error('Error parsing proInfo from localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Fetch client contacts from API on mount - with filtering by assignedRegie
   useEffect(() => {
     fetch('/api/contacts')
       .then((res) => res.json())
-      .then((data) => setClients(data))
+      .then((data) => {
+        // Filter contacts by assignedRegie if currentUserRegieId exists
+        const filteredData = currentUserRegieId 
+          ? data.filter((client: Client) => client.assignedRegie === currentUserRegieId)
+          : data;
+        setClients(filteredData);
+      })
       .catch((error) => console.error('Error fetching clients:', error));
-  }, []);
+  }, [currentUserRegieId]);
 
   // Once clients are loaded, for each client check if they have any tickets
   useEffect(() => {
@@ -837,45 +885,51 @@ const AttestationModal: React.FC = () => {
     fetchTicketClientIds();
   }, [clients]);
 
-  // 2. Fetch tickets from your API on mount (or you may adjust this as needed):
-useEffect(() => {
-  fetch('/api/tickets')
-    .then((res) => res.json())
-    .then((data) => setTickets(data))
-    .catch((error) => console.error('Error fetching tickets:', error));
-}, []);
+  // Fetch tickets from API on mount - with filtering by assignedRegie
+  useEffect(() => {
+    fetch('/api/tickets')
+      .then((res) => res.json())
+      .then((data) => {
+        // Filter tickets by assignedRegie if currentUserRegieId exists
+        const filteredData = currentUserRegieId 
+          ? data.filter((ticket: Ticket) => ticket.assignedRegie === currentUserRegieId)
+          : data;
+        setTickets(filteredData);
+      })
+      .catch((error) => console.error('Error fetching tickets:', error));
+  }, [currentUserRegieId]);
 
-// 3. Update the selection handler for a ticket:
-const handleTicketSelect = (ticketId: string) => {
-  setSelectedTicketId(ticketId);
-  const ticket = tickets.find((t) => t._id === ticketId);
-  if (ticket) {
-    // Start by updating from ticket information
-    let updatedData: Partial<AttestationData> = {
-      ticketId: String(ticket.ticket),
-      lastName: ticket.customerLastName,
-      firstName: ticket.customerFirstName,
-      address: ticket.location,
-      ...parseMailingAddress(ticket.location),
-    };    
+  // Update the selection handler for a ticket:
+  const handleTicketSelect = (ticketId: string) => {
+    setSelectedTicketId(ticketId);
+    const ticket = tickets.find((t) => t._id === ticketId);
+    if (ticket) {
+      // Start by updating from ticket information
+      let updatedData: Partial<AttestationData> = {
+        ticketId: String(ticket.ticket),
+        lastName: ticket.customerLastName,
+        firstName: ticket.customerFirstName,
+        address: ticket.location,
+        ...parseMailingAddress(ticket.location),
+      };    
 
-    // Optionally, if you want to override/update with client details, find the client via ticket.contactId
-    const client = clients.find((c) => c.contactId === ticket.contactId);
-    if (client) {
-      const clientAddressData = parseMailingAddress(client.mailingAddress);
-      updatedData = {
-        ...updatedData,
-        lastName: client.lastName,
-        firstName: client.firstName,
-        address: client.mailingAddress,
-        phone: client.phone,
-        postalCode: clientAddressData.postalCode,
-        city: clientAddressData.city,
-      };
+      // Optionally, if you want to override/update with client details, find the client via ticket.contactId
+      const client = clients.find((c) => c.contactId === ticket.contactId);
+      if (client) {
+        const clientAddressData = parseMailingAddress(client.mailingAddress);
+        updatedData = {
+          ...updatedData,
+          lastName: client.lastName,
+          firstName: client.firstName,
+          address: client.mailingAddress,
+          phone: client.phone,
+          postalCode: clientAddressData.postalCode,
+          city: clientAddressData.city,
+        };
+      }
+      setAttestationData(prev => ({ ...prev, ...updatedData }));
     }
-    setAttestationData(prev => ({ ...prev, ...updatedData }));
-  }
-};
+  };
 
   // Utility function to parse mailingAddress
   const parseMailingAddress = (mailingAddress: string) => {
@@ -888,24 +942,7 @@ const handleTicketSelect = (ticketId: string) => {
     return { postalCode: '', city: '' };
   };
 
-  // Update attestationData when a client is selected from dropdown
-  // const handleClientSelect = (clientId: string) => {
-  //   setSelectedClientId(clientId);
-  //   const client = clients.find((c) => c._id === clientId);
-  //   if (client) {
-  //     const { postalCode, city } = parseMailingAddress(client.mailingAddress);
-  //     setAttestationData((prev) => ({
-  //       ...prev,
-  //       lastName: client.lastName,
-  //       firstName: client.firstName,
-  //       address: client.mailingAddress,
-  //       postalCode,
-  //       city,
-  //       phone: client.phone,
-  //     }));
-  //   }
-  // };
-
+  // Rest of the attestation modal component... (unchanged)
   // Fonction d'initialisation de la zone de signature
   const initializeSignaturePad = () => {
     if (!signatureRef.current) {
@@ -1124,7 +1161,7 @@ const handleTicketSelect = (ticketId: string) => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(textColor);
-    doc.text("Détail de l’intervention:", margin + 10, yPos + 16);
+    doc.text("Détail de l'intervention:", margin + 10, yPos + 16);
 
     doc.setFont("helvetica", "normal");
     const techDetails = doc.splitTextToSize((data.interventionDetails || "Aucun détail fourni").toUpperCase(), contentWidth - 20);
@@ -1626,20 +1663,43 @@ export default function SupportPage() {
   const [currentPage, setCurrentPage] = useState(1);
   // These could be set via similar API calls for closedTickets and pendingTickets
   const [attestationsCount, setAttestationsCount] = useState(0);
+  // Add state to store the current user's ID from localStorage
+  const [currentUserRegieId, setCurrentUserRegieId] = useState<string | null>(null);
+
+  // Get user info from localStorage on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const proInfoString = localStorage.getItem('proInfo');
+        if (proInfoString) {
+          const proInfo = JSON.parse(proInfoString);
+          // Extract the id field from proInfo
+          setCurrentUserRegieId(proInfo.id || null);
+        }
+      } catch (error) {
+        console.error("Error parsing proInfo from localStorage:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Fetch attestations data from your API endpoint
     axios.get('/api/attestations')
       .then(response => {
         if (response.data.success) {
-          // Set the count to the number of items returned by the API
-          setAttestationsCount(response.data.data.length);
+          // Filter attestations by assignedRegie if currentUserRegieId exists
+          const filteredAttestations = currentUserRegieId 
+            ? response.data.data.filter((attestation: any) => attestation.assignedRegie === currentUserRegieId)
+            : response.data.data;
+          
+          // Set the count to the number of filtered items
+          setAttestationsCount(filteredAttestations.length);
         }
       })
       .catch(error => {
         console.error('Error fetching attestations:', error);
       });
-  }, []);
+  }, [currentUserRegieId]);
 
   // Calculate indices for slicing the events array
   const indexOfLastEvent = currentPage * itemsPerPage;
@@ -1669,25 +1729,35 @@ export default function SupportPage() {
       : 0;
   }, [processedData]);
 
-    // Fetch the contact details when an event is selected
-    useEffect(() => {
-      if (selectedEvent && selectedEvent.contactId) {
-        fetch(`/api/contacts/${selectedEvent.contactId}`)
-          .then((res) => res.json())
-          .then((data: Contact) => setContact(data))
-          .catch((error) => {
-            console.error("Error fetching contact data:", error);
-            setContact(null);
-          });
-      }
-    }, [selectedEvent]);
+  // Fetch the contact details when an event is selected
+  useEffect(() => {
+    if (selectedEvent && selectedEvent.contactId) {
+      fetch(`/api/contacts/${selectedEvent.contactId}`)
+        .then((res) => res.json())
+        .then((data: Contact) => {
+          // Only set the contact if it matches the current user's regie ID
+          if (!currentUserRegieId || data.assignedRegie === currentUserRegieId) {
+            setContact(data);
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching contact data:", error);
+          setContact(null);
+        });
+    }
+  }, [selectedEvent, currentUserRegieId]);
 
   // Fetch tickets from your API on mount and convert date strings to Date objects
   useEffect(() => {
     fetch('/api/tickets')
       .then((res) => res.json())
       .then((data: Ticket[]) => {
-        const mappedTickets = data.map((ticket) => ({
+        // Filter tickets by assignedRegie if currentUserRegieId exists
+        const filteredData = currentUserRegieId 
+          ? data.filter(ticket => ticket.assignedRegie === currentUserRegieId)
+          : data;
+          
+        const mappedTickets = filteredData.map((ticket) => ({
           ...ticket,
           start: new Date(ticket.start),
           end: new Date(ticket.end),
@@ -1701,7 +1771,7 @@ export default function SupportPage() {
         setError('Error loading tickets');
         setLoading(false);
       });
-  }, []);
+  }, [currentUserRegieId]);
 
   const calendarEvents = tickets;
 
@@ -2054,21 +2124,6 @@ export default function SupportPage() {
                       </p>
                     </div>
                   </div>
-                  {/* <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10"
-                    >
-                      <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
-                      Exporter
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10 w-10 p-0 flex items-center justify-center"
-                    >
-                      <AdjustmentsHorizontalIcon className="h-5 w-5" />
-                    </Button>
-                  </div> */}
                 </div>
               </div>
 
@@ -2444,27 +2499,6 @@ export default function SupportPage() {
                         </p>
                       </div>
                     </div>
-                    {/* <div className="flex items-center gap-3">
-                      <div className="relative group">
-                        <button className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors">
-                          <BellIcon className="h-5 w-5" />
-                        </button>
-                        <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 p-3 border border-gray-100">
-                          <h4 className="font-semibold text-gray-800 mb-2">Notifications</h4>
-                          <div className="space-y-2">
-                            <div className="p-2 bg-blue-50 rounded-lg border-l-4 border-blue-500 text-sm">
-                              <p className="font-medium text-blue-800">Réunion d&apos;équipe</p>
-                              <p className="text-blue-700 mt-1">Aujourd&apos;hui, 14:00 - 15:30</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="relative group">
-                        <button className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors">
-                          <UserCircleIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div> */}
                   </div>
                   <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
                     {/* Left: Today and Navigation */}

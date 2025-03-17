@@ -7,6 +7,7 @@ interface Contact {
   id: string;
   firstName: string;
   lastName: string;
+  assignedRegie?: string; // Added to match the requirement
 }
 
 interface User {
@@ -14,6 +15,7 @@ interface User {
   firstName: string;
   lastName: string;
   role: string;
+  assignedRegie?: string; // Added to match the requirement
 }
 
 interface Ticket {
@@ -29,6 +31,7 @@ interface Ticket {
   technicianFirstName: string;
   technicianLastName: string;
   createdAt: string;
+  assignedRegie?: string; // Added to match the requirement
 }
 
 interface NewTicketModalProps {
@@ -186,6 +189,9 @@ export default function NewTicketModal({ isOpen, onClose, onTicketCreated }: New
   const [priority, setPriority] = useState('medium');
   const [notes, setNotes] = useState('');
   const [technician, setTechnician] = useState('');
+  
+  // Add state for current user's regie ID
+  const [currentUserRegieId, setCurrentUserRegieId] = useState<string | null>(null);
 
   // Form validation
   const [touched, setTouched] = useState({
@@ -202,6 +208,21 @@ export default function NewTicketModal({ isOpen, onClose, onTicketCreated }: New
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Get user info from localStorage on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const proInfoString = localStorage.getItem('proInfo');
+        if (proInfoString) {
+          const proInfo = JSON.parse(proInfoString);
+          setCurrentUserRegieId(proInfo.id || null);
+        }
+      } catch (error) {
+        console.error("Error parsing proInfo from localStorage:", error);
+      }
+    }
+  }, []);
 
   // Format names for display
   const formatClientName = (client: Contact) => `${client.firstName} ${client.lastName}`;
@@ -243,26 +264,34 @@ export default function NewTicketModal({ isOpen, onClose, onTicketCreated }: New
     }
   }, [isOpen]);
 
-  // Fetch clients (contacts) from your API
+  // Fetch clients (contacts) from your API - filtered by assignedRegie
   useEffect(() => {
     if (isOpen) {
       fetch('/api/contacts')
         .then((res) => res.json())
-        .then((data: Contact[]) => setClients(data))
+        .then((data: Contact[]) => {
+          // Filter contacts by assignedRegie if currentUserRegieId exists
+          const filteredData = currentUserRegieId 
+            ? data.filter(contact => contact.assignedRegie === currentUserRegieId)
+            : data;
+          setClients(filteredData);
+        })
         .catch((err) => console.error('Error fetching contacts:', err));
     }
-  }, [isOpen]);
+  }, [isOpen, currentUserRegieId]);
 
-  // Fetch technicians (users) from your API and filter by role
+  // Fetch technicians (users) from your API and filter only by role (no assignedRegie filter)
   useEffect(() => {
     if (isOpen) {
       fetch('/api/users')
         .then((res) => res.json())
         .then((data: User[]) => {
+          // Only filter by role, show all technicians regardless of assignedRegie
           const filteredUsers = data.filter(
             (user) =>
               user.role === 'Technician / Installer' || user.role === 'Installer'
           );
+          
           setTechnicians(filteredUsers);
         })
         .catch((err) => console.error('Error fetching users:', err));
@@ -303,6 +332,8 @@ export default function NewTicketModal({ isOpen, onClose, onTicketCreated }: New
       technicianFirstName: selectedTech ? selectedTech.firstName : '',
       technicianLastName: selectedTech ? selectedTech.lastName : '',
       createdAt: new Date().toISOString(),
+      // Add the assignedRegie field from the current user
+      assignedRegie: currentUserRegieId || undefined,
     };
 
     // Post the new ticket to your API (endpoint updated to /api/ticket)
@@ -416,6 +447,11 @@ export default function NewTicketModal({ isOpen, onClose, onTicketCreated }: New
             nameFormat={formatClientName}
             required={true}
           />
+          {clients.length === 0 && (
+            <p className="text-xs text-gray-500 mt-1">
+              Aucun client disponible. Veuillez vérifier vos autorisations ou contacter un administrateur.
+            </p>
+          )}
         </div>
 
         {/* Problème */}
