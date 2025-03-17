@@ -116,6 +116,7 @@ type Dossier = {
     circuitChauffageFonctionnel?: string;
   };
   contactId?: string;
+  assignedRegie?: string; // Added this field to match the API response
 };
 
 type Contact = {
@@ -126,18 +127,9 @@ type Contact = {
   mailingAddress: string;
   email?: string;
   phone?: string;
+  assignedRegie?: string; // Added this field to match the API response
 };
 
-// Mapping for step colors - updated with brand colors
-// const stepStyles: { [key: string]: { bg: string; text: string } } = {
-//   "1": { bg: "bg-[#bfddf9]/30", text: "text-[#213f5b]" },
-//   "2": { bg: "bg-[#bfddf9]/50", text: "text-[#213f5b]" },
-//   "3": { bg: "bg-[#d2fcb2]/30", text: "text-[#213f5b]" },
-//   "4": { bg: "bg-[#d2fcb2]/50", text: "text-[#213f5b]" },
-//   "5": { bg: "bg-[#213f5b]/20", text: "text-[#213f5b]" },
-//   "6": { bg: "bg-[#213f5b]/30", text: "text-[#213f5b]" },
-//   "7": { bg: "bg-[#213f5b]/50", text: "text-white" },
-// };
 // Define your timeline steps
 const steps = [
   "Prise de contact",
@@ -149,17 +141,11 @@ const steps = [
   "Dossier clôturé",
 ];
 
-// type SlideOverProps = {
-//   selectedProject: Dossier | null;
-//   setSelectedProject: (project: Dossier | null) => void;
-// };
-
 export default function ProjectsPage() {
   // Data and loading
   const [projects, setProjects] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
-  
+  const [currentManagerId, setCurrentManagerId] = useState<string | null>(null);
 
   // Fetched contacts (mapping contactId => contact data)
   const [contacts, setContacts] = useState<{ [id: string]: Contact }>({});
@@ -175,6 +161,23 @@ export default function ProjectsPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
+
+  // Get the manager ID from localStorage on component mount
+  useEffect(() => {
+    // Only run in browser environment
+    if (typeof window !== 'undefined') {
+      try {
+        const proInfoString = localStorage.getItem('proInfo');
+        if (proInfoString) {
+          const proInfo = JSON.parse(proInfoString);
+          // Extract the id field from proInfo
+          setCurrentManagerId(proInfo.id || null);
+        }
+      } catch (error) {
+        console.error("Error parsing proInfo from localStorage:", error);
+      }
+    }
+  }, []);
 
 // Helper Functions with explicit types
 const getStepColor = (step: number): string => {
@@ -213,14 +216,21 @@ const getGradientColorForStep = (step: number): string => {
   return `linear-gradient(90deg, ${baseColor}, ${lightenColor(baseColor, 20)})`;
 };
 
-
   // Fetch projects (dossiers)
   const fetchProjects = () => {
     setLoading(true);
     fetch("/api/dossiers")
       .then((res) => res.json())
       .then((data) => {
-        setProjects(data);
+        // Filter projects to only include those assigned to the current manager
+        if (currentManagerId) {
+          const filteredData = data.filter((project: Dossier) => 
+            project.assignedRegie === currentManagerId
+          );
+          setProjects(filteredData);
+        } else {
+          setProjects(data);
+        }
         setLoading(false);
       })
       .catch((error) => {
@@ -229,9 +239,10 @@ const getGradientColorForStep = (step: number): string => {
       });
   };
 
+  // Refetch projects when currentManagerId changes
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [currentManagerId]);
 
   // When projects change, fetch their contact data if available.
   useEffect(() => {
@@ -240,14 +251,17 @@ const getGradientColorForStep = (step: number): string => {
         fetch(`/api/contacts/${project.contactId}`)
           .then((res) => res.json())
           .then((data: Contact) => {
-            setContacts((prev) => ({ ...prev, [project.contactId as string]: data }));
+            // Only add contacts that are assigned to the current manager
+            if (!currentManagerId || data.assignedRegie === currentManagerId) {
+              setContacts((prev) => ({ ...prev, [project.contactId as string]: data }));
+            }
           })
           .catch((error) => {
             console.error("Erreur lors de la récupération du contact :", error);
           });
       }
     });
-  }, [projects, contacts]);
+  }, [projects, contacts, currentManagerId]);
 
   // Helper: Format the etape string to "Etape X - description"
   const formatEtape = (etape?: string) => {
@@ -259,21 +273,16 @@ const getGradientColorForStep = (step: number): string => {
     return etape;
   };
 
-  // Helper: Get bg and text classes based on the step number
-  // const getEtapeStyles = (etape?: string) => {
-  //   if (!etape) return "bg-gray-200 text-gray-800";
-  //   const digit = etape.charAt(0);
-  //   const style = stepStyles[digit];
-  //   return style ? `${style.bg} ${style.text}` : "bg-gray-200 text-gray-800";
-  // };
-
   // Filtering logic (ensuring string conversion)
   const filteredProjects = projects.filter((project) => {
-    // Only include steps 5, 6, 7
-    const includedSteps = [5, 6, 7];
+    // Filter by assignedRegie if currentManagerId is available
+    if (currentManagerId && project.assignedRegie !== currentManagerId) {
+      return false;
+    }
+    
+    const includedSteps = [1, 2, 3, 4, 5, 6, 7];
     const stepNumber = parseInt(project.etape?.charAt(0) ?? "0", 10);
-  
-    // If the project's etape is not 5, 6, or 7, exclude it
+
     if (!includedSteps.includes(stepNumber)) {
       return false;
     }
@@ -306,42 +315,27 @@ const getGradientColorForStep = (step: number): string => {
   };
 
   // 2. Compute *all stats* from the filteredProjects array.
-const totalClientsCount = filteredProjects.length;
+  const totalClientsCount = filteredProjects.length;
 
-// For stageStats
-const stageStats = filteredProjects.reduce((acc, project) => {
-  const stageNumber = project.etape?.charAt(0) || "N/A";
-  acc[stageNumber] = (acc[stageNumber] || 0) + 1;
-  return acc;
-}, {} as { [key: string]: number });
+  // For stageStats
+  const stageStats = filteredProjects.reduce((acc, project) => {
+    const stageNumber = project.etape?.charAt(0) || "N/A";
+    acc[stageNumber] = (acc[stageNumber] || 0) + 1;
+    return acc;
+  }, {} as { [key: string]: number });
 
-// For solutions
-const solutionCounts = filteredProjects.reduce((acc, project) => {
-  const sol = project.solution || "Autres";
-  acc[sol] = (acc[sol] || 0) + 1;
-  return acc;
-}, {} as { [key: string]: number });
+  // For solutions
+  const solutionCounts = filteredProjects.reduce((acc, project) => {
+    const sol = project.solution || "Autres";
+    acc[sol] = (acc[sol] || 0) + 1;
+    return acc;
+  }, {} as { [key: string]: number });
 
-// Sort solutions, show only the top ones
-const sortedSolutions = Object.entries(solutionCounts)
-  .filter(([key]) => key !== "Autres")
-  .sort(([, a], [, b]) => b - a)
-  .slice(0, 2);
-
-  // -------------------------------
-  // Stats Calculations
-  // -------------------------------
-  // We'll use the total number of projects as "Total Clients"
-  // const totalClientsCount = projects.length;
-  // const solutionCounts = projects.reduce((acc, project) => {
-  //   const sol = project.solution || "Autres";
-  //   acc[sol] = (acc[sol] || 0) + 1;
-  //   return acc;
-  // }, {} as { [key: string]: number });
-  // const sortedSolutions = Object.entries(solutionCounts)
-  //   .filter(([key]) => key !== "Autres")
-  //   .sort(([, a], [, b]) => b - a)
-  //   .slice(0, 2);
+  // Sort solutions, show only the top ones
+  const sortedSolutions = Object.entries(solutionCounts)
+    .filter(([key]) => key !== "Autres")
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 2);
 
   // Define solution filter options
   const solutionOptions = [
@@ -351,13 +345,6 @@ const sortedSolutions = Object.entries(solutionCounts)
     "Chauffe-eau thermodynamique",
     "Système Solaire Combiné",
   ];
-
-  // Calculate stage statistics
-  // const stageStats = projects.reduce((acc, project) => {
-  //   const stageNumber = project.etape?.charAt(0) || "N/A";
-  //   acc[stageNumber] = (acc[stageNumber] || 0) + 1;
-  //   return acc;
-  // }, {} as { [key: string]: number });
 
   if (loading) {
     return (
@@ -393,24 +380,6 @@ const sortedSolutions = Object.entries(solutionCounts)
 
   return (
     <div className="flex h-screen bg-white">
-      {/* Sidebar placeholder */}
-      {/* <motion.div
-        className="relative border-r border-[#bfddf9]/30 bg-white w-16 md:w-64"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-
-        <div className="p-4 hidden md:block">
-          <div className="h-10 w-full bg-[#213f5b]/10 rounded-lg animate-pulse"></div>
-          <div className="mt-8 space-y-4">
-            <div className="h-8 w-full bg-[#bfddf9]/20 rounded-lg"></div>
-            <div className="h-8 w-full bg-[#bfddf9]/20 rounded-lg"></div>
-            <div className="h-8 w-full bg-[#213f5b]/10 rounded-lg"></div>
-          </div>
-        </div>
-      </motion.div> */}
-
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
