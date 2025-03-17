@@ -6,22 +6,31 @@ import {
   ChatBubbleLeftRightIcon,
   ChevronRightIcon,
   ExclamationTriangleIcon,
-  // CheckCircleIcon,
   InformationCircleIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  // ClockIcon,
   TagIcon,
   MapPinIcon,
   UserIcon,
   PaperAirplaneIcon,
-  // CheckIcon,
-  // ExclamationCircleIcon,
-  // DocumentTextIcon,
+  // DocumentArrowDownIcon,
+  // DocumentCheckIcon,
+  ArrowPathIcon,
+  XMarkIcon,
+  // ChevronDownIcon,
+  // ArrowDownTrayIcon,
+  DocumentTextIcon,
+  // BellAlertIcon,
+  CloudArrowDownIcon,
+  ArrowTopRightOnSquareIcon
 } from "@heroicons/react/24/outline";
 import { Header } from "@/components/Header";
-import { useEffect, useState, JSX } from "react";
-import { TicketIcon } from "lucide-react";
+import { useEffect, useState, useRef, JSX } from "react";
+import { TicketIcon, Check, FileText, FileSignature } from "lucide-react";
+import SignatureCanvas from 'react-signature-canvas';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 {/* Type definitions */}
 interface PriorityBadgeProps {
@@ -31,20 +40,29 @@ interface PriorityBadgeProps {
 interface ConversationMessage {
   message: string;
   sender: string;
-  timestamp: number; // or string if that's what you use
+  timestamp: number; 
 }
 
+interface AttestationDocument {
+  id: string;
+  title: string;
+  issueDate: string;
+  expiryDate: string;
+  status: "pending" | "signed" | "verified";
+  issuedBy: string;
+  description: string;
+  fileName: string;
+  fileType: string;
+  fileSize: string;
+  signatureRequired: boolean;
+  signedDate?: string;
+  verifiedDate?: string;
+  content?: string; // HTML content of the attestation for preview
+}
 
 interface StatusBadgeProps {
   status: string;
 }
-
-// interface InfoSectionProps {
-//   title: string;
-//   content: string;
-//   icon: React.ReactNode;
-//   multiline?: boolean;
-// }
 
 interface IconProps {
   className?: string;
@@ -72,11 +90,11 @@ interface ApiTicket {
   start: string;
   title: string;
   type: string;
+  attestations?: AttestationDocument[];
 }
 
 // Define the UI ticket type.
 interface Ticket {
-  // customerPhone: any;
   title: string;
   ticket: string;
   type: string;
@@ -101,7 +119,253 @@ interface Ticket {
   description: string;
   lastUpdate: string;
   conversation: ConversationMessage[];
+  attestations: AttestationDocument[];
 }
+
+// Sample attestation data to inject
+const sampleAttestations: AttestationDocument[] = [
+  {
+    id: "att-001",
+    title: "Attestation d'intervention technique",
+    issueDate: "2025-03-15",
+    expiryDate: "2025-06-15",
+    status: "pending",
+    issuedBy: "Service Technique",
+    description: "Attestation d'intervention suite à réparation du système de chauffage",
+    fileName: "attestation_intervention_technique.pdf",
+    fileType: "PDF",
+    fileSize: "1.2 MB",
+    signatureRequired: true,
+    content: `
+      <div style="font-family: Arial, sans-serif;">
+        <h1 style="text-align: center; color: #213f5b;">ATTESTATION D'INTERVENTION TECHNIQUE</h1>
+        <div style="text-align: right;">
+          <p>Date: 15/03/2025</p>
+          <p>Référence: ATT-001-2025</p>
+        </div>
+        <div style="margin-top: 30px;">
+          <p>Je soussigné(e), [PRÉNOM NOM], certifie que l'intervention technique a été réalisée le 15/03/2025 à l'adresse suivante : </p>
+          <p style="font-weight: bold; margin: 15px 0;">[ADRESSE COMPLÈTE]</p>
+          <p>Type d'intervention : Réparation du système de chauffage</p>
+          <p>Détails des opérations effectuées :</p>
+          <ul>
+            <li>Diagnostic du dysfonctionnement</li>
+            <li>Remplacement des pièces défectueuses</li>
+            <li>Test de fonctionnement</li>
+            <li>Mise en service</li>
+          </ul>
+          <p>Cette attestation est valable jusqu'au 15/06/2025.</p>
+          <div style="margin-top: 50px;">
+            <p>Signature du technicien:</p>
+            <div style="border-bottom: 1px solid #000; height: 40px; width: 200px;"></div>
+            <p>Signature du client:</p>
+            <div style="border-bottom: 1px solid #000; height: 40px; width: 200px;"></div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: "att-002",
+    title: "Certificat de conformité",
+    issueDate: "2025-03-10",
+    expiryDate: "2026-03-10",
+    status: "signed",
+    issuedBy: "Département Qualité",
+    description: "Certificat attestant de la conformité de l'installation aux normes en vigueur",
+    fileName: "certificat_conformite.pdf",
+    fileType: "PDF",
+    fileSize: "0.8 MB",
+    signatureRequired: true,
+    signedDate: "2025-03-12",
+    content: `
+      <div style="font-family: Arial, sans-serif;">
+        <h1 style="text-align: center; color: #213f5b;">CERTIFICAT DE CONFORMITÉ</h1>
+        <div style="text-align: right;">
+          <p>Date: 10/03/2025</p>
+          <p>Référence: CERT-002-2025</p>
+        </div>
+        <div style="margin-top: 30px;">
+          <p>Je soussigné(e), [PRÉNOM NOM], certifie que l'installation réalisée le 10/03/2025 à l'adresse suivante : </p>
+          <p style="font-weight: bold; margin: 15px 0;">[ADRESSE COMPLÈTE]</p>
+          <p>Est conforme aux normes en vigueur et spécifications techniques requises.</p>
+          <p>Type d'installation : Système énergétique</p>
+          <p>Normes appliquées :</p>
+          <ul>
+            <li>NF C 15-100 pour les installations électriques</li>
+            <li>RT 2020 pour les performances énergétiques</li>
+            <li>Directive européenne 2009/28/CE</li>
+          </ul>
+          <p>Ce certificat est valable jusqu'au 10/03/2026.</p>
+          <div style="margin-top: 50px;">
+            <p>Signature du technicien:</p>
+            <div style="border-bottom: 1px solid #000; height: 40px; width: 200px;"></div>
+            <p>Signature du client:</p>
+            <div style="border-bottom: 1px solid #000; height: 40px; width: 200px;"></div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: "att-003",
+    title: "Rapport de maintenance préventive",
+    issueDate: "2025-02-20",
+    expiryDate: "2025-08-20",
+    status: "verified",
+    issuedBy: "Service Maintenance",
+    description: "Rapport détaillant les opérations de maintenance préventive effectuées",
+    fileName: "rapport_maintenance.pdf",
+    fileType: "PDF",
+    fileSize: "1.5 MB",
+    signatureRequired: true,
+    signedDate: "2025-02-22",
+    verifiedDate: "2025-02-25",
+    content: `
+      <div style="font-family: Arial, sans-serif;">
+        <h1 style="text-align: center; color: #213f5b;">RAPPORT DE MAINTENANCE PRÉVENTIVE</h1>
+        <div style="text-align: right;">
+          <p>Date: 20/02/2025</p>
+          <p>Référence: RPT-003-2025</p>
+        </div>
+        <div style="margin-top: 30px;">
+          <p>Je soussigné(e), [PRÉNOM NOM], certifie que la maintenance préventive a été réalisée le 20/02/2025 à l'adresse suivante : </p>
+          <p style="font-weight: bold; margin: 15px 0;">[ADRESSE COMPLÈTE]</p>
+          <p>Type de maintenance : Préventive complète</p>
+          <p>Équipements vérifiés :</p>
+          <ul>
+            <li>Système de chauffage</li>
+            <li>Ventilation</li>
+            <li>Isolation thermique</li>
+            <li>Tableau électrique</li>
+          </ul>
+          <p>Recommandations :</p>
+          <ol>
+            <li>Planifier le remplacement du filtre d'ici 3 mois</li>
+            <li>Surveiller le niveau de pression du circuit</li>
+            <li>Prochaine maintenance complète dans 6 mois</li>
+          </ol>
+          <p>Ce rapport est valable jusqu'au 20/08/2025.</p>
+          <div style="margin-top: 50px;">
+            <p>Signature du technicien:</p>
+            <div style="border-bottom: 1px solid #000; height: 40px; width: 200px;"></div>
+            <p>Signature du client:</p>
+            <div style="border-bottom: 1px solid #000; height: 40px; width: 200px;"></div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+];
+
+// PDF document styles
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: 'column',
+    backgroundColor: '#ffffff',
+    padding: 30,
+  },
+  section: {
+    margin: 10,
+    padding: 10,
+  },
+  header: {
+    fontSize: 24,
+    textAlign: 'center',
+    color: '#213f5b',
+    marginBottom: 20,
+  },
+  subheader: {
+    fontSize: 18,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  text: {
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
+  reference: {
+    fontSize: 10,
+    marginTop: 5,
+    color: '#666',
+  },
+  signatureSection: {
+    marginTop: 30,
+    borderTop: 1,
+    borderTopColor: '#ddd',
+    paddingTop: 10,
+  },
+  signatureLine: {
+    borderBottom: 1,
+    borderBottomColor: '#000',
+    width: 200,
+    marginTop: 40,
+    marginBottom: 10,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 30,
+    right: 30,
+    textAlign: 'center',
+    color: '#666',
+    borderTop: 1,
+    borderTopColor: '#ddd',
+    paddingTop: 10,
+    fontSize: 10,
+  },
+});
+
+// PDF attestation document
+const AttestationnPDF: React.FC<AttestationPDFProps> = ({ attestation, ticketData }) => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.section}>
+        <Text style={styles.header}>{attestation.title}</Text>
+        <Text style={styles.reference}>Référence: {attestation.id} - Date: {new Date(attestation.issueDate).toLocaleDateString('fr-FR')}</Text>
+      </View>
+      
+      <View style={styles.section}>
+        <Text style={styles.subheader}>Informations du client</Text>
+        <Text style={styles.text}>Nom: {ticketData.customerFirstName} {ticketData.customerLastName}</Text>
+        <Text style={styles.text}>Adresse: {ticketData.location}</Text>
+        <Text style={styles.text}>Numéro de ticket: {ticketData.ticketNumber}</Text>
+      </View>
+      
+      <View style={styles.section}>
+        <Text style={styles.subheader}>Détails de l&apos;attestation</Text>
+        <Text style={styles.text}>{attestation.description}</Text>
+        <Text style={styles.text}>Délivré par: {attestation.issuedBy}</Text>
+        <Text style={styles.text}>Validité: du {new Date(attestation.issueDate).toLocaleDateString('fr-FR')} au {new Date(attestation.expiryDate).toLocaleDateString('fr-FR')}</Text>
+      </View>
+      
+      <View style={styles.section}>
+        <Text style={styles.subheader}>Nature de l&apos;intervention</Text>
+        <Text style={styles.text}>Type: {ticketData.type}</Text>
+        <Text style={styles.text}>Problème: {ticketData.problem}</Text>
+        <Text style={styles.text}>Solution: {ticketData.solution}</Text>
+      </View>
+      
+      <View style={styles.signatureSection}>
+        <Text style={styles.text}>Signature du technicien:</Text>
+        <View style={styles.signatureLine}></View>
+        <Text style={styles.text}>Nom du technicien: {ticketData.technicianFirstName} {ticketData.technicianLastName}</Text>
+        
+        <Text style={[styles.text, { marginTop: 20 }]}>Signature du client:</Text>
+        <View style={styles.signatureLine}></View>
+        <Text style={styles.text}>Nom du client: {ticketData.customerFirstName} {ticketData.customerLastName}</Text>
+      </View>
+      
+      <View style={styles.footer}>
+        <Text>Ce document a été généré automatiquement et fait office d&apos;attestation d&apos;intervention.</Text>
+        <Text>Pour toute question, veuillez contacter notre service après-vente.</Text>
+      </View>
+    </Page>
+  </Document>
+);
 
 // Transformation function to convert an API ticket into the UI ticket.
 function transformTicket(realTicket: ApiTicket): Ticket {
@@ -144,12 +408,12 @@ function transformTicket(realTicket: ApiTicket): Ticket {
     lastUpdate: realTicket.end
       ? new Date(realTicket.end).toLocaleString("fr-FR")
       : "",
+    attestations: realTicket.attestations || [], // Initialize with empty array if none provided
   };
 }
 
 const statusOptions = ["Tous", "Ouvert", "En cours", "Fermé"];
 const priorityOptions = ["Tous", "Haute", "Moyenne", "Faible"];
-
 
 {/* Component for Priority Badge */}
 const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
@@ -212,21 +476,6 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   );
 };
 
-{/* Component for Info Section */}
-// const InfoSection: React.FC<InfoSectionProps> = ({ title, content, icon, multiline = false }) => {
-//   return (
-//     <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-//       <div className="flex items-center gap-2 mb-2">
-//         {icon}
-//         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
-//       </div>
-//       <div className={multiline ? "whitespace-pre-line" : ""}>
-//         <p className="text-gray-900 dark:text-gray-100">{content}</p>
-//       </div>
-//     </div>
-//   );
-// };
-
 {/* Icons - simplified versions for the example */}
 const ExclamationCircleIcon: React.FC<IconProps> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -237,12 +486,6 @@ const ExclamationCircleIcon: React.FC<IconProps> = ({ className }) => (
 const CheckCircleIcon: React.FC<IconProps> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const DocumentTextIcon: React.FC<IconProps> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
   </svg>
 );
 
@@ -258,6 +501,11 @@ const ClockIcon: React.FC<IconProps> = ({ className }) => (
   </svg>
 );
 
+interface AttestationPDFProps {
+  attestation: AttestationDocument;
+  ticketData: Ticket;
+}
+
 export default function SAV() {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -267,7 +515,19 @@ export default function SAV() {
   const [contactId, setContactId] = useState<string>("");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [mapType, setMapType] = useState('roadmap');
-  // const [showStreetView, setShowStreetView] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
+  const [showNewBadge, setShowNewBadge] = useState(true);
+  const [selectedAttestation, setSelectedAttestation] = useState<AttestationDocument | null>(null);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const signaturePadRef = useRef<SignatureCanvas>(null);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
+  
+  // Simulate having new attestations
+  useEffect(() => {
+    // This will hide the "NEW" badge after 10 seconds
+    const timer = setTimeout(() => setShowNewBadge(false), 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Retrieve clientInfo from localStorage to get contactId.
   useEffect(() => {
@@ -299,10 +559,54 @@ export default function SAV() {
       try {
         const res = await fetch(`/api/tickets?contactId=${contactId}`);
         const data: ApiTicket[] = await res.json();
+        
+        // Add sample attestation data to the first ticket for demo purposes
+        if (data.length > 0) {
+          data[0].attestations = sampleAttestations;
+        }
+        
         const transformedTickets = data.map(transformTicket);
         setTickets(transformedTickets);
       } catch (error) {
         console.error("Error fetching tickets:", error);
+        
+        // If fetch fails, create sample data for demo purposes
+        const sampleApiTicket: ApiTicket = {
+          _id: "sample-123",
+          ticket: "SAV-2025-0123",
+          status: "in progress",
+          priority: "medium",
+          contactId: "contact-123",
+          customerFirstName: "Marie",
+          customerLastName: "Dubois",
+          problem: "Dysfonctionnement du système de chauffage",
+          notes: "Le client signale que son système de chauffage ne fonctionne pas correctement depuis 3 jours. La température ne monte pas au-dessus de 17°C malgré les réglages.",
+          technicianId: "tech-456",
+          technicianFirstName: "Thomas",
+          technicianLastName: "Martin",
+          createdAt: "2025-03-10T09:30:00Z",
+          end: "2025-03-18T16:00:00Z",
+          location: "15 Rue des Fleurs, 75001 Paris, France",
+          participants: "Thomas Martin, Marie Dubois",
+          start: "2025-03-15T14:00:00Z",
+          title: "Réparation système de chauffage",
+          type: "Intervention technique",
+          conversation: [
+            {
+              message: "Bonjour, je confirme ma disponibilité pour l'intervention ce samedi.",
+              sender: "technicien",
+              timestamp: Date.now() - 86400000 * 3
+            },
+            {
+              message: "Parfait, je serai présent. Merci de votre réactivité.",
+              sender: "client",
+              timestamp: Date.now() - 86400000 * 2
+            }
+          ],
+          attestations: sampleAttestations
+        };
+        
+        setTickets([transformTicket(sampleApiTicket)]);
       }
     }
     fetchTickets();
@@ -341,11 +645,139 @@ export default function SAV() {
         return <CheckCircleIcon className={`${iconStyle} text-[#213f5b]`} />;
     }
   };
+  
+  const getAttestationStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return (
+          <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            En attente
+          </span>
+        );
+      case 'signed':
+        return (
+          <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Signé
+          </span>
+        );
+      case 'verified':
+        return (
+          <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Vérifié
+          </span>
+        );
+      default:
+        return (
+          <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+            Inconnu
+          </span>
+        );
+    }
+  };
+  
+  const handleSignAttestation = (attestation: AttestationDocument) => {
+    setSelectedAttestation(attestation);
+    setShowSignatureModal(true);
+  };
+  
+  const handleSignatureSubmit = () => {
+    if (signaturePadRef.current?.isEmpty()) {
+      toast.error('Veuillez signer le document avant de soumettre');
+      return;
+    }
+    
+    // In a real app, here we would save the signature data, update the attestation status, etc.
+    // For this demo, we'll just update the local state
+    if (selectedTicket && selectedAttestation) {
+      const updatedTickets = tickets.map(ticket => {
+        if (ticket.id === selectedTicket.id) {
+          const updatedAttestations = ticket.attestations.map(att => {
+            if (att.id === selectedAttestation.id) {
+              return {
+                ...att,
+                status: 'signed' as "signed",
+                signedDate: new Date().toISOString()
+              };
+            }
+            return att;
+          });
+          
+          return {
+            ...ticket,
+            attestations: updatedAttestations
+          };
+        }
+        return ticket;
+      });
+      
+      setTickets(updatedTickets);
+      
+      // Also update the selected ticket if it's open
+      if (selectedTicket) {
+        const updatedAttestations = selectedTicket.attestations.map(att => {
+          if (att.id === selectedAttestation.id) {
+            return {
+              ...att,
+              status: 'signed' as "signed",
+              signedDate: new Date().toISOString()
+            };
+          }
+          return att;
+        });
+        
+        setSelectedTicket({
+          ...selectedTicket,
+          attestations: updatedAttestations
+        });
+      }
+      
+      setShowSignatureModal(false);
+      toast.success('Document signé avec succès !');
+    }
+  };
+  
+  const clearSignature = () => {
+    if (signaturePadRef.current) {
+      signaturePadRef.current.clear();
+    }
+  };
+
+  const handlePreviewPdf = (attestation: AttestationDocument) => {
+    setSelectedAttestation(attestation);
+    setShowPdfPreview(true);
+  };
+  
+  const hasUnsignedAttestations = (ticket: Ticket) => {
+    return ticket.attestations && ticket.attestations.some(att => att.status === 'pending');
+  };
 
   return (
     <div className="flex h-screen bg-white">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
+        
+        {/* Toast container for notifications */}
+        <ToastContainer 
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
 
         <main
           className="flex-1 overflow-y-auto px-8 py-6 space-y-6"
@@ -464,12 +896,23 @@ export default function SAV() {
                   <div className="p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-start gap-4">
-                        <div className="p-2 bg-[#bfddf9]/30 rounded-lg">
+                        <div className="p-2 bg-[#bfddf9]/30 rounded-lg relative">
                           <ChatBubbleLeftRightIcon className="h-8 w-8 text-[#213f5b]" />
+                          {/* Notification badge for new attestations */}
+                          {hasUnsignedAttestations(ticket) && showNewBadge && (
+                            <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white animate-pulse">
+                              !
+                            </span>
+                          )}
                         </div>
                         <div>
-                          <h3 className="text-xl font-semibold text-[#213f5b]">
+                          <h3 className="text-xl font-semibold text-[#213f5b] flex items-center gap-2">
                             {ticket.subject}
+                            {hasUnsignedAttestations(ticket) && showNewBadge && (
+                              <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full animate-pulse">
+                                Attestation à signer
+                              </span>
+                            )}
                           </h3>
                           <div className="mt-2 flex flex-wrap gap-2">
                             <span className={getStatusBadge(ticket.status)}>
@@ -479,6 +922,12 @@ export default function SAV() {
                               {getPriorityIcon(ticket.priority)}
                               {ticket.priority}
                             </span>
+                            {ticket.attestations && ticket.attestations.length > 0 && (
+                              <span className="flex items-center gap-1 px-3 py-1 bg-[#213f5b]/10 rounded-full text-sm text-[#213f5b]">
+                                <DocumentTextIcon className="h-4 w-4" />
+                                {ticket.attestations.length} attestation{ticket.attestations.length > 1 ? 's' : ''}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -613,47 +1062,108 @@ export default function SAV() {
                 </div>
               </div>
               
+              {/* Tab Navigation */}
+              <div className="flex border-b border-gray-200 overflow-x-auto hide-scrollbar">
+                <button 
+                  className={`px-6 py-4 font-medium text-sm flex items-center gap-2 transition-colors border-b-2 ${
+                    activeTab === 'details' 
+                    ? 'text-[#1a365d] border-[#1a365d]' 
+                    : 'text-gray-500 border-transparent hover:text-[#1a365d] hover:border-gray-300'
+                  }`}
+                  onClick={() => setActiveTab('details')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Détails
+                </button>
+                
+                <button 
+                  className={`px-6 py-4 font-medium text-sm flex items-center gap-2 transition-colors border-b-2 ${
+                    activeTab === 'conversation' 
+                    ? 'text-[#1a365d] border-[#1a365d]' 
+                    : 'text-gray-500 border-transparent hover:text-[#1a365d] hover:border-gray-300'
+                  }`}
+                  onClick={() => setActiveTab('conversation')}
+                >
+                  <ChatBubbleLeftRightIcon className="h-5 w-5" />
+                  Conversation
+                </button>
+                
+                <button 
+                  className={`px-6 py-4 font-medium text-sm flex items-center gap-2 transition-colors border-b-2 relative ${
+                    activeTab === 'attestations' 
+                    ? 'text-[#1a365d] border-[#1a365d]' 
+                    : 'text-gray-500 border-transparent hover:text-[#1a365d] hover:border-gray-300'
+                  }`}
+                  onClick={() => setActiveTab('attestations')}
+                >
+                  <FileText className="h-5 w-5" />
+                  Attestations
+                  {hasUnsignedAttestations(selectedTicket) && showNewBadge && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white animate-pulse">
+                      !
+                    </span>
+                  )}
+                </button>
+                
+                <button 
+                  className={`px-6 py-4 font-medium text-sm flex items-center gap-2 transition-colors border-b-2 ${
+                    activeTab === 'location' 
+                    ? 'text-[#1a365d] border-[#1a365d]' 
+                    : 'text-gray-500 border-transparent hover:text-[#1a365d] hover:border-gray-300'
+                  }`}
+                  onClick={() => setActiveTab('location')}
+                >
+                  <MapPinIcon className="h-5 w-5" />
+                  Localisation
+                </button>
+              </div>
+              
               {/* Content with refined design */}
-              <div className="p-0 max-h-[70vh] overflow-y-auto bg-gray-50">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
-                  {/* Left Column - 3/5 width */}
-                  <div className="md:col-span-3 p-6 space-y-6 bg-white border-r border-gray-100">
+              <div className="max-h-[70vh] overflow-y-auto bg-gray-50">
+                {/* Tab content: Details */}
+                {activeTab === 'details' && (
+                  <div className="p-6 space-y-6 bg-white">
                     <div className="flex items-center space-x-3 mb-5 pb-2 border-b border-gray-100">
                       <DocumentTextIcon className="h-5 w-5 text-[#1a365d]" />
                       <h3 className="text-lg font-semibold text-gray-800">Détails du Ticket</h3>
                     </div>
                     
-                    {/* Problem Card - Redesigned */}
-                    <div className="bg-gradient-to-br from-[#bfddf9]/10 to-[#bfddf9]/5 p-5 rounded-2xl border border-[#bfddf9]/30 shadow-sm hover:shadow-md transition-shadow duration-300">
-                      <div className="flex items-start gap-4">
-                        <div className="bg-gradient-to-br from-[#1a365d] to-[#213f5b] rounded-full p-3 shadow-md flex-shrink-0">
-                          <ExclamationCircleIcon className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-[#1a365d] font-semibold text-lg flex items-center">
-                            Problème
-                            <span className="ml-2 text-xs bg-[#1a365d]/10 text-[#1a365d] px-2 py-0.5 rounded-full">Signalé</span>
-                          </h3>
-                          <div className="text-gray-700 mt-3 p-3 bg-white/80 rounded-xl border border-[#bfddf9]/20">
-                            {selectedTicket.problem}
+                    {/* Information Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Problem Card - Redesigned */}
+                      <div className="bg-gradient-to-br from-[#bfddf9]/10 to-[#bfddf9]/5 p-5 rounded-2xl border border-[#bfddf9]/30 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div className="flex items-start gap-4">
+                          <div className="bg-gradient-to-br from-[#1a365d] to-[#213f5b] rounded-full p-3 shadow-md flex-shrink-0">
+                            <ExclamationCircleIcon className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-[#1a365d] font-semibold text-lg flex items-center">
+                              Problème
+                              <span className="ml-2 text-xs bg-[#1a365d]/10 text-[#1a365d] px-2 py-0.5 rounded-full">Signalé</span>
+                            </h3>
+                            <div className="text-gray-700 mt-3 p-3 bg-white/80 rounded-xl border border-[#bfddf9]/20">
+                              {selectedTicket.problem}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Solution Card - Redesigned */}
-                    <div className="bg-gradient-to-br from-[#d2fcb2]/15 to-[#d2fcb2]/5 p-5 rounded-2xl border border-[#d2fcb2]/30 shadow-sm hover:shadow-md transition-shadow duration-300">
-                      <div className="flex items-start gap-4">
-                        <div className="bg-gradient-to-br from-[#2e5e3a] to-[#3d7a4c] rounded-full p-3 shadow-md flex-shrink-0">
-                          <CheckCircleIcon className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-[#2e5e3a] font-semibold text-lg flex items-center">
-                            Solution / Type
-                            <span className="ml-2 text-xs bg-[#2e5e3a]/10 text-[#2e5e3a] px-2 py-0.5 rounded-full">Proposé</span>
-                          </h3>
-                          <div className="text-gray-700 mt-3 p-3 bg-white/80 rounded-xl border border-[#d2fcb2]/20">
-                            {selectedTicket.solution || selectedTicket.type || "Aucun type défini pour ce ticket."}
+                      
+                      {/* Solution Card - Redesigned */}
+                      <div className="bg-gradient-to-br from-[#d2fcb2]/15 to-[#d2fcb2]/5 p-5 rounded-2xl border border-[#d2fcb2]/30 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div className="flex items-start gap-4">
+                          <div className="bg-gradient-to-br from-[#2e5e3a] to-[#3d7a4c] rounded-full p-3 shadow-md flex-shrink-0">
+                            <CheckCircleIcon className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-[#2e5e3a] font-semibold text-lg flex items-center">
+                              Solution / Type
+                              <span className="ml-2 text-xs bg-[#2e5e3a]/10 text-[#2e5e3a] px-2 py-0.5 rounded-full">Proposé</span>
+                            </h3>
+                            <div className="text-gray-700 mt-3 p-3 bg-white/80 rounded-xl border border-[#d2fcb2]/20">
+                              {selectedTicket.solution || selectedTicket.type || "Aucun type défini pour ce ticket."}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -677,98 +1187,6 @@ export default function SAV() {
                       </div>
                     </div>
                     
-                    {/* Enhanced Map Section if location exists */}
-                    {selectedTicket.location && (
-                      <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 relative">
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="bg-gradient-to-br from-[#1a365d] to-[#213f5b] rounded-full p-3 shadow-md flex-shrink-0">
-                            <MapPinIcon className="h-5 w-5 text-white" />
-                          </div>
-                          <div className="w-full">
-                            <h3 className="text-[#1a365d] font-semibold text-lg flex items-center">
-                              Adresse
-                              <span className="ml-2 text-xs bg-[#1a365d]/10 text-[#1a365d] px-2 py-0.5 rounded-full">Localisation</span>
-                            </h3>
-                            <div className="flex items-center mt-3">
-                              <div className="flex-grow">
-                                <p className="text-gray-700 font-medium p-3 bg-white/80 rounded-xl border border-gray-200">{selectedTicket.location}</p>
-                              </div>
-
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Map Container */}
-                        <div className="relative">
-                          {/* Map View Options */}
-                          <div className="absolute top-3 right-3 z-10 bg-white rounded-lg shadow-md border border-gray-200 flex overflow-hidden">
-                            <button 
-                              className="p-2 hover:bg-gray-100 transition-colors border-r border-gray-200 focus:outline-none active:bg-gray-200"
-                              onClick={() => setMapType('roadmap')}
-                              title="Vue standard"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#1a365d]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                              </svg>
-                            </button>
-                            <button 
-                              className="p-2 hover:bg-gray-100 transition-colors focus:outline-none active:bg-gray-200"
-                              onClick={() => setMapType('satellite')}
-                              title="Vue satellite"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#1a365d]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </button>
-                          </div>
-                          
-                          {/* Google Maps iframe */}
-                          <div className="h-72 w-full rounded-xl overflow-hidden border border-gray-200 shadow-md">
-                            <iframe 
-                              width="100%" 
-                              height="100%" 
-                              frameBorder="0" 
-                              scrolling="no"
-                              src={`https://maps.google.com/maps?q=${encodeURIComponent(selectedTicket.location)}&t=${mapType === 'satellite' ? 'k' : 'm'}&z=16&ie=UTF8&iwloc=&output=embed`} 
-                              style={{ border: 0 }}
-                              title="Client Location"
-                              allowFullScreen
-                            ></iframe>
-                          </div>
-                        </div>
-                        
-                        {/* Action Buttons - Enhanced */}
-                        <div className="flex flex-wrap gap-3 mt-4">
-                          <a 
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedTicket.location)}&travelmode=driving`} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-[#1a365d] to-[#213f5b] text-white py-3 px-4 rounded-xl hover:shadow-lg transition-all active:scale-98 transform shadow-sm"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Itinéraire
-                          </a>
-                          <a 
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedTicket.location)}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="flex-1 flex items-center justify-center gap-2 bg-white border border-[#1a365d] text-[#1a365d] py-3 px-4 rounded-xl hover:bg-gray-50 transition-all active:scale-98 transform hover:shadow-md shadow-sm"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            Voir sur Google Maps
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Right Column - 2/5 width */}
-                  <div className="md:col-span-2 bg-gray-50 p-6 space-y-6">
                     {/* Timeline Card - Redesigned */}
                     <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300">
                       <h3 className="flex items-center text-[#1a365d] font-semibold text-lg mb-5 pb-2 border-b border-gray-100">
@@ -815,25 +1233,14 @@ export default function SAV() {
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Conditionally render Conversation Box if conversation exists and has messages */}
-                    {selectedTicket.conversation && selectedTicket.conversation.length > 0 && (
-                      <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
-                        <div className="bg-gradient-to-r from-[#0f2947] via-[#1a365d] to-[#2c4f76] p-4 relative overflow-hidden">
-                          <div className="absolute inset-0 opacity-10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-                              <pattern id="pattern-circles-conv" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse" patternContentUnits="userSpaceOnUse">
-                                <circle id="pattern-circle-conv" cx="20" cy="20" r="4" fill="#fff"></circle>
-                              </pattern>
-                              <rect id="rect-conv" x="0" y="0" width="100%" height="100%" fill="url(#pattern-circles-conv)"></rect>
-                            </svg>
-                          </div>
-                          <h3 className="text-white font-semibold flex items-center relative z-10">
-                            <ChatBubbleLeftRightIcon className="h-5 w-5 mr-2" />
-                            Conversation
-                          </h3>
-                        </div>
-                        
+                  </div>
+                )}
+                
+                {/* Tab content: Conversation */}
+                {activeTab === 'conversation' && (
+                  <div className="bg-gray-50">
+                    {selectedTicket.conversation && selectedTicket.conversation.length > 0 ? (
+                      <div className="bg-white rounded-b-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
                         <div className="max-h-96 overflow-y-auto p-4 bg-gray-50 space-y-4">
                           {selectedTicket.conversation.map((msg, index) => {
                             if (!msg.message || !msg.sender) return null;
@@ -894,74 +1301,263 @@ export default function SAV() {
                           </div>
                         </div>
                       </div>
-                    )}
-                    
-                    {/* Documents and Attachments Section - New */}
-                    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
-                      <div className="bg-gradient-to-r from-[#0f2947] via-[#1a365d] to-[#2c4f76] p-4 relative overflow-hidden">
-                        <div className="absolute inset-0 opacity-10">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-                            <pattern id="pattern-circles-docs" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse" patternContentUnits="userSpaceOnUse">
-                              <circle id="pattern-circle-docs" cx="20" cy="20" r="4" fill="#fff"></circle>
-                            </pattern>
-                            <rect id="rect-docs" x="0" y="0" width="100%" height="100%" fill="url(#pattern-circles-docs)"></rect>
-                          </svg>
+                    ) : (
+                      <div className="text-center py-16 px-4">
+                        <div className="mx-auto max-w-md">
+                          <ChatBubbleLeftRightIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                          <h3 className="text-xl font-semibold text-gray-700">Aucun message</h3>
+                          <p className="mt-2 text-gray-500">Cette conversation ne contient pas encore de messages.</p>
+                          
+                          <div className="mt-6">
+                            <div className="flex-1 relative rounded-xl border border-gray-200 overflow-hidden hover:border-[#1a365d]/30 focus-within:border-[#1a365d] transition-colors shadow-sm">
+                              <input 
+                                type="text" 
+                                placeholder="Démarrer une conversation..." 
+                                className="flex-1 w-full px-4 py-3 focus:outline-none focus:ring-0 bg-transparent" 
+                              />
+                              <button className="absolute right-1 top-1/2 -translate-y-1/2 bg-[#1a365d] text-white p-2 rounded-lg hover:bg-[#213f5b] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a365d] focus:ring-offset-2">
+                                <PaperAirplaneIcon className="h-5 w-5" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <h3 className="text-white font-semibold flex items-center relative z-10">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          Documents
-                        </h3>
                       </div>
-                      
-                      <div className="p-4 space-y-3">
-                        <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 hover:border-[#1a365d]/30 transition-colors cursor-pointer group">
-                          <div className="bg-gray-100 p-2 rounded-lg group-hover:bg-[#1a365d]/10 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 group-hover:text-[#1a365d] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-sm font-medium text-gray-900 group-hover:text-[#1a365d] transition-colors">Rapport_Technique.pdf</h4>
-                            <p className="text-xs text-gray-500">PDF - 2.4 MB</p>
-                          </div>
-                          <button className="p-1.5 text-gray-400 hover:text-[#1a365d] rounded-full hover:bg-[#1a365d]/10 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                          </button>
-                        </div>
-                        
-                        <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 hover:border-[#1a365d]/30 transition-colors cursor-pointer group">
-                          <div className="bg-gray-100 p-2 rounded-lg group-hover:bg-[#1a365d]/10 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 group-hover:text-[#1a365d] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-sm font-medium text-gray-900 group-hover:text-[#1a365d] transition-colors">Photo_Installation.jpg</h4>
-                            <p className="text-xs text-gray-500">Image - 1.8 MB</p>
-                          </div>
-                          <button className="p-1.5 text-gray-400 hover:text-[#1a365d] rounded-full hover:bg-[#1a365d]/10 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                          </button>
-                        </div>
-                        
-                        {/* Upload new document button */}
-                        <button className="w-full flex items-center justify-center gap-2 p-3 border border-dashed border-gray-300 rounded-xl text-[#1a365d] hover:bg-[#1a365d]/5 hover:border-[#1a365d]/30 transition-all">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                          <span>Ajouter un document</span>
-                        </button>
+                    )}
+                  </div>
+                )}
+                
+                {/* Tab content: Attestations - NEW */}
+                {activeTab === 'attestations' && (
+                  <div className="p-6 space-y-6 bg-white">
+                    <div className="flex justify-between items-center mb-5 pb-2 border-b border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-[#1a365d]" />
+                        <h3 className="text-lg font-semibold text-gray-800">Attestations et documents officiels</h3>
                       </div>
                     </div>
                     
+                    {selectedTicket.attestations && selectedTicket.attestations.length > 0 ? (
+                      <div className="space-y-4">
+                        {selectedTicket.attestations.map((attestation) => (
+                          <div 
+                            key={attestation.id}
+                            className={`bg-white rounded-xl border ${
+                              attestation.status === 'pending' 
+                                ? 'border-amber-200 shadow-amber-100/50'
+                                : attestation.status === 'signed'
+                                ? 'border-blue-200 shadow-blue-100/50'
+                                : 'border-green-200 shadow-green-100/50'
+                            } shadow-lg overflow-hidden transform transition-all duration-300 hover:translate-y-[-2px] hover:shadow-xl`}
+                          >
+                            <div className={`p-4 ${
+                              attestation.status === 'pending' 
+                                ? 'bg-amber-50/50' 
+                                : attestation.status === 'signed'
+                                ? 'bg-blue-50/50'
+                                : 'bg-green-50/50'
+                            } border-b border-gray-100 flex justify-between items-center`}>
+                              <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${
+                                  attestation.status === 'pending' 
+                                    ? 'bg-amber-100 text-amber-700' 
+                                    : attestation.status === 'signed'
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-green-100 text-green-700'
+                                }`}>
+                                  {attestation.status === 'pending' ? (
+                                    <FileText className="h-5 w-5" />
+                                  ) : attestation.status === 'signed' ? (
+                                    <FileSignature className="h-5 w-5" />
+                                  ) : (
+                                    <Check className="h-5 w-5" />
+                                  )}
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-gray-800">{attestation.title}</h4>
+                                  <p className="text-sm text-gray-500">
+                                    Émis le {new Date(attestation.issueDate).toLocaleDateString('fr-FR')} • 
+                                    Valide jusqu&apos;au {new Date(attestation.expiryDate).toLocaleDateString('fr-FR')}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                {getAttestationStatusBadge(attestation.status)}
+                              </div>
+                            </div>
+                            
+                            <div className="p-4">
+                              <p className="text-sm text-gray-700 mb-4">{attestation.description}</p>
+                              
+                              <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-4">
+                                <span className="px-2 py-1 bg-gray-100 rounded-full">
+                                  Délivré par: {attestation.issuedBy}
+                                </span>
+                                {attestation.signedDate && (
+                                  <span className="px-2 py-1 bg-blue-50 rounded-full text-blue-700">
+                                    Signé le: {new Date(attestation.signedDate).toLocaleDateString('fr-FR')}
+                                  </span>
+                                )}
+                                {attestation.verifiedDate && (
+                                  <span className="px-2 py-1 bg-green-50 rounded-full text-green-700">
+                                    Vérifié le: {new Date(attestation.verifiedDate).toLocaleDateString('fr-FR')}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="flex flex-wrap items-center gap-3">
+                                {attestation.status === 'pending' && (
+                                  <button 
+                                    onClick={() => handleSignAttestation(attestation)} 
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#1a365d] text-white rounded-lg hover:bg-[#264973] transition-colors"
+                                  >
+                                    <FileSignature className="h-4 w-4" />
+                                    Signer
+                                  </button>
+                                )}
+                                
+                                <button 
+                                  onClick={() => handlePreviewPdf(attestation)}
+                                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                  Prévisualiser
+                                </button>
+                                
+                                {/* React-PDF Download Link Button */}
+                                <PDFDownloadLink
+                                  document={<AttestationnPDF attestation={attestation} ticketData={selectedTicket} />}
+                                  fileName={attestation.fileName}
+                                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                >
+                                  {({ loading }) => (
+                                    loading ? (
+                                      <span className="flex items-center gap-2">
+                                        <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                                        Préparation...
+                                      </span>
+                                    ) : (
+                                      <span className="flex items-center gap-2">
+                                        <CloudArrowDownIcon className="h-4 w-4" />
+                                        Télécharger
+                                      </span>
+                                    )
+                                  )}
+                                </PDFDownloadLink>
+                                
+                                {attestation.status !== 'pending' && (
+                                  <span className="ml-auto text-xs text-gray-500 flex items-center">
+                                    {attestation.status === 'signed' ? (
+                                      <>
+                                        <FileSignature className="h-4 w-4 mr-1 text-blue-500" />
+                                        Signé
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Check className="h-4 w-4 mr-1 text-green-500" />
+                                        Vérifié
+                                      </>
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-10">
+                        <div className="mx-auto max-w-md">
+                          <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                          <h3 className="text-xl font-semibold text-gray-700">Aucune attestation</h3>
+                          <p className="mt-2 text-gray-500">Ce ticket ne contient pas encore d&apos;attestations ou de documents officiels.</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
+                
+                {/* Tab content: Location */}
+                {activeTab === 'location' && selectedTicket.location && (
+                  <div className="p-6 space-y-6 bg-white">
+                    <div className="flex items-center space-x-3 mb-5 pb-2 border-b border-gray-100">
+                      <MapPinIcon className="h-5 w-5 text-[#1a365d]" />
+                      <h3 className="text-lg font-semibold text-gray-800">Localisation</h3>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 relative">
+                      <div className="flex items-center mt-3 mb-4">
+                        <div className="flex-grow">
+                          <p className="text-gray-700 font-medium p-3 bg-white/80 rounded-xl border border-gray-200">{selectedTicket.location}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Map View Options */}
+                      <div className="absolute top-3 right-3 z-10 bg-white rounded-lg shadow-md border border-gray-200 flex overflow-hidden">
+                        <button 
+                          className="p-2 hover:bg-gray-100 transition-colors border-r border-gray-200 focus:outline-none active:bg-gray-200"
+                          onClick={() => setMapType('roadmap')}
+                          title="Vue standard"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#1a365d]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                          </svg>
+                        </button>
+                        <button 
+                          className="p-2 hover:bg-gray-100 transition-colors focus:outline-none active:bg-gray-200"
+                          onClick={() => setMapType('satellite')}
+                          title="Vue satellite"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#1a365d]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      {/* Google Maps iframe */}
+                      <div className="h-72 w-full rounded-xl overflow-hidden border border-gray-200 shadow-md">
+                        <iframe 
+                          width="100%" 
+                          height="100%" 
+                          frameBorder="0" 
+                          scrolling="no"
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent(selectedTicket.location)}&t=${mapType === 'satellite' ? 'k' : 'm'}&z=16&ie=UTF8&iwloc=&output=embed`} 
+                          style={{ border: 0 }}
+                          title="Client Location"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                      
+                      {/* Action Buttons - Enhanced */}
+                      <div className="flex flex-wrap gap-3 mt-4">
+                        <a 
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedTicket.location)}&travelmode=driving`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-[#1a365d] to-[#213f5b] text-white py-3 px-4 rounded-xl hover:shadow-lg transition-all active:scale-98 transform shadow-sm"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          Itinéraire
+                        </a>
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedTicket.location)}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="flex-1 flex items-center justify-center gap-2 bg-white border border-[#1a365d] text-[#1a365d] py-3 px-4 rounded-xl hover:bg-gray-50 transition-all active:scale-98 transform hover:shadow-md shadow-sm"
+                        >
+                          <ArrowTopRightOnSquareIcon className="h-5 w-5" />
+                          Voir sur Google Maps
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* Footer with action buttons */}
@@ -971,19 +1567,219 @@ export default function SAV() {
                     ID: {selectedTicket.ticketNumber || selectedTicket.ticket}
                   </span>
                   <span className="text-gray-500 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <ClockIcon className="h-4 w-4 mr-1" />
                     Dernière mise à jour: {new Date().toLocaleDateString('fr-FR')}
                   </span>
                 </div>
-
+                
+                <div className="flex flex-wrap gap-2">
+                  <button className="px-4 py-2 text-[#1a365d] border border-[#1a365d] rounded-lg hover:bg-[#1a365d]/5 transition-colors">
+                    Imprimer
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('attestations')}
+                    className="px-4 py-2 bg-[#1a365d] text-white rounded-lg hover:bg-[#1a365d]/90 transition-colors flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Attestations
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
+      
+      {/* Signature Modal */}
+      <AnimatePresence>
+        {showSignatureModal && selectedAttestation && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div 
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSignatureModal(false)}
+            />
+            
+            <motion.div
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gradient-to-r from-[#0f2947] to-[#1a365d] p-5 text-white flex justify-between items-center">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <FileSignature className="h-5 w-5" />
+                  Signature d&apos;attestation
+                </h3>
+                <button 
+                  onClick={() => setShowSignatureModal(false)}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="p-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-blue-800">
+                  <p className="text-sm flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>
+                      <strong>{selectedAttestation.title}</strong> - 
+                      Veuillez appposer votre signature ci-dessous pour valider ce document.
+                    </span>
+                  </p>
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Votre signature:</label>
+                  <div className="border-2 border-gray-300 rounded-lg overflow-hidden hover:border-[#1a365d] transition-colors">
+                    <SignatureCanvas
+                      ref={signaturePadRef}
+                      canvasProps={{
+                        className: 'w-full h-64 cursor-crosshair',
+                        style: { width: '100%', height: '256px', backgroundColor: 'rgba(255, 255, 255, 0)' }
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-end mt-2">
+                                          <button 
+                      onClick={clearSignature}
+                      className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Effacer
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end mt-6 gap-3">
+                  <button
+                    onClick={() => setShowSignatureModal(false)}
+                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleSignatureSubmit}
+                    className="px-4 py-2 bg-[#1a365d] text-white rounded-lg hover:bg-[#264973] transition-colors flex items-center gap-2"
+                  >
+                    <Check className="h-4 w-4" />
+                    Valider la signature
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* PDF Preview Modal */}
+      <AnimatePresence>
+        {showPdfPreview && selectedAttestation && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div 
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPdfPreview(false)}
+            />
+            
+            <motion.div
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] relative z-10 overflow-hidden flex flex-col"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gradient-to-r from-[#0f2947] to-[#1a365d] p-4 text-white flex justify-between items-center">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <DocumentTextIcon className="h-5 w-5" />
+                  {selectedAttestation.title}
+                </h3>
+                <button 
+                  onClick={() => setShowPdfPreview(false)}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-hidden p-0 bg-gray-100">
+                <div className="h-full w-full">
+                  {selectedTicket && (
+                    <PDFViewer width="100%" height="100%" className="border-none">
+                      <AttestationnPDF attestation={selectedAttestation} ticketData={selectedTicket} />
+                    </PDFViewer>
+                  )}
+                </div>
+              </div>
+              
+              <div className="p-4 border-t border-gray-200 flex justify-between items-center">
+                <span className="text-sm text-gray-500">
+                  Document généré le {new Date().toLocaleDateString('fr-FR')}
+                </span>
+                
+                <div className="flex gap-2">
+                  <PDFDownloadLink
+                    document={<AttestationnPDF attestation={selectedAttestation} ticketData={selectedTicket!} />}
+                    fileName={selectedAttestation.fileName}
+                    className="px-4 py-2 bg-[#1a365d] text-white rounded-lg hover:bg-[#264973] transition-colors flex items-center gap-2"
+                  >
+                    {({ loading }) => (
+                      loading ? (
+                        <span className="flex items-center gap-2">
+                          <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                          Préparation...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <CloudArrowDownIcon className="h-4 w-4" />
+                          Télécharger
+                        </span>
+                      )
+                    )}
+                  </PDFDownloadLink>
+                  
+                  {selectedAttestation.status === 'pending' && (
+                    <button 
+                      onClick={() => {
+                        setShowPdfPreview(false);
+                        handleSignAttestation(selectedAttestation);
+                      }}
+                      className="px-4 py-2 bg-white border border-[#1a365d] text-[#1a365d] rounded-lg hover:bg-[#1a365d]/5 transition-colors flex items-center gap-2"
+                    >
+                      <FileSignature className="h-4 w-4" />
+                      Signer
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
