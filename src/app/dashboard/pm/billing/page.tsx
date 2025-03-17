@@ -451,30 +451,38 @@ export default function FacturationPage() {
     }
   };
 
-  // New cancellation handler to update invoice status to "Annulé"
-  const handleCancelInvoice = async (invoice: Invoice) => {
-    try {
-      const updatedFields: Partial<Invoice> = { statut: "Annulé" };
-      const res = await fetch(`/api/factures/${invoice._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedFields),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to cancel invoice: ${res.statusText}`);
-      }
-      const updatedInvoice = (await res.json()) as Invoice;
-      setFactures((prev) =>
-        prev.map((f) => (f._id === updatedInvoice._id ? updatedInvoice : f))
-      );
-      if (selectedInvoice && selectedInvoice._id === updatedInvoice._id) {
-        setSelectedInvoice(updatedInvoice);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Could not cancel invoice.");
+  /// Replace the existing handleCancelInvoice function with this new implementation
+const handleDeleteInvoice = async (invoice: Invoice) => {
+  try {
+    // Confirm deletion with the user
+    if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement cette facture ?")) {
+      return;
     }
-  };
+
+    // Make DELETE request to the API
+    const res = await fetch(`/api/factures/${invoice._id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to delete invoice: ${res.statusText}`);
+    }
+
+    // Update the factures state to remove the deleted invoice
+    setFactures((prev) => prev.filter((f) => f._id !== invoice._id));
+    
+    // If the deleted invoice was being viewed, close the detail modal
+    if (selectedInvoice && selectedInvoice._id === invoice._id) {
+      setShowInvoiceDetailModal(false);
+    }
+
+    // Show success message
+    alert("Facture supprimée avec succès.");
+  } catch (error) {
+    console.error(error);
+    alert("Impossible de supprimer la facture.");
+  }
+};
 
   // const getFilteredContactsByRegie = (contactsList: Contact[], regieId: string): Contact[] => {
   //   if (!regieId) return [];
@@ -1215,7 +1223,7 @@ const handleDeselectAllContacts = () => {
                               {(invoice.statut === "Brouillon" ||
                                 invoice.statut === "En attente de validation") && (
                                 <button
-                                  onClick={() => handleCancelInvoice(invoice)}
+                                onClick={() => handleDeleteInvoice(invoice)}
                                   className="text-red-600 hover:text-red-900 flex items-center gap-1"
                                 >
                                   <XCircleIcon className="h-4 w-4" />
@@ -1770,18 +1778,23 @@ const handleDeselectAllContacts = () => {
                 </button>
                 {selectedInvoice.statut !== "Payée" &&
                   selectedInvoice.statut !== "Annulé" && (
-                    <button
+                    <><button
                       type="button"
-                      onClick={() =>
-                        handlePrimaryActionClick(selectedInvoice)
-                      }
+                      onClick={() => handlePrimaryActionClick(selectedInvoice)}
                       className="inline-flex items-center gap-1 rounded-md bg-[#213f5b] px-4 py-2 text-sm font-medium text-white hover:bg-[#213f5b]/90"
                     >
                       <PaperAirplaneIcon className="h-4 w-4" />
                       {selectedInvoice.statut === "Brouillon"
                         ? "Envoyer"
                         : "Marquer comme payée"}
-                    </button>
+                    </button><button
+                      type="button"
+                      onClick={() => handleDeleteInvoice(selectedInvoice)}
+                      className="inline-flex items-center gap-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                    >
+                        <XCircleIcon className="h-4 w-4" />
+                        Supprimer
+                      </button></>
                   )}
               </div>
             </div>
