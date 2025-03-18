@@ -388,10 +388,10 @@ const progressionGlobale = ((etapeActuelle + 1) / progressSteps.length) * 100;
   const clientName = `${contact.firstName} ${contact.lastName}`;
 
   return (
-    <div className="flex h-screen bg-white relative">
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div className="flex h-screen bg-white relative overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
       <Header />
-      <main className="flex-1 overflow-y-auto p-8 space-y-8 bg-gradient-to-b from-[#bfddf9]/10 to-[#d2fcb2]/05">
+      <main className="container mx-auto px-4 py-8 space-y-8 bg-white">
 
       <div className="relative">
         {/* Shape 1 - Top Left (4s animation) */}
