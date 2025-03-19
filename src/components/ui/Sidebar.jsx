@@ -145,7 +145,7 @@ export function Sidebar({ role }) {
       },
       { name: "Chat", href: "/dashboard/admin/emails", icon: EnvelopeIcon, badge: 24 },
       { name: "Agenda", href: "/dashboard/admin/calendar", icon: CalendarIcon },
-      // { name: "Produits & Services", href: "/dashboard/admin/products-services", icon: ShoppingBagIcon },
+      { name: "Produits & Prestations", href: "/dashboard/admin/products-services", icon: ShoppingBagIcon },
       { name: "Facturation / Paiements", href: "/dashboard/admin/billing", icon: CreditCardIcon },
       { name: "Rapports / Statistiques", href: "/dashboard/admin/reports", icon: ChartBarIcon },
       { name: "Support & Tickets", href: "/dashboard/admin/support", icon: LifebuoyIcon },
