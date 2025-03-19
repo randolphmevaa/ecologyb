@@ -1,11 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, CSSProperties } from "react";
 import { Header } from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { DragEndEvent } from '@dnd-kit/core';
+
+import { 
+  DragOverlay
+} from '@dnd-kit/core';
+import { 
+  useSortable,
+  arrayMove
+} from '@dnd-kit/sortable';
 
 import {
   CheckIcon,
@@ -94,13 +102,6 @@ interface Checklist {
   }[];
 }
 
-// interface DragResult {
-//   source: { droppableId: string; index: number };
-//   destination?: { droppableId: string; index: number };
-//   draggableId: string;
-// }
-
-
 interface Comment {
   id: string;
   user_id: string;
@@ -174,6 +175,21 @@ interface Task {
   recurrence_pattern?: string;
   is_favorite?: boolean;
   external_links?: { title: string; url: string }[];
+}
+
+const validTaskStatuses: TaskStatus[] = [
+  "not_started", 
+  "in_progress", 
+  "under_review", 
+  "completed", 
+  "blocked", 
+  "canceled", 
+  "deferred"
+];
+
+interface SortableTaskCardProps {
+  task: Task;
+  renderTaskCard: (task: Task) => React.ReactNode;
 }
 
 /** ---------------------
@@ -467,11 +483,40 @@ function getDisplayName(userOrString: User | string): string {
   return `${userOrString.firstName} ${userOrString.lastName}`;
 }
 
+const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task, renderTaskCard }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style: CSSProperties = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes} 
+      {...listeners}
+    >
+      {renderTaskCard(task)}
+    </div>
+  );
+};
 
 /** ---------------------
  *     MAIN COMPONENT
  *  --------------------- */
 export default function TasksPage() {
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -1433,25 +1478,77 @@ export default function TasksPage() {
   };
 
   // Handle task drag and drop
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) return;
+  // Updated handleDragEnd function with proper null checks
+const handleDragEnd = (event: DragEndEvent) => {
+  const { active, over } = event;
   
-    // Ensure that active.data.current and its sortable property are defined.
-    if (!active.data.current?.sortable) return;
+  setActiveTask(null);
   
-    const sourceDroppableId = active.data.current.sortable.containerId;
-    const destinationDroppableId = over.id as string;
+  if (!over) return;
   
-    if (sourceDroppableId !== destinationDroppableId) {
-      const newStatus = destinationDroppableId as TaskStatus;
-      const task = tasks.find((t) => t.id === active.id);
-      if (!task) return;
+  const activeId = active.id as string;
+  const overId = over.id as string;
   
-      handleTaskStatusChange(task.id, newStatus);
+  // Find the active task
+  const draggedTask = tasks.find(task => task.id === activeId);
+  if (!draggedTask) return;
+  
+  // Special case for direct status column drops
+  // This happens when we drop on the column and not on another task
+  if (validTaskStatuses.includes(overId as TaskStatus)) {
+    // Direct drop onto a status column
+    handleTaskStatusChange(draggedTask.id, overId as TaskStatus);
+    return;
+  }
+  
+  // Make sure both active and over have data.current before proceeding
+  if (!active.data.current || !over.data.current) return;
+  
+  // Check if we're dragging between columns
+  const activeContainerId = active.data.current.sortable?.containerId;
+  const overContainerId = over.data.current.sortable?.containerId;
+  
+  if (activeContainerId !== overContainerId) {
+    // This is a drop into a different column (status change)
+    if (overContainerId && validTaskStatuses.includes(overContainerId as TaskStatus)) {
+      handleTaskStatusChange(draggedTask.id, overContainerId as TaskStatus);
+    }
+  } else if (activeContainerId) {
+    // This is a reordering within the same column
+    const activeIndex = active.data.current.sortable?.index;
+    const overIndex = over.data.current.sortable?.index;
+    
+    if (activeIndex !== undefined && overIndex !== undefined && activeIndex !== overIndex) {
+      // Get the container ID (status)
+      const containerId = activeContainerId as TaskStatus;
+      
+      // Update tasks by reordering them
+      setTasks(prevTasks => {
+        // Filter tasks by the container/status
+        const tasksInContainer = prevTasks.filter(task => task.status === containerId);
+        
+        // Reorder the tasks within this container
+        const reorderedTasks = arrayMove(tasksInContainer, activeIndex, overIndex);
+        
+        // Merge back with tasks not in this container
+        return [
+          ...prevTasks.filter(task => task.status !== containerId),
+          ...reorderedTasks
+        ];
+      });
+    }
+  }
+};
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const foundTask = tasks.find(task => task.id === active.id);
+    if (foundTask) {
+      setActiveTask(foundTask);
     }
   };
 
+  
   // Get group label
   const getGroupLabel = (groupKey: string): string => {
     if (groupBy === "status") {
@@ -2303,43 +2400,107 @@ export default function TasksPage() {
                         sensors={sensors}
                         collisionDetection={closestCenter}
                         onDragEnd={handleDragEnd}
+                        onDragStart={handleDragStart}
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                          {Object.keys(groupedTasks).map(groupKey => (
-                            <div 
-                              key={groupKey}
-                              className={`rounded-lg overflow-hidden ${getGroupColor(groupKey)}`}
-                            >
-                              <div className="p-3 flex items-center justify-between border-b">
-                                <div className="flex items-center gap-2">
-                                  <div className={`h-6 w-6 rounded-full flex items-center justify-center ${getGroupBadgeColor(groupKey)}`}>
-                                    {getGroupIcon(groupKey)}
-                                  </div>
-                                  <h3 className="font-medium">
-                                    {getGroupLabel(groupKey)}
-                                  </h3>
-                                  <span className="text-xs bg-white bg-opacity-60 py-0.5 px-2 rounded-full">
-                                    {groupedTasks[groupKey].length}
-                                  </span>
-                                </div>
-                                <button className="text-gray-400 hover:text-gray-600">
-                                  <EllipsisHorizontalIcon className="h-5 w-5" />
-                                </button>
-                              </div>
-                              <div 
-                                className="p-2 overflow-y-auto"
-                                style={{ maxHeight: 'calc(100vh - 300px)', minHeight: '100px' }}
-                              >
-                                <SortableContext 
-                                  items={groupedTasks[groupKey].map(task => task.id)}
-                                  strategy={verticalListSortingStrategy}
+                          {Object.keys(groupedTasks).map(groupKey => {
+                            // Only render columns for valid task statuses
+                            // This ensures our drag and drop works properly between different status columns
+                            if (validTaskStatuses.includes(groupKey as TaskStatus)) {
+                              return (
+                                <div 
+                                  key={groupKey}
+                                  id={groupKey} // Important: add id for direct column drops
+                                  className={`rounded-lg overflow-hidden ${getGroupColor(groupKey)}`}
+                                  data-droppable-id={groupKey} // Add data attribute for better debugging
                                 >
-                                  {groupedTasks[groupKey].map(task => renderTaskCard(task))}
-                                </SortableContext>
-                              </div>
-                            </div>
-                          ))}
+                                  <div className="p-3 flex items-center justify-between border-b">
+                                    <div className="flex items-center gap-2">
+                                      <div className={`h-6 w-6 rounded-full flex items-center justify-center ${getGroupBadgeColor(groupKey)}`}>
+                                        {getGroupIcon(groupKey)}
+                                      </div>
+                                      <h3 className="font-medium">
+                                        {getGroupLabel(groupKey)}
+                                      </h3>
+                                      <span className="text-xs bg-white bg-opacity-60 py-0.5 px-2 rounded-full">
+                                        {groupedTasks[groupKey].length}
+                                      </span>
+                                    </div>
+                                    <button className="text-gray-400 hover:text-gray-600">
+                                      <EllipsisHorizontalIcon className="h-5 w-5" />
+                                    </button>
+                                  </div>
+                                  <div 
+                                    className="p-2 overflow-y-auto"
+                                    style={{ maxHeight: 'calc(100vh - 300px)', minHeight: '100px' }}
+                                  >
+                                    <SortableContext 
+                                      items={groupedTasks[groupKey].map(task => task.id)}
+                                      strategy={verticalListSortingStrategy}
+                                      id={groupKey} // Identify this container to help with drop targets
+                                    >
+                                      {groupedTasks[groupKey].map((task) => (
+                                        <SortableTaskCard 
+                                          key={task.id} 
+                                          task={task} 
+                                          renderTaskCard={renderTaskCard} 
+                                        />
+                                      ))}
+                                    </SortableContext>
+                                  </div>
+                                </div>
+                              );
+                            } else {
+                              // For non-status columns when grouping by other criteria
+                              return (
+                                <div 
+                                  key={groupKey}
+                                  className={`rounded-lg overflow-hidden ${getGroupColor(groupKey)}`}
+                                >
+                                  <div className="p-3 flex items-center justify-between border-b">
+                                    <div className="flex items-center gap-2">
+                                      <div className={`h-6 w-6 rounded-full flex items-center justify-center ${getGroupBadgeColor(groupKey)}`}>
+                                        {getGroupIcon(groupKey)}
+                                      </div>
+                                      <h3 className="font-medium">
+                                        {getGroupLabel(groupKey)}
+                                      </h3>
+                                      <span className="text-xs bg-white bg-opacity-60 py-0.5 px-2 rounded-full">
+                                        {groupedTasks[groupKey].length}
+                                      </span>
+                                    </div>
+                                    <button className="text-gray-400 hover:text-gray-600">
+                                      <EllipsisHorizontalIcon className="h-5 w-5" />
+                                    </button>
+                                  </div>
+                                  <div 
+                                    className="p-2 overflow-y-auto"
+                                    style={{ maxHeight: 'calc(100vh - 300px)', minHeight: '100px' }}
+                                  >
+                                    <SortableContext 
+                                      items={groupedTasks[groupKey].map(task => task.id)}
+                                      strategy={verticalListSortingStrategy}
+                                      id={groupKey} 
+                                    >
+                                      {groupedTasks[groupKey].map((task) => (
+                                        <SortableTaskCard 
+                                          key={task.id} 
+                                          task={task} 
+                                          renderTaskCard={renderTaskCard} 
+                                        />
+                                      ))}
+                                    </SortableContext>
+                                  </div>
+                                </div>
+                              );
+                            }
+                          })}
                         </div>
+                        
+                        {/* Add drag overlay for better visual feedback */}
+                        <DragOverlay>
+                          {activeTask ? renderTaskCard(activeTask) : null}
+                        </DragOverlay>
                       </DndContext>
                     </div>
                   )}
