@@ -8,23 +8,28 @@ import {
   HomeIcon,
   ClipboardDocumentCheckIcon,
   UserCircleIcon,
-  SparklesIcon,
+  // SparklesIcon,
+  // CurrencyDollarIcon,
+  CurrencyEuroIcon,
   BriefcaseIcon,
   FolderIcon,
   EnvelopeIcon,
   CalendarIcon,
-  ChartPieIcon,
+  BuildingStorefrontIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
   ShoppingBagIcon,
+  // ArchiveBoxIcon,
+  TruckIcon,
   CreditCardIcon,
   ChartBarIcon,
   WrenchScrewdriverIcon,
   LifebuoyIcon,
+  UserIcon,
   DocumentIcon,
   // Cog6ToothIcon,
   UserGroupIcon,
-  CodeBracketIcon,
+  // CodeBracketIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
@@ -81,7 +86,7 @@ export function Sidebar({ role }) {
   if (role === "Sales Representative / Account Executive") {
     navigation = [
       { name: "Accueil", href: "/dashboard/sales", icon: HomeIcon },
-      { name: "Prospects", href: "/dashboard/sales/leads", icon: SparklesIcon },
+      { name: "Prospects", href: "/dashboard/sales/leads", icon: UserCircleIcon },
       { name: "Opportunités", href: "/dashboard/sales/opportunities", icon: BriefcaseIcon },
       { name: "Clients & Organisations", href: "/dashboard/sales/contacts-organizations", icon: UserCircleIcon },
       { name: "Chat", href: "/dashboard/sales/emails", icon: EnvelopeIcon },
@@ -130,14 +135,14 @@ export function Sidebar({ role }) {
     // Default admin navigation (with dropdown "Gestion")
     navigation = [
       { name: "Accueil", href: "/dashboard/admin", icon: HomeIcon },
-      { name: "Tableaux de bord", href: "/dashboard/admin/dashboards", icon: ChartPieIcon },
+      { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon },
       {
         name: "Gestion",
         icon: BriefcaseIcon,
         children: [
           // { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
           // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
-          { name: "Prospects", href: "/dashboard/admin/leads", icon: SparklesIcon, badge: 12 },
+          { name: "Prospects", href: "/dashboard/admin/leads", icon: UserCircleIcon},
           { name: "Clients", href: "/dashboard/admin/projects", icon: UserCircleIcon },
           // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
@@ -146,6 +151,26 @@ export function Sidebar({ role }) {
       { name: "Chat", href: "/dashboard/admin/emails", icon: EnvelopeIcon, badge: 24 },
       { name: "Agenda", href: "/dashboard/admin/calendar", icon: CalendarIcon },
       { name: "Produits & Prestations", href: "/dashboard/admin/products-services", icon: ShoppingBagIcon },
+      { 
+        name: "Sous-traitants", 
+        href: "/dashboard/admin/sous-traitants", 
+        icon: BuildingStorefrontIcon 
+      },
+      { 
+        name: "Mandataires MPR", 
+        href: "/dashboard/admin/mandataires-mpr", 
+        icon: UserIcon 
+      },
+      { 
+        name: "Gestion des Stocks", 
+        href: "/dashboard/admin/stock", 
+        icon: TruckIcon 
+      },
+      { 
+        name: "Deals", 
+        href: "/dashboard/admin/deals", 
+        icon: CurrencyEuroIcon 
+      },
       { name: "Facturation / Paiements", href: "/dashboard/admin/billing", icon: CreditCardIcon },
       { name: "Rapports / Statistiques", href: "/dashboard/admin/reports", icon: ChartBarIcon },
       { name: "Support & Tickets", href: "/dashboard/admin/support", icon: LifebuoyIcon },

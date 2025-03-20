@@ -5,30 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/Button";
 import {
-  // Cog6ToothIcon,
-  // UserCircleIcon,
   DocumentArrowDownIcon,
-  // ShieldCheckIcon,
-  // DocumentTextIcon,
   PlusIcon,
-  // CheckIcon,
   XMarkIcon,
-  // ArrowPathIcon,
-  // TagIcon,
   CubeIcon,
   WrenchScrewdriverIcon,
-  BuildingStorefrontIcon,
-  // ClipboardDocumentListIcon,
-  // PresentationChartLineIcon,
-  // CurrencyEuroIcon,
-  // InformationCircleIcon,
-  // ChevronDownIcon,
-  // EyeIcon,
   PencilIcon,
   TrashIcon,
   ChevronLeftIcon,
   ListBulletIcon,
   TableCellsIcon,
+  CogIcon,
 } from "@heroicons/react/24/outline";
 
 interface ProductDetails {
@@ -51,6 +38,12 @@ interface ProductDetails {
   surfaceCapteurs?: string;
   certificationCapteurs?: string;
   capteursHybrides?: string;
+  // New fields for COUP DE POUCE
+  typeCoupDePouce?: string;
+  kwhCumacCoupDePouce?: string;
+  kwhCumacHorsCoupDePouce?: string;
+  // New fields for BAR-TH-113
+  chaudiereOperationMode?: string;
 }
 
 interface Product {
@@ -82,16 +75,14 @@ interface Prestation {
   produits: string[];
 }
 
-interface SousTraitant {
+// New interface for Operation
+interface Operation {
   id: string;
-  raisonSociale: string;
-  typeSociete: string;
-  telephone: string;
-  adresse: string;
-  codePostal: string;
-  ville: string;
+  code: string;
+  name: string;
+  description: string;
+  categorie: string;
   active: boolean;
-  sousTraitant: boolean;
 }
 
 // Let's define interfaces for our form states
@@ -124,16 +115,14 @@ interface PrestationForm {
   produits: string[];
 }
 
-interface SousTraitantForm {
+// New form interface for Operation
+interface OperationForm {
   id: string;
-  raisonSociale: string;
-  typeSociete: string;
-  telephone: string;
-  adresse: string;
-  codePostal: string;
-  ville: string;
+  code: string;
+  name: string;
+  description: string;
+  categorie: string;
   active: boolean;
-  sousTraitant: boolean;
 }
 
 // Operation constants
@@ -141,6 +130,7 @@ const OPERATIONS = {
   BAR_TH_171: "BAR-TH-171 : POMPE A CHALEUR AIR/EAU",
   BAR_TH_129: "BAR-TH-129 : POMPE A CHALEUR AIR/AIR",
   BAR_TH_112: "BAR-TH-112 : POELE A GRANULES",
+  BAR_TH_113: "BAR-TH-113 : CHAUDIERE BIOMASSE",
   BAR_TH_148: "BAR-TH-148 : CHAUFFE EAU THERMODYNAMIQUE",
   BAR_TH_143: "BAR-TH-143 : SYSTEME SOLAIRE COMBINE",
   BAR_TH_101: "BAR-TH-101 : CHAUFFE EAU SOLAIRE INDIVIDUEL"
@@ -267,6 +257,27 @@ const SAMPLE_PRODUCTS: Product[] = [
       certificationCapteurs: "OUI",
       capteursHybrides: "OUI"
     }
+  },
+  {
+    id: "P007",
+    reference: "BIO-CHAUD-ECO",
+    description: "Chaudière biomasse automatique à haute performance énergétique",
+    libelle: "Chaudière Biomasse Automatique",
+    quantite: 1,
+    prixTTC: 5800,
+    categorie: "MONO GESTE",
+    tva: "5.5",
+    marque: "BiomasseTech",
+    unite: "Unité",
+    operation: OPERATIONS.BAR_TH_113,
+    details: {
+      efficaciteEnergetique: "92",
+      puissanceNominale: "24kW",
+      chaudiereOperationMode: "Automatique",
+      labelFlameVerte: "OUI",
+      typeCoupDePouce: "COUP DE POUCE",
+      kwhCumacCoupDePouce: "120000"
+    }
   }
 ];
 
@@ -325,55 +336,68 @@ const SAMPLE_PRESTATIONS: Prestation[] = [
   }
 ];
 
-const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
+// New sample data for operations
+const SAMPLE_OPERATIONS: Operation[] = [
   {
-    id: "ST001",
-    raisonSociale: "Thermo Experts",
-    typeSociete: "SARL",
-    telephone: "06 12 34 56 78",
-    adresse: "12 rue des Artisans, ZI des Entrepreneurs",
-    codePostal: "75001",
-    ville: "Paris",
-    active: true,
-    sousTraitant: true
+    id: "O001",
+    code: "BAR-TH-171",
+    name: "POMPE A CHALEUR AIR/EAU",
+    description: "Installation d'une pompe à chaleur air/eau pour le chauffage de locaux à usage d'habitation.",
+    categorie: "CHAUFFAGE",
+    active: true
   },
   {
-    id: "ST002",
-    raisonSociale: "Solaris Installation",
-    typeSociete: "SAS",
-    telephone: "07 23 45 67 89",
-    adresse: "45 avenue du Soleil, Parc d'activités Sud",
-    codePostal: "69002",
-    ville: "Lyon",
-    active: true,
-    sousTraitant: true
+    id: "O002",
+    code: "BAR-TH-129",
+    name: "POMPE A CHALEUR AIR/AIR",
+    description: "Installation d'une pompe à chaleur air/air pour le chauffage des locaux à usage d'habitation.",
+    categorie: "CHAUFFAGE",
+    active: true
   },
   {
-    id: "ST003",
-    raisonSociale: "Eco-Chauffagistes",
-    typeSociete: "EURL",
-    telephone: "06 54 32 10 98",
-    adresse: "8 impasse des Chaleurs, Zone Artisanale Est",
-    codePostal: "33000",
-    ville: "Bordeaux",
-    active: false,
-    sousTraitant: true
+    id: "O003",
+    code: "BAR-TH-112",
+    name: "POELE A GRANULES",
+    description: "Installation d'un poêle à granulés ou à bûches.",
+    categorie: "CHAUFFAGE",
+    active: true
   },
   {
-    id: "ST004",
-    raisonSociale: "All-Clima Services",
-    typeSociete: "SASU",
-    telephone: "07 89 65 43 21",
-    adresse: "27 boulevard des Techniques, Technoparc",
-    codePostal: "31000",
-    ville: "Toulouse",
-    active: true,
-    sousTraitant: true
+    id: "O004",
+    code: "BAR-TH-148",
+    name: "CHAUFFE EAU THERMODYNAMIQUE",
+    description: "Installation d'un chauffe-eau thermodynamique à accumulation.",
+    categorie: "EAU CHAUDE SANITAIRE",
+    active: true
+  },
+  {
+    id: "O005",
+    code: "BAR-TH-143",
+    name: "SYSTEME SOLAIRE COMBINE",
+    description: "Installation d'un système solaire combiné (SSC).",
+    categorie: "CHAUFFAGE",
+    active: true
+  },
+  {
+    id: "O006",
+    code: "BAR-TH-101",
+    name: "CHAUFFE EAU SOLAIRE INDIVIDUEL",
+    description: "Installation d'un chauffe-eau solaire individuel (CESI).",
+    categorie: "EAU CHAUDE SANITAIRE",
+    active: true
+  },
+  {
+    id: "O007",
+    code: "BAR-TH-113",
+    name: "CHAUDIERE BIOMASSE",
+    description: "Installation d'une chaudière biomasse individuelle à haute performance énergétique.",
+    categorie: "CHAUFFAGE",
+    active: true
   }
 ];
 
 export default function ProduitPrestationPage() {
-  const [activeTab, setActiveTab] = useState<"produit" | "prestation" | "sous-traitant">("produit");
+  const [activeTab, setActiveTab] = useState<"produit" | "prestation" | "operation">("produit");
   const [viewMode, setViewMode] = useState<"list" | "form">("list");
   const [selectedOperation, setSelectedOperation] = useState<string>("");
   const [selectedOperations, setSelectedOperations] = useState<string[]>([]);
@@ -383,12 +407,12 @@ export default function ProduitPrestationPage() {
   // States for data lists
   const [products, setProducts] = useState<Product[]>(SAMPLE_PRODUCTS);
   const [prestations, setPrestations] = useState<Prestation[]>(SAMPLE_PRESTATIONS);
-  const [sousTraitants, setSousTraitants] = useState<SousTraitant[]>(SAMPLE_SOUS_TRAITANTS);
+  const [operations, setOperations] = useState<Operation[]>(SAMPLE_OPERATIONS);
 
   // Selected item for editing
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedPrestation, setSelectedPrestation] = useState<Prestation | null>(null);
-  const [selectedSousTraitant, setSelectedSousTraitant] = useState<SousTraitant | null>(null);
+  const [selectedOperationItem, setSelectedOperationItem] = useState<Operation | null>(null);
 
   // State for product form
   const [produitForm, setProduitForm] = useState<ProductForm>({
@@ -442,17 +466,14 @@ export default function ProduitPrestationPage() {
     produits: []
   });
 
-  // State for sous-traitant form
-  const [sousTraitantForm, setSousTraitantForm] = useState<SousTraitantForm>({
+  // State for operation form
+  const [operationForm, setOperationForm] = useState<OperationForm>({
     id: "",
-    raisonSociale: "",
-    typeSociete: "",
-    telephone: "",
-    adresse: "",
-    codePostal: "",
-    ville: "",
-    active: true,
-    sousTraitant: true
+    code: "",
+    name: "",
+    description: "",
+    categorie: "",
+    active: true
   });
 
   // Edit handlers
@@ -496,18 +517,15 @@ export default function ProduitPrestationPage() {
     setViewMode("form");
   };
 
-  const handleEditSousTraitant = (sousTraitant: SousTraitant) => {
-    setSelectedSousTraitant(sousTraitant);
-    setSousTraitantForm({
-      id: sousTraitant.id,
-      raisonSociale: sousTraitant.raisonSociale,
-      typeSociete: sousTraitant.typeSociete,
-      telephone: sousTraitant.telephone,
-      adresse: sousTraitant.adresse,
-      codePostal: sousTraitant.codePostal,
-      ville: sousTraitant.ville,
-      active: sousTraitant.active,
-      sousTraitant: sousTraitant.sousTraitant
+  const handleEditOperation = (operation: Operation) => {
+    setSelectedOperationItem(operation);
+    setOperationForm({
+      id: operation.id,
+      code: operation.code,
+      name: operation.name,
+      description: operation.description,
+      categorie: operation.categorie,
+      active: operation.active
     });
     setViewMode("form");
   };
@@ -521,8 +539,8 @@ export default function ProduitPrestationPage() {
     setPrestations(prestations.filter(prestation => prestation.id !== id));
   };
 
-  const handleDeleteSousTraitant = (id: string) => {
-    setSousTraitants(sousTraitants.filter(sousTraitant => sousTraitant.id !== id));
+  const handleDeleteOperation = (id: string) => {
+    setOperations(operations.filter(operation => operation.id !== id));
   };
 
   // Add new item handlers
@@ -566,18 +584,15 @@ export default function ProduitPrestationPage() {
     setViewMode("form");
   };
 
-  const handleAddNewSousTraitant = () => {
-    setSelectedSousTraitant(null);
-    setSousTraitantForm({
-      id: `ST${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      raisonSociale: "",
-      typeSociete: "",
-      telephone: "",
-      adresse: "",
-      codePostal: "",
-      ville: "",
-      active: true,
-      sousTraitant: true
+  const handleAddNewOperation = () => {
+    setSelectedOperationItem(null);
+    setOperationForm({
+      id: `O${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      code: "",
+      name: "",
+      description: "",
+      categorie: "",
+      active: true
     });
     setViewMode("form");
   };
@@ -634,17 +649,22 @@ export default function ProduitPrestationPage() {
     setViewMode("list");
   };
 
-  const handleSaveSousTraitant = () => {
-    const sousTraitantToSave: SousTraitant = {
-      ...sousTraitantForm
+  const handleSaveOperation = () => {
+    const operationToSave: Operation = {
+      id: operationForm.id,
+      code: operationForm.code,
+      name: operationForm.name,
+      description: operationForm.description,
+      categorie: operationForm.categorie,
+      active: operationForm.active
     };
 
-    if (selectedSousTraitant) {
-      // Update existing sous-traitant
-      setSousTraitants(sousTraitants.map(s => s.id === sousTraitantToSave.id ? sousTraitantToSave : s));
+    if (selectedOperationItem) {
+      // Update existing operation
+      setOperations(operations.map(o => o.id === operationToSave.id ? operationToSave : o));
     } else {
-      // Add new sous-traitant
-      setSousTraitants([...sousTraitants, sousTraitantToSave]);
+      // Add new operation
+      setOperations([...operations, operationToSave]);
     }
     setViewMode("list");
   };
@@ -717,11 +737,11 @@ export default function ProduitPrestationPage() {
     });
   };
 
-  // Handle sous-traitant form changes
-  const handleSousTraitantChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  // Handle operation form changes
+  const handleOperationFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setSousTraitantForm({
-      ...sousTraitantForm,
+    setOperationForm({
+      ...operationForm,
       [name]: value
     });
   };
@@ -731,7 +751,7 @@ export default function ProduitPrestationPage() {
     setViewMode("list");
     setSelectedProduct(null);
     setSelectedPrestation(null);
-    setSelectedSousTraitant(null);
+    setSelectedOperationItem(null);
   };
 
   // Filtered lists based on search term
@@ -746,133 +766,114 @@ export default function ProduitPrestationPage() {
     prestation.designation.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredSousTraitants = sousTraitants.filter(sousTraitant => 
-    sousTraitant.raisonSociale.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sousTraitant.ville.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOperations = operations.filter(operation => 
+    operation.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    operation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    operation.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Render operation-specific details
   const renderOperationDetails = () => {
+
+    const showCoupDePouceToggle = [
+      OPERATIONS.BAR_TH_171, 
+      OPERATIONS.BAR_TH_143, 
+      OPERATIONS.BAR_TH_113
+    ].includes(selectedOperation);
+
+    // Render Coup de Pouce toggle if needed
+  const renderCoupDePouceToggle = () => {
+    if (!showCoupDePouceToggle) return null;
+    
+    return (
+      <div className="mb-6 border-b pb-4">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-[#213f5b] mb-1">Type de valorisation</label>
+          <div className="flex items-center space-x-4">
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="typeCoupDePouce"
+                value="COUP DE POUCE"
+                checked={(produitForm.details.typeCoupDePouce || "") === "COUP DE POUCE"}
+                onChange={(e) => handleProduitDetailsChange({
+                  target: {
+                    name: "typeCoupDePouce",
+                    value: e.target.value
+                  }
+                } as React.ChangeEvent<HTMLInputElement>)}
+                className="mr-2 h-4 w-4 text-[#213f5b] focus:ring-[#213f5b]"
+              />
+              <span className="text-sm font-medium text-[#213f5b]">COUP DE POUCE</span>
+            </label>
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="typeCoupDePouce"
+                value="HORS COUP DE POUCE"
+                checked={(produitForm.details.typeCoupDePouce || "") === "HORS COUP DE POUCE"}
+                onChange={(e) => handleProduitDetailsChange({
+                  target: {
+                    name: "typeCoupDePouce",
+                    value: e.target.value
+                  }
+                } as React.ChangeEvent<HTMLInputElement>)}
+                className="mr-2 h-4 w-4 text-[#213f5b] focus:ring-[#213f5b]"
+              />
+              <span className="text-sm font-medium text-[#213f5b]">HORS COUP DE POUCE</span>
+            </label>
+          </div>
+        </div>
+        
+        {(produitForm.details.typeCoupDePouce || "") === "COUP DE POUCE" && (
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">kWh Cumac (Coup de Pouce)</label>
+            <input
+              type="text"
+              name="kwhCumacCoupDePouce"
+              value={produitForm.details.kwhCumacCoupDePouce || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+        )}
+        
+        {(produitForm.details.typeCoupDePouce || "") === "HORS COUP DE POUCE" && (
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">kWh Cumac (Hors Coup de Pouce)</label>
+            <input
+              type="text"
+              name="kwhCumacHorsCoupDePouce"
+              value={produitForm.details.kwhCumacHorsCoupDePouce || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
     switch (selectedOperation) {
-      case OPERATIONS.BAR_TH_171:
-        return (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">Classe</label>
-                <input 
-                  type="text"
-                  name="classe" 
-                  value={produitForm.details.classe || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">% Efficacité énerg. saisonnière</label>
-                <input 
-                  type="text"
-                  name="efficaciteEnergetique" 
-                  value={produitForm.details.efficaciteEnergetique || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
+
+      case OPERATIONS.BAR_TH_113:
+      return (
+        <>
+          {renderCoupDePouceToggle()}
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">% Efficacité énerg. saisonnière</label>
+              <input 
+                type="text"
+                name="efficaciteEnergetique" 
+                value={produitForm.details.efficaciteEnergetique || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
             </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">T° PAC</label>
-                <input 
-                  type="text"
-                  name="temperaturePAC" 
-                  value={produitForm.details.temperaturePAC || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">Classe du régulateur</label>
-                <input 
-                  type="text"
-                  name="classeRegulateur" 
-                  value={produitForm.details.classeRegulateur || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">COP</label>
-                <input 
-                  type="text"
-                  name="cop" 
-                  value={produitForm.details.cop || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">SCOP</label>
-                <input 
-                  type="text"
-                  name="scop" 
-                  value={produitForm.details.scop || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">La temperature d&apos;eau</label>
-                <input 
-                  type="text"
-                  name="temperatureEau" 
-                  value={produitForm.details.temperatureEau || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">La temperature d&apos;arrêt</label>
-                <input 
-                  type="text"
-                  name="temperatureArret" 
-                  value={produitForm.details.temperatureArret || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-            </div>
-          </>
-        );
-      case OPERATIONS.BAR_TH_129:
-        return (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">COP</label>
-                <input 
-                  type="text"
-                  name="cop" 
-                  value={produitForm.details.cop || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">SCOP</label>
-                <input 
-                  type="text"
-                  name="scop" 
-                  value={produitForm.details.scop || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-            </div>
-            <div className="space-y-2 mt-4">
+            
+            <div className="space-y-2">
               <label className="block text-sm font-medium text-[#213f5b] mb-1">Puissance nominale</label>
               <input 
                 type="text"
@@ -882,13 +883,24 @@ export default function ProduitPrestationPage() {
                 className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
               />
             </div>
-          </>
-        );
-      case OPERATIONS.BAR_TH_112:
-        return (
-          <>
+            
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">L&apos;appareil possède-t-il le label flame verte 7*?</label>
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">Chaudière opérée d&apos;une manière</label>
+              <select
+                name="chaudiereOperationMode"
+                value={produitForm.details.chaudiereOperationMode || ""}
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              >
+                <option value="">Sélectionner</option>
+                <option value="Automatique">Automatique</option>
+                <option value="Semi-automatique">Semi-automatique</option>
+                <option value="Manuelle">Manuelle</option>
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">L&apos;appareil possède-t-il le label flamme verte 7*?</label>
               <select
                 name="labelFlameVerte"
                 value={produitForm.details.labelFlameVerte || ""}
@@ -900,36 +912,27 @@ export default function ProduitPrestationPage() {
                 <option value="NON">NON</option>
               </select>
             </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Type d&apos;appareil</label>
-              <select
-                name="typeAppareil"
-                value={produitForm.details.typeAppareil || ""}
+          </div>
+        </>
+      );
+      case OPERATIONS.BAR_TH_171:
+      return (
+        <>
+          {renderCoupDePouceToggle()}
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">Classe</label>
+              <input 
+                type="text"
+                name="classe" 
+                value={produitForm.details.classe || ""} 
                 onChange={handleProduitDetailsChange}
                 className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              >
-                <option value="">Sélectionner</option>
-                <option value="PEOLE">PEOLE</option>
-                <option value="INSERT">INSERT</option>
-                <option value="CUISINIERE">CUISINIERE</option>
-                <option value="AUTRES">AUTRES</option>
-              </select>
+              />
             </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Utilisant</label>
-              <select
-                name="utilisant"
-                value={produitForm.details.utilisant || ""}
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              >
-                <option value="">Sélectionner</option>
-                <option value="Buches de bois">Buches de bois</option>
-                <option value="granules de bois">Granules de bois</option>
-              </select>
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Efficacité énergétique saisonnière (Etas)</label>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">% Efficacité énerg. saisonnière</label>
               <input 
                 type="text"
                 name="efficaciteEnergetique" 
@@ -938,195 +941,357 @@ export default function ProduitPrestationPage() {
                 className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
               />
             </div>
-          </>
-        );
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">T° PAC</label>
+              <input 
+                type="text"
+                name="temperaturePAC" 
+                value={produitForm.details.temperaturePAC || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">Classe du régulateur</label>
+              <input 
+                type="text"
+                name="classeRegulateur" 
+                value={produitForm.details.classeRegulateur || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">COP</label>
+              <input 
+                type="text"
+                name="cop" 
+                value={produitForm.details.cop || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">SCOP</label>
+              <input 
+                type="text"
+                name="scop" 
+                value={produitForm.details.scop || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">La temperature d&apos;eau</label>
+              <input 
+                type="text"
+                name="temperatureEau" 
+                value={produitForm.details.temperatureEau || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">La temperature d&apos;arrêt</label>
+              <input 
+                type="text"
+                name="temperatureArret" 
+                value={produitForm.details.temperatureArret || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
+            </div>
+          </div>
+        </>
+      );
+      case OPERATIONS.BAR_TH_129:
+      return (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">COP</label>
+              <input 
+                type="text"
+                name="cop" 
+                value={produitForm.details.cop || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">SCOP</label>
+              <input 
+                type="text"
+                name="scop" 
+                value={produitForm.details.scop || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
+            </div>
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Puissance nominale</label>
+            <input 
+              type="text"
+              name="puissanceNominale" 
+              value={produitForm.details.puissanceNominale || ""} 
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+        </>
+      );
+      case OPERATIONS.BAR_TH_112:
+      return (
+        <>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">L&apos;appareil possède-t-il le label flame verte 7*?</label>
+            <select
+              name="labelFlameVerte"
+              value={produitForm.details.labelFlameVerte || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="OUI">OUI</option>
+              <option value="NON">NON</option>
+            </select>
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Type d&apos;appareil</label>
+            <select
+              name="typeAppareil"
+              value={produitForm.details.typeAppareil || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="PEOLE">PEOLE</option>
+              <option value="INSERT">INSERT</option>
+              <option value="CUISINIERE">CUISINIERE</option>
+              <option value="AUTRES">AUTRES</option>
+            </select>
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Utilisant</label>
+            <select
+              name="utilisant"
+              value={produitForm.details.utilisant || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="Buches de bois">Buches de bois</option>
+              <option value="granules de bois">Granules de bois</option>
+            </select>
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Efficacité énergétique saisonnière (Etas)</label>
+            <input 
+              type="text"
+              name="efficaciteEnergetique" 
+              value={produitForm.details.efficaciteEnergetique || ""} 
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+        </>
+      );
       case OPERATIONS.BAR_TH_148:
-        return (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">COP</label>
-                <input 
-                  type="text"
-                  name="cop" 
-                  value={produitForm.details.cop || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">SCOP</label>
-                <input 
-                  type="text"
-                  name="scop" 
-                  value={produitForm.details.scop || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Type d&apos;installation ballon</label>
-              <select
-                name="typeInstallationBallon"
-                value={produitForm.details.typeInstallationBallon || ""}
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              >
-                <option value="">Sélectionner</option>
-                <option value="AUTRES TYPES D'INSTALLATION">AUTRES TYPES D&apos;INSTALLATION</option>
-                <option value="SUR AIR EXTRAIT">SUR AIR EXTRAIT</option>
-                <option value="SUR AIR AMBIANT">SUR AIR AMBIANT</option>
-              </select>
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Profil de sous tirage</label>
-              <select
-                name="profilSousTirage"
-                value={produitForm.details.profilSousTirage || ""}
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              >
-                <option value="">Sélectionner</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-              </select>
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Efficacité énergetique saisonnière</label>
+      return (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">COP</label>
               <input 
                 type="text"
-                name="efficaciteEnergetique" 
-                value={produitForm.details.efficaciteEnergetique || ""} 
+                name="cop" 
+                value={produitForm.details.cop || ""} 
                 onChange={handleProduitDetailsChange}
                 className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
               />
             </div>
-          </>
-        );
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#213f5b] mb-1">SCOP</label>
+              <input 
+                type="text"
+                name="scop" 
+                value={produitForm.details.scop || ""} 
+                onChange={handleProduitDetailsChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+              />
+            </div>
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Type d&apos;installation ballon</label>
+            <select
+              name="typeInstallationBallon"
+              value={produitForm.details.typeInstallationBallon || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="AUTRES TYPES D'INSTALLATION">AUTRES TYPES D&apos;INSTALLATION</option>
+              <option value="SUR AIR EXTRAIT">SUR AIR EXTRAIT</option>
+              <option value="SUR AIR AMBIANT">SUR AIR AMBIANT</option>
+            </select>
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Profil de sous tirage</label>
+            <select
+              name="profilSousTirage"
+              value={produitForm.details.profilSousTirage || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+            </select>
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Efficacité énergetique saisonnière</label>
+            <input 
+              type="text"
+              name="efficaciteEnergetique" 
+              value={produitForm.details.efficaciteEnergetique || ""} 
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+        </>
+      );
       case OPERATIONS.BAR_TH_143:
-        return (
-          <>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Productivité capteur</label>
-              <input 
-                type="text"
-                name="productiviteCapteur" 
-                value={produitForm.details.productiviteCapteur || ""} 
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              />
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Capacité de stockage du ou des ballon d&apos;eau chaude solaires (litre)</label>
-              <input 
-                type="text"
-                name="capaciteStockage" 
-                value={produitForm.details.capaciteStockage || ""} 
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              />
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Surface hors tout de capteurs installés</label>
-              <input 
-                type="text"
-                name="surfaceCapteurs" 
-                value={produitForm.details.surfaceCapteurs || ""} 
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              />
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Certification capteurs solaires ?</label>
-              <select
-                name="certificationCapteurs"
-                value={produitForm.details.certificationCapteurs || ""}
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              >
-                <option value="">Sélectionner</option>
-                <option value="OUI">OUI</option>
-                <option value="NON">NON</option>
-              </select>
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Capteurs solaires hybrides ?</label>
-              <select
-                name="capteursHybrides"
-                value={produitForm.details.capteursHybrides || ""}
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              >
-                <option value="">Sélectionner</option>
-                <option value="OUI">OUI</option>
-                <option value="NON">NON</option>
-              </select>
-            </div>
-          </>
-        );
+      return (
+        <>
+          {renderCoupDePouceToggle()}
+          
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Productivité capteur</label>
+            <input 
+              type="text"
+              name="productiviteCapteur" 
+              value={produitForm.details.productiviteCapteur || ""} 
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Capacité de stockage du ou des ballon d&apos;eau chaude solaires (litre)</label>
+            <input 
+              type="text"
+              name="capaciteStockage" 
+              value={produitForm.details.capaciteStockage || ""} 
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Surface hors tout de capteurs installés</label>
+            <input 
+              type="text"
+              name="surfaceCapteurs" 
+              value={produitForm.details.surfaceCapteurs || ""} 
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Certification capteurs solaires ?</label>
+            <select
+              name="certificationCapteurs"
+              value={produitForm.details.certificationCapteurs || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="OUI">OUI</option>
+              <option value="NON">NON</option>
+            </select>
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Capteurs solaires hybrides ?</label>
+            <select
+              name="capteursHybrides"
+              value={produitForm.details.capteursHybrides || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="OUI">OUI</option>
+              <option value="NON">NON</option>
+            </select>
+          </div>
+        </>
+      );
       case OPERATIONS.BAR_TH_101:
-        return (
-          <>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Capacité de stockage du ballon d&apos;eau chaide solaire (litres)*</label>
-              <input 
-                type="text"
-                name="capaciteStockage" 
-                value={produitForm.details.capaciteStockage || ""} 
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              />
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Si la capacité de stockage du ballon d&apos;eau chaude solaire est inférieur ou égale à 500 litres, classe d&apos;efficacité énergetique du ballon d&apos;eau chaude solaire*</label>
-              <input 
-                type="text"
-                name="efficaciteEnergetique" 
-                value={produitForm.details.efficaciteEnergetique || ""} 
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              />
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Surface hors-tout totale de capteurs solaires vitrés thermque installés (m²)*</label>
-              <input 
-                type="text"
-                name="surfaceCapteurs" 
-                value={produitForm.details.surfaceCapteurs || ""} 
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              />
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Les capteurs solaires ont une certification CSTBat ou Solar Keymark ou équivalente</label>
-              <select
-                name="certificationCapteurs"
-                value={produitForm.details.certificationCapteurs || ""}
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              >
-                <option value="">Sélectionner</option>
-                <option value="OUI">OUI</option>
-                <option value="NON">NON</option>
-              </select>
-            </div>
-            <div className="space-y-2 mt-4">
-              <label className="block text-sm font-medium text-[#213f5b] mb-1">Les capteurs solaires sont des capteurs non hybrides</label>
-              <select
-                name="capteursHybrides"
-                value={produitForm.details.capteursHybrides || ""}
-                onChange={handleProduitDetailsChange}
-                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-              >
-                <option value="">Sélectionner</option>
-                <option value="OUI">OUI</option>
-                <option value="NON">NON</option>
-              </select>
-            </div>
-          </>
-        );
+      return (
+        <>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Capacité de stockage du ballon d&apos;eau chaide solaire (litres)*</label>
+            <input 
+              type="text"
+              name="capaciteStockage" 
+              value={produitForm.details.capaciteStockage || ""} 
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Si la capacité de stockage du ballon d&apos;eau chaude solaire est inférieur ou égale à 500 litres, classe d&apos;efficacité énergetique du ballon d&apos;eau chaude solaire*</label>
+            <input 
+              type="text"
+              name="efficaciteEnergetique" 
+              value={produitForm.details.efficaciteEnergetique || ""} 
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Surface hors-tout totale de capteurs solaires vitrés thermque installés (m²)*</label>
+            <input 
+              type="text"
+              name="surfaceCapteurs" 
+              value={produitForm.details.surfaceCapteurs || ""} 
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            />
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Les capteurs solaires ont une certification CSTBat ou Solar Keymark ou équivalente</label>
+            <select
+              name="certificationCapteurs"
+              value={produitForm.details.certificationCapteurs || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="OUI">OUI</option>
+              <option value="NON">NON</option>
+            </select>
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium text-[#213f5b] mb-1">Les capteurs solaires sont des capteurs non hybrides</label>
+            <select
+              name="capteursHybrides"
+              value={produitForm.details.capteursHybrides || ""}
+              onChange={handleProduitDetailsChange}
+              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="OUI">OUI</option>
+              <option value="NON">NON</option>
+            </select>
+          </div>
+        </>
+      );
       default:
         return (
           <div className="flex items-center justify-center h-40 text-gray-500">
@@ -1148,7 +1313,7 @@ export default function ProduitPrestationPage() {
                 <div className="relative">
                   <div className="absolute -left-3 md:-left-5 top-1 w-1.5 h-12 bg-gradient-to-b from-[#bfddf9] to-[#d2fcb2] rounded-full"></div>
                   <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#213f5b] to-[#2c5681] mb-2 pl-2">Produits & Prestations</h1>
-                  <p className="text-[#213f5b] opacity-75 pl-2">Ajoutez et gérez vos produits, prestations et sous-traitants</p>
+                  <p className="text-[#213f5b] opacity-75 pl-2">Ajoutez et gérez vos produits et prestations</p>
                   <div className="absolute -z-10 -top-10 -left-10 w-40 h-40 bg-[#bfddf9] opacity-10 rounded-full blur-3xl"></div>
                 </div>
                 
@@ -1167,12 +1332,14 @@ export default function ProduitPrestationPage() {
                       onClick={() => {
                         if (activeTab === "produit") handleAddNewProduct();
                         else if (activeTab === "prestation") handleAddNewPrestation();
-                        else if (activeTab === "sous-traitant") handleAddNewSousTraitant();
+                        else if (activeTab === "operation") handleAddNewOperation();
                       }}
                       className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
                     >
                       <PlusIcon className="h-4 w-4 mr-2" />
-                      Nouveau {activeTab === "produit" ? "Produit" : activeTab === "prestation" ? "Prestation" : "Sous-traitant"}
+                      {activeTab === "produit" ? "Nouveau Produit" : 
+                       activeTab === "prestation" ? "Nouvelle Prestation" : 
+                       "Nouvelle Opération"}
                     </Button>
                   </div>
                 )}
@@ -1205,7 +1372,11 @@ export default function ProduitPrestationPage() {
                   <input
                     type="search"
                     className="block w-full px-4 py-3 pl-10 text-sm text-[#213f5b] border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                    placeholder={`Rechercher des ${activeTab === "produit" ? "produits" : activeTab === "prestation" ? "prestations" : "sous-traitants"}...`}
+                    placeholder={`Rechercher des ${
+                      activeTab === "produit" ? "produits" : 
+                      activeTab === "prestation" ? "prestations" : 
+                      "opérations"
+                    }...`}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -1254,17 +1425,17 @@ export default function ProduitPrestationPage() {
                 </button>
                 <button
                   className={`flex items-center gap-2 py-3 px-5 ${
-                    activeTab === "sous-traitant" 
+                    activeTab === "operation" 
                       ? "bg-[#213f5b] text-white rounded-t-lg" 
                       : "text-[#213f5b] hover:bg-[#f0f7ff]"
                   }`}
                   onClick={() => {
-                    setActiveTab("sous-traitant");
+                    setActiveTab("operation");
                     setViewMode("list");
                   }}
                 >
-                  <BuildingStorefrontIcon className="h-5 w-5" />
-                  <span>Sous-traitant</span>
+                  <CogIcon className="h-5 w-5" />
+                  <span>Opération</span>
                 </button>
               </div>
 
@@ -1533,8 +1704,10 @@ export default function ProduitPrestationPage() {
                                 className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
                               >
                                 <option value="">Sélectionner une opération</option>
-                                {Object.values(OPERATIONS).map((operation) => (
-                                  <option key={operation} value={operation}>{operation}</option>
+                                {operations.map((operation) => (
+                                  <option key={operation.id} value={`${operation.code} : ${operation.name}`}>
+                                    {operation.code} : {operation.name}
+                                  </option>
                                 ))}
                               </select>
                             </div>
@@ -1768,7 +1941,7 @@ export default function ProduitPrestationPage() {
                               </div>
 
                               <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="codeComptable">Code comptable</label>
+                              <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="codeComptable">Code comptable</label>
                                 <input
                                   id="codeComptable"
                                   type="text"
@@ -1813,11 +1986,31 @@ export default function ProduitPrestationPage() {
                                 className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
                               >
                                 <option value="">Sélectionner une opération</option>
-                                {Object.values(OPERATIONS).map((operation) => (
-                                  <option key={operation} value={operation}>{operation}</option>
+                                {operations.map((operation) => (
+                                  <option key={operation.id} value={`${operation.code} : ${operation.name}`}>
+                                    {operation.code} : {operation.name}
+                                  </option>
                                 ))}
                               </select>
                             </div>
+                            {selectedOperations.length > 0 && (
+                              <div className="mt-4">
+                                <p className="text-sm font-medium text-[#213f5b] mb-2">Opérations sélectionnées:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {selectedOperations.map(op => (
+                                    <div key={op} className="bg-[#bfddf9] text-[#213f5b] rounded-lg px-3 py-1 text-sm flex items-center">
+                                      {op}
+                                      <button
+                                        onClick={() => setSelectedOperations(selectedOperations.filter(o => o !== op))}
+                                        className="ml-2 text-[#213f5b] hover:text-red-500"
+                                      >
+                                        <XMarkIcon className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -1844,6 +2037,27 @@ export default function ProduitPrestationPage() {
                                 ))}
                               </select>
                             </div>
+                            {selectedProducts.length > 0 && (
+                              <div className="mt-4">
+                                <p className="text-sm font-medium text-[#213f5b] mb-2">Produits sélectionnés:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {selectedProducts.map(prodId => {
+                                    const product = products.find(p => p.id === prodId);
+                                    return (
+                                      <div key={prodId} className="bg-[#d2fcb2] text-[#213f5b] rounded-lg px-3 py-1 text-sm flex items-center">
+                                        {product ? (product.libelle || product.reference) : prodId}
+                                        <button
+                                          onClick={() => setSelectedProducts(selectedProducts.filter(p => p !== prodId))}
+                                          className="ml-2 text-[#213f5b] hover:text-red-500"
+                                        >
+                                          <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -1869,19 +2083,19 @@ export default function ProduitPrestationPage() {
                 )}
               </AnimatePresence>
 
-              {/* Sous-traitant Tab Content */}
+              {/* Operation Tab Content */}
               <AnimatePresence mode="wait">
-                {activeTab === "sous-traitant" && (
+                {activeTab === "operation" && (
                   <>
                     {viewMode === "list" && (
                       <motion.div
-                        key="sous-traitant-list"
+                        key="operation-list"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        {/* Sous-traitants List/Grid View */}
+                        {/* Operations List View */}
                         <div className="mb-4 flex justify-end">
                           <div className="inline-flex rounded-md shadow-sm">
                             <button 
@@ -1899,87 +2113,64 @@ export default function ProduitPrestationPage() {
                           </div>
                         </div>
 
-                        {filteredSousTraitants.length === 0 ? (
+                        {filteredOperations.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-12 text-[#213f5b]">
-                            <BuildingStorefrontIcon className="h-16 w-16 mb-4 opacity-50" />
-                            <h3 className="text-xl font-semibold mb-2">Aucun sous-traitant trouvé</h3>
-                            <p className="text-sm opacity-75 mb-6">Ajoutez un nouveau sous-traitant ou modifiez vos critères de recherche</p>
+                            <CogIcon className="h-16 w-16 mb-4 opacity-50" />
+                            <h3 className="text-xl font-semibold mb-2">Aucune opération trouvée</h3>
+                            <p className="text-sm opacity-75 mb-6">Ajoutez une nouvelle opération ou modifiez vos critères de recherche</p>
                             <Button
-                              onClick={handleAddNewSousTraitant}
+                              onClick={handleAddNewOperation}
                               className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
                             >
                               <PlusIcon className="h-4 w-4 mr-2" />
-                              Nouveau Sous-traitant
+                              Nouvelle Opération
                             </Button>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredSousTraitants.map((sousTraitant) => (
-                              <motion.div
-                                key={sousTraitant.id}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="bg-white rounded-xl border border-[#eaeaea] shadow-sm hover:shadow-md hover:border-[#bfddf9] transition-all group"
-                                whileHover={{ y: -4 }}
-                              >
-                                <div className="p-5 border-b border-[#eaeaea] bg-gradient-to-r from-white to-[#f8fafc]">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <div className="flex items-start gap-3">
-                                      <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
-                                        <BuildingStorefrontIcon className="h-6 w-6 text-[#213f5b]" />
-                                      </div>
-                                      <div>
-                                        <h3 className="font-bold text-[#213f5b] line-clamp-1">{sousTraitant.raisonSociale}</h3>
-                                        <p className="text-xs opacity-75">{sousTraitant.typeSociete}</p>
-                                      </div>
-                                    </div>
-                                    <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${sousTraitant.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                      {sousTraitant.active ? 'Actif' : 'Inactif'}
-                                    </span>
-                                  </div>
-                                </div>
-                                
-                                <div className="p-5">
-                                  <div className="space-y-2 mb-4">
-                                    <div className="flex gap-2">
-                                      <span className="text-xs text-[#213f5b] opacity-75">Téléphone:</span>
-                                      <span className="text-sm font-medium text-[#213f5b]">{sousTraitant.telephone}</span>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <span className="text-xs text-[#213f5b] opacity-75">Adresse:</span>
-                                      <span className="text-sm font-medium text-[#213f5b]">{sousTraitant.adresse}</span>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <span className="text-xs text-[#213f5b] opacity-75">Ville:</span>
-                                      <span className="text-sm font-medium text-[#213f5b]">{sousTraitant.codePostal} {sousTraitant.ville}</span>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex justify-end gap-2 mt-4">
-                                    <button 
-                                      className="p-2 rounded-full text-[#213f5b] hover:bg-[#bfddf9] transition-colors"
-                                      onClick={() => handleEditSousTraitant(sousTraitant)}
-                                    >
-                                      <PencilIcon className="h-4 w-4" />
-                                    </button>
-                                    <button 
-                                      className="p-2 rounded-full text-[#213f5b] hover:bg-red-100 hover:text-red-500 transition-colors"
-                                      onClick={() => handleDeleteSousTraitant(sousTraitant.id)}
-                                    >
-                                      <TrashIcon className="h-4 w-4" />
-                                    </button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
-                                      onClick={() => handleEditSousTraitant(sousTraitant)}
-                                    >
-                                      Modifier
-                                    </Button>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
+                          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm text-left">
+                                <thead className="text-xs text-[#213f5b] uppercase bg-[#f8fafc]">
+                                  <tr>
+                                    <th scope="col" className="px-6 py-4">Code</th>
+                                    <th scope="col" className="px-6 py-4">Nom</th>
+                                    <th scope="col" className="px-6 py-4">Description</th>
+                                    <th scope="col" className="px-6 py-4">Catégorie</th>
+                                    <th scope="col" className="px-6 py-4">Statut</th>
+                                    <th scope="col" className="px-6 py-4 text-right">Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {filteredOperations.map((operation) => (
+                                    <tr key={operation.id} className="border-b hover:bg-[#f0f7ff] transition-colors">
+                                      <td className="px-6 py-4 font-medium text-[#213f5b]">{operation.code}</td>
+                                      <td className="px-6 py-4 text-[#213f5b]">{operation.name}</td>
+                                      <td className="px-6 py-4 text-[#213f5b] max-w-[300px] truncate">{operation.description}</td>
+                                      <td className="px-6 py-4 text-[#213f5b]">{operation.categorie}</td>
+                                      <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${operation.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                          {operation.active ? 'Actif' : 'Inactif'}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-4 text-right space-x-2">
+                                        <button 
+                                          className="font-medium text-[#213f5b] hover:text-[#152a3d] p-1 rounded hover:bg-[#bfddf9]"
+                                          onClick={() => handleEditOperation(operation)}
+                                        >
+                                          <PencilIcon className="h-4 w-4" />
+                                        </button>
+                                        <button 
+                                          className="font-medium text-[#213f5b] hover:text-red-500 p-1 rounded hover:bg-red-100"
+                                          onClick={() => handleDeleteOperation(operation.id)}
+                                        >
+                                          <TrashIcon className="h-4 w-4" />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
                         )}
                       </motion.div>
@@ -1987,93 +2178,79 @@ export default function ProduitPrestationPage() {
                     
                     {viewMode === "form" && (
                       <motion.div
-                        key="sousTraitant-form"
+                        key="operation-form"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="max-w-3xl mx-auto"
+                        className="space-y-6"
                       >
+                        {/* Enregistrement opération */}
                         <div className="bg-white rounded-xl shadow-md overflow-hidden">
                           <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
                             <div className="flex items-center gap-2">
                               <div className="h-8 w-1 rounded-full bg-[#213f5b]"></div>
-                              <h2 className="text-xl font-bold text-[#213f5b]">Informations du sous-traitant</h2>
+                              <h2 className="text-xl font-bold text-[#213f5b]">Enregistrement opération</h2>
                             </div>
-                            <p className="text-[#213f5b] opacity-75 ml-3 pl-3">Ajouter ou modifier un sous-traitant</p>
+                            <p className="text-[#213f5b] opacity-75 ml-3 pl-3">Informations de base de l&apos;opération</p>
                           </div>
                           <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="space-y-2 md:col-span-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="raisonSociale">Raison sociale *</label>
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="code-operation">Code de l&apos;opération *</label>
                                 <input
-                                  id="raisonSociale"
+                                  id="code-operation"
                                   type="text"
-                                  name="raisonSociale"
-                                  value={sousTraitantForm.raisonSociale}
-                                  onChange={handleSousTraitantChange}
+                                  name="code"
+                                  value={operationForm.code}
+                                  onChange={handleOperationFormChange}
                                   className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  placeholder="Ex: BAR-TH-XXX"
                                 />
                               </div>
 
                               <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="typeSociete">Type de société (SAS, SASU, SARL...)</label>
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="name-operation">Nom de l&apos;opération *</label>
                                 <input
-                                  id="typeSociete"
+                                  id="name-operation"
                                   type="text"
-                                  name="typeSociete"
-                                  value={sousTraitantForm.typeSociete}
-                                  onChange={handleSousTraitantChange}
+                                  name="name"
+                                  value={operationForm.name}
+                                  onChange={handleOperationFormChange}
                                   className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="telephone">Telephone MOBILE *</label>
-                                <input
-                                  id="telephone"
-                                  type="text"
-                                  name="telephone"
-                                  value={sousTraitantForm.telephone}
-                                  onChange={handleSousTraitantChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  placeholder="Ex: POMPE A CHALEUR AIR/EAU"
                                 />
                               </div>
 
                               <div className="space-y-2 md:col-span-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="adresse">Adresse *</label>
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="description-operation">Description *</label>
                                 <textarea
-                                  id="adresse"
-                                  name="adresse"
-                                  value={sousTraitantForm.adresse}
-                                  onChange={handleSousTraitantChange}
-                                  rows={2}
+                                  id="description-operation"
+                                  name="description"
+                                  value={operationForm.description}
+                                  onChange={handleOperationFormChange}
+                                  rows={3}
                                   className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  placeholder="Description détaillée de l'opération..."
                                 />
                               </div>
 
                               <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="codePostal">Code Postal *</label>
-                                <input
-                                  id="codePostal"
-                                  type="text"
-                                  name="codePostal"
-                                  value={sousTraitantForm.codePostal}
-                                  onChange={handleSousTraitantChange}
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="categorie-operation">Catégorie</label>
+                                <select
+                                  id="categorie-operation"
+                                  name="categorie"
+                                  value={operationForm.categorie}
+                                  onChange={handleOperationFormChange}
                                   className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="ville">Ville *</label>
-                                <input
-                                  id="ville"
-                                  type="text"
-                                  name="ville"
-                                  value={sousTraitantForm.ville}
-                                  onChange={handleSousTraitantChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                />
+                                >
+                                  <option value="">Sélectionner une catégorie</option>
+                                  <option value="CHAUFFAGE">CHAUFFAGE</option>
+                                  <option value="EAU CHAUDE SANITAIRE">EAU CHAUDE SANITAIRE</option>
+                                  <option value="ISOLATION">ISOLATION</option>
+                                  <option value="VENTILATION">VENTILATION</option>
+                                  <option value="ENERGIES RENOUVELABLES">ENERGIES RENOUVELABLES</option>
+                                </select>
                               </div>
 
                               <div className="flex items-center space-x-2">
@@ -2081,43 +2258,32 @@ export default function ProduitPrestationPage() {
                                   <input 
                                     type="checkbox" 
                                     className="sr-only peer"
-                                    checked={sousTraitantForm.active}
-                                    onChange={() => setSousTraitantForm({...sousTraitantForm, active: !sousTraitantForm.active})}
+                                    checked={operationForm.active}
+                                    onChange={() => setOperationForm({...operationForm, active: !operationForm.active})}
                                   />
                                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-[#213f5b] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#213f5b]"></div>
-                                  <span className="ml-3 text-sm font-medium text-[#213f5b]">Activé</span>
-                                </label>
-                              </div>
-
-                              <div className="flex items-center space-x-2">
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                  <input 
-                                    type="checkbox" 
-                                    className="sr-only peer"
-                                    checked={sousTraitantForm.sousTraitant}
-                                    onChange={() => setSousTraitantForm({...sousTraitantForm, sousTraitant: !sousTraitantForm.sousTraitant})}
-                                  />
-                                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-[#213f5b] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#213f5b]"></div>
-                                  <span className="ml-3 text-sm font-medium text-[#213f5b]">Sous-traitant</span>
+                                  <span className="ml-3 text-sm font-medium text-[#213f5b]">Active</span>
                                 </label>
                               </div>
                             </div>
                           </div>
-                          <div className="flex justify-end gap-3 p-6">
-                            <Button
-                              variant="outline"
-                              className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
-                              onClick={handleCancelForm}
-                            >
-                              Annuler
-                            </Button>
-                            <Button
-                              className="bg-[#213f5b] hover:bg-[#152a3d] text-white"
-                              onClick={handleSaveSousTraitant}
-                            >
-                              Enregistrer
-                            </Button>
-                          </div>
+                        </div>
+
+                        {/* Submit Buttons - Full Width */}
+                        <div className="flex flex-wrap justify-end gap-3 mt-4">
+                          <Button
+                            variant="outline"
+                            className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
+                            onClick={handleCancelForm}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            className="bg-[#213f5b] hover:bg-[#152a3d] text-white"
+                            onClick={handleSaveOperation}
+                          >
+                            Enregistrer
+                          </Button>
                         </div>
                       </motion.div>
                     )}

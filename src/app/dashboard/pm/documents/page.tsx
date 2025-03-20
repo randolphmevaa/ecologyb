@@ -1772,7 +1772,7 @@ export default function DocumentsPage() {
                     </div>
                     
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700">Partagé avec</h4>
+                    <h4 className="text-sm font-medium text-gray-700">Partagé avec</h4>
                       {selectedDocument.shared_with.length > 0 ? (
                         <div className="mt-2 space-y-2">
                           {selectedDocument.shared_with.map(userId => (

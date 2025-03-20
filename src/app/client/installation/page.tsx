@@ -8,22 +8,23 @@ import {
   CalendarIcon, 
   ClockIcon, 
   CheckCircleIcon,
-  DocumentTextIcon,
   PhoneIcon,
   ChatBubbleLeftRightIcon,
   MapPinIcon,
   UserIcon,
   ArrowRightIcon,
-  PhotoIcon,
+  // PhotoIcon,
   CloudIcon,
   ExclamationCircleIcon,
   InformationCircleIcon,
   StarIcon,
   CheckIcon,
   PencilIcon,
-  BuildingOfficeIcon
+  BuildingOfficeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from "@heroicons/react/24/outline";
-import { format, addDays, parseISO } from 'date-fns';
+import { format, addDays, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, getDay, addMonths, startOfMonth, endOfMonth, addWeeks, isSameMonth, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 // Define all the necessary TypeScript interfaces and types
@@ -67,6 +68,7 @@ interface ChecklistItem {
 
 type InstallationStatus = 'confirmed' | 'in_progress' | 'completed' | 'delayed';
 type WeatherCondition = 'sunny' | 'partly_cloudy' | 'cloudy' | 'rainy' | 'stormy';
+type CalendarView = 'day' | 'week' | 'month';
 
 interface WeatherForecast {
   date: string;
@@ -158,6 +160,8 @@ export default function InstallationTracker() {
     minutes: 0,
     seconds: 0
   });
+  const [currentDate, setCurrentDate] = useState(parseISO(installationData.installationDate));
+  const [calendarView, setCalendarView] = useState<CalendarView>('week');
 
   // Brand colors
   const colors = {
@@ -292,6 +296,57 @@ type WeatherCondition = 'sunny' | 'partly_cloudy' | 'cloudy' | 'rainy' | 'stormy
     return format(date, "d MMMM yyyy", { locale: fr });
   };
 
+  // Calendar navigation functions
+  const nextPeriod = () => {
+    if (calendarView === 'day') {
+      setCurrentDate(addDays(currentDate, 1));
+    } else if (calendarView === 'week') {
+      setCurrentDate(addWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(addMonths(currentDate, 1));
+    }
+  };
+
+  const prevPeriod = () => {
+    if (calendarView === 'day') {
+      setCurrentDate(addDays(currentDate, -1));
+    } else if (calendarView === 'week') {
+      setCurrentDate(addWeeks(currentDate, -1));
+    } else {
+      setCurrentDate(addMonths(currentDate, -1));
+    }
+  };
+
+  const today = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Get the date range for the current view
+  const getDateRange = () => {
+    if (calendarView === 'day') {
+      return [currentDate];
+    } else if (calendarView === 'week') {
+      const start = startOfWeek(currentDate, { weekStartsOn: 1 }); // Week starts on Monday
+      const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+      return eachDayOfInterval({ start, end });
+    } else {
+      const start = startOfMonth(currentDate);
+      const end = endOfMonth(currentDate);
+      return eachDayOfInterval({ start, end });
+    }
+  };
+
+  // Get installation events
+  const getEvents = () => {
+    return installationData.steps.map(step => ({
+      id: step.id,
+      title: step.name,
+      description: step.description,
+      date: parseISO(step.date),
+      completed: step.completed
+    }));
+  };
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -310,6 +365,280 @@ type WeatherCondition = 'sunny' | 'partly_cloudy' | 'cloudy' | 'rainy' | 'stormy
       y: 0,
       transition: { duration: 0.4 }
     }
+  };
+
+  const renderCalendarHeader = () => {
+    // const monthYear = format(currentDate, 'MMMM yyyy', { locale: fr });
+    let dateRangeText = "";
+    
+    if (calendarView === 'day') {
+      dateRangeText = format(currentDate, "EEEE d MMMM yyyy", { locale: fr });
+    } else if (calendarView === 'week') {
+      const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+      const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+      dateRangeText = `${format(start, "d", { locale: fr })} - ${format(end, "d MMMM yyyy", { locale: fr })}`;
+    } else {
+      dateRangeText = format(currentDate, "MMMM yyyy", { locale: fr });
+    }
+    
+    return (
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-[#213f5b]">{dateRangeText}</h3>
+        <div className="flex space-x-2">
+          <button 
+            onClick={prevPeriod}
+            className="p-1 rounded-full hover:bg-gray-100"
+          >
+            <ChevronLeftIcon className="h-5 w-5 text-[#213f5b]" />
+          </button>
+          <button 
+            onClick={today}
+            className="px-3 py-1 text-sm bg-[#bfddf9]/20 text-[#213f5b] rounded-lg hover:bg-[#bfddf9]/30"
+          >
+            Aujourd&apos;hui
+          </button>
+          <button 
+            onClick={nextPeriod}
+            className="p-1 rounded-full hover:bg-gray-100"
+          >
+            <ChevronRightIcon className="h-5 w-5 text-[#213f5b]" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCalendarViewSelector = () => {
+    return (
+      <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden mb-6 shadow-sm">
+        <button
+          onClick={() => setCalendarView('day')}
+          className={`flex-1 py-2 px-4 text-sm font-medium ${
+            calendarView === 'day'
+              ? 'bg-[#213f5b] text-white'
+              : 'text-[#213f5b] hover:bg-gray-50'
+          }`}
+        >
+          Jour
+        </button>
+        <button
+          onClick={() => setCalendarView('week')}
+          className={`flex-1 py-2 px-4 text-sm font-medium ${
+            calendarView === 'week'
+              ? 'bg-[#213f5b] text-white'
+              : 'text-[#213f5b] hover:bg-gray-50'
+          }`}
+        >
+          Semaine
+        </button>
+        <button
+          onClick={() => setCalendarView('month')}
+          className={`flex-1 py-2 px-4 text-sm font-medium ${
+            calendarView === 'month'
+              ? 'bg-[#213f5b] text-white'
+              : 'text-[#213f5b] hover:bg-gray-50'
+          }`}
+        >
+          Mois
+        </button>
+      </div>
+    );
+  };
+
+  const renderDayView = () => {
+    const events = getEvents().filter(event => 
+      isSameDay(event.date, currentDate)
+    );
+    
+    const hours = Array.from({ length: 12 }, (_, i) => i + 8); // 8:00 - 19:00
+    
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-200 bg-[#f8faff]">
+          <h4 className="text-base font-medium text-[#213f5b] capitalize">
+            {format(currentDate, "EEEE d MMMM", { locale: fr })}
+          </h4>
+        </div>
+        <div className="divide-y divide-gray-100">
+          {hours.map((hour) => {
+            const hourEvents = events.filter(event => {
+              const eventHour = event.date.getHours();
+              return eventHour === hour;
+            });
+            
+            return (
+              <div key={hour} className="flex p-3 hover:bg-gray-50">
+                <div className="w-16 flex-shrink-0 text-gray-500 text-sm">
+                  {`${hour}:00`}
+                </div>
+                <div className="flex-grow">
+                  {hourEvents.length > 0 ? (
+                    hourEvents.map(event => (
+                      <div 
+                        key={event.id}
+                        className={`p-2 rounded-lg text-sm mb-1 ${
+                          event.completed 
+                            ? 'bg-[#d2fcb2]/20 border border-[#d2fcb2]' 
+                            : 'bg-[#bfddf9]/20 border border-[#bfddf9]'
+                        }`}
+                      >
+                        <div className="font-medium text-[#213f5b]">{event.title}</div>
+                        <div className="text-xs text-gray-600">{event.description}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="h-6"></div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderWeekView = () => {
+    const days = getDateRange();
+    const events = getEvents();
+    const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+        {/* Week header */}
+        <div className="grid grid-cols-7 border-b border-gray-200">
+          {weekDays.map((day, index) => (
+            <div key={index} className="py-3 px-2 text-center text-sm font-medium text-[#213f5b]">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar days */}
+        <div className="grid grid-cols-7 h-96 auto-rows-fr">
+          {days.map((day, i) => {
+            const dayEvents = events.filter(event => 
+              isSameDay(event.date, day)
+            );
+            const isToday = isSameDay(day, new Date());
+            const isInstallationDay = isSameDay(day, parseISO(installationData.installationDate));
+            
+            return (
+              <div 
+                key={i} 
+                className={`border-r border-b border-gray-100 p-2 ${
+                  isToday 
+                    ? 'bg-[#f8faff]' 
+                    : isInstallationDay
+                      ? 'bg-[#d2fcb2]/10'
+                      : ''
+                } hover:bg-gray-50`}
+              >
+                <div className={`text-sm mb-2 ${
+                  isToday 
+                    ? 'font-bold text-[#213f5b]' 
+                    : 'text-gray-500'
+                }`}>
+                  {format(day, 'd', { locale: fr })}
+                </div>
+                <div className="space-y-1">
+                  {dayEvents.map(event => (
+                    <div 
+                      key={event.id}
+                      className={`p-1 rounded text-xs ${
+                        event.completed 
+                          ? 'bg-[#d2fcb2]/20 border border-[#d2fcb2]' 
+                          : 'bg-[#bfddf9]/20 border border-[#bfddf9]'
+                      }`}
+                    >
+                      <div className="font-medium text-[#213f5b] truncate">{event.title}</div>
+                      <div className="text-gray-600 truncate text-xs">
+                        {format(event.date, 'HH:mm')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderMonthView = () => {
+    // const currentMonth = getMonth(currentDate);
+    // const currentYear = getYear(currentDate);
+    const monthStart = startOfMonth(currentDate);
+    const firstDayOfMonth = getDay(monthStart);
+    const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // Adjust for Monday start
+    
+    // Generate days including those from previous and next months to fill the grid
+    const startDate = addDays(monthStart, -adjustedFirstDay);
+    const days = Array.from({ length: 42 }, (_, i) => addDays(startDate, i));
+    
+    const events = getEvents();
+    const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+        {/* Week header */}
+        <div className="grid grid-cols-7 border-b border-gray-200">
+          {weekDays.map((day, index) => (
+            <div key={index} className="py-3 px-2 text-center text-sm font-medium text-[#213f5b]">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar days */}
+        <div className="grid grid-cols-7 auto-rows-fr">
+          {days.map((day, i) => {
+            const inCurrentMonth = isSameMonth(day, currentDate);
+            const isToday = isSameDay(day, new Date());
+            const isInstallationDay = isSameDay(day, parseISO(installationData.installationDate));
+            const dayEvents = events.filter(event => isSameDay(event.date, day));
+            
+            return (
+              <div 
+                key={i} 
+                className={`h-24 border-r border-b border-gray-100 p-1 ${
+                  !inCurrentMonth 
+                    ? 'bg-gray-50 text-gray-400' 
+                    : isToday 
+                      ? 'bg-[#f8faff]' 
+                      : isInstallationDay
+                        ? 'bg-[#d2fcb2]/10'
+                        : ''
+                } hover:bg-gray-50`}
+              >
+                <div className={`text-sm p-1 ${
+                  isToday 
+                    ? 'font-bold text-white bg-[#213f5b] rounded-full w-6 h-6 flex items-center justify-center' 
+                    : inCurrentMonth ? 'text-gray-700' : 'text-gray-400'
+                }`}>
+                  {format(day, 'd')}
+                </div>
+                <div className="space-y-1 mt-1 overflow-y-auto max-h-16">
+                  {dayEvents.map(event => (
+                    <div 
+                      key={event.id}
+                      className={`p-1 rounded text-xs ${
+                        event.completed 
+                          ? 'bg-[#d2fcb2]/20 border border-[#d2fcb2]' 
+                          : 'bg-[#bfddf9]/20 border border-[#bfddf9]'
+                      }`}
+                    >
+                      <div className="font-medium text-[#213f5b] truncate">{event.title}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -397,17 +726,6 @@ type WeatherCondition = 'sunny' | 'partly_cloudy' | 'cloudy' | 'rainy' | 'stormy
                   Calendrier
                 </button>
                 <button
-                  onClick={() => setActiveTab("documents")}
-                  className={`flex items-center py-4 px-6 text-sm font-medium ${
-                    activeTab === "documents"
-                      ? "text-[#213f5b] border-b-2 border-[#213f5b]"
-                      : "text-gray-500 hover:text-[#213f5b]"
-                  }`}
-                >
-                  <DocumentTextIcon className="h-5 w-5 mr-2" />
-                  Documents
-                </button>
-                <button
                   onClick={() => setActiveTab("messages")}
                   className={`flex items-center py-4 px-6 text-sm font-medium ${
                     activeTab === "messages"
@@ -460,7 +778,7 @@ type WeatherCondition = 'sunny' | 'partly_cloudy' | 'cloudy' | 'rainy' | 'stormy
                             </div>
                           </div>
                           <div className="flex items-start">
-                            <DocumentTextIcon className="h-5 w-5 text-[#213f5b] mt-0.5 mr-3 flex-shrink-0" />
+                            <ClockIcon className="h-5 w-5 text-[#213f5b] mt-0.5 mr-3 flex-shrink-0" />
                             <div>
                               <p className="text-sm font-medium text-[#213f5b]">Référence projet</p>
                               <p className="text-sm text-gray-600">{installationData.projectId}</p>
@@ -705,7 +1023,7 @@ type WeatherCondition = 'sunny' | 'partly_cloudy' | 'cloudy' | 'rainy' | 'stormy
                   </motion.div>
                 )}
 
-                {/* Timeline Tab */}
+                {/* Calendar Tab */}
                 {activeTab === "timeline" && (
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -714,125 +1032,31 @@ type WeatherCondition = 'sunny' | 'partly_cloudy' | 'cloudy' | 'rainy' | 'stormy
                   >
                     <div className="bg-[#213f5b]/5 rounded-lg p-5">
                       <h3 className="text-lg font-semibold text-[#213f5b] mb-4">Calendrier d&apos;installation</h3>
-                      <div className="space-y-4">
-                        {/* Installation date range visualization */}
-                        <div className="relative bg-white rounded-lg border border-[#bfddf9]/30 p-5">
-                          <div className="flex items-center justify-between mb-6">
-                            <div>
-                              <h4 className="text-base font-medium text-[#213f5b]">Installation Pompe à Chaleur Air/Eau</h4>
-                              <p className="text-sm text-gray-500 mt-1">{installationData.address}</p>
-                            </div>
-                            <span className="text-sm font-medium px-3 py-1 bg-[#bfddf9]/20 text-[#213f5b] rounded-full">
-                              {installationData.duration} jour{installationData.duration > 1 ? 's' : ''}
-                            </span>
-                          </div>
-
-                          {/* Day blocks */}
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {[...Array(installationData.duration)].map((_, index) => {
-                              const date = addDays(parseISO(installationData.installationDate), index);
-                              const formattedDate = format(date, "EEEE d MMMM", { locale: fr });
-                              const timeSlot = index === 0 ? "9h00 - 17h00" : "8h30 - 17h30";
-                              
-                              return (
-                                <div 
-                                  key={index} 
-                                  className="bg-[#f8faff] rounded-lg p-4 border border-[#bfddf9]/30 hover:shadow-md transition-shadow cursor-pointer"
-                                >
-                                  <div className="flex items-center justify-between mb-3">
-                                    <div className="h-8 w-8 rounded-full bg-[#bfddf9]/20 flex items-center justify-center text-[#213f5b] font-medium">
-                                      {index + 1}
-                                    </div>
-                                    <span className="text-xs text-gray-500">Jour {index + 1}</span>
-                                  </div>
-                                  <h5 className="text-sm font-medium text-[#213f5b] capitalize">{formattedDate}</h5>
-                                  <div className="flex items-center mt-2">
-                                    <ClockIcon className="h-3.5 w-3.5 text-gray-500 mr-1" />
-                                    <span className="text-xs text-gray-500">{timeSlot}</span>
-                                  </div>
-                                  <div className="mt-3 pt-3 border-t border-gray-100">
-                                    <p className="text-xs text-gray-600">
-                                      {index === 0 
-                                        ? "Installation de l'unité extérieure" 
-                                        : "Installation de l'unité intérieure et mise en service"}
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                      
+                      {/* Calendar View Controls */}
+                      {renderCalendarViewSelector()}
+                      
+                      {/* Calendar Header */}
+                      {renderCalendarHeader()}
+                      
+                      {/* Calendar Content based on view */}
+                      {calendarView === 'day' && renderDayView()}
+                      {calendarView === 'week' && renderWeekView()}
+                      {calendarView === 'month' && renderMonthView()}
+                      
+                      {/* Installation legend */}
+                      <div className="mt-6 flex items-center space-x-6">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-[#bfddf9]/80 mr-2"></div>
+                          <span className="text-sm text-gray-600">À venir</span>
                         </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Documents Tab */}
-                {activeTab === "documents" && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-6"
-                  >
-                    <div className="bg-[#213f5b]/5 rounded-lg p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-[#213f5b]">Documents liés à l&apos;installation</h3>
-                        <button className="flex items-center text-sm text-[#213f5b] hover:text-[#213f5b]/80">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                          </svg>
-                          Ajouter un document
-                        </button>
-                      </div>
-
-                      {/* Document cards */}
-                      <div className="space-y-3">
-                        {installationData.documents.map((doc) => (
-                          <div 
-                            key={doc.id} 
-                            className="bg-white rounded-lg p-4 border border-[#bfddf9]/20 flex items-start hover:shadow-md transition-shadow cursor-pointer"
-                          >
-                            <div className="h-10 w-10 rounded-lg bg-[#213f5b]/10 flex items-center justify-center mr-4">
-                              <DocumentTextIcon className="h-5 w-5 text-[#213f5b]" />
-                            </div>
-                            <div className="flex-grow">
-                              <h4 className="text-sm font-medium text-[#213f5b]">{doc.name}</h4>
-                              <div className="flex items-center mt-1">
-                                <span className="text-xs text-gray-500">{doc.size}</span>
-                                <span className="mx-2 text-gray-300">•</span>
-                                <span className="text-xs text-gray-500">Ajouté le {formatDate(doc.uploadDate, false)}</span>
-                              </div>
-                            </div>
-                            <button 
-                              className="text-[#213f5b] hover:text-[#213f5b]/80 p-1"
-                              onClick={() => alert(`Téléchargement de ${doc.name}`)}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Photos/Gallery Section */}
-                      <div className="mt-8">
-                        <h3 className="text-lg font-semibold text-[#213f5b] mb-4">Photos du projet</h3>
-                        <div className="bg-white rounded-lg p-5 border border-[#bfddf9]/20">
-                          <div className="flex items-center justify-center h-48 border-2 border-dashed border-gray-200 rounded-lg">
-                            <div className="text-center">
-                              <PhotoIcon className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                              <p className="text-sm text-gray-500">Aucune photo disponible pour le moment</p>
-                              <button 
-                                className="mt-3 inline-flex items-center px-4 py-2 text-sm text-[#213f5b] bg-[#bfddf9]/20 rounded-lg hover:bg-[#bfddf9]/30 transition-colors"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                                </svg>
-                                Ajouter des photos
-                              </button>
-                            </div>
-                          </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-[#d2fcb2]/80 mr-2"></div>
+                          <span className="text-sm text-gray-600">Complété</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-[#213f5b] mr-2"></div>
+                          <span className="text-sm text-gray-600">Aujourd&apos;hui</span>
                         </div>
                       </div>
                     </div>
@@ -1006,7 +1230,7 @@ type WeatherCondition = 'sunny' | 'partly_cloudy' | 'cloudy' | 'rainy' | 'stormy
                   </button>
                   <button className="w-full flex items-center justify-between p-3 bg-white text-[#213f5b] border border-[#bfddf9] rounded-lg hover:bg-[#bfddf9]/10 transition-colors">
                     <span className="flex items-center">
-                      <DocumentTextIcon className="h-5 w-5 mr-3" />
+                      <CalendarIcon className="h-5 w-5 mr-3" />
                       Guide de préparation
                     </span>
                     <ArrowRightIcon className="h-4 w-4" />
