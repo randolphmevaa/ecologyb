@@ -158,7 +158,7 @@ export function Sidebar({ role }) {
       },
       { 
         name: "Mandataires MPR", 
-        href: "/dashboard/admin/mandataires-mpr", 
+        href: "/dashboard/admin/mandataire-mpr", 
         icon: UserIcon 
       },
       { 
