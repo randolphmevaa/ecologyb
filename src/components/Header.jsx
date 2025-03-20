@@ -696,7 +696,7 @@ function AdminHeader({ user, contactId }) {
     { name: "Facturation / Paiements", href: "/dashboard/admin/billing", icon: CreditCardIcon },
     { name: "Rapports / Statistiques", href: "/dashboard/admin/reports", icon: ChartBarIcon },
     { name: "Support & Tickets", href: "/dashboard/admin/support", icon: LifebuoyIcon },
-    { name: "Mes Utilisateurs", href: "/dashboard/admin/administration", icon: UserGroupIcon },
+    { name: "Tout les rôles", href: "/dashboard/admin/administration", icon: UserGroupIcon },
     { name: "Intégrations / API", href: "/dashboard/admin/integrations", icon: CodeBracketIcon },
   ];
 

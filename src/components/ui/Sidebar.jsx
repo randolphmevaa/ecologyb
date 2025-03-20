@@ -175,7 +175,7 @@ export function Sidebar({ role }) {
       { name: "Rapports / Statistiques", href: "/dashboard/admin/reports", icon: ChartBarIcon },
       { name: "Support & Tickets", href: "/dashboard/admin/support", icon: LifebuoyIcon },
       // { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
-      { name: "Mes Utilisateurs", href: "/dashboard/admin/administration", icon: UserGroupIcon },
+      { name: "Tout les rôles", href: "/dashboard/admin/administration", icon: UserGroupIcon },
       { name: "Paramètres de l'Administrateur", href: "/dashboard/admin/reglages", icon: SettingsIcon }
       // { name: "Intégrations / API", href: "/dashboard/admin/integrations", icon: CodeBracketIcon }
     ];
