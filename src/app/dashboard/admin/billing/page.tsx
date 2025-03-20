@@ -16,8 +16,6 @@ import {
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
   ExclamationTriangleIcon,
-  CalendarIcon,
-  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { jsPDF } from "jspdf";
 
@@ -45,7 +43,7 @@ interface Contact {
   mailingAddress: string;
   email?: string;
   phone?: string;
-  assignedRegie: string;
+  assignedRegie?: string; // Mark as optional since it might be undefined
 }
 
 // Map the original statuses to admin view statuses
@@ -178,46 +176,51 @@ export default function AdminFacturationPage() {
 
   // Stats for the dashboard
   const statsData = {
-    totalApproved: factures.filter(f => 
-      mapStatusToAdmin(f.statut) === "Approuvée"
+    enAttenteApprobation: factures.filter(f => 
+      f.statut === "En attente de validation"
     ).length,
-    totalPending: factures.filter(f => 
-      mapStatusToAdmin(f.statut) === "En attente d'approbation" || 
-      mapStatusToAdmin(f.statut) === "Reçu"
+    enAttenteVerification: factures.filter(f => 
+      f.statut === "Envoyée"
     ).length,
-    totalRejected: factures.filter(f => 
-      mapStatusToAdmin(f.statut) === "Rejetée"
+    aPayer: factures.filter(f => 
+      f.statut === "Payée" && !f.date_paiement
     ).length,
-    totalAmount: factures
-      .filter(f => mapStatusToAdmin(f.statut) === "Approuvée")
+    facturePaye: factures.filter(f => 
+      f.statut === "Payée" && f.date_paiement
+    ).length,
+    totalEnAttenteApprobation: factures
+      .filter(f => f.statut === "En attente de validation")
       .reduce((sum, f) => sum + f.montant_ttc, 0),
-    pendingAmount: factures
-      .filter(f => 
-        mapStatusToAdmin(f.statut) === "En attente d'approbation" ||
-        mapStatusToAdmin(f.statut) === "Reçu"
-      )
+    totalEnAttenteVerification: factures
+      .filter(f => f.statut === "Envoyée")
+      .reduce((sum, f) => sum + f.montant_ttc, 0),
+    totalAPayer: factures
+      .filter(f => f.statut === "Payée" && !f.date_paiement)
+      .reduce((sum, f) => sum + f.montant_ttc, 0),
+    totalPaye: factures
+      .filter(f => f.statut === "Payée" && f.date_paiement)
       .reduce((sum, f) => sum + f.montant_ttc, 0),
   };
 
   // Region data for visualization
-  const regionData = regies.map((regie) => {
-    const regieInvoices = factures.filter(f => {
-      // Find all contacts assigned to this regie
-      const regieContactIds = contacts
-        .filter((c: Contact) => c.assignedRegie === regie.id)
-        .map((c: Contact) => c.id || c._id);
+  // const regionData = regies.map((regie) => {
+  //   const regieInvoices = factures.filter(f => {
+  //     // Find all contacts assigned to this regie
+  //     const regieContactIds = contacts
+  //       .filter((c: Contact) => c.assignedRegie === regie.id)
+  //       .map((c: Contact) => c.id || c._id || "");
         
-      // Check if any of the invoice's contacts belong to this regie
-      return f.contact_ids.some(cid => regieContactIds.includes(cid)) && 
-             mapStatusToAdmin(f.statut) === "Approuvée";
-    });
+  //     // Check if any of the invoice's contacts belong to this regie
+  //     return f.contact_ids.some(cid => regieContactIds.includes(cid)) && 
+  //            mapStatusToAdmin(f.statut) === "Approuvée";
+  //   });
     
-    return {
-      region: regie.region,
-      count: regieInvoices.length,
-      amount: regieInvoices.reduce((sum, f) => sum + f.montant_ttc, 0),
-    };
-  }).filter(region => region.count > 0);
+  //   return {
+  //     region: regie.region,
+  //     count: regieInvoices.length,
+  //     amount: regieInvoices.reduce((sum, f) => sum + f.montant_ttc, 0),
+  //   };
+  // }).filter(region => region.count > 0);
 
   // Utility functions
   const getContactName = (contactId: string): string => {
@@ -261,7 +264,7 @@ export default function AdminFacturationPage() {
     }).format(montant);
   };
 
-  const formatDate = (dateString: string | null): string => {
+  const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return "-";
     const date = new Date(dateString);
     const options = { year: "numeric", month: "long", day: "numeric" } as Intl.DateTimeFormatOptions;
@@ -367,7 +370,13 @@ export default function AdminFacturationPage() {
         commentaire_admin: invoiceComment
       };
 
-      const res = await fetch(`/api/factures/${selectedInvoice._id}`, {
+      // Make sure _id exists before using it
+      const invoiceId = selectedInvoice._id;
+      if (!invoiceId) {
+        throw new Error("Invoice ID is undefined");
+      }
+
+      const res = await fetch(`/api/factures/${invoiceId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedFields),
@@ -422,7 +431,13 @@ export default function AdminFacturationPage() {
         commentaire_admin: invoiceComment
       };
 
-      const res = await fetch(`/api/factures/${selectedInvoice._id}`, {
+      // Make sure _id exists before using it
+      const invoiceId = selectedInvoice._id;
+      if (!invoiceId) {
+        throw new Error("Invoice ID is undefined");
+      }
+
+      const res = await fetch(`/api/factures/${invoiceId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedFields),
@@ -468,7 +483,13 @@ export default function AdminFacturationPage() {
         commentaire_admin: invoiceComment || "Paiement enregistré"
       };
 
-      const res = await fetch(`/api/factures/${selectedInvoice._id}`, {
+      // Make sure _id exists before using it
+      const invoiceId = selectedInvoice._id;
+      if (!invoiceId) {
+        throw new Error("Invoice ID is undefined");
+      }
+
+      const res = await fetch(`/api/factures/${invoiceId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedFields),
@@ -586,60 +607,38 @@ export default function AdminFacturationPage() {
                 transition={{ delay: 0.2 }}
               >
                 <motion.div
-                  className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#d2fcb2]/20 to-[#bfddf9]/30 border border-[#bfddf9]/30"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">Total Approuvé</p>
-                    <div className="p-2 rounded-full bg-white/60">
-                      <CheckBadgeIcon className="h-5 w-5 text-[#213f5b]" />
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-[#213f5b]">
-                    {formatMontant(statsData.totalAmount)}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {statsData.totalApproved} factures
-                  </p>
-                </motion.div>
-
-                <motion.div
                   className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#bfddf9]/20 to-[#d2fcb2]/30 border border-[#bfddf9]/30"
                   whileHover={{ scale: 1.02 }}
                 >
                   <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">En Attente</p>
+                    <p className="text-sm font-medium text-[#213f5b]">En attente d&apos;approbation</p>
                     <div className="p-2 rounded-full bg-white/60">
                       <ClockIcon className="h-5 w-5 text-[#213f5b]" />
                     </div>
                   </div>
                   <p className="text-2xl font-bold text-[#213f5b]">
-                    {formatMontant(statsData.pendingAmount)}
+                    {formatMontant(statsData.totalEnAttenteApprobation)}
                   </p>
                   <p className="text-xs text-gray-600 mt-1">
-                    {statsData.totalPending} factures à traiter
+                    {statsData.enAttenteApprobation} factures
                   </p>
                 </motion.div>
 
                 <motion.div
-                  className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#d2fcb2]/10 via-[#bfddf9]/20 to-[#d2fcb2]/10 border border-[#bfddf9]/30"
+                  className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#d2fcb2]/20 to-[#bfddf9]/30 border border-[#bfddf9]/30"
                   whileHover={{ scale: 1.02 }}
                 >
                   <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">Taux d&apos;Approbation</p>
+                    <p className="text-sm font-medium text-[#213f5b]">En attente de verification</p>
                     <div className="p-2 rounded-full bg-white/60">
-                      <ChartBarIcon className="h-5 w-5 text-[#213f5b]" />
+                      <MagnifyingGlassIcon className="h-5 w-5 text-[#213f5b]" />
                     </div>
                   </div>
                   <p className="text-2xl font-bold text-[#213f5b]">
-                    {Math.round(
-                      (statsData.totalApproved /
-                        (statsData.totalApproved + statsData.totalRejected + statsData.totalPending || 1)) * 100
-                    )}
-                    %
+                    {formatMontant(statsData.totalEnAttenteVerification)}
                   </p>
                   <p className="text-xs text-gray-600 mt-1">
-                    Des factures soumises
+                    {statsData.enAttenteVerification} factures
                   </p>
                 </motion.div>
 
@@ -648,14 +647,34 @@ export default function AdminFacturationPage() {
                   whileHover={{ scale: 1.02 }}
                 >
                   <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">Délai Moyen</p>
+                    <p className="text-sm font-medium text-[#213f5b]">A payer</p>
                     <div className="p-2 rounded-full bg-white/60">
-                      <CalendarIcon className="h-5 w-5 text-[#213f5b]" />
+                      <BanknotesIcon className="h-5 w-5 text-[#213f5b]" />
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-[#213f5b]">2.3 jours</p>
+                  <p className="text-2xl font-bold text-[#213f5b]">
+                    {formatMontant(statsData.totalAPayer)}
+                  </p>
                   <p className="text-xs text-gray-600 mt-1">
-                    D&apos;approbation des factures
+                    {statsData.aPayer} factures
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#d2fcb2]/10 via-[#bfddf9]/20 to-[#d2fcb2]/10 border border-[#bfddf9]/30"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-sm font-medium text-[#213f5b]">Facture payé</p>
+                    <div className="p-2 rounded-full bg-white/60">
+                      <CheckBadgeIcon className="h-5 w-5 text-[#213f5b]" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-[#213f5b]">
+                    {formatMontant(statsData.totalPaye)}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {statsData.facturePaye} factures
                   </p>
                 </motion.div>
               </motion.div>
@@ -952,39 +971,74 @@ export default function AdminFacturationPage() {
               >
                 <div className="bg-white rounded-xl shadow-sm p-6 h-full">
                   <h3 className="text-lg font-semibold text-[#213f5b] mb-4">
-                    Facturation par région
+                    Par utilisateur
                   </h3>
-                  {regionData.length === 0 ? (
-                    <p className="text-gray-500">Aucune donnée de région disponible.</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {regionData.map((region, index) => (
-                        <div key={index} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <span className="font-medium text-[#213f5b]">
-                                {region.region}
-                              </span>
-                              <span className="text-sm text-gray-500 ml-2">
-                                ({region.count} factures)
-                              </span>
+                  
+                  {/* Chart visualization */}
+                  <div className="h-60 mb-4">
+                    {/* This would be a bar chart showing invoice amounts per user */}
+                    <div className="w-full h-full bg-gradient-to-b from-[#bfddf9]/30 to-[#d2fcb2]/20 rounded-lg relative overflow-hidden">
+                      {contacts.filter(c => c.assignedRegie).slice(0, 5).map((contact, idx) => {
+                        // Calculate total amount for this user
+                        const contactId = contact.id || contact._id || "";
+                        
+                        const totalAmount = factures
+                          .filter(f => f.contact_ids.includes(contactId) && f.statut === "Payée")
+                          .reduce((sum, f) => sum + f.montant_ttc, 0);
+                          
+                        // Calculate width percentage based on max total
+                        const maxTotal = Math.max(...contacts
+                          .filter(c => c.assignedRegie)
+                          .map(c => {
+                            const cId = c.id || c._id || "";
+                            return factures
+                              .filter(f => f.contact_ids.includes(cId) && f.statut === "Payée")
+                              .reduce((sum, f) => sum + f.montant_ttc, 0);
+                          }));
+                          
+                        const widthPercentage = Math.max(5, Math.round((totalAmount / (maxTotal || 1)) * 90));
+                        
+                        return (
+                          <div 
+                            key={contactId || idx} 
+                            className="flex items-center my-3 px-3"
+                          >
+                            <div className="w-32 mr-3 text-sm truncate">
+                              {contact.firstName} {contact.lastName}
                             </div>
-                            <span className="font-medium text-[#213f5b]">
-                              {formatMontant(region.amount)}
-                            </span>
+                            <div className="flex-1 h-8 bg-gray-100 rounded-lg">
+                              <div 
+                                className="h-8 rounded-lg bg-[#213f5b]"
+                                style={{ width: `${widthPercentage}%` }}
+                              >
+                                <div className="flex h-full items-center justify-end">
+                                  <span className="text-white text-xs font-medium px-2">
+                                    {formatMontant(totalAmount)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <motion.div
-                              className="h-2 rounded-full bg-[#213f5b]"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${(region.amount / statsData.totalAmount) * 100}%` }}
-                              transition={{ duration: 0.8 }}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                  )}
+                  </div>
+                  
+                  {/* Total section */}
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold text-[#213f5b]">Total</span>
+                      <span className="text-xl font-bold text-[#213f5b]">
+                        {formatMontant(factures
+                          .filter(f => f.statut === "Payée")
+                          .reduce((sum, f) => sum + f.montant_ttc, 0)
+                        )}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      {factures.filter(f => f.statut === "Payée").length} factures payées
+                    </div>
+                  </div>
                 </div>
               </motion.div>
 
@@ -1182,12 +1236,12 @@ export default function AdminFacturationPage() {
                       <div className="text-sm text-gray-500">Aucun contact lié à cette facture</div>
                     ) : (
                       <div className="space-y-2">
-                        {selectedInvoice.contact_ids.map(contactId => {
+                        {selectedInvoice.contact_ids.map((contactId, idx) => {
                           const contact = contacts.find(c => (c.id === contactId || c._id === contactId));
                           if (!contact) return null;
                           
                           return (
-                            <div key={contactId} className="text-sm">
+                            <div key={idx} className="text-sm">
                               <div className="font-medium">{contact.firstName} {contact.lastName}</div>
                               <div className="text-gray-500">{contact.mailingAddress}</div>
                               {contact.email && <div className="text-gray-500">{contact.email}</div>}
