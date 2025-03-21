@@ -57,7 +57,7 @@ import {
  *    TYPE DEFINITIONS
  *  --------------------- */
 type TaskPriority = "low" | "medium" | "high" | "urgent";
-type TaskStatus = "not_started" | "in_progress" | "under_review" | "completed" | "blocked" | "canceled" | "deferred";
+type TaskStatus = "not_started" | "in_progress" | "completed";
 type TaskCategory = 
   | "administrative" 
   | "finance" 
@@ -162,11 +162,7 @@ interface Task {
 const validTaskStatuses: TaskStatus[] = [
   "not_started", 
   "in_progress", 
-  "under_review", 
-  "completed", 
-  "blocked", 
-  "canceled", 
-  "deferred"
+  "completed"
 ];
 
 interface SortableTaskCardProps {
@@ -184,16 +180,8 @@ const StatusBadge = ({ status }: { status: TaskStatus }) => {
         return "bg-gray-100 text-gray-800 border-gray-300";
       case "in_progress":
         return "bg-blue-100 text-blue-800 border-blue-300";
-      case "under_review":
-        return "bg-purple-100 text-purple-800 border-purple-300";
       case "completed":
         return "bg-green-100 text-green-800 border-green-300";
-      case "blocked":
-        return "bg-red-100 text-red-800 border-red-300";
-      case "canceled":
-        return "bg-red-100 text-red-800 border-red-300";
-      case "deferred":
-        return "bg-amber-100 text-amber-800 border-amber-300";
       default:
         return "bg-gray-100 text-gray-800 border-gray-300";
     }
@@ -202,21 +190,13 @@ const StatusBadge = ({ status }: { status: TaskStatus }) => {
   const getStatusIcon = (status: TaskStatus) => {
     switch (status) {
       case "not_started":
-        return <ClockIcon className="h-3.5 w-3.5" />;
+        return <ClockIcon className="h-4 w-4" />;
       case "in_progress":
-        return <PlayIcon className="h-3.5 w-3.5" />;
-      case "under_review":
-        return <MagnifyingGlassIcon className="h-3.5 w-3.5" />;
+        return <PlayIcon className="h-4 w-4" />;
       case "completed":
-        return <CheckIcon className="h-3.5 w-3.5" />;
-      case "blocked":
-        return <NoSymbolIcon className="h-3.5 w-3.5" />;
-      case "canceled":
-        return <XMarkIcon className="h-3.5 w-3.5" />;
-      case "deferred":
-        return <ArrowPathIcon className="h-3.5 w-3.5" />;
+        return <CheckIcon className="h-4 w-4" />;
       default:
-        return <ClockIcon className="h-3.5 w-3.5" />;
+        return <ClockIcon className="h-4 w-4" />;
     }
   };
 
@@ -226,23 +206,15 @@ const StatusBadge = ({ status }: { status: TaskStatus }) => {
         return "À faire";
       case "in_progress":
         return "En cours";
-      case "under_review":
-        return "En revue";
       case "completed":
         return "Terminé";
-      case "blocked":
-        return "Bloqué";
-      case "canceled":
-        return "Annulé";
-      case "deferred":
-        return "Reporté";
       default:
         return "Non défini";
     }
   };
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusClasses(status)}`}>
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border ${getStatusClasses(status)}`}>
       {getStatusIcon(status)}
       {getStatusLabel(status)}
     </span>
@@ -855,7 +827,7 @@ export default function TasksPage() {
       id: "task007",
       title: "Préparer le dossier pour la certification ISO 9001",
       description: "Rassembler la documentation requise, revoir les procédures qualité et préparer l'entreprise pour l'audit de certification.",
-      status: "deferred",
+      status: "not_started",
       priority: "medium",
       category: "compliance",
       created_at: "2025-03-12T11:15:00Z",
@@ -1022,7 +994,7 @@ export default function TasksPage() {
       id: "task012",
       title: "Résoudre le litige avec le fournisseur de services informatiques",
       description: "Examiner les termes du contrat, préparer un dossier de réclamation et organiser une réunion de médiation pour résoudre le différend sur la qualité des services.",
-      status: "blocked",
+      status: "in_progress",
       priority: "high",
       category: "legal",
       created_at: "2025-03-15T09:30:00Z",
@@ -1062,7 +1034,25 @@ export default function TasksPage() {
     // Simulate API fetch
     setIsLoading(true);
     setTimeout(() => {
-      setTasks(sampleTasks);
+      // Map old statuses to new ones for any existing tasks
+      const updatedTasks = sampleTasks.map(task => {
+        let updatedStatus = task.status;
+        
+        // Map the removed statuses to our new simplified set
+        // Using type assertion to tell TypeScript this is intentional
+        if ((task.status as string) === "under_review" || (task.status as string) === "blocked") {
+          updatedStatus = "in_progress";
+        } else if ((task.status as string) === "canceled" || (task.status as string) === "deferred") {
+          updatedStatus = "not_started";
+        }
+        
+        return {
+          ...task,
+          status: updatedStatus as TaskStatus
+        };
+      });
+      
+      setTasks(updatedTasks);
       setUsers(sampleUsers);
       setProjects(sampleProjects);
       setIsLoading(false);
@@ -1181,7 +1171,7 @@ export default function TasksPage() {
     
     if (groupBy === "status") {
       // Pre-create groups to ensure order
-      ["not_started", "in_progress", "under_review", "completed", "blocked", "deferred", "canceled"].forEach(status => {
+      ["not_started", "in_progress", "completed"].forEach(status => {
         groups[status] = [];
       });
       
@@ -1339,11 +1329,7 @@ export default function TasksPage() {
           const statusOrder = { 
             not_started: 0, 
             in_progress: 1, 
-            under_review: 2, 
-            completed: 3, 
-            blocked: 4, 
-            deferred: 5, 
-            canceled: 6 
+            completed: 2
           };
           comparison = statusOrder[a.status] - statusOrder[b.status];
           break;
@@ -1441,67 +1427,66 @@ export default function TasksPage() {
   };
 
   // Handle task drag and drop
-  // Updated handleDragEnd function with proper null checks
-const handleDragEnd = (event: DragEndEvent) => {
-  const { active, over } = event;
-  
-  setActiveTask(null);
-  
-  if (!over) return;
-  
-  const activeId = active.id as string;
-  const overId = over.id as string;
-  
-  // Find the active task
-  const draggedTask = tasks.find(task => task.id === activeId);
-  if (!draggedTask) return;
-  
-  // Special case for direct status column drops
-  // This happens when we drop on the column and not on another task
-  if (validTaskStatuses.includes(overId as TaskStatus)) {
-    // Direct drop onto a status column
-    handleTaskStatusChange(draggedTask.id, overId as TaskStatus);
-    return;
-  }
-  
-  // Make sure both active and over have data.current before proceeding
-  if (!active.data.current || !over.data.current) return;
-  
-  // Check if we're dragging between columns
-  const activeContainerId = active.data.current.sortable?.containerId;
-  const overContainerId = over.data.current.sortable?.containerId;
-  
-  if (activeContainerId !== overContainerId) {
-    // This is a drop into a different column (status change)
-    if (overContainerId && validTaskStatuses.includes(overContainerId as TaskStatus)) {
-      handleTaskStatusChange(draggedTask.id, overContainerId as TaskStatus);
-    }
-  } else if (activeContainerId) {
-    // This is a reordering within the same column
-    const activeIndex = active.data.current.sortable?.index;
-    const overIndex = over.data.current.sortable?.index;
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
     
-    if (activeIndex !== undefined && overIndex !== undefined && activeIndex !== overIndex) {
-      // Get the container ID (status)
-      const containerId = activeContainerId as TaskStatus;
-      
-      // Update tasks by reordering them
-      setTasks(prevTasks => {
-        // Filter tasks by the container/status
-        const tasksInContainer = prevTasks.filter(task => task.status === containerId);
-        
-        // Reorder the tasks within this container
-        const reorderedTasks = arrayMove(tasksInContainer, activeIndex, overIndex);
-        
-        // Merge back with tasks not in this container
-        return [
-          ...prevTasks.filter(task => task.status !== containerId),
-          ...reorderedTasks
-        ];
-      });
+    setActiveTask(null);
+    
+    if (!over) return;
+    
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    
+    // Find the active task
+    const draggedTask = tasks.find(task => task.id === activeId);
+    if (!draggedTask) return;
+    
+    // Special case for direct status column drops
+    // This happens when we drop on the column and not on another task
+    if (validTaskStatuses.includes(overId as TaskStatus)) {
+      // Direct drop onto a status column
+      handleTaskStatusChange(draggedTask.id, overId as TaskStatus);
+      return;
     }
-  }
-};
+    
+    // Make sure both active and over have data.current before proceeding
+    if (!active.data.current || !over.data.current) return;
+    
+    // Check if we're dragging between columns
+    const activeContainerId = active.data.current.sortable?.containerId;
+    const overContainerId = over.data.current.sortable?.containerId;
+    
+    if (activeContainerId !== overContainerId) {
+      // This is a drop into a different column (status change)
+      if (overContainerId && validTaskStatuses.includes(overContainerId as TaskStatus)) {
+        handleTaskStatusChange(draggedTask.id, overContainerId as TaskStatus);
+      }
+    } else if (activeContainerId) {
+      // This is a reordering within the same column
+      const activeIndex = active.data.current.sortable?.index;
+      const overIndex = over.data.current.sortable?.index;
+      
+      if (activeIndex !== undefined && overIndex !== undefined && activeIndex !== overIndex) {
+        // Get the container ID (status)
+        const containerId = activeContainerId as TaskStatus;
+        
+        // Update tasks by reordering them
+        setTasks(prevTasks => {
+          // Filter tasks by the container/status
+          const tasksInContainer = prevTasks.filter(task => task.status === containerId);
+          
+          // Reorder the tasks within this container
+          const reorderedTasks = arrayMove(tasksInContainer, activeIndex, overIndex);
+          
+          // Merge back with tasks not in this container
+          return [
+            ...prevTasks.filter(task => task.status !== containerId),
+            ...reorderedTasks
+          ];
+        });
+      }
+    }
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -1518,11 +1503,7 @@ const handleDragEnd = (event: DragEndEvent) => {
       switch (groupKey) {
         case "not_started": return "À faire";
         case "in_progress": return "En cours";
-        case "under_review": return "En revue";
         case "completed": return "Terminé";
-        case "blocked": return "Bloqué";
-        case "deferred": return "Reporté";
-        case "canceled": return "Annulé";
         default: return groupKey;
       }
     } else if (groupBy === "priority") {
@@ -1576,11 +1557,7 @@ const handleDragEnd = (event: DragEndEvent) => {
       switch (groupKey) {
         case "not_started": return "bg-gray-100";
         case "in_progress": return "bg-blue-50";
-        case "under_review": return "bg-purple-50";
         case "completed": return "bg-green-50";
-        case "blocked": return "bg-red-50";
-        case "deferred": return "bg-amber-50";
-        case "canceled": return "bg-red-50";
         default: return "bg-gray-50";
       }
     } else if (groupBy === "priority") {
@@ -1625,11 +1602,7 @@ const handleDragEnd = (event: DragEndEvent) => {
       switch (groupKey) {
         case "not_started": return "bg-gray-100 text-gray-800";
         case "in_progress": return "bg-blue-100 text-blue-800";
-        case "under_review": return "bg-purple-100 text-purple-800";
         case "completed": return "bg-green-100 text-green-800";
-        case "blocked": return "bg-red-100 text-red-800";
-        case "deferred": return "bg-amber-100 text-amber-800";
-        case "canceled": return "bg-red-100 text-red-800";
         default: return "bg-gray-100 text-gray-800";
       }
     } else if (groupBy === "priority") {
@@ -1659,14 +1632,10 @@ const handleDragEnd = (event: DragEndEvent) => {
   const getGroupIcon = (groupKey: string) => {
     if (groupBy === "status") {
       switch (groupKey) {
-        case "not_started": return <ClockIcon className="h-4 w-4" />;
-        case "in_progress": return <PlayIcon className="h-4 w-4" />;
-        case "under_review": return <MagnifyingGlassIcon className="h-4 w-4" />;
-        case "completed": return <CheckIcon className="h-4 w-4" />;
-        case "blocked": return <NoSymbolIcon className="h-4 w-4" />;
-        case "deferred": return <ArrowPathIcon className="h-4 w-4" />;
-        case "canceled": return <XMarkIcon className="h-4 w-4" />;
-        default: return <TagIcon className="h-4 w-4" />;
+        case "not_started": return <ClockIcon className="h-5 w-5" />;
+        case "in_progress": return <PlayIcon className="h-5 w-5" />;
+        case "completed": return <CheckIcon className="h-5 w-5" />;
+        default: return <TagIcon className="h-5 w-5" />;
       }
     } else if (groupBy === "priority") {
       switch (groupKey) {
@@ -1716,81 +1685,100 @@ const handleDragEnd = (event: DragEndEvent) => {
     return (
       <motion.div
         key={task.id}
-        className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all cursor-pointer mb-2 overflow-hidden"
-        whileHover={{ y: -2 }}
+        className="bg-white rounded-lg shadow-md border hover:shadow-lg transition-all cursor-pointer mb-4 overflow-hidden"
+        whileHover={{ y: -3, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
         onClick={() => handleTaskClick(task)}
       >
         {/* Project indicator (if task has project) */}
         {task.project_id && (
           <div 
-            className="h-1.5 w-full" 
+            className="h-2 w-full" 
             style={{ 
               backgroundColor: getProjectById(task.project_id)?.color || '#cbd5e1',
             }}
           ></div>
         )}
         
-        <div className="p-3">
+        <div className="p-5">
           {/* Task title */}
-          <div className="mb-2">
+          <div className="mb-3">
             <div className="flex items-start justify-between">
-              <h3 className="text-sm font-medium text-gray-900 mr-2">
+              <h3 className="text-base font-medium text-gray-900 mr-2 line-clamp-2">
                 {task.title}
               </h3>
               {task.is_favorite && (
-                <StarIcon className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                <StarIcon className="h-5 w-5 text-amber-500 flex-shrink-0" />
               )}
             </div>
             
+            {/* Description preview */}
+            {task.description && (
+              <p className="text-sm text-gray-600 mt-1.5 line-clamp-2">
+                {task.description}
+              </p>
+            )}
+            
             {/* Due date */}
             {task.due_date && (
-              <div className={`text-xs flex items-center gap-1 mt-1 ${getDueDateStatusClass(task.due_date)}`}>
-                <CalendarIcon className="h-3.5 w-3.5" />
+              <div className={`text-sm flex items-center gap-1.5 mt-2 ${getDueDateStatusClass(task.due_date)}`}>
+                <CalendarIcon className="h-4 w-4" />
                 {formatDate(task.due_date, 'short')}
               </div>
             )}
           </div>
           
+          {/* Progress bar */}
+          {task.completion_percentage > 0 && (
+            <div className="mt-3 mb-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-500">Progression</span>
+                <span className="text-xs font-medium">{task.completion_percentage}%</span>
+              </div>
+              <ProgressBar percentage={task.completion_percentage} small={false} />
+            </div>
+          )}
+          
           {/* Task details */}
-          <div className="flex justify-between items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex justify-between items-center gap-2 flex-wrap mt-4 pt-3 border-t border-gray-100">
+            <div className="flex items-center gap-2 flex-wrap">
               <PriorityBadge priority={task.priority} />
               {task.category && (
                 <CategoryBadge category={task.category} />
               )}
             </div>
             
-            {/* Assignee */}
-            <div className="flex justify-end">
+            {/* Assignee with name */}
+            <div className="flex items-center gap-2">
               {task.assignee_id ? (
-                <UserAvatar user={getUserById(task.assignee_id)} size="sm" />
+                <>
+                  <UserAvatar user={getUserById(task.assignee_id)} size="sm" />
+                  <span className="text-xs text-gray-600">
+                    {getDisplayName(getUserById(task.assignee_id))}
+                  </span>
+                </>
               ) : (
-                <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-                  <UserIcon className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-1.5">
+                  <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                    <UserIcon className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-xs text-gray-500">Non assigné</span>
                 </div>
               )}
             </div>
           </div>
           
-          {/* Progress bar */}
-          {task.completion_percentage > 0 && (
-            <div className="mt-2">
-              <ProgressBar percentage={task.completion_percentage} small />
-            </div>
-          )}
-          
           {/* Task meta info */}
-          <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+          <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
             <div className="flex items-center gap-1">
               <ClockIcon className="h-3.5 w-3.5" />
               <span>ID: {task.id.replace('task', '#')}</span>
             </div>
             
             {/* Indicators */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {task.checklist && task.checklist.length > 0 && (
-                <div className="flex items-center gap-0.5">
-                  <ClipboardDocumentCheckIcon className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-1">
+                  <ClipboardDocumentCheckIcon className="h-4 w-4" />
                   <span>
                     {task.checklist.reduce((total, checklist) => 
                       total + checklist.items.filter(item => item.completed).length, 0
@@ -1802,15 +1790,15 @@ const handleDragEnd = (event: DragEndEvent) => {
               )}
               
               {task.attachments && task.attachments.length > 0 && (
-                <div className="flex items-center gap-0.5">
-                  <PaperClipIcon className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-1">
+                  <PaperClipIcon className="h-4 w-4" />
                   <span>{task.attachments.length}</span>
                 </div>
               )}
               
               {task.comments && task.comments.length > 0 && (
-                <div className="flex items-center gap-0.5">
-                  <ChatBubbleLeftRightIcon className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-1">
+                  <ChatBubbleLeftRightIcon className="h-4 w-4" />
                   <span>{task.comments.length}</span>
                 </div>
               )}
@@ -1867,7 +1855,7 @@ const handleDragEnd = (event: DragEndEvent) => {
             <div className="flex items-center gap-2">
               <UserAvatar user={getUserById(task.assignee_id)} size="sm" />
               <span className="text-sm text-gray-900">
-              {getDisplayName(getUserById(task.assignee_id))}
+                {getDisplayName(getUserById(task.assignee_id))}
               </span>
             </div>
           ) : (
@@ -1942,7 +1930,6 @@ const handleDragEnd = (event: DragEndEvent) => {
       completed: tasks.filter(t => t.status === "completed").length,
       inProgress: tasks.filter(t => t.status === "in_progress").length,
       notStarted: tasks.filter(t => t.status === "not_started").length,
-      blocked: tasks.filter(t => t.status === "blocked").length,
       overdue: tasks.filter(t => {
         if (!t.due_date || t.status === "completed") return false;
         return new Date(t.due_date) < new Date();
@@ -2079,11 +2066,7 @@ const handleDragEnd = (event: DragEndEvent) => {
                           <option value="all">Tous les statuts</option>
                           <option value="not_started">À faire</option>
                           <option value="in_progress">En cours</option>
-                          <option value="under_review">En revue</option>
                           <option value="completed">Terminé</option>
-                          <option value="blocked">Bloqué</option>
-                          <option value="deferred">Reporté</option>
-                          <option value="canceled">Annulé</option>
                         </select>
                       </div>
                       
@@ -2591,21 +2574,21 @@ const handleDragEnd = (event: DragEndEvent) => {
                     <h3 className="text-sm uppercase text-gray-500 font-medium mb-2">Informations</h3>
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <dl className="grid grid-cols-1 gap-2 text-sm">
-                        <div className="flex justify-between">
-                          <dt className="text-gray-500">Assigné à</dt>
-                          <dd className="font-medium text-gray-900">
-                            {selectedTask.assignee_id ? (
-                              <div className="flex items-center gap-2">
-                                <UserAvatar user={getUserById(selectedTask.assignee_id)} size="sm" />
-                                <span>
-                                  {getDisplayName(getUserById(selectedTask.assignee_id))}
-                                </span>
-                              </div>
-                            ) : (
-                              "Non assigné"
-                            )}
-                          </dd>
-                        </div>
+                      <div className="flex justify-between">
+                        <dt className="text-gray-500">Assigné à</dt>
+                        <dd className="font-medium text-gray-900">
+                          {selectedTask.assignee_id ? (
+                            <div className="flex items-center gap-2">
+                              <UserAvatar user={getUserById(selectedTask.assignee_id)} size="sm" />
+                              <span>
+                                {getDisplayName(getUserById(selectedTask.assignee_id))}
+                              </span>
+                            </div>
+                          ) : (
+                            "Non assigné"
+                          )}
+                        </dd>
+                      </div>
                         <div className="flex justify-between">
                           <dt className="text-gray-500">Projet</dt>
                           <dd className="font-medium text-gray-900">
@@ -2950,11 +2933,7 @@ const handleDragEnd = (event: DragEndEvent) => {
                     >
                       <option value="not_started">À faire</option>
                       <option value="in_progress">En cours</option>
-                      <option value="under_review">En revue</option>
                       <option value="completed">Terminé</option>
-                      <option value="blocked">Bloqué</option>
-                      <option value="deferred">Reporté</option>
-                      <option value="canceled">Annulé</option>
                     </select>
                   </div>
                   

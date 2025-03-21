@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Enhanced Ecology'B Signature</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .signature-container {
+            width: 620px;
+            padding: 45px;
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(191, 221, 249, 0.8);
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        .signature-container:hover {
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.15), 0 0 50px rgba(191, 221, 249, 0.2);
+            transform: translateY(-5px);
+        }
+        
+        /* Premium background elements */
+        .signature-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .bg-texture {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9 0h2v20H9V0zm25.134.84l1.732 1-10 17.32-1.732-1 10-17.32zm-20 20l1.732 1-10 17.32-1.732-1 10-17.32zM58.16 4.134l1 1.732-17.32 10-1-1.732 17.32-10zm-40 40l1 1.732-17.32 10-1-1.732 17.32-10zM80 9v2H60V9h20zM20 69v2H0v-2h20zm79.32-55l-1 1.732-17.32-10L82 4l17.32 10zm-80 80l-1 1.732-17.32-10L2 84l17.32 10zm96.546-75.84l-1.732 1-10-17.32 1.732-1 10 17.32zm-100 100l-1.732 1-10-17.32 1.732-1 10 17.32zM38.16 24.134l1 1.732-17.32 10-1-1.732 17.32-10zM60 29v2H40v-2h20zm19.32 5l-1 1.732-17.32-10L62 24l17.32 10zm16.546 4.16l-1.732 1-10-17.32 1.732-1 10 17.32zM111 40h-2V20h2v20zm3.134.84l1.732 1-10 17.32-1.732-1 10-17.32zM40 49v2H20v-2h20zm19.32 5l-1 1.732-17.32-10L42 44l17.32 10zm-20 20l-1 1.732-17.32-10L22 64l17.32 10zm52.546-59.84l-1.732 1-10-17.32 1.732-1 10 17.32zm-40 40l-1.732 1-10-17.32 1.732-1 10 17.32zM91 60h-2V40h2v20zm3.134.84l1.732 1-10 17.32-1.732-1 10-17.32zm-60 10l1.732 1-10 17.32-1.732-1 10-17.32zm-20 20l1.732 1-10 17.32-1.732-1 10-17.32zM80 69v2H60v-2h20zm-40 40v2H20v-2h20zm60-30v2H80v-2h20zm-20 20v2H60v-2h20zm-40 40v2H20v-2h20zm60-30v2H80v-2h20zm-20 20v2H60v-2h20zm60-30v2h-20v-2h20z' fill='%23213f5b' fill-opacity='0.015' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.7;
+        }
+        
+        .decoration-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 0%;
+            background: linear-gradient(to bottom, #213f5b, #bfddf9, #213f5b);
+            animation: lineEnterDeluxe 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        
+        .accent-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(191, 221, 249, 0.04) 0%, rgba(255, 255, 255, 0) 70%);
+            animation: pulseDeluxe 15s ease-in-out infinite alternate;
+        }
+        
+        .accent-circle-1 {
+            width: 400px;
+            height: 400px;
+            right: -200px;
+            top: -100px;
+            animation-delay: 0s;
+        }
+        
+        .accent-circle-2 {
+            width: 250px;
+            height: 250px;
+            left: -100px;
+            bottom: -50px;
+            animation-delay: 5s;
+        }
+        
+        .accent-circle-3 {
+            width: 150px;
+            height: 150px;
+            right: 100px;
+            bottom: 100px;
+            animation-delay: 10s;
+            background: radial-gradient(circle, rgba(191, 221, 249, 0.03) 0%, rgba(255, 255, 255, 0) 70%);
+        }
+        
+        /* Enhanced Ecosystem Showcase */
+        .eco-animation-container {
+            height: 250px; /* Increased height for more space */
+            background: linear-gradient(135deg, rgba(246, 250, 248, 0.6), rgba(238, 245, 242, 0.2));
+            border-radius: 24px; /* Increased border radius */
+            margin: 15px 0 40px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(35, 121, 92, 0.1);
+            box-shadow: 
+                0 20px 50px rgba(35, 121, 92, 0.08), 
+                inset 0 0 20px rgba(255, 255, 255, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+                0 10px 30px rgba(0, 0, 0, 0.05);
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUpDeluxe 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation-delay: 0.8s;
+            perspective: 1000px;
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        .eco-animation-container:hover {
+            transform: translateY(0) scale(1.02);
+            box-shadow: 
+                0 30px 60px rgba(35, 121, 92, 0.12), 
+                inset 0 0 30px rgba(255, 255, 255, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+                0 15px 40px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* Enhanced Day-Night Cycle Effect */
+        .eco-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .sky-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(158, 214, 233, 0.3) 0%, rgba(215, 240, 255, 0.15) 100%);
+            animation: skyColorCycle 20s linear infinite;
+            transition: background 0.5s ease;
+        }
+        
+        /* Dynamic time-based lighting */
+        .lighting-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 70% 20%, rgba(255, 255, 235, 0.2) 0%, rgba(255, 255, 235, 0) 70%);
+            mix-blend-mode: soft-light;
+            opacity: 0;
+            animation: lightingChange 20s linear infinite;
+            pointer-events: none;
+        }
+        
+        .mountains {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            overflow: hidden;
+        }
+        
+        .mountain {
+            position: absolute;
+            bottom: 0;
+            opacity: 0.4;
+            transform: translateY(100%);
+            animation: riseMountain 2s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.1));
+        }
+        
+        .mountain-1 {
+            left: 10%;
+            width: 160px;
+            height: 90px;
+            background: linear-gradient(135deg, #0F4737 20%, #155C46 80%);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 1.2s;
+        }
+        
+        .mountain-2 {
+            left: 30%;
+            width: 200px;
+            height: 120px;
+            background: linear-gradient(135deg, #155C46 20%, #1A6E53 80%);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 1.4s;
+        }
+        
+        .mountain-3 {
+            right: 15%;
+            width: 220px;
+            height: 100px;
+            background: linear-gradient(135deg, #1A6E53 20%, #23795C 80%);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 1.6s;
+        }
+        
+        /* Mountain snow caps */
+        .mountain-1::after,
+        .mountain-2::after,
+        .mountain-3::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 20%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            opacity: 0.7;
+        }
+        
+        /* Enhanced Sun/Moon */
+        .celestial-body {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #FFE175 30%, #FFB52E 70%, #FF9500 100%);
+            box-shadow: 
+                0 0 40px rgba(255, 192, 93, 0.7), 
+                0 0 80px rgba(255, 192, 93, 0.4), 
+                0 0 120px rgba(255, 192, 93, 0.2);
+            opacity: 0;
+            animation: fadeInDeluxe 1.5s ease forwards, celestialMovement 20s linear infinite;
+            animation-delay: 1.8s, 2s;
+            z-index: 2;
+            filter: blur(0.5px);
+        }
+        
+        .celestial-beam {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            opacity: 0;
+            transform-origin: center;
+            animation: beamPulse 10s ease-in-out infinite alternate;
+            animation-delay: 2s;
+        }
+        
+        .beam {
+            position: absolute;
+            top: -120px;
+            left: -2px;
+            width: 4px;
+            height: 120px;
+            background: linear-gradient(to top, rgba(255, 213, 93, 0), rgba(255, 213, 93, 0.4));
+            transform-origin: bottom center;
+        }
+        
+        .beam-1 { transform: rotate(0deg); }
+        .beam-2 { transform: rotate(45deg); }
+        .beam-3 { transform: rotate(90deg); }
+        .beam-4 { transform: rotate(135deg); }
+        .beam-5 { transform: rotate(180deg); }
+        .beam-6 { transform: rotate(225deg); }
+        .beam-7 { transform: rotate(270deg); }
+        .beam-8 { transform: rotate(315deg); }
+        
+        /* Enhanced clouds with depth and shadow */
+        .cloud {
+            position: absolute;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            border-radius: 50%;
+            opacity: 0;
+            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.05));
+        }
+        
+        .cloud::before,
+        .cloud::after {
+            content: '';
+            position: absolute;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            border-radius: 50%;
+        }
+        
+        .cloud-1 {
+            top: 30px;
+            left: -60px;
+            width: 60px;
+            height: 25px;
+            animation: moveCloud 30s linear infinite, fadeInDeluxe 1s ease forwards;
+            animation-delay: 0s, 2.2s;
+        }
+        
+        .cloud-1::before {
+            top: -15px;
+            left: 10px;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .cloud-1::after {
+            top: -10px;
+            left: 30px;
+            width: 25px;
+            height: 25px;
+        }
+        
+        .cloud-2 {
+            top: 70px;
+            left: -100px;
+            width: 50px;
+            height: 20px;
+            animation: moveCloud 25s linear infinite, fadeInDeluxe 1s ease forwards;
+            animation-delay: 5s, 2.4s;
+        }
+        
+        .cloud-2::before {
+            top: -12px;
+            left: 8px;
+            width: 25px;
+            height: 25px;
+        }
+        
+        .cloud-2::after {
+            top: -8px;
+            left: 25px;
+            width: 20px;
+            height: 20px;
+        }
+        
+        /* New cloud with different path */
+        .cloud-3 {
+            top: 45px;
+            left: -80px;
+            width: 45px;
+            height: 18px;
+            animation: moveCloudAlt 35s linear infinite, fadeInDeluxe 1s ease forwards;
+            animation-delay: 10s, 2.6s;
+        }
+        
+        .cloud-3::before {
+            top: -10px;
+            left: 6px;
+            width: 22px;
+            height: 22px;
+        }
+        
+        .cloud-3::after {
+            top: -7px;
+            left: 20px;
+            width: 18px;
+            height: 18px;
+        }
+        
+        /* Animated title showcase with enhanced 3D perspective */
+        .eco-title-container {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            transform-style: preserve-3d;
+            perspective: 800px;
+            z-index: 5;
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        .eco-animation-container:hover .eco-title-container {
+            transform: translateZ(10px);
+        }
+        
+        .eco-title {
+            font-family: 'Cormorant', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #0A3A2A;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: rotateX(45deg) translateZ(-20px);
+            transform-origin: bottom center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: titleEntrance 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation-delay: 1.2s;
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        .eco-animation-container:hover .eco-title {
+            transform: translateZ(5px);
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .eco-subtitle {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #0F4737;
+            max-width: 270px;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateZ(-10px);
+            animation: subtitleEntrance 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+            animation-delay: 1.5s;
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        .eco-animation-container:hover .eco-subtitle {
+            transform: translateZ(10px);
+        }
+        
+        .eco-title-underline {
+            position: relative;
+            display: block;
+            width: 0;
+            height: 2px;
+            margin-top: 5px;
+            background: linear-gradient(90deg, #23795C, rgba(35, 121, 92, 0.3));
+            animation: lineGrow 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation-delay: 1.8s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* Enhanced Ecosystem Scene */
+        .ecosystem-scene {
+            position: absolute;
+            bottom: 0;
+            right: 20px;
+            width: 280px;
+            height: 140px;
+            transform-style: preserve-3d;
+            perspective: 800px;
+            z-index: 3;
+        }
+        
+        /* Enhanced Ground with 3D grass */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(180deg, #1A6E53 0%, #155C46 100%);
+            border-radius: 2px 2px 0 0;
+            transform: rotateX(60deg) scaleX(0);
+            transform-origin: bottom center;
+            animation: groundExpand 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation-delay: 2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Terrain texture */
+        .ground::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(21, 92, 70, 0.8) 2px, transparent 2px),
+                radial-gradient(circle at 60% 30%, rgba(21, 92, 70, 0.8) 2px, transparent 2px),
+                radial-gradient(circle at 85% 70%, rgba(21, 92, 70, 0.8) 2px, transparent 2px);
+            background-size: 40px 40px;
+            opacity: 0.5;
+        }
+        
+        .grass-blades {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            height: 15px;
+            display: flex;
+            justify-content: space-around;
+            transform-origin: bottom center;
+            opacity: 0;
+            animation: fadeInDeluxe 1s ease forwards;
+            animation-delay: 2.4s;
+        }
+        
+        .grass-blade {
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(to top, #23795C, #39A786);
+            border-radius: 2px 2px 0 0;
+            transform-origin: bottom center;
+            animation: swayGrass 4s ease-in-out infinite alternate;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .grass-blade:nth-child(2n) {
+            animation-delay: 0.5s;
+            height: 80%;
+        }
+        
+        .grass-blade:nth-child(3n) {
+            animation-delay: 1s;
+            height: 90%;
+        }
+        
+        .grass-blade:nth-child(4n) {
+            animation-delay: 1.5s;
+            height: 70%;
+        }
+        
+        /* Add more grass blades for density */
+        .grass-blades::before,
+        .grass-blades::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .grass-blades::before {
+            transform: translateX(1px);
+        }
+        
+        .grass-blades::after {
+            transform: translateX(-1px);
+        }
+        
+        /* Enhanced Tree with Realistic Growth and Leaves */
+        .eco-tree {
+            position: absolute;
+            bottom: 30px;
+            left: 40px;
+            z-index: 10;
+            transform-style: preserve-3d;
+        }
+        
+        .tree-trunk {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 0;
+            background: linear-gradient(to top, #5E3B28, #7D5236);
+            border-radius: 3px;
+            animation: growTreeTrunk 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation-delay: 2.6s;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Tree bark texture */
+        .tree-trunk::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, transparent 40%, rgba(94, 59, 40, 0.6) 40%, rgba(94, 59, 40, 0.6) 60%, transparent 60%);
+            background-size: 6px 8px;
+            opacity: 0.7;
+        }
+        
+        .tree-foliage-container {
+            position: absolute;
+            bottom: 45px;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            transform-style: preserve-3d;
+        }
+        
+        .tree-foliage {
+            position: absolute;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            opacity: 0;
+            transform: translateZ(0) scale(0);
+            animation: foliageGrow 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, foliageWave 8s ease-in-out infinite alternate;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
+        }
+        
+        .tree-foliage-1 {
+            bottom: 0;
+            background: linear-gradient(to top, #23795C, #39A786);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 3s, 3.2s;
+        }
+        
+        .tree-foliage-2 {
+            bottom: 20px;
+            background: linear-gradient(to top, #1A6E53, #2D8C6C);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 3.2s, 3.4s;
+            transform: translateZ(5px) scale(0);
+        }
+        
+        .tree-foliage-3 {
+            bottom: 40px;
+            background: linear-gradient(to top, #155C46, #23795C);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 3.4s, 3.6s;
+            transform: translateZ(10px) scale(0);
+        }
+        
+        /* Enhanced Tree Leaves Particles */
+        .tree-particles-container {
+            position: absolute;
+            bottom: 45px;
+            left: 40px;
+            width: 80px;
+            height: 80px;
+            pointer-events: none;
+        }
+        
+        .tree-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: #39A786;
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 9;
+            animation: leafFall 5s ease-in-out infinite;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .tree-particle:nth-child(1) {
+            left: 20px;
+            top: 30px;
+            animation-delay: 4s;
+        }
+        
+        .tree-particle:nth-child(2) {
+            left: 40px;
+            top: 20px;
+            animation-delay: 6s;
+        }
+        
+        .tree-particle:nth-child(3) {
+            left: 30px;
+            top: 35px;
+            animation-delay: 8s;
+        }
+        
+        .tree-particle:nth-child(4) {
+            left: 50px;
+            top: 25px;
+            animation-delay: 10s;
+        }
+        
+        .tree-particle:nth-child(5) {
+            left: 15px;
+            top: 40px;
+            animation-delay: 12s;
+        }
+        
+        /* Enhanced Water with Dynamic Ripples */
+        .water-container {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 120px;
+            height: 50px;
+            overflow: hidden;
+            border-radius: 50%;
+            transform: rotateX(60deg) scale(0);
+            transform-origin: center;
+            animation: waterAppear 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation-delay: 2.8s;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .water {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #4FA1D0 0%, #3D8EB9 100%);
+            border-radius: 50%;
+        }
+        
+        /* Dynamic water texture */
+        .water::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, transparent 80%, rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.1) 90%, transparent 90%),
+                linear-gradient(0deg, transparent 80%, rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.1) 90%, transparent 90%);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            animation: waterPatternMove 8s linear infinite;
+        }
+        
+        .water-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0.1) 100%);
+            animation: waterShimmer 5s linear infinite;
+            opacity: 0.8;
+        }
+        
+        .water-ripple {
+            position: absolute;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transform: scale(0);
+            opacity: 0;
+        }
+        
+        .water-ripple-1 {
+            top: 15px;
+            left: 25px;
+            width: 40px;
+            height: 20px;
+            animation: rippleExpand 4s ease-out infinite;
+            animation-delay: 4s;
+        }
+        
+        .water-ripple-2 {
+            top: 20px;
+            left: 45px;
+            width: 20px;
+            height: 10px;
+            animation: rippleExpand 4s ease-out infinite;
+            animation-delay: 6s;
+        }
+        
+        .water-ripple-3 {
+            top: 10px;
+            left: 35px;
+            width: 30px;
+            height: 15px;
+            animation: rippleExpand 4s ease-out infinite;
+            animation-delay: 8s;
+        }
+        
+        /* Additional ripples */
+        .water-ripple-4 {
+            top: 25px;
+            left: 60px;
+            width: 25px;
+            height: 12px;
+            animation: rippleExpand 4s ease-out infinite;
+            animation-delay: 10s;
+        }
+        
+        .water-ripple-5 {
+            top: 15px;
+            left: 75px;
+            width: 35px;
+            height: 18px;
+            animation: rippleExpand 4s ease-out infinite;
+            animation-delay: 12s;
+        }
+        
+        .water-drop {
+            position: absolute;
+            top: -20px;
+            left: 40px;
+            width: 10px;
+            height: 15px;
+            background-color: rgba(79, 161, 208, 0.9);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            transform: scale(0);
+            opacity: 0;
+            animation: dropFall 4s ease-in infinite;
+            animation-delay: 4s;
+            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.2));
+        }
+        
+        /* Additional water drops */
+        .water-drop-2 {
+            top: -20px;
+            left: 70px;
+            width: 8px;
+            height: 12px;
+            animation-delay: 6s;
+        }
+        
+        .water-drop-3 {
+            top: -20px;
+            left: 90px;
+            width: 9px;
+            height: 14px;
+            animation-delay: 8s;
+        }
+        
+        /* Enhanced Solar Panel with Realistic Energy Flow */
+        .solar-panel-container {
+            position: absolute;
+            bottom: 40px;
+            right: 170px;
+            width: 70px;
+            height: 60px;
+            transform-style: preserve-3d;
+            opacity: 0;
+            animation: fadeInUpDeluxe 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation-delay: 3s;
+        }
+        
+        .solar-base {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 20px;
+            background: linear-gradient(to top, #444, #666);
+            border-radius: 1px;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .solar-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 70px;
+            height: 40px;
+            background: linear-gradient(135deg, #1A237E, #3949AB);
+            border: 2px solid #444;
+            transform: perspective(300px) rotateX(30deg) scale(0);
+            transform-origin: bottom center;
+            animation: solarPanelGrow 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, solarPanelTilt 8s ease-in-out infinite alternate;
+            animation-delay: 3.2s, 4s;
+            box-shadow: 
+                0 10px 20px rgba(0,0,0,0.2), 
+                inset 0 0 10px rgba(255,255,255,0.2);
+        }
+        
+        .solar-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, transparent 19px, rgba(255, 255, 255, 0.1) 19px, rgba(255, 255, 255, 0.1) 20px, transparent 20px) 0 0 / 20px 100%,
+                linear-gradient(0deg, transparent 19px, rgba(255, 255, 255, 0.1) 19px, rgba(255, 255, 255, 0.1) 20px, transparent 20px) 0 0 / 100% 20px;
+        }
+        
+        .solar-reflection {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent 80%);
+            opacity: 0.7;
+        }
+        
+        .solar-glint {
+            position: absolute;
+            width: 20px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 4px;
+            top: 5px;
+            left: -20px;
+            transform: rotate(-45deg);
+            opacity: 0;
+            animation: glintMove 6s linear infinite;
+            animation-delay: 4s;
+            filter: blur(1px);
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+        
+        /* Enhanced energy particles */
+        .energy-particles-container {
+            position: absolute;
+            bottom: 30px;
+            right: 160px;
+            width: 80px;
+            height: 80px;
+            pointer-events: none;
+        }
+        
+        .energy-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: #FFD700;
+            border-radius: 50%;
+            opacity: 0;
+            animation: energyFlow 3s ease-out infinite;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+        
+        .energy-particle:nth-child(1) {
+            bottom: 20px;
+            right: 10px;
+            animation-delay: 4.5s;
+        }
+        
+        .energy-particle:nth-child(2) {
+            bottom: 25px;
+            right: 20px;
+            animation-delay: 5s;
+        }
+        
+        .energy-particle:nth-child(3) {
+            bottom: 15px;
+            right: 30px;
+            animation-delay: 5.5s;
+        }
+        
+        .energy-particle:nth-child(4) {
+            bottom: 30px;
+            right: 15px;
+            animation-delay: 6s;
+        }
+        
+        .energy-particle:nth-child(5) {
+            bottom: 18px;
+            right: 25px;
+            animation-delay: 6.5s;
+        }
+        
+        /* Enhanced Butterflies */
+        .butterfly {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            opacity: 0;
+            z-index: 12;
+        }
+        
+        .butterfly-1 {
+            top: 60px;
+            left: 100px;
+            animation: butterflyFlight1 15s linear infinite, fadeInDeluxe 1s ease forwards;
+            animation-delay: 0s, 4.5s;
+        }
+        
+        .butterfly-2 {
+            top: 40px;
+            left: 150px;
+            animation: butterflyFlight2 18s linear infinite, fadeInDeluxe 1s ease forwards;
+            animation-delay: 3s, 4.8s;
+        }
+        
+        /* Additional butterfly */
+        .butterfly-3 {
+            top: 80px;
+            left: 180px;
+            animation: butterflyFlight3 20s linear infinite, fadeInDeluxe 1s ease forwards;
+            animation-delay: 6s, 5.1s;
+        }
+        
+        .butterfly-wing {
+            position: absolute;
+            width: 8px;
+            height: 12px;
+            background: linear-gradient(to bottom, #F9A826, #F5820D);
+            border-radius: 50% 50% 0 50%;
+            top: 0;
+            box-shadow: 0 0 5px rgba(249, 168, 38, 0.3);
+        }
+        
+        .butterfly-wing-left {
+            left: 0;
+            transform-origin: right center;
+            animation: wingFlap 0.2s ease-in-out infinite alternate;
+        }
+        
+        .butterfly-wing-right {
+            right: 0;
+            transform: scaleX(-1);
+            transform-origin: left center;
+            animation: wingFlap 0.2s ease-in-out infinite alternate-reverse;
+        }
+        
+        /* Different colored butterflies */
+        .butterfly-2 .butterfly-wing {
+            background: linear-gradient(to bottom, #58B5E8, #3A9BDA);
+            box-shadow: 0 0 5px rgba(88, 181, 232, 0.3);
+        }
+        
+        .butterfly-3 .butterfly-wing {
+            background: linear-gradient(to bottom, #E8587B, #DA3A5E);
+            box-shadow: 0 0 5px rgba(232, 88, 123, 0.3);
+        }
+        
+        /* Birds in the sky */
+        .bird {
+            position: absolute;
+            opacity: 0;
+            z-index: 3;
+            animation: fadeInDeluxe 1s ease forwards;
+        }
+        
+        .bird-1 {
+            top: 80px;
+            left: -50px;
+            animation-delay: 5.4s;
+            transform: scale(0.7);
+        }
+        
+        .bird-2 {
+            top: 65px;
+            left: -80px;
+            animation-delay: 5.7s;
+            transform: scale(0.5);
+        }
+        
+        .bird-3 {
+            top: 90px;
+            left: -30px;
+            animation-delay: 6s;
+            transform: scale(0.6);
+        }
+        
+        .bird-silhouette {
+            position: relative;
+            width: 30px;
+            height: 12px;
+        }
+        
+        .bird-silhouette::before,
+        .bird-silhouette::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 15px;
+            height: 12px;
+            background: rgba(35, 50, 65, 0.6);
+            clip-path: ellipse(40% 50% at 50% 50%);
+        }
+        
+        .bird-silhouette::before {
+            left: 0;
+            transform-origin: right bottom;
+            animation: wingFlapBird 0.6s ease-in-out infinite alternate;
+        }
+        
+        .bird-silhouette::after {
+            right: 0;
+            transform-origin: left bottom;
+            animation: wingFlapBird 0.6s ease-in-out infinite alternate-reverse;
+        }
+        
+        /* Bird flying path */
+        .bird-1 {
+            animation: birdFlight1 25s linear infinite, fadeInDeluxe 1s ease forwards;
+            animation-delay: 0s, 5.4s;
+        }
+        
+        .bird-2 {
+            animation: birdFlight2 30s linear infinite, fadeInDeluxe 1s ease forwards;
+            animation-delay: 2s, 5.7s;
+        }
+        
+        .bird-3 {
+            animation: birdFlight3 35s linear infinite, fadeInDeluxe 1s ease forwards;
+            animation-delay: 4s, 6s;
+        }
+        
+        /* Enhanced Interactive Elements Indicators */
+        .eco-interaction-hints {
+            position: absolute;
+            bottom: 15px;
+            left: 25px;
+            display: flex;
+            gap: 15px;
+            opacity: 0;
+            animation: fadeInDeluxe 1s ease forwards;
+            animation-delay: 5s;
+            z-index: 20;
+        }
+        
+        .interaction-hint {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: rgba(15, 71, 55, 0.08);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .interaction-hint:hover {
+            background: rgba(15, 71, 55, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(15, 71, 55, 0.1);
+        }
+        
+        .hint-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(15, 71, 55, 0.1);
+            color: #0F4737;
+            font-size: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .interaction-hint:hover .hint-icon {
+            background: rgba(15, 71, 55, 0.2);
+            transform: rotate(15deg);
+        }
+        
+        .hint-text {
+            font-size: 11px;
+            color: #0F4737;
+            font-weight: 500;
+        }
+        
+        /* Weather effect container */
+        .weather-effects {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 15;
+            overflow: hidden;
+        }
+        
+        /* Rain drops */
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 15px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.6));
+            opacity: 0;
+            transform: rotate(20deg);
+            animation: rainFall 1s linear infinite;
+            animation-play-state: paused;
+        }
+        
+        /* Enhanced animations */
+        @keyframes skyColorCycle {
+            0%, 100% {
+                background: linear-gradient(180deg, rgba(158, 214, 233, 0.3) 0%, rgba(215, 240, 255, 0.15) 100%);
+            }
+            30% {
+                background: linear-gradient(180deg, rgba(253, 187, 134, 0.3) 0%, rgba(255, 231, 194, 0.15) 100%);
+            }
+            70% {
+                background: linear-gradient(180deg, rgba(76, 95, 146, 0.3) 0%, rgba(130, 160, 214, 0.15) 100%);
+            }
+        }
+        
+        @keyframes lightingChange {
+            0%, 100% {
+                opacity: 0.2;
+                background: radial-gradient(circle at 70% 20%, rgba(255, 255, 235, 0.2) 0%, rgba(255, 255, 235, 0) 70%);
+            }
+            30% {
+                opacity: 0.5;
+                background: radial-gradient(circle at 70% 20%, rgba(255, 233, 191, 0.3) 0%, rgba(255, 233, 191, 0) 70%);
+            }
+            70% {
+                opacity: 0.3;
+                background: radial-gradient(circle at 70% 20%, rgba(191, 210, 255, 0.2) 0%, rgba(191, 210, 255, 0) 70%);
+            }
+        }
+        
+        @keyframes riseMountain {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes celestialMovement {
+            0% {
+                transform: translate(0, 0);
+                box-shadow: 
+                    0 0 40px rgba(255, 192, 93, 0.7), 
+                    0 0 80px rgba(255, 192, 93, 0.4), 
+                    0 0 120px rgba(255, 192, 93, 0.2);
+                background: radial-gradient(circle, #FFE175 30%, #FFB52E 70%, #FF9500 100%);
+            }
+            25% {
+                transform: translate(-80px, 10px);
+            }
+            50% {
+                transform: translate(-160px, 0);
+                box-shadow: 
+                    0 0 30px rgba(200, 215, 255, 0.6), 
+                    0 0 60px rgba(200, 215, 255, 0.3), 
+                    0 0 90px rgba(200, 215, 255, 0.1);
+                background: radial-gradient(circle, #E6ECF5 30%, #C3D2E6 70%, #A5BAD6 100%);
+            }
+            75% {
+                transform: translate(-80px, -10px);
+            }
+            100% {
+                transform: translate(0, 0);
+                box-shadow: 
+                    0 0 40px rgba(255, 192, 93, 0.7), 
+                    0 0 80px rgba(255, 192, 93, 0.4), 
+                    0 0 120px rgba(255, 192, 93, 0.2);
+                background: radial-gradient(circle, #FFE175 30%, #FFB52E 70%, #FF9500 100%);
+            }
+        }
+        
+        @keyframes beamPulse {
+            0%, 100% {
+                opacity: 0.4;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            50% {
+                opacity: 0.6;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+        
+        @keyframes moveCloud {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(800px);
+            }
+        }
+        
+        @keyframes moveCloudAlt {
+            from {
+                transform: translateX(0) translateY(0);
+            }
+            25% {
+                transform: translateX(200px) translateY(10px);
+            }
+            50% {
+                transform: translateX(400px) translateY(-5px);
+            }
+            75% {
+                transform: translateX(600px) translateY(5px);
+            }
+            to {
+                transform: translateX(800px) translateY(0);
+            }
+        }
+        
+        @keyframes titleEntrance {
+            0% {
+                opacity: 0;
+                transform: rotateX(45deg) translateZ(-20px);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 1;
+                transform: rotateX(0) translateZ(0);
+            }
+        }
+        
+        @keyframes subtitleEntrance {
+            0% {
+                opacity: 0;
+                transform: translateZ(-10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateZ(0);
+            }
+        }
+        
+        @keyframes lineGrow {
+            from {
+                width: 0;
+            }
+            to {
+                width: 80px;
+            }
+        }
+        
+        @keyframes groundExpand {
+            from {
+                transform: rotateX(60deg) scaleX(0);
+            }
+            to {
+                transform: rotateX(60deg) scaleX(1);
+            }
+        }
+        
+        @keyframes swayGrass {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(10deg);
+            }
+        }
+        
+        @keyframes growTreeTrunk {
+            from {
+                height: 0;
+            }
+            to {
+                height: 45px;
+            }
+        }
+        
+        @keyframes foliageGrow {
+            0% {
+                opacity: 0;
+                transform: translateZ(var(--z, 0)) scale(0);
+            }
+            70% {
+                opacity: 1;
+                transform: translateZ(var(--z, 0)) scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: translateZ(var(--z, 0)) scale(1);
+            }
+        }
+        
+        @keyframes foliageWave {
+            0%, 100% {
+                transform: translateZ(var(--z, 0)) rotate(0deg);
+            }
+            25% {
+                transform: translateZ(var(--z, 0)) rotate(-5deg);
+            }
+            75% {
+                transform: translateZ(var(--z, 0)) rotate(5deg);
+            }
+        }
+        
+        @keyframes leafFall {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) rotate(0deg) scale(0.8);
+            }
+            10% {
+                opacity: 0.8;
+                transform: translate(5px, 10px) rotate(45deg) scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translate(10px, 25px) rotate(90deg) scale(0.9);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(20px, 50px) rotate(360deg) scale(0.7);
+            }
+        }
+        
+        @keyframes waterAppear {
+            from {
+                transform: rotateX(60deg) scale(0);
+            }
+            to {
+                transform: rotateX(60deg) scale(1);
+            }
+        }
+        
+        @keyframes waterPatternMove {
+            from {
+                background-position: 0 0;
+            }
+            to {
+                background-position: 20px 20px;
+            }
+        }
+        
+        @keyframes waterShimmer {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(100%);
+            }
+        }
+        
+        @keyframes rippleExpand {
+            0% {
+                transform: scale(0);
+                opacity: 0.8;
+                border-width: 2px;
+            }
+            50% {
+                border-width: 1px;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+                border-width: 0.5px;
+            }
+        }
+        
+        @keyframes dropFall {
+            0% {
+                transform: translateY(-20px) scale(1);
+                opacity: 0;
+            }
+            5% {
+                opacity: 0.8;
+                transform: translateY(-15px) scale(0.9);
+            }
+            80% {
+                opacity: 0.8;
+                transform: translateY(20px) scale(0.5);
+            }
+            100% {
+                transform: translateY(30px) scale(0.2);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes fadeInUpDeluxe {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes solarPanelGrow {
+            from {
+                transform: perspective(300px) rotateX(30deg) scale(0);
+            }
+            to {
+                transform: perspective(300px) rotateX(30deg) scale(1);
+            }
+        }
+        
+        @keyframes solarPanelTilt {
+            0%, 100% {
+                transform: perspective(300px) rotateX(30deg) rotateZ(0deg);
+            }
+            50% {
+                transform: perspective(300px) rotateX(30deg) rotateZ(5deg);
+            }
+        }
+        
+        @keyframes glintMove {
+            0% {
+                left: -20px;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            40% {
+                left: 80px;
+                opacity: 0;
+            }
+            100% {
+                left: 80px;
+                opacity: 0;
+            }
+        }
+        
+        @keyframes energyFlow {
+            0% {
+                transform: translate(0, 0) scale(0);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.8;
+                transform: translate(-10px, -10px) scale(1);
+            }
+            60% {
+                opacity: 0.8;
+                transform: translate(-25px, -20px) scale(0.8);
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+            }
+            100% {
+                transform: translate(-40px, -30px) scale(0);
+                opacity: 0;
+                box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+            }
+        }
+        
+        @keyframes butterflyFlight1 {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(50px, -30px) rotate(20deg);
+            }
+            50% {
+                transform: translate(100px, 0) rotate(0deg);
+            }
+            75% {
+                transform: translate(50px, 30px) rotate(-20deg);
+            }
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+        }
+        
+        @keyframes butterflyFlight2 {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(-30px, -20px) rotate(-15deg);
+            }
+            50% {
+                transform: translate(-60px, 10px) rotate(10deg);
+            }
+            75% {
+                transform: translate(-30px, 30px) rotate(25deg);
+            }
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+        }
+        
+        @keyframes butterflyFlight3 {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(0.8);
+            }
+            20% {
+                transform: translate(-40px, -10px) rotate(-10deg) scale(0.9);
+            }
+            40% {
+                transform: translate(-70px, -30px) rotate(15deg) scale(0.8);
+            }
+            60% {
+                transform: translate(-90px, -10px) rotate(-5deg) scale(0.7);
+            }
+            80% {
+                transform: translate(-40px, 20px) rotate(20deg) scale(0.8);
+            }
+            100% {
+                transform: translate(0, 0) rotate(0deg) scale(0.8);
+            }
+        }
+        
+        @keyframes wingFlap {
+            from {
+                transform: rotateY(0deg);
+            }
+            to {
+                transform: rotateY(80deg);
+            }
+        }
+        
+        @keyframes wingFlapBird {
+            from {
+                transform: rotateX(0deg);
+            }
+            to {
+                transform: rotateX(40deg);
+            }
+        }
+        
+        @keyframes birdFlight1 {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(0.7);
+            }
+            100% {
+                transform: translate(850px, -50px) rotate(5deg) scale(0.7);
+            }
+        }
+        
+        @keyframes birdFlight2 {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(0.5);
+            }
+            30% {
+                transform: translate(250px, -30px) rotate(5deg) scale(0.5);
+            }
+            60% {
+                transform: translate(500px, -10px) rotate(-5deg) scale(0.5);
+            }
+            100% {
+                transform: translate(850px, -40px) rotate(0deg) scale(0.5);
+            }
+        }
+        
+        @keyframes birdFlight3 {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(0.6);
+            }
+            20% {
+                transform: translate(170px, -40px) rotate(10deg) scale(0.6);
+            }
+            40% {
+                transform: translate(340px, -20px) rotate(0deg) scale(0.6);
+            }
+            60% {
+                transform: translate(510px, -50px) rotate(-5deg) scale(0.6);
+            }
+            80% {
+                transform: translate(680px, -30px) rotate(5deg) scale(0.6);
+            }
+            100% {
+                transform: translate(850px, -60px) rotate(0deg) scale(0.6);
+            }
+        }
+        
+        @keyframes rainFall {
+            from {
+                transform: translateY(-20px) rotate(20deg);
+                opacity: 0.7;
+            }
+            to {
+                transform: translateY(300px) rotate(20deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Base animations */
+        @keyframes lineEnterDeluxe {
+            0% {
+                height: 0%;
+                opacity: 0;
+            }
+            100% {
+                height: 100%;
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideUpDeluxe {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInDeluxe {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes pulseDeluxe {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.05;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.1;
+            }
+        }
+        
+        /* Media Queries for responsiveness */
+        @media (max-width: 768px) {
+            .signature-container {
+                width: 90%;
+                padding: 30px;
+            }
+            
+            .eco-animation-container {
+                height: 220px;
+            }
+            
+            .celestial-body {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .eco-title {
+                font-size: 22px;
+            }
+            
+            .eco-subtitle {
+                font-size: 13px;
+                max-width: 220px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .signature-container {
+                padding: 20px;
+            }
+            
+            .eco-animation-container {
+                height: 180px;
+            }
+            
+            .eco-title {
+                font-size: 18px;
+            }
+            
+            .eco-subtitle {
+                font-size: 12px;
+                max-width: 180px;
+            }
+            
+            .water-container {
+                width: 80px;
+                height: 35px;
+            }
+            
+            .solar-panel-container {
+                right: 140px;
+                width: 50px;
+            }
+            
+            .mountain-1, .mountain-2, .mountain-3 {
+                transform: scale(0.8);
+            }
+        }
+    </style>
+    <!-- Font awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</head>
+<body>
+    <div class="signature-container">
+        <!-- Container backgrounds -->
+        <div class="signature-background">
+            <div class="bg-texture"></div>
+            <div class="decoration-line"></div>
+            <div class="accent-circle accent-circle-1"></div>
+            <div class="accent-circle accent-circle-2"></div>
+            <div class="accent-circle accent-circle-3"></div>
+        </div>
+        
+        <!-- Enhanced Ecosystem Showcase -->
+        <div class="eco-animation-container">
+            <!-- Enhanced Background with Day/Night Cycle -->
+            <div class="eco-background">
+                <div class="sky-gradient"></div>
+                <div class="lighting-overlay"></div>
+                
+                <!-- Enhanced Mountains -->
+                <div class="mountains">
+                    <div class="mountain mountain-1"></div>
+                    <div class="mountain mountain-2"></div>
+                    <div class="mountain mountain-3"></div>
+                </div>
+                
+                <!-- Enhanced Sun/Moon with Light Rays -->
+                <div class="celestial-body">
+                    <div class="celestial-beam">
+                        <div class="beam beam-1"></div>
+                        <div class="beam beam-2"></div>
+                        <div class="beam beam-3"></div>
+                        <div class="beam beam-4"></div>
+                        <div class="beam beam-5"></div>
+                        <div class="beam beam-6"></div>
+                        <div class="beam beam-7"></div>
+                        <div class="beam beam-8"></div>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Clouds -->
+                <div class="cloud cloud-1"></div>
+                <div class="cloud cloud-2"></div>
+                <div class="cloud cloud-3"></div>
+                
+                <!-- Birds in the sky -->
+                <div class="bird bird-1">
+                    <div class="bird-silhouette"></div>
+                </div>
+                <div class="bird bird-2">
+                    <div class="bird-silhouette"></div>
+                </div>
+                <div class="bird bird-3">
+                    <div class="bird-silhouette"></div>
+                </div>
+            </div>
+            
+            <!-- Enhanced 3D Title -->
+            <div class="eco-title-container">
+                <div class="eco-title">Écologie & Innovation
+                    <span class="eco-title-underline"></span>
+                </div>
+                <div class="eco-subtitle">Découvrez la magie de l'ecologie avec Ecology'B: chaque geste, un avenir plus vert et plus durable pour notre planète !</div>
+            </div>
+            
+            <!-- Enhanced Interactive Ecosystem Scene -->
+            <div class="ecosystem-scene">
+                <!-- Enhanced Ground with 3D Grass -->
+                <div class="ground"></div>
+                <div class="grass-blades">
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                    <div class="grass-blade"></div>
+                </div>
+                
+                <!-- Enhanced Tree with Realistic Growth and Leaves -->
+                <div class="eco-tree">
+                    <div class="tree-trunk"></div>
+                    <div class="tree-foliage-container">
+                        <div class="tree-foliage tree-foliage-1"></div>
+                        <div class="tree-foliage tree-foliage-2"></div>
+                        <div class="tree-foliage tree-foliage-3"></div>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Tree Leaves Particles -->
+                <div class="tree-particles-container">
+                    <div class="tree-particle"></div>
+                    <div class="tree-particle"></div>
+                    <div class="tree-particle"></div>
+                    <div class="tree-particle"></div>
+                    <div class="tree-particle"></div>
+                </div>
+                
+                <!-- Enhanced Water with Dynamic Ripples -->
+                <div class="water-container">
+                    <div class="water"></div>
+                    <div class="water-overlay"></div>
+                    <div class="water-ripple water-ripple-1"></div>
+                    <div class="water-ripple water-ripple-2"></div>
+                    <div class="water-ripple water-ripple-3"></div>
+                    <div class="water-ripple water-ripple-4"></div>
+                    <div class="water-ripple water-ripple-5"></div>
+                    <div class="water-drop"></div>
+                    <div class="water-drop water-drop-2"></div>
+                    <div class="water-drop water-drop-3"></div>
+                </div>
+                
+                <!-- Enhanced Solar Panel with Realistic Energy Flow -->
+                <div class="solar-panel-container">
+                    <div class="solar-base"></div>
+                    <div class="solar-panel">
+                        <div class="solar-grid"></div>
+                        <div class="solar-reflection"></div>
+                    </div>
+                    <div class="solar-glint"></div>
+                </div>
+                
+                <!-- Enhanced Energy Particles -->
+                <div class="energy-particles-container">
+                    <div class="energy-particle"></div>
+                    <div class="energy-particle"></div>
+                    <div class="energy-particle"></div>
+                    <div class="energy-particle"></div>
+                    <div class="energy-particle"></div>
+                </div>
+                
+                <!-- Enhanced Butterflies -->
+                <div class="butterfly butterfly-1">
+                    <div class="butterfly-wing butterfly-wing-left"></div>
+                    <div class="butterfly-wing butterfly-wing-right"></div>
+                </div>
+                <div class="butterfly butterfly-2">
+                    <div class="butterfly-wing butterfly-wing-left"></div>
+                    <div class="butterfly-wing butterfly-wing-right"></div>
+                </div>
+                <div class="butterfly butterfly-3">
+                    <div class="butterfly-wing butterfly-wing-left"></div>
+                    <div class="butterfly-wing butterfly-wing-right"></div>
+                </div>
+            </div>
+            
+            <!-- Weather effects container -->
+            <div class="weather-effects">
+                <!-- Rain drops will be added dynamically when needed -->
+            </div>
+            
+            <!-- Enhanced Interactive Elements Indicators -->
+            <div class="eco-interaction-hints">
+                <div class="interaction-hint">
+                    <div class="hint-icon"><i class="fas fa-sync-alt"></i></div>
+                    <div class="hint-text">Cycle naturel</div>
+                </div>
+                <div class="interaction-hint">
+                    <div class="hint-icon"><i class="fas fa-leaf"></i></div>
+                    <div class="hint-text">Écosystème vivant</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add a simple script to allow weather change on interaction -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ecoContainer = document.querySelector('.eco-animation-container');
+            
+            // Add hover effect to show subtle depth change
+            ecoContainer.addEventListener('mousemove', function(e) {
+                const containerRect = ecoContainer.getBoundingClientRect();
+                const xPos = (e.clientX - containerRect.left) / containerRect.width;
+                const yPos = (e.clientY - containerRect.top) / containerRect.height;
+                
+                const mountains = document.querySelectorAll('.mountain');
+                const celestialBody = document.querySelector('.celestial-body');
+                const ecoTitle = document.querySelector('.eco-title');
+                
+                // Apply subtle parallax effect
+                mountains.forEach((mountain, index) => {
+                    const depth = (index + 1) * 10;
+                    const moveX = (0.5 - xPos) * depth;
+                    const moveY = (0.5 - yPos) * depth / 2;
+                    mountain.style.transform = `translateX(${moveX}px) translateY(${moveY}px)`;
+                });
+                
+                // Move sun/moon slightly
+                if (celestialBody) {
+                    const moveX = (0.5 - xPos) * 15;
+                    const moveY = (0.5 - yPos) * 15;
+                    celestialBody.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                }
+                
+                // Title follows mouse slightly
+                if (ecoTitle) {
+                    const moveX = (0.5 - xPos) * 5;
+                    const moveY = (0.5 - yPos) * 5;
+                    ecoTitle.style.transform = `translateX(${moveX}px) translateY(${moveY}px) translateZ(5px)`;
+                }
+            });
+            
+            // Reset transforms when mouse leaves
+            ecoContainer.addEventListener('mouseleave', function() {
+                const mountains = document.querySelectorAll('.mountain');
+                const celestialBody = document.querySelector('.celestial-body');
+                const ecoTitle = document.querySelector('.eco-title');
+                
+                mountains.forEach(mountain => {
+                    mountain.style.transform = '';
+                });
+                
+                if (celestialBody) {
+                    celestialBody.style.transform = '';
+                }
+                
+                if (ecoTitle) {
+                    ecoTitle.style.transform = '';
+                }
+            });
+            
+            // Toggle rain effect when clicking the cycle hint
+            const cycleHint = document.querySelector('.interaction-hint:first-child');
+            if (cycleHint) {
+                cycleHint.addEventListener('click', function() {
+                    toggleRain();
+                });
+            }
+            
+            function toggleRain() {
+                const weatherEffects = document.querySelector('.weather-effects');
+                const skyGradient = document.querySelector('.sky-gradient');
+                const isRaining = weatherEffects.classList.contains('raining');
+                
+                if (isRaining) {
+                    // Stop rain
+                    weatherEffects.innerHTML = '';
+                    weatherEffects.classList.remove('raining');
+                    if (skyGradient) {
+                        skyGradient.style.background = '';
+                    }
+                } else {
+                    // Start rain
+                    weatherEffects.classList.add('raining');
+                    if (skyGradient) {
+                        skyGradient.style.background = 'linear-gradient(180deg, rgba(100, 130, 160, 0.4) 0%, rgba(180, 200, 220, 0.2) 100%)';
+                    }
+                    
+                    // Create raindrops
+                    for (let i = 0; i < 50; i++) {
+                        const raindrop = document.createElement('div');
+                        raindrop.className = 'raindrop';
+                        raindrop.style.left = `${Math.random() * 100}%`;
+                        raindrop.style.animationDelay = `${Math.random() * 1.5}s`;
+                        raindrop.style.animationPlayState = 'running';
+                        weatherEffects.appendChild(raindrop);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

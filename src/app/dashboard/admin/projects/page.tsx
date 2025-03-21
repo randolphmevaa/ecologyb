@@ -17,15 +17,27 @@ import {
   PhoneIcon,
   FunnelIcon,
   ChartBarIcon,
-  // StarIcon, // Added missing SearchIcon import
 } from "@heroicons/react/24/outline";
 import { ChevronLeftIcon, SearchIcon } from "lucide-react";
 // import { MagnifyingGlassIcon, ArrowPathIcon, ChartBarIcon, UserGroupIcon, BuildingOfficeIcon, MapPinIcon, PhoneIcon } from "@heroicons/react/24/outline";
 
-// Define your colors object
-const colors = {
-  darkBlue: "#213f5b",
-};
+// Define your colors object with an enhanced palette
+// const colors = {
+//   darkBlue: "#213f5b",
+//   lightBlue: "#bfddf9",
+//   green: "#d2fcb2",
+//   amber: "#f7b91b",
+//   teal: "#a6e4d0",
+//   skyBlue: "#92d1e0",
+//   oceanBlue: "#7aafc2",
+//   deepBlue: "#5d8ba3",
+//   gradient: {
+//     blue: "linear-gradient(135deg, #213f5b, #3a6fa0)",
+//     green: "linear-gradient(135deg, #a8e063, #d2fcb2)",
+//     teal: "linear-gradient(135deg, #4ecdc4, #a6e4d0)",
+//     amber: "linear-gradient(135deg, #f7b91b, #ffd166)",
+//   }
+// };
 
 // Example getStatusInfo function that maps a project's etape to status details.
 const getStatusInfo = (etape?: string) => {
@@ -128,16 +140,6 @@ type Contact = {
   phone?: string;
 };
 
-// Mapping for step colors - updated with brand colors
-// const stepStyles: { [key: string]: { bg: string; text: string } } = {
-//   "1": { bg: "bg-[#bfddf9]/30", text: "text-[#213f5b]" },
-//   "2": { bg: "bg-[#bfddf9]/50", text: "text-[#213f5b]" },
-//   "3": { bg: "bg-[#d2fcb2]/30", text: "text-[#213f5b]" },
-//   "4": { bg: "bg-[#d2fcb2]/50", text: "text-[#213f5b]" },
-//   "5": { bg: "bg-[#213f5b]/20", text: "text-[#213f5b]" },
-//   "6": { bg: "bg-[#213f5b]/30", text: "text-[#213f5b]" },
-//   "7": { bg: "bg-[#213f5b]/50", text: "text-white" },
-// };
 // Define your timeline steps
 const steps = [
   "Prise de contact",
@@ -149,17 +151,10 @@ const steps = [
   "Dossier clôturé",
 ];
 
-// type SlideOverProps = {
-//   selectedProject: Dossier | null;
-//   setSelectedProject: (project: Dossier | null) => void;
-// };
-
 export default function ProjectsPage() {
   // Data and loading
   const [projects, setProjects] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
-  
 
   // Fetched contacts (mapping contactId => contact data)
   const [contacts, setContacts] = useState<{ [id: string]: Contact }>({});
@@ -176,18 +171,18 @@ export default function ProjectsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
 
-// Helper Functions with explicit types
+// Enhanced helper functions with improved color schemes
 const getStepColor = (step: number): string => {
   const colors: { [key: number]: string } = {
-    1: "#d2fcb2",   // business green
-    2: "#bfddf9",   // business light blue
-    3: "#f7b91b",   // business dark blue
-    4: "#a6e4d0",   // custom derived shade
-    5: "#92d1e0",   // custom derived shade
-    6: "#7aafc2",   // custom derived shade
-    7: "#5d8ba3",   // custom derived shade
+    1: "#4facfe",   // Bright blue for initial contact
+    2: "#43e97b",   // Vibrant green for documents
+    3: "#f7b91b",   // Amber for processing
+    4: "#38c2de",   // Teal for accepted 
+    5: "#32a7c1",   // Mid blue for installation
+    6: "#2d98c5",   // Ocean blue for control
+    7: "#1d6fa5",   // Deep blue for closure
   };
-  return colors[step] || "#bfddf9";
+  return colors[step] || "#4facfe";
 };
 
 const lightenColor = (color: string, percent: number): string => {
@@ -209,8 +204,9 @@ const lightenColor = (color: string, percent: number): string => {
 
 const getGradientColorForStep = (step: number): string => {
   const baseColor = getStepColor(step);
-  // Create a gradient from the base color to a 20% lighter version.
-  return `linear-gradient(90deg, ${baseColor}, ${lightenColor(baseColor, 20)})`;
+  // Create a more interesting gradient with a shift in hue
+  const lighterColor = lightenColor(baseColor, 30);
+  return `linear-gradient(90deg, ${baseColor}, ${lighterColor})`;
 };
 
 
@@ -259,14 +255,6 @@ const getGradientColorForStep = (step: number): string => {
     return etape;
   };
 
-  // Helper: Get bg and text classes based on the step number
-  // const getEtapeStyles = (etape?: string) => {
-  //   if (!etape) return "bg-gray-200 text-gray-800";
-  //   const digit = etape.charAt(0);
-  //   const style = stepStyles[digit];
-  //   return style ? `${style.bg} ${style.text}` : "bg-gray-200 text-gray-800";
-  // };
-
   // Filtering logic (ensuring string conversion)
   const filteredProjects = projects.filter((project) => {
     // Only include steps 5, 6, 7
@@ -306,38 +294,23 @@ const getGradientColorForStep = (step: number): string => {
   };
 
   // 2. Compute *all stats* from the filteredProjects array.
-const totalClientsCount = filteredProjects.length;
+  const totalClientsCount = filteredProjects.length;
 
-// For stageStats
-const stageStats = filteredProjects.reduce((acc, project) => {
-  const stageNumber = project.etape?.charAt(0) || "N/A";
-  acc[stageNumber] = (acc[stageNumber] || 0) + 1;
-  return acc;
-}, {} as { [key: string]: number });
+  // For stageStats
+  const stageStats = filteredProjects.reduce((acc, project) => {
+    const stageNumber = project.etape?.charAt(0) || "N/A";
+    acc[stageNumber] = (acc[stageNumber] || 0) + 1;
+    return acc;
+  }, {} as { [key: string]: number });
 
-// For solutions
-const solutionCounts = filteredProjects.reduce((acc, project) => {
-  const sol = project.solution || "Autres";
-  acc[sol] = (acc[sol] || 0) + 1;
-  return acc;
-}, {} as { [key: string]: number });
-
-// Sort solutions, show only the top ones
-const sortedSolutions = Object.entries(solutionCounts)
-  .filter(([key]) => key !== "Autres")
-  .sort(([, a], [, b]) => b - a)
-  .slice(0, 2);
-
-  // -------------------------------
-  // Stats Calculations
-  // -------------------------------
-  // We'll use the total number of projects as "Total Clients"
-  // const totalClientsCount = projects.length;
-  // const solutionCounts = projects.reduce((acc, project) => {
+  // For solutions
+  // const solutionCounts = filteredProjects.reduce((acc, project) => {
   //   const sol = project.solution || "Autres";
   //   acc[sol] = (acc[sol] || 0) + 1;
   //   return acc;
   // }, {} as { [key: string]: number });
+
+  // Sort solutions, show only the top ones
   // const sortedSolutions = Object.entries(solutionCounts)
   //   .filter(([key]) => key !== "Autres")
   //   .sort(([, a], [, b]) => b - a)
@@ -351,13 +324,6 @@ const sortedSolutions = Object.entries(solutionCounts)
     "Chauffe-eau thermodynamique",
     "Système Solaire Combiné",
   ];
-
-  // Calculate stage statistics
-  // const stageStats = projects.reduce((acc, project) => {
-  //   const stageNumber = project.etape?.charAt(0) || "N/A";
-  //   acc[stageNumber] = (acc[stageNumber] || 0) + 1;
-  //   return acc;
-  // }, {} as { [key: string]: number });
 
   if (loading) {
     return (
@@ -393,7 +359,6 @@ const sortedSolutions = Object.entries(solutionCounts)
 
   return (
     <div className="flex h-screen bg-white">
-
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
@@ -408,7 +373,9 @@ const sortedSolutions = Object.entries(solutionCounts)
           {/* Hero Section */}
           <div
             className="w-full py-8 md:py-10 relative overflow-hidden"
-            style={{ backgroundColor: "#213f5b" }}
+            style={{ 
+              background: "linear-gradient(135deg, #213f5b, #1a324a)" 
+            }}
           >
             {/* Background pattern */}
             <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#bfddf9]/10 transform translate-x-1/3 -translate-y-1/3"></div>
@@ -431,17 +398,19 @@ const sortedSolutions = Object.entries(solutionCounts)
                   </p>
                 </div>
                 <div className="mt-4 md:mt-0">
-                  <button className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white rounded-lg px-4 py-2 inline-flex items-center text-sm transition-all border border-white/20 shadow-lg">
-                    <ChartBarIcon className="h-4 w-4 mr-2" />
-                    Voir les statistiques
-                  </button>
+                  <Link href={"/dashboard/admin/reports"}>
+                    <button className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white rounded-lg px-4 py-2 inline-flex items-center text-sm transition-all border border-white/20 shadow-lg">
+                      <ChartBarIcon className="h-4 w-4 mr-2" />
+                      Voir les statistiques
+                    </button>
+                  </Link>
                 </div>
               </div>
             </motion.div>
           </div>
 
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
-            {/* Stats Section */}
+            {/* Stats Section - Updated with new labels and improved UI */}
             <motion.div
               className="mb-6 md:mb-8 grid grid-cols-2 lg:grid-cols-4 gap-4"
               initial={{ opacity: 0 }}
@@ -449,71 +418,89 @@ const sortedSolutions = Object.entries(solutionCounts)
               transition={{ delay: 0.2 }}
             >
               {/* Total Clients */}
-              <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#213f5b] hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs md:text-sm text-gray-500">Total Clients</p>
-                    <h3 className="text-xl md:text-2xl font-bold text-[#213f5b]">
-                      {totalClientsCount}
-                    </h3>
-                  </div>
-                  <div className="p-2 md:p-3 rounded-full bg-[#bfddf9]/20">
-                    <UserGroupIcon className="h-5 w-5 md:h-6 md:w-6 text-[#213f5b]" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Active Projects */}
-              <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#d2fcb2] hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs md:text-sm text-gray-500">Projets Actifs</p>
-                    <h3 className="text-xl md:text-2xl font-bold text-[#213f5b]">
-                      {/* If you want "active" to be steps 5 or 6 only, do something like: */}
-                      {(stageStats["5"] ?? 0) + (stageStats["6"] ?? 0)}
-                    </h3>
-                  </div>
-                  <div className="p-2 md:p-3 rounded-full bg-[#d2fcb2]/20">
-                    <BuildingOfficeIcon className="h-5 w-5 md:h-6 md:w-6 text-[#213f5b]" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Top Solution */}
-              {sortedSolutions[0] && (
-                <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#bfddf9] hover:shadow-lg transition-shadow">
-                  <div>
-                    <p className="text-xs md:text-sm text-gray-500">Solution Principale</p>
-                    <h3 className="text-lg font-bold text-[#213f5b] truncate">
-                      {sortedSolutions[0][0]}
-                    </h3>
-                    <div className="mt-1 w-full bg-gray-200 rounded-full h-1.5">
-                      <div
-                        className="bg-[#bfddf9] h-1.5 rounded-full"
-                        style={{
-                          width: `${(sortedSolutions[0][1] / totalClientsCount) * 100}%`,
-                        }}
-                      ></div>
+              <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
+                <div className="flex h-full">
+                  <div className="w-2 bg-gradient-to-b from-[#4facfe] to-[#1d6fa5]"></div>
+                  <div className="flex-1 p-4 md:p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs md:text-sm text-gray-500 font-medium">Total Clients</p>
+                        <h3 className="text-xl md:text-2xl font-bold text-[#213f5b] mt-1">
+                          {totalClientsCount}
+                        </h3>
+                      </div>
+                      <div className="p-2 md:p-3 rounded-full bg-[#4facfe]/10 group-hover:bg-[#4facfe]/20 transition-all">
+                        <UserGroupIcon className="h-5 w-5 md:h-6 md:w-6 text-[#4facfe]" />
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {sortedSolutions[0][1]} clients (
-                      {Math.round((sortedSolutions[0][1] / totalClientsCount) * 100)}%)
-                    </p>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Completed Projects (Step 7) */}
-              <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-[#213f5b] hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs md:text-sm text-gray-500">Projets Complétés</p>
-                    <h3 className="text-xl md:text-2xl font-bold text-[#213f5b]">
-                      {stageStats["7"] || 0}
-                    </h3>
+              {/* Projets en Installation */}
+              <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
+                <div className="flex h-full">
+                  <div className="w-2 bg-gradient-to-b from-[#43e97b] to-[#38f9d7]"></div>
+                  <div className="flex-1 p-4 md:p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs md:text-sm text-gray-500 font-medium">Projets en Installation</p>
+                        <h3 className="text-xl md:text-2xl font-bold text-[#213f5b] mt-1">
+                          {stageStats["5"] || 0}
+                        </h3>
+                      </div>
+                      <div className="p-2 md:p-3 rounded-full bg-[#43e97b]/10 group-hover:bg-[#43e97b]/20 transition-all">
+                        <BuildingOfficeIcon className="h-5 w-5 md:h-6 md:w-6 text-[#43e97b]" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-2 md:p-3 rounded-full bg-[#213f5b]/10">
-                    <ChartBarIcon className="h-5 w-5 md:h-6 md:w-6 text-[#213f5b]" />
+                </div>
+              </div>
+
+              {/* Projets en Contrôle */}
+              <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
+                <div className="flex h-full">
+                  <div className="w-2 bg-gradient-to-b from-[#f7b91b] to-[#f59e0b]"></div>
+                  <div className="flex-1 p-4 md:p-6">
+                    <div>
+                      <p className="text-xs md:text-sm text-gray-500 font-medium">Projets en Contrôle</p>
+                      <h3 className="text-lg font-bold text-[#213f5b] mt-1">
+                        {stageStats["6"] || 0}
+                      </h3>
+                      <div className="mt-2 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#f7b91b] to-[#f59e0b]"
+                          style={{
+                            width: `${((stageStats["6"] || 0) / totalClientsCount) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {Math.round(((stageStats["6"] || 0) / totalClientsCount) * 100) || 0}% des projets
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Projets Complétés */}
+              <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
+                <div className="flex h-full">
+                  <div className="w-2 bg-gradient-to-b from-[#38c2de] to-[#1d6fa5]"></div>
+                  <div className="flex-1 p-4 md:p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs md:text-sm text-gray-500 font-medium">
+                          Projets Complétés
+                        </p>
+                        <h3 className="text-xl md:text-2xl font-bold text-[#213f5b] mt-1">
+                          {stageStats["7"] || 0}
+                        </h3>
+                      </div>
+                      <div className="p-2 md:p-3 rounded-full bg-[#38c2de]/10 group-hover:bg-[#38c2de]/20 transition-all">
+                        <ChartBarIcon className="h-5 w-5 md:h-6 md:w-6 text-[#38c2de]" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -531,7 +518,7 @@ const sortedSolutions = Object.entries(solutionCounts)
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full pl-12 pr-24 py-3 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#bfddf9] focus:border-transparent transition"
+                  className="w-full pl-12 pr-24 py-3 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
                 />
                 <div className="absolute right-3 top-2 flex items-center">
                   {searchQuery && (
@@ -571,8 +558,8 @@ const sortedSolutions = Object.entries(solutionCounts)
                       }}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                         filter === item
-                          ? "bg-[#213f5b] text-white shadow-sm"
-                          : "bg-white text-gray-600 border border-gray-200 hover:border-[#bfddf9] hover:bg-[#bfddf9]/10"
+                          ? "bg-gradient-to-r from-[#213f5b] to-[#1d6fa5] text-white shadow-sm"
+                          : "bg-white text-gray-600 border border-gray-200 hover:border-[#4facfe] hover:bg-[#4facfe]/10"
                       }`}
                     >
                       {item}
@@ -640,23 +627,30 @@ const sortedSolutions = Object.entries(solutionCounts)
                     ? contact.mailingAddress
                     : project.informationLogement?.typeDeLogement || "N/A";
                   const solution = project.solution;
+                  const stepNumber = Number(project.etape?.charAt(0)) || 1;
 
                   return (
                     <motion.div
                       key={project._id}
-                      className="relative bg-white rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden"
+                      className="relative bg-white rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                       whileHover={{ y: -3 }}
                     >
-                      {/* Decorative elements - reduced size */}
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#bfddf9]/20 rounded-bl-full z-0"></div>
-                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-[#d2fcb2]/15 rounded-tr-full z-0"></div>
+                      {/* Status indicator stripe at top */}
+                      <div 
+                        className="absolute top-0 left-0 right-0 h-1 z-10"
+                        style={{ background: getGradientColorForStep(stepNumber) }}
+                      ></div>
+                      
+                      {/* Decorative elements with improved styling */}
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#4facfe]/5 to-[#4facfe]/15 rounded-bl-full z-0 group-hover:scale-110 transition-transform duration-500"></div>
+                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-[#43e97b]/5 to-[#43e97b]/15 rounded-tr-full z-0 group-hover:scale-110 transition-transform duration-500"></div>
 
-                      {/* Client's initials in a circle - reduced size */}
+                      {/* Client's initials in a circle - with enhanced gradient */}
                       <div className="flex items-center gap-3 mb-3 relative z-10">
-                        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-[#213f5b] to-[#bfddf9] text-white text-lg font-bold shadow-md">
+                        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-[#4facfe] to-[#1d6fa5] text-white text-lg font-bold shadow-md">
                           {initials}
                         </div>
                         <div>
@@ -671,53 +665,57 @@ const sortedSolutions = Object.entries(solutionCounts)
                         </div>
                       </div>
 
-                      {/* Info container with subtle background - reduced padding */}
-                      <div className="bg-gradient-to-br from-white to-[#bfddf9]/10 rounded-lg p-3 mb-3 border border-[#bfddf9]/30">
-                        {/* SOLUTION Section - tighter spacing */}
+                      {/* Info container with improved background */}
+                      <div className="bg-gradient-to-br from-white to-[#f9fbff] rounded-lg p-3 mb-3 border border-[#e0eefb] shadow-sm">
+                        {/* SOLUTION Section - with improved styling */}
                         <div className="mb-2">
                           <p className="text-xs font-bold text-[#213f5b]/70 uppercase mb-1 flex items-center">
-                            <span className="w-3 h-0.5 bg-[#d2fcb2] mr-1"></span>
+                            <span className="w-3 h-0.5 bg-[#43e97b] mr-1"></span>
                             SOLUTION
                           </p>
-                          <div className="bg-[#bfddf9]/10 p-2 rounded-lg inline-block border border-[#bfddf9]/30">
+                          <div className="bg-[#4facfe]/10 p-2 rounded-lg inline-block border border-[#4facfe]/20">
                             <span className="text-xs font-medium text-[#213f5b]">
                               {solution}
                             </span>
                           </div>
                         </div>
 
-                        {/* ÉTAPE DU PROJET Section - Advanced UI with Step-Specific Colors */}
+                        {/* ÉTAPE DU PROJET Section - Enhanced UI with advanced progress styling */}
                         <div className="mb-4">
                           <p className="text-xs font-bold text-[#213f5b] uppercase mb-2 flex items-center">
-                            <span className="w-4 h-0.5 bg-[#d2fcb2] mr-2"></span>
+                            <span className="w-4 h-0.5 bg-[#43e97b] mr-2"></span>
                             ÉTAPE DU PROJET
                           </p>
                           <div className="space-y-3">
-                            {/* Progress Bar with Step-Based Gradient */}
-                            <div className="relative h-4 w-full bg-[#ffffff] border border-[#bfddf9] rounded-full overflow-hidden shadow-inner">
+                            {/* Progress Bar with Step-Based Gradient - Improved aesthetic */}
+                            <div className="relative h-4 w-full bg-gray-50 rounded-full overflow-hidden shadow-inner">
                               {project.etape && (
                                 <motion.div
                                   initial={{ width: 0 }}
                                   animate={{
                                     width: `${(Number(project.etape.charAt(0)) / 7) * 100}%`,
                                   }}
-                                  transition={{ duration: 0.6 }}
+                                  transition={{ 
+                                    duration: 0.8, 
+                                    ease: "easeOut" 
+                                  }}
                                   className="absolute h-full rounded-full"
                                   style={{
                                     background: getGradientColorForStep(Number(project.etape.charAt(0))),
                                   }}
                                 >
-                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20"></div>
+                                  {/* Add animated shimmer effect */}
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent shimmer"></div>
                                 </motion.div>
                               )}
                             </div>
 
-                            {/* Step Indicator with Unique Colors per Step */}
+                            {/* Step Indicator with enhanced styling */}
                             <div className="flex justify-between items-center">
                               <span className="text-xs font-medium text-[#213f5b]">
                                 {formatEtape(project.etape)}
                               </span>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
                                 {[...Array(7)].map((_, idx) => {
                                   const stepNumber = idx + 1;
                                   // Consider the step complete if the current etape is greater or equal to the step number.
@@ -726,20 +724,20 @@ const sortedSolutions = Object.entries(solutionCounts)
                                   return (
                                     <div
                                       key={idx}
-                                      className="w-6 h-6 flex items-center justify-center transition-transform transform hover:scale-110"
+                                      className="w-5 h-5 flex items-center justify-center transition-transform transform hover:scale-110"
                                       title={`Step ${stepNumber}`}
                                     >
                                       <div
-                                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                                        className={`w-3 h-3 rounded-full flex items-center justify-center ${
                                           completed
-                                            ? ""
-                                            : "bg-[#ffffff] border border-[#bfddf9]"
-                                        }`}
+                                            ? "shadow-sm"
+                                            : "bg-gray-100 border border-gray-200"
+                                        } transition-all duration-300`}
                                         style={completed ? { background: stepColor } : {}}
                                       >
-                                        <span className="text-[10px] text-[#213f5b]">
-                                          {stepNumber}
-                                        </span>
+                                        {stepNumber === Number(project.etape?.charAt(0)) && (
+                                          <div className="absolute w-5 h-5 rounded-full border-2 border-white shadow-sm animate-pulse" style={{ borderColor: stepColor }}></div>
+                                        )}
                                       </div>
                                     </div>
                                   );
@@ -750,25 +748,25 @@ const sortedSolutions = Object.entries(solutionCounts)
                         </div>
                       </div>
 
-                      {/* Contact information - condensed */}
+                      {/* Contact information - enhanced UI */}
                       <div className="space-y-1 mb-3">
-                        <div className="flex items-center gap-2 p-1 hover:bg-[#bfddf9]/5 rounded-lg transition-colors">
-                          <div className="bg-[#213f5b]/5 p-1.5 rounded-full">
-                            <EnvelopeIcon className="h-3 w-3 text-[#213f5b]" />
+                        <div className="flex items-center gap-2 p-1 hover:bg-[#4facfe]/5 rounded-lg transition-colors">
+                          <div className="bg-[#4facfe]/10 p-1.5 rounded-full">
+                            <EnvelopeIcon className="h-3 w-3 text-[#4facfe]" />
                           </div>
                           <span className="text-xs text-gray-700 truncate">
                             {email}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 p-1 hover:bg-[#bfddf9]/5 rounded-lg transition-colors">
-                          <div className="bg-[#213f5b]/5 p-1.5 rounded-full">
-                            <PhoneIcon className="h-3 w-3 text-[#213f5b]" />
+                        <div className="flex items-center gap-2 p-1 hover:bg-[#4facfe]/5 rounded-lg transition-colors">
+                          <div className="bg-[#4facfe]/10 p-1.5 rounded-full">
+                            <PhoneIcon className="h-3 w-3 text-[#4facfe]" />
                           </div>
                           <span className="text-xs text-gray-700">{phone}</span>
                         </div>
-                        <div className="flex items-center gap-2 p-1 hover:bg-[#bfddf9]/5 rounded-lg transition-colors">
-                          <div className="bg-[#213f5b]/5 p-1.5 rounded-full">
-                            <MapPinIcon className="h-3 w-3 text-[#213f5b]" />
+                        <div className="flex items-center gap-2 p-1 hover:bg-[#4facfe]/5 rounded-lg transition-colors">
+                          <div className="bg-[#4facfe]/10 p-1.5 rounded-full">
+                            <MapPinIcon className="h-3 w-3 text-[#4facfe]" />
                           </div>
                           <span className="text-xs text-gray-700 truncate">
                             {locationStr}
@@ -776,20 +774,19 @@ const sortedSolutions = Object.entries(solutionCounts)
                         </div>
                       </div>
 
-                      {/* Action button - reduced padding */}
+                      {/* Action button - enhanced with gradient */}
                       <div className="mt-auto">
                       <button
                         onClick={() => setSelectedProject(project)}
-                        className="group inline-flex items-center justify-center w-full py-2 px-4 bg-[#213f5b] text-white rounded-lg transition-all hover:bg-[#213f5b]/90 hover:shadow-md text-sm"
+                        className="group inline-flex items-center justify-center w-full py-2 px-4 bg-gradient-to-r from-[#213f5b] to-[#1d6fa5] text-white rounded-lg transition-all hover:shadow-md text-sm relative overflow-hidden"
                       >
+                        {/* Button shimmer effect */}
+                        <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                        
                         <span>Voir le détail</span>
                         <ChevronRightIcon className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
                       </button>
-
                       </div>
-
-                      
-
                     </motion.div>
                   );
                 })}
@@ -802,7 +799,7 @@ const sortedSolutions = Object.entries(solutionCounts)
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 rounded-lg flex items-center gap-2 text-[#213f5b] border border-[#bfddf9]/40 hover:bg-[#bfddf9]/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg flex items-center gap-2 text-[#213f5b] border border-[#4facfe]/40 hover:bg-[#4facfe]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronLeftIcon className="w-4 h-4" />
                 <span className="text-sm font-medium">Précédent</span>
@@ -827,8 +824,8 @@ const sortedSolutions = Object.entries(solutionCounts)
                       onClick={() => setCurrentPage(pageNum)}
                       className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all ${
                         currentPage === pageNum
-                          ? "bg-[#213f5b] text-white shadow-lg"
-                          : "text-[#213f5b] hover:bg-[#bfddf9]/20 border border-[#bfddf9]/40"
+                          ? "bg-gradient-to-br from-[#213f5b] to-[#1d6fa5] text-white shadow-lg"
+                          : "text-[#213f5b] hover:bg-[#4facfe]/10 border border-[#4facfe]/40"
                       }`}
                     >
                       {pageNum}
@@ -838,7 +835,7 @@ const sortedSolutions = Object.entries(solutionCounts)
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-lg flex items-center gap-2 text-[#213f5b] border border-[#bfddf9]/40 hover:bg-[#bfddf9]/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-lg flex items-center gap-2 text-[#213f5b] border border-[#4facfe]/40 hover:bg-[#4facfe]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <span className="text-sm font-medium">Suivant</span>
                   <ChevronRightIcon className="w-4 h-4" />
@@ -920,12 +917,12 @@ const sortedSolutions = Object.entries(solutionCounts)
                     <p className="text-[#213f5b]">{selectedProject.surfaceChauffee} m²</p>
                   </div>
                   
-                  {/* Timeline using real data */}
+                  {/* Timeline using real data - enhanced styling */}
                   <div className="mt-8">
                     <h4 className="text-sm font-medium text-gray-500 mb-4">Progression du projet</h4>
                     
                     <div className="relative">
-                      <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200"></div>
+                      <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-[#4facfe]/30 via-[#43e97b]/30 to-[#1d6fa5]/30"></div>
                       
                       <div className="space-y-6">
                         {steps.map((step, index) => {
@@ -933,36 +930,36 @@ const sortedSolutions = Object.entries(solutionCounts)
                           let bgColor, icon;
                           if (stepNumber < currentStep) {
                             // Completed steps
-                            bgColor = "bg-[#d2fcb2]";
-                            // textColor = "text-[#213f5b]";
+                            bgColor = "bg-gradient-to-r from-[#43e97b] to-[#38f9d7]";
                             icon = (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#213f5b]" viewBox="0 0 20 20" fill="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
                             );
                           } else if (stepNumber === currentStep) {
                             // Current step
-                            bgColor = "bg-[#bfddf9]";
-                            // textColor = "text-[#213f5b]";
+                            bgColor = "bg-gradient-to-r from-[#4facfe] to-[#4bb8fe]";
                             icon = (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#213f5b]" viewBox="0 0 20 20" fill="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
                             );
                           } else {
                             // Pending steps
                             bgColor = "bg-gray-200";
-                            // textColor = "text-gray-500";
-                            icon = <span className="text-xs font-medium">{stepNumber}</span>;
+                            icon = <span className="text-xs font-medium text-gray-500">{stepNumber}</span>;
                           }
                           return (
                             <div className="flex" key={index}>
-                              <div className={`flex-shrink-0 h-8 w-8 rounded-full ${bgColor} flex items-center justify-center relative z-10`}>
+                              <div className={`flex-shrink-0 h-8 w-8 rounded-full ${bgColor} flex items-center justify-center relative z-10 shadow-sm`}>
                                 {icon}
                               </div>
                               <div className="ml-4">
                                 <h5 className={`text-sm font-medium ${stepNumber <= currentStep ? "text-[#213f5b]" : "text-gray-400"}`}>{step}</h5>
                                 {/* Optionally, add dates for each step if available */}
+                                {stepNumber === currentStep && (
+                                  <p className="text-xs text-[#4facfe] mt-1">En cours</p>
+                                )}
                               </div>
                             </div>
                           );
@@ -976,11 +973,13 @@ const sortedSolutions = Object.entries(solutionCounts)
               <div className="p-6 border-t border-gray-100">
                 <Link href={`/dashboard/admin/projects/${selectedProject._id}`}>
                   <motion.button
-                    className="w-full py-3 rounded-xl text-white font-medium"
-                    style={{ backgroundColor: colors.darkBlue }}
+                    className="w-full py-3 rounded-xl text-white font-medium relative overflow-hidden"
+                    style={{ background: "linear-gradient(135deg, #213f5b, #1d6fa5)" }}
                     whileHover={{ opacity: 0.9 }}
                     whileTap={{ scale: 0.98 }}
                   >
+                    {/* Button shimmer effect */}
+                    <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
                     Voir tous les détails
                   </motion.button>
                 </Link>
@@ -989,6 +988,23 @@ const sortedSolutions = Object.entries(solutionCounts)
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Add some CSS for animations */}
+      <style jsx global>{`
+        .shimmer {
+          animation: shimmer 2s infinite linear;
+          background-size: 1000px 100%;
+        }
+        
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </div>
   );
 }
