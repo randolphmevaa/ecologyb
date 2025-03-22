@@ -106,7 +106,7 @@ export default function AdminChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "staff" | "system" | "client" | "support">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "staff" | "unread" | "client" | "support">("all");
   const [isTyping, setIsTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
   const [showFormatting, setShowFormatting] = useState(false);
@@ -662,7 +662,7 @@ export default function AdminChatPage() {
     .filter(conv => {
       // Filter by active tab
       if (activeTab === "staff" && (conv.type !== "individual" && conv.type !== "group")) return false;
-      if (activeTab === "system" && conv.type !== "system") return false;
+      if (activeTab === "unread" && conv.type !== "system") return false;
       if (activeTab === "client" && conv.type !== "client") return false;
       if (activeTab === "support" && conv.type !== "support") return false;
       
@@ -963,43 +963,43 @@ export default function AdminChatPage() {
               )}
               
               <div className="flex border rounded-lg overflow-hidden shadow-sm">
-                <button
-                  className={`flex-1 py-2 text-sm font-medium ${activeTab === 'all' ? 'bg-[#213f5b] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                  onClick={() => setActiveTab('all')}
-                >
-                  <div className="flex justify-center items-center gap-1">
-                    <ChatBubbleLeftRightIcon className="h-4 w-4" />
-                    <span>Tous</span>
-                  </div>
-                </button>
-                <button
-                  className={`flex-1 py-2 text-sm font-medium ${activeTab === 'staff' ? 'bg-[#213f5b] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                  onClick={() => setActiveTab('staff')}
-                >
-                  <div className="flex justify-center items-center gap-1">
-                    <UserGroupIcon className="h-4 w-4" />
-                    <span>Équipe</span>
-                  </div>
-                </button>
-                <button
-                  className={`flex-1 py-2 text-sm font-medium ${activeTab === 'system' ? 'bg-[#213f5b] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                  onClick={() => setActiveTab('system')}
-                >
-                  <div className="flex justify-center items-center gap-1">
-                    <CogIcon className="h-4 w-4" />
-                    <span>Système</span>
-                  </div>
-                </button>
-                <button
-                  className={`flex-1 py-2 text-sm font-medium ${activeTab === 'client' ? 'bg-[#213f5b] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                  onClick={() => setActiveTab('client')}
-                >
-                  <div className="flex justify-center items-center gap-1">
-                    <BriefcaseIcon className="h-4 w-4" />
-                    <span>Clients</span>
-                  </div>
-                </button>
-              </div>
+              <button
+                className={`flex-1 py-2 text-sm font-medium ${activeTab === 'all' ? 'bg-[#213f5b] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                onClick={() => setActiveTab('all')}
+              >
+                <div className="flex justify-center items-center gap-1">
+                  <ChatBubbleLeftRightIcon className="h-4 w-4" />
+                  <span>Tous</span>
+                </div>
+              </button>
+              <button
+                className={`flex-1 py-2 text-sm font-medium ${activeTab === 'staff' ? 'bg-[#213f5b] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                onClick={() => setActiveTab('staff')}
+              >
+                <div className="flex justify-center items-center gap-1">
+                  <UserGroupIcon className="h-4 w-4" />
+                  <span>Équipe</span>
+                </div>
+              </button>
+              <button
+                className={`flex-1 py-2 text-sm font-medium ${activeTab === 'unread' ? 'bg-[#213f5b] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                onClick={() => setActiveTab('unread')}
+              >
+                <div className="flex justify-center items-center gap-1">
+                  <BellIcon className="h-4 w-4" />
+                  <span>Non lue</span>
+                </div>
+              </button>
+              <button
+                className={`flex-1 py-2 text-sm font-medium ${activeTab === 'client' ? 'bg-[#213f5b] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                onClick={() => setActiveTab('client')}
+              >
+                <div className="flex justify-center items-center gap-1">
+                  <BriefcaseIcon className="h-4 w-4" />
+                  <span>Clients</span>
+                </div>
+              </button>
+            </div>
             </div>
             
             <div className="overflow-y-auto flex-1">

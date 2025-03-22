@@ -11,34 +11,95 @@ import InfoTab from "./InfoTab";
 import PhotoTab from "./PhotoTab";
 import ChatTab from "./ChatTab";
 import SavTab from "./SavTab";
-
 import {
-  // EnvelopeIcon,
-  // PhoneIcon,
-  // MapPinIcon,
-  // ClipboardDocumentCheckIcon,
-  // HomeIcon,
-  // BriefcaseIcon,
-  // InformationCircleIcon,
   DocumentTextIcon,
   CloudArrowDownIcon,
   XMarkIcon,
   ArrowUpTrayIcon,
   PlusIcon,
-  CloudIcon,
-  MagnifyingGlassIcon, // For the file upload area
+  // CloudIcon,
+  MagnifyingGlassIcon,
+  TrashIcon,
+  PencilIcon,
+  ArrowDownTrayIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  CalendarIcon,
+  DocumentArrowUpIcon,
+  DocumentIcon,
+  ArrowPathIcon,
+  EyeIcon,
+  FolderIcon,
+  DocumentArrowDownIcon,
+  DocumentDuplicateIcon, // For the file upload area
 } from "@heroicons/react/24/outline";
 import { Header } from "@/components/Header";
 import PremiumTabs from "./TabsUI";
 import ReglementTab from "./ReglementTab";
-import FacturationTab from "./FacturationTab"
+import DevisFactureTab from "./DevisFactureTab"
+
+interface DocumentsTabProps {
+  contactId: string;
+}
+
+interface DocumentData {
+  id: string;
+  type: string;
+  date: string;
+  status: string;
+  filePath?: string;
+}
+
+// Sample data for demonstration
+const SAMPLE_DOWNLOADABLE_DOCS: DocumentData[] = [
+  {
+    id: "1",
+    type: "Devis",
+    date: "15/03/2025",
+    status: "Soumis",
+    filePath: ""
+  },
+  {
+    id: "2",
+    type: "Facture",
+    date: "18/03/2025",
+    status: "Soumis",
+    filePath: ""
+  },
+  {
+    id: "3",
+    type: "Avis d'éligibilité MaPrimeRénov'",
+    date: "20/03/2025",
+    status: "Soumis",
+    filePath: ""
+  }
+];
+
+const SAMPLE_TRANSMITTABLE_DOCS: DocumentData[] = [
+  {
+    id: "4",
+    type: "Avis d'imposition",
+    date: "22/03/2025",
+    status: "Manquant",
+    filePath: ""
+  },
+  {
+    id: "5",
+    type: "Attestation de propriété",
+    date: "22/03/2025",
+    status: "Manquant",
+    filePath: ""
+  }
+];
 
 // Define the predefined document types in a shared scope.
 const predefinedTypes = [
-  "avis d'imposition",
-  "devis facture",
-  "checklist PAC",
-  "note de dimensionnement",
+  "Devis",
+  "Facture",
+  "Avis d'imposition",
+  "Attestation de propriété",
+  "Avis d'éligibilité MaPrimeRénov'",
+  "Autre"
 ];
 
 // ------------------------
@@ -73,13 +134,13 @@ interface DossierFormData {
   };
 }
 
-interface DocumentApiResponse {
-  _id: string;
-  type: string;
-  date: string;
-  statut: string;
-  filePath?: string;
-}
+// interface DocumentApiResponse {
+//   _id: string;
+//   type: string;
+//   date: string;
+//   statut: string;
+//   filePath?: string;
+// }
 
 interface User {
   email: string;
@@ -145,235 +206,235 @@ type StepProgressProps = {
 
 // When editing an existing document, we pass initialData (including the document id).
 // Otherwise, for a new document the initialData prop is omitted.
-interface DocumentInitialData {
-  id: string;
-  docType: string;
-  solution: string;
-  status?: string;
-  customDocType?: string;
-}
+// interface DocumentInitialData {
+//   id: string;
+//   docType: string;
+//   solution: string;
+//   status?: string;
+//   customDocType?: string;
+// }
 
-interface AddDocumentFormProps {
-  onClose: () => void;
-  contactId: string;
-  // Optional initial data for editing an existing document.
-  initialData?: DocumentInitialData;
-  // Callback called with the saved document data (after POST or PUT).
-  onDocumentSaved: (doc: DocumentData) => void;
-}
+// interface AddDocumentFormProps {
+//   onClose: () => void;
+//   contactId: string;
+//   // Optional initial data for editing an existing document.
+//   initialData?: DocumentInitialData;
+//   // Callback called with the saved document data (after POST or PUT).
+//   onDocumentSaved: (doc: DocumentData) => void;
+// }
 
-const AddDocumentForm = ({
-  onClose,
-  contactId,
-  initialData,
-  onDocumentSaved,
-}: AddDocumentFormProps) => {
-  // Initialize state using initialData if provided.
-  const [docType, setDocType] = useState(
-    initialData
-      ? predefinedTypes.includes(initialData.docType)
-        ? initialData.docType
-        : "autre"
-      : ""
-  );
-  const [customDocType, setCustomDocType] = useState(
-    initialData
-      ? predefinedTypes.includes(initialData.docType)
-        ? ""
-        : initialData.customDocType || initialData.docType
-      : ""
-  );
-  const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState(
-    initialData ? initialData.status || "Manquant" : "Manquant"
-  );
-  // Format current date in French (day/month/year)
-  const currentDate = new Date().toLocaleDateString("fr-FR");
-  const [solution, setSolution] = useState(initialData ? initialData.solution : "");
+// const AddDocumentForm = ({
+//   onClose,
+//   contactId,
+//   initialData,
+//   onDocumentSaved,
+// }: AddDocumentFormProps) => {
+//   // Initialize state using initialData if provided.
+//   const [docType, setDocType] = useState(
+//     initialData
+//       ? predefinedTypes.includes(initialData.docType)
+//         ? initialData.docType
+//         : "autre"
+//       : ""
+//   );
+//   const [customDocType, setCustomDocType] = useState(
+//     initialData
+//       ? predefinedTypes.includes(initialData.docType)
+//         ? ""
+//         : initialData.customDocType || initialData.docType
+//       : ""
+//   );
+//   const [file, setFile] = useState<File | null>(null);
+//   const [status, setStatus] = useState(
+//     initialData ? initialData.status || "Manquant" : "Manquant"
+//   );
+//   // Format current date in French (day/month/year)
+//   const currentDate = new Date().toLocaleDateString("fr-FR");
+//   const [solution, setSolution] = useState(initialData ? initialData.solution : "");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setStatus("Soumis");
-    } else {
-      setFile(null);
-      setStatus("Manquant");
-    }
-  };
+//   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     if (e.target.files && e.target.files[0]) {
+//       setFile(e.target.files[0]);
+//       setStatus("Soumis");
+//     } else {
+//       setFile(null);
+//       setStatus("Manquant");
+//     }
+//   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // Use the custom type if "autre" is selected.
-    const finalDocType = docType === "autre" ? customDocType : docType;
-    if (!finalDocType || !solution || !contactId) {
-      alert("Veuillez remplir tous les champs obligatoires.");
-      return;
-    }
-    const formData = new FormData();
-    formData.append("docType", finalDocType);
-    formData.append("date", currentDate);
-    formData.append("status", status);
-    formData.append("solution", solution);
-    formData.append("contactId", contactId);
-    if (file) {
-      formData.append("file", file);
-    }
-    try {
-      let res;
-      // If initialData exists, update the document via PUT.
-      if (initialData) {
-        res = await fetch(`/api/documents/${initialData.id}`, {
-          method: "PUT",
-          body: formData,
-        });
-      } else {
-        // Otherwise, create a new document via POST.
-        res = await fetch("/api/documents", {
-          method: "POST",
-          body: formData,
-        });
-      }
-      if (!res.ok) throw new Error("Erreur lors de l'enregistrement du document");
-      const savedDoc: DocumentData = await res.json();
-      onDocumentSaved(savedDoc);
-      onClose();
-    } catch (error) {
-      console.error(error);
-      alert("Une erreur est survenue lors de l'enregistrement.");
-    }
-  };
+//   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+//     e.preventDefault();
+//     // Use the custom type if "autre" is selected.
+//     const finalDocType = docType === "autre" ? customDocType : docType;
+//     if (!finalDocType || !solution || !contactId) {
+//       alert("Veuillez remplir tous les champs obligatoires.");
+//       return;
+//     }
+//     const formData = new FormData();
+//     formData.append("docType", finalDocType);
+//     formData.append("date", currentDate);
+//     formData.append("status", status);
+//     formData.append("solution", solution);
+//     formData.append("contactId", contactId);
+//     if (file) {
+//       formData.append("file", file);
+//     }
+//     try {
+//       let res;
+//       // If initialData exists, update the document via PUT.
+//       if (initialData) {
+//         res = await fetch(`/api/documents/${initialData.id}`, {
+//           method: "PUT",
+//           body: formData,
+//         });
+//       } else {
+//         // Otherwise, create a new document via POST.
+//         res = await fetch("/api/documents", {
+//           method: "POST",
+//           body: formData,
+//         });
+//       }
+//       if (!res.ok) throw new Error("Erreur lors de l'enregistrement du document");
+//       const savedDoc: DocumentData = await res.json();
+//       onDocumentSaved(savedDoc);
+//       onClose();
+//     } catch (error) {
+//       console.error(error);
+//       alert("Une erreur est survenue lors de l'enregistrement.");
+//     }
+//   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <h3 className="text-2xl font-semibold text-gray-800 mb-4">
-        Informations du document
-      </h3>
-      {/* Type de document */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Type de document <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={docType}
-          onChange={(e) => setDocType(e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          required
-        >
-          <option value="">Sélectionner le type</option>
-          <option value="avis d'imposition">Avis d&apos;imposition</option>
-          <option value="devis facture">Devis / Facture</option>
-          <option value="checklist PAC">Checklist PAC</option>
-          <option value="note de dimensionnement">Note de dimensionnement</option>
-          <option value="autre">Autre</option>
-        </select>
-      </div>
-      {/* Champ personnalisé pour "autre" */}
-      {docType === "autre" && (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Spécifiez le type <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={customDocType}
-            onChange={(e) => setCustomDocType(e.target.value)}
-            placeholder="Entrez le type personnalisé..."
-            className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-            required
-          />
-        </div>
-      )}
-      {/* Date de téléversement */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Date de téléversement
-        </label>
-        <input
-          type="text"
-          value={currentDate}
-          disabled
-          className="w-full border border-gray-300 rounded-md px-4 py-2 bg-gray-100"
-        />
-      </div>
-      {/* Zone de téléversement de fichier */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Fichier
-        </label>
-        <div className="relative">
-          <input
-            id="file-upload"
-            type="file"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <label
-            htmlFor="file-upload"
-            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          >
-            <CloudIcon className="w-10 h-10 text-gray-400 mb-2" />
-            {file ? (
-              <span className="text-gray-700">{file.name}</span>
-            ) : (
-              <span className="text-gray-500">
-                Cliquez ou glissez-déposez votre fichier ici
-              </span>
-            )}
-          </label>
-        </div>
-        {!file && (
-          <p className="mt-1 text-xs text-gray-500">
-            Vous pouvez enregistrer ce document et téléverser le fichier ultérieurement.
-          </p>
-        )}
-      </div>
-      {/* Statut */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Statut
-        </label>
-        <input
-          type="text"
-          value={status}
-          disabled
-          className="w-full border border-gray-300 rounded-md px-4 py-2 bg-gray-100"
-        />
-      </div>
-      {/* Solution */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Solution <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={solution}
-          onChange={(e) => setSolution(e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          required
-        >
-          <option value="">Sélectionner une solution</option>
-          <option value="Pompes a chaleur">Pompes à chaleur</option>
-          <option value="Chauffe-eau solaire individuel">
-            Chauffe-eau solaire individuel
-          </option>
-          <option value="Chauffe-eau thermodynamique">
-            Chauffe-eau thermodynamique
-          </option>
-          <option value="Système Solaire Combiné">
-            Système Solaire Combiné
-          </option>
-        </select>
-      </div>
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition-colors text-center"
-        >
-          {file ? "Téléverser" : "Enregistrer"}
-        </button>
-      </div>
-    </form>
-  );
-};
+//   return (
+//     <form onSubmit={handleSubmit} className="space-y-6">
+//       <h3 className="text-2xl font-semibold text-gray-800 mb-4">
+//         Informations du document
+//       </h3>
+//       {/* Type de document */}
+//       <div className="mb-4">
+//         <label className="block text-sm font-medium text-gray-700 mb-2">
+//           Type de document <span className="text-red-500">*</span>
+//         </label>
+//         <select
+//           value={docType}
+//           onChange={(e) => setDocType(e.target.value)}
+//           className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+//           required
+//         >
+//           <option value="">Sélectionner le type</option>
+//           <option value="avis d'imposition">Avis d&apos;imposition</option>
+//           <option value="devis facture">Devis / Facture</option>
+//           <option value="checklist PAC">Checklist PAC</option>
+//           <option value="note de dimensionnement">Note de dimensionnement</option>
+//           <option value="autre">Autre</option>
+//         </select>
+//       </div>
+//       {/* Champ personnalisé pour "autre" */}
+//       {docType === "autre" && (
+//         <div className="mb-4">
+//           <label className="block text-sm font-medium text-gray-700 mb-2">
+//             Spécifiez le type <span className="text-red-500">*</span>
+//           </label>
+//           <input
+//             type="text"
+//             value={customDocType}
+//             onChange={(e) => setCustomDocType(e.target.value)}
+//             placeholder="Entrez le type personnalisé..."
+//             className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+//             required
+//           />
+//         </div>
+//       )}
+//       {/* Date de téléversement */}
+//       <div className="mb-4">
+//         <label className="block text-sm font-medium text-gray-700 mb-2">
+//           Date de téléversement
+//         </label>
+//         <input
+//           type="text"
+//           value={currentDate}
+//           disabled
+//           className="w-full border border-gray-300 rounded-md px-4 py-2 bg-gray-100"
+//         />
+//       </div>
+//       {/* Zone de téléversement de fichier */}
+//       <div className="mb-4">
+//         <label className="block text-sm font-medium text-gray-700 mb-2">
+//           Fichier
+//         </label>
+//         <div className="relative">
+//           <input
+//             id="file-upload"
+//             type="file"
+//             onChange={handleFileChange}
+//             className="hidden"
+//           />
+//           <label
+//             htmlFor="file-upload"
+//             className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+//           >
+//             <CloudIcon className="w-10 h-10 text-gray-400 mb-2" />
+//             {file ? (
+//               <span className="text-gray-700">{file.name}</span>
+//             ) : (
+//               <span className="text-gray-500">
+//                 Cliquez ou glissez-déposez votre fichier ici
+//               </span>
+//             )}
+//           </label>
+//         </div>
+//         {!file && (
+//           <p className="mt-1 text-xs text-gray-500">
+//             Vous pouvez enregistrer ce document et téléverser le fichier ultérieurement.
+//           </p>
+//         )}
+//       </div>
+//       {/* Statut */}
+//       <div className="mb-4">
+//         <label className="block text-sm font-medium text-gray-700 mb-2">
+//           Statut
+//         </label>
+//         <input
+//           type="text"
+//           value={status}
+//           disabled
+//           className="w-full border border-gray-300 rounded-md px-4 py-2 bg-gray-100"
+//         />
+//       </div>
+//       {/* Solution */}
+//       <div className="mb-4">
+//         <label className="block text-sm font-medium text-gray-700 mb-2">
+//           Solution <span className="text-red-500">*</span>
+//         </label>
+//         <select
+//           value={solution}
+//           onChange={(e) => setSolution(e.target.value)}
+//           className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+//           required
+//         >
+//           <option value="">Sélectionner une solution</option>
+//           <option value="Pompes a chaleur">Pompes à chaleur</option>
+//           <option value="Chauffe-eau solaire individuel">
+//             Chauffe-eau solaire individuel
+//           </option>
+//           <option value="Chauffe-eau thermodynamique">
+//             Chauffe-eau thermodynamique
+//           </option>
+//           <option value="Système Solaire Combiné">
+//             Système Solaire Combiné
+//           </option>
+//         </select>
+//       </div>
+//       <div className="flex justify-end">
+//         <button
+//           type="submit"
+//           className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition-colors text-center"
+//         >
+//           {file ? "Téléverser" : "Enregistrer"}
+//         </button>
+//       </div>
+//     </form>
+//   );
+// };
 
 // ------------------------
 // Component: StepProgress
@@ -553,8 +614,19 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
   const [docToEdit, setDocToEdit] = useState<DocumentData | null>(null);
   const [previewDoc, setPreviewDoc] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [activeDownloadTab, setActiveDownloadTab] = useState<string>("all");
+  const [activeTransmitTab, setActiveTransmitTab] = useState<string>("all");
 
+  // For demo purposes, use sample data
   useEffect(() => {
+    setLoading(true);
+    setTimeout(() => {
+      setDownloadableDocs(SAMPLE_DOWNLOADABLE_DOCS);
+      setTransmittableDocs(SAMPLE_TRANSMITTABLE_DOCS);
+      setLoading(false);
+    }, 800);
+    
+    /* Commented out actual API call for demo
     if (contactId) {
       setLoading(true);
       fetch(`/api/documents?contactId=${contactId}`)
@@ -578,14 +650,20 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
           setLoading(false);
         });
     }
+    */
   }, [contactId]);
 
-  const filteredDownloadableDocs = downloadableDocs.filter((doc) =>
-    doc.type.toLowerCase().includes(searchDownload.toLowerCase())
-  );
-  const filteredTransmittableDocs = transmittableDocs.filter((doc) =>
-    doc.type.toLowerCase().includes(searchTransmit.toLowerCase())
-  );
+  const filteredDownloadableDocs = downloadableDocs.filter((doc) => {
+    const matchesSearch = doc.type.toLowerCase().includes(searchDownload.toLowerCase());
+    if (activeDownloadTab === "all") return matchesSearch;
+    return matchesSearch && doc.type === activeDownloadTab;
+  });
+  
+  const filteredTransmittableDocs = transmittableDocs.filter((doc) => {
+    const matchesSearch = doc.type.toLowerCase().includes(searchTransmit.toLowerCase());
+    if (activeTransmitTab === "all") return matchesSearch;
+    return matchesSearch && doc.type === activeTransmitTab;
+  });
 
   const handleVisualiser = (doc: DocumentData): void => {
     setPreviewDoc(doc);
@@ -596,318 +674,608 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
     setIsModalOpen(true);
   };
 
-  const handleDocumentSaved = (savedDoc: DocumentData) => {
-    if (docToEdit) {
-      // Update an existing document.
-      setTransmittableDocs((prev) =>
-        prev.map((d) => (d.id === savedDoc.id ? savedDoc : d))
-      );
-      if (savedDoc.status === "Soumis") {
-        setTransmittableDocs((prev) => prev.filter((d) => d.id !== savedDoc.id));
-        setDownloadableDocs((prev) => [...prev, savedDoc]);
-      }
-    } else {
-      // Add a new document.
-      if (savedDoc.status === "Manquant") {
-        setTransmittableDocs((prev) => [...prev, savedDoc]);
-      } else if (savedDoc.status === "Soumis") {
-        setDownloadableDocs((prev) => [...prev, savedDoc]);
-      }
+  // const handleDocumentSaved = (savedDoc: DocumentData) => {
+  //   if (docToEdit) {
+  //     // Update an existing document.
+  //     setTransmittableDocs((prev) =>
+  //       prev.map((d) => (d.id === savedDoc.id ? savedDoc : d))
+  //     );
+  //     if (savedDoc.status === "Soumis") {
+  //       setTransmittableDocs((prev) => prev.filter((d) => d.id !== savedDoc.id));
+  //       setDownloadableDocs((prev) => [...prev, savedDoc]);
+  //     }
+  //   } else {
+  //     // Add a new document.
+  //     if (savedDoc.status === "Manquant") {
+  //       setTransmittableDocs((prev) => [...prev, savedDoc]);
+  //     } else if (savedDoc.status === "Soumis") {
+  //       setDownloadableDocs((prev) => [...prev, savedDoc]);
+  //     }
+  //   }
+  //   setDocToEdit(null);
+  //   setIsModalOpen(false);
+  // };
+
+  // Function to get an icon based on document type
+  const getDocumentIcon = (type: string) => {
+    switch (type) {
+      case "Devis":
+        return <DocumentTextIcon className="h-8 w-8 text-blue-500" />;
+      case "Facture":
+        return <DocumentDuplicateIcon className="h-8 w-8 text-green-500" />;
+      case "Avis d'imposition":
+        return <DocumentArrowDownIcon className="h-8 w-8 text-amber-500" />;
+      case "Attestation de propriété":
+        return <DocumentIcon className="h-8 w-8 text-purple-500" />;
+      case "Avis d'éligibilité MaPrimeRénov'":
+        return <DocumentArrowUpIcon className="h-8 w-8 text-red-500" />;
+      default:
+        return <DocumentIcon className="h-8 w-8 text-gray-500" />;
     }
-    setDocToEdit(null);
-    setIsModalOpen(false);
   };
 
   return (
-    <>
-      {/* Add/Edit Document Modal */}
+    <div className="h-full">
+      {/* Enhanced Header with Background */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.6 }}
+        className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-10 py-8 rounded-t-2xl"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full -mr-16 -mt-20 opacity-30" />
+        <div className="absolute bottom-0 right-24 w-32 h-32 bg-blue-300 rounded-full -mb-10 opacity-20" />
+        
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center">
+            <div className="flex items-center justify-center bg-white text-blue-600 rounded-full w-16 h-16 mr-6 shadow-xl">
+              <FolderIcon className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-extrabold text-white">
+                Documents
+              </h2>
+              <p className="text-blue-100 mt-1">Gestion des documents clients et administratifs</p>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => {
+              setDocToEdit(null);
+              setIsModalOpen(true);
+            }}
+            className="px-4 py-2 bg-white text-blue-700 rounded-lg shadow-md hover:bg-blue-50 transition-colors flex items-center gap-2"
+          >
+            <PlusIcon className="h-5 w-5" />
+            <span>Ajouter un document</span>
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Main Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="bg-white rounded-b-2xl shadow-xl p-6 pb-10"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* Documents to Download Section */}
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg overflow-hidden border border-blue-100"
+          >
+            <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <CloudArrowDownIcon className="h-8 w-8 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Documents à télécharger</h2>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Enhanced Search and Filter */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                <div className="relative flex-1 w-full">
+                  <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchDownload}
+                    onChange={(e) => setSearchDownload(e.target.value)}
+                    placeholder="Rechercher un document..."
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+                
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setActiveDownloadTab("all")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      activeDownloadTab === "all"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Tous
+                  </button>
+                  <button
+                    onClick={() => setActiveDownloadTab("Devis")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      activeDownloadTab === "Devis"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Devis
+                  </button>
+                  <button
+                    onClick={() => setActiveDownloadTab("Facture")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      activeDownloadTab === "Facture"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Factures
+                  </button>
+                </div>
+              </div>
+              
+              {/* Document List */}
+              {loading ? (
+                <div className="flex justify-center items-center py-16">
+                  <div className="relative">
+                    <div className="h-16 w-16 border-4 border-blue-200 border-dashed rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <ArrowPathIcon className="h-6 w-6 text-blue-500 animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              ) : filteredDownloadableDocs.length === 0 ? (
+                <div className="bg-gray-50 rounded-xl p-8 text-center">
+                  <DocumentIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-gray-900 font-medium text-lg mb-1">Aucun document trouvé</h3>
+                  <p className="text-gray-500 mb-4">Aucun document ne correspond à vos critères de recherche</p>
+                  <button
+                    onClick={() => {
+                      setDocToEdit(null);
+                      setIsModalOpen(true);
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    Ajouter un document
+                  </button>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {filteredDownloadableDocs.map((doc) => (
+                    <motion.div
+                      key={doc.id}
+                      whileHover={{ y: -2, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 group cursor-pointer hover:border-blue-300"
+                      onClick={() => handleVisualiser(doc)}
+                    >
+                      <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+                        {getDocumentIcon(doc.type)}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-medium text-gray-900 truncate">
+                          {doc.type}
+                        </h3>
+                        <div className="flex items-center gap-3 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <CalendarIcon className="h-4 w-4 mr-1" />
+                            {doc.date}
+                          </div>
+                          <div className="flex items-center">
+                            <CheckCircleIcon className="h-4 w-4 mr-1 text-green-500" />
+                            {doc.status}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleVisualiser(doc);
+                          }}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                        >
+                          <EyeIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(doc.filePath);
+                          }}
+                          className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                        >
+                          <ArrowDownTrayIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Documents to Transmit Section */}
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg overflow-hidden border border-green-100"
+          >
+            <div className="relative bg-gradient-to-r from-green-600 to-green-400 px-6 py-4">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500 rounded-full -mr-10 -mt-10 opacity-20" />
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <ArrowUpTrayIcon className="h-8 w-8 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Documents à transmettre</h2>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Enhanced Search and Filter */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                <div className="relative flex-1 w-full">
+                  <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchTransmit}
+                    onChange={(e) => setSearchTransmit(e.target.value)}
+                    placeholder="Rechercher un document..."
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                  />
+                </div>
+                
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setActiveTransmitTab("all")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      activeTransmitTab === "all"
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Tous
+                  </button>
+                  <button
+                    onClick={() => setActiveTransmitTab("Avis d'imposition")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      activeTransmitTab === "Avis d'imposition"
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Avis
+                  </button>
+                  <button
+                    onClick={() => setActiveTransmitTab("Attestation de propriété")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      activeTransmitTab === "Attestation de propriété"
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Attestation
+                  </button>
+                </div>
+              </div>
+              
+              {/* Document List */}
+              {loading ? (
+                <div className="flex justify-center items-center py-16">
+                  <div className="relative">
+                    <div className="h-16 w-16 border-4 border-green-200 border-dashed rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <ArrowPathIcon className="h-6 w-6 text-green-500 animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              ) : filteredTransmittableDocs.length === 0 ? (
+                <div className="bg-gray-50 rounded-xl p-8 text-center">
+                  <CheckCircleIcon className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                  <h3 className="text-gray-900 font-medium text-lg mb-1">Tous les documents sont transmis</h3>
+                  <p className="text-gray-500 mb-4">Il n&apos;y a pas de documents manquants à ce stade</p>
+                  <button
+                    onClick={() => {
+                      setDocToEdit(null);
+                      setIsModalOpen(true);
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    Ajouter un document
+                  </button>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {filteredTransmittableDocs.map((doc) => (
+                    <motion.div
+                      key={doc.id}
+                      whileHover={{ y: -2, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 group cursor-pointer hover:border-green-300"
+                    >
+                      <div className="p-3 bg-amber-50 rounded-lg group-hover:bg-amber-100 transition-colors">
+                        {getDocumentIcon(doc.type)}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-medium text-gray-900 truncate">
+                          {doc.type}
+                        </h3>
+                        <div className="flex items-center gap-3 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <CalendarIcon className="h-4 w-4 mr-1" />
+                            {doc.date}
+                          </div>
+                          <div className="flex items-center">
+                            <ExclamationTriangleIcon className="h-4 w-4 mr-1 text-amber-500" />
+                            {doc.status}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => handleAjouterDocTransmettre(doc)}
+                        className="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-lg bg-green-600 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                      >
+                        <PlusIcon className="h-4 w-4" />
+                        Ajouter
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Modal for Add/Edit Document - Enhanced Design */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl relative"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              className="bg-white rounded-2xl w-full max-w-lg relative shadow-2xl overflow-hidden"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
             >
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setDocToEdit(null);
-                }}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-              <AddDocumentForm
-                onClose={() => {
-                  setIsModalOpen(false);
-                  setDocToEdit(null);
-                }}
-                contactId={contactId}
-                initialData={
-                  docToEdit
-                    ? {
-                        id: docToEdit.id,
-                        docType: predefinedTypes.includes(docToEdit.type)
-                          ? docToEdit.type
-                          : "autre",
-                        customDocType: predefinedTypes.includes(docToEdit.type)
-                          ? ""
-                          : docToEdit.type,
-                        solution: "",
-                        status: docToEdit.status,
-                      }
-                    : undefined
-                }
-                onDocumentSaved={handleDocumentSaved}
-              />
+              {/* Modal header */}
+              <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                      <DocumentIcon className="h-6 w-6 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-white">
+                      {docToEdit ? "Modifier le document" : "Ajouter un document"}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setDocToEdit(null);
+                    }}
+                    className="text-white/80 hover:text-white transition-colors focus:outline-none"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                {/* For demo purposes, we'll just show a placeholder form */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Type de document
+                    </label>
+                    <select
+                      className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      defaultValue={docToEdit?.type || ""}
+                    >
+                      <option value="" disabled>Sélectionnez un type</option>
+                      {predefinedTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fichier
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer bg-gray-50">
+                      <DocumentArrowUpIcon className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">
+                        Glissez et déposez votre fichier ici, ou
+                        <span className="text-blue-600 font-medium ml-1">parcourir vos fichiers</span>
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        PDF, JPEG, PNG jusqu&apos;à 10MB
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Statut
+                    </label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          value="Soumis"
+                          defaultChecked={docToEdit?.status === "Soumis"}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-gray-700">Soumis</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          value="Manquant"
+                          defaultChecked={docToEdit?.status === "Manquant"}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-gray-700">Manquant</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-8 flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setDocToEdit(null);
+                    }}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={() => {
+                      // For demo purposes, we'll just close the modal
+                      setIsModalOpen(false);
+                      setDocToEdit(null);
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    {docToEdit ? "Mettre à jour" : "Ajouter"}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-        className="space-y-10 px-4 py-6"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Documents to Download */}
-          <motion.div
-            className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300"
-          >
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-4 flex items-center gap-3">
-              <CloudArrowDownIcon className="h-10 w-10 text-white" />
-              <h2 className="text-2xl font-bold text-white">Documents à télécharger</h2>
-            </div>
-            <div className="p-6">
-              <div className="relative mb-6">
-                <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchDownload}
-                  onChange={(e) => setSearchDownload(e.target.value)}
-                  placeholder="Rechercher..."
-                  className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="overflow-x-auto">
-                {loading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <motion.div
-                      className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full"
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1 }}
-                    />
-                  </div>
-                ) : (
-                  <table className="min-w-full">
-                    <thead className="bg-blue-500 text-white sticky top-0">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {filteredDownloadableDocs.map((doc) => (
-                        <motion.tr
-                          key={doc.id}
-                          whileHover={{ backgroundColor: "#f0f4f8" }}
-                          transition={{ duration: 0.2 }}
-                          className="transition-colors duration-200"
-                        >
-                          <td className="px-4 py-3 text-sm text-gray-700">{doc.type}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{doc.date}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{doc.status}</td>
-                          <td className="px-4 py-3">
-                            <button
-                              onClick={() => handleVisualiser(doc)}
-                              className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-                            >
-                              <DocumentTextIcon className="h-5 w-5" />
-                              Visualiser
-                            </button>
-                          </td>
-                        </motion.tr>
-                      ))}
-                      {filteredDownloadableDocs.length === 0 && (
-                        <tr>
-                          <td colSpan={4} className="px-4 py-3 text-center text-gray-500">
-                            Aucun document trouvé.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-
-              {/* 
-                Here's the new button to add documents directly 
-                to the “Documents à télécharger” list
-              */}
-              <div className="mt-8 flex justify-end">
-                <button
-                  onClick={() => {
-                    setDocToEdit(null);
-                    setIsModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  Ajouter un document (devis, facture, etc.)
-                </button>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Documents to Transmit */}
-          <motion.div
-            className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300 flex flex-col"
-          >
-            <div className="bg-gradient-to-r from-green-500 to-teal-500 px-6 py-4 flex items-center gap-3">
-              <ArrowUpTrayIcon className="h-10 w-10 text-white" />
-              <h2 className="text-2xl font-bold text-white">Documents à transmettre</h2>
-            </div>
-            <div className="flex flex-col flex-grow p-6">
-              <div className="relative mb-6">
-                <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchTransmit}
-                  onChange={(e) => setSearchTransmit(e.target.value)}
-                  placeholder="Rechercher..."
-                  className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div className="overflow-x-auto flex-grow">
-                {loading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <motion.div
-                      className="w-8 h-8 border-4 border-green-500 border-dashed rounded-full"
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1 }}
-                    />
-                  </div>
-                ) : (
-                  <table className="min-w-full">
-                    <thead className="bg-green-500 text-white sticky top-0">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {filteredTransmittableDocs.map((doc) => (
-                        <motion.tr
-                          key={doc.id}
-                          whileHover={{ backgroundColor: "#f0f4f8" }}
-                          transition={{ duration: 0.2 }}
-                          className="transition-colors duration-200"
-                        >
-                          <td className="px-4 py-3 text-sm text-gray-700">{doc.type}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{doc.date}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{doc.status}</td>
-                          <td className="px-4 py-3">
-                            <button
-                              onClick={() => handleAjouterDocTransmettre(doc)}
-                              className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1 text-sm font-medium text-white hover:bg-green-700 transition-colors"
-                            >
-                              <PlusIcon className="h-5 w-5" />
-                              Ajouter
-                            </button>
-                          </td>
-                        </motion.tr>
-                      ))}
-                      {filteredTransmittableDocs.length === 0 && (
-                        <tr>
-                          <td colSpan={4} className="px-4 py-3 text-center text-gray-500">
-                            Aucun document trouvé.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-              <div className="mt-8 flex justify-end">
-                <button
-                  onClick={() => {
-                    setDocToEdit(null);
-                    setIsModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  Ajouter un document (devis, facture, avis d&apos;imposition, autre, etc.)
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* Preview Modal */}
+      {/* Enhanced Document Preview Modal */}
       <AnimatePresence>
         {previewDoc && (
           <motion.div
-            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => setPreviewDoc(null)}
           >
             <motion.div
-              className="bg-white rounded-lg p-4 max-w-3xl w-full relative shadow-2xl"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl w-full max-w-4xl mx-4 overflow-hidden shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">Prévisualisation du document</h3>
+              {/* Modal header */}
+              <div className="relative bg-gradient-to-r from-gray-800 to-gray-700 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/10 backdrop-blur-sm p-2 rounded-lg">
+                    {getDocumentIcon(previewDoc.type)}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      {previewDoc.type}
+                    </h2>
+                    <div className="flex items-center gap-3 text-white/70 text-sm">
+                      <div className="flex items-center">
+                        <CalendarIcon className="h-4 w-4 mr-1" />
+                        {previewDoc.date}
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="h-4 w-4 mr-1 text-green-400" />
+                        {previewDoc.status}
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <button
                   onClick={() => setPreviewDoc(null)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-white/70 hover:text-white transition-colors focus:outline-none"
                 >
-                  Fermer
+                  <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
-              {previewDoc.filePath ? (
-                <iframe
-                  src={previewDoc.filePath}
-                  title="Document Preview"
-                  className="w-full h-96 border rounded-md"
-                />
-              ) : (
-                <p>Aucun document à afficher.</p>
-              )}
-              <div className="mt-4 flex justify-end">
+              
+              {/* Document preview */}
+              <div className="p-2 bg-gray-100">
+                {previewDoc.filePath ? (
+                  <iframe
+                    src={previewDoc.filePath}
+                    title="Document Preview"
+                    className="w-full h-[70vh] border-none rounded"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <ExclamationTriangleIcon className="h-16 w-16 text-amber-500 mb-4" />
+                    <h3 className="text-xl font-medium text-gray-900 mb-2">Document non disponible</h3>
+                    <p className="text-gray-500 max-w-md text-center">
+                      Ce document n&apos;est pas encore disponible. Il est marqué comme &quot;à transmettre&quot;.
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Action bar */}
+              <div className="px-6 py-4 flex justify-between items-center border-t border-gray-200">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      // Mock download functionality
+                      if (previewDoc.filePath) {
+                        window.open(previewDoc.filePath, '_blank');
+                      }
+                    }}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
+                      previewDoc.filePath
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    } transition-colors`}
+                    disabled={!previewDoc.filePath}
+                  >
+                    <ArrowDownTrayIcon className="h-5 w-5" />
+                    Télécharger
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDocToEdit(previewDoc);
+                      setPreviewDoc(null);
+                      setIsModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                  >
+                    <PencilIcon className="h-5 w-5" />
+                    Modifier
+                  </button>
+                </div>
+                
                 <button
                   onClick={() => {
-                    if (!previewDoc) return;
-                    fetch(`/api/documents/${previewDoc.id}`, { method: "DELETE" })
-                      .then((res) => {
-                        if (!res.ok) throw new Error("Erreur lors de la suppression du document");
-                        setDownloadableDocs((prev) => prev.filter((d) => d.id !== previewDoc.id));
-                        setTransmittableDocs((prev) => prev.filter((d) => d.id !== previewDoc.id));
-                        setPreviewDoc(null);
-                      })
-                      .catch((err) => console.error("Erreur lors de la suppression :", err));
+                    // For demo purposes, we'll just close the modal
+                    setPreviewDoc(null);
                   }}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
                 >
+                  <TrashIcon className="h-5 w-5" />
                   Supprimer
                 </button>
               </div>
@@ -915,7 +1283,7 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
 
@@ -954,7 +1322,7 @@ export default function ProjectDetailPage() {
   });
   const [userList, setUserList] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<
-  "info" | "documents" | "photo" | "chat" | "sav" | "reglement" | "facturation"
+  "info" | "documents" | "photo" | "chat" | "sav" | "reglement" | "devis"
 >("info");
   const searchParams = useSearchParams();
   // const { tab } = router.query;
@@ -1333,7 +1701,9 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        <PremiumTabs activeTab={activeTab} setActiveTab={setActiveTab} chatMessageCount={chatMessageCount} />
+        <div className="relative z-20">
+          <PremiumTabs activeTab={activeTab} setActiveTab={setActiveTab} chatMessageCount={chatMessageCount} />
+        </div>
 
           {activeTab === "info" && (
             <div id="info">
@@ -1381,9 +1751,9 @@ export default function ProjectDetailPage() {
             </div>
           )}
 
-          {activeTab === "facturation" && (
-            <div id="facturation" className="h-full">
-              <FacturationTab contactId={dossier.contactId || ""} />
+          {activeTab === "devis" && (
+            <div id="devis" className="h-full">
+              <DevisFactureTab contactId={dossier.contactId || ""} />
             </div>
           )}
 

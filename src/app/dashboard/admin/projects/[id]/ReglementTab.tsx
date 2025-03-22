@@ -1,17 +1,22 @@
 import React, { FC, useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Clock,
-  CreditCard,
-  CheckCircle,
-  ArrowDownUp,
-  Edit,
-  Check,
-  X,
-  Plus,
-  Filter,
-  Trash2,
-  AlertCircle,
-} from "lucide-react";
+  ClockIcon,
+  CreditCardIcon,
+  CheckCircleIcon,
+  ArrowsUpDownIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon,
+  PlusIcon,
+  FunnelIcon,
+  TrashIcon,
+  ExclamationCircleIcon,
+  BanknotesIcon,
+  ArrowPathIcon,
+  CalendarIcon,
+  ChartBarIcon
+} from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 
 // Constants for better maintainability
@@ -61,9 +66,9 @@ const PaymentStatusBadge: FC<{ status: string }> = ({ status }) => {
       }`}
     >
       {isReceived ? (
-        <CheckCircle className="mr-1" size={14} />
+        <CheckCircleIcon className="mr-1 h-4 w-4" />
       ) : (
-        <Clock className="mr-1" size={14} />
+        <ClockIcon className="mr-1 h-4 w-4" />
       )}
       {isReceived ? "Paiement reçu" : "Paiement à venir"}
     </span>
@@ -86,16 +91,16 @@ const PaymentForm: FC<{
   return (
     <form
       onSubmit={onSubmit}
-      className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-6 rounded-lg shadow-md"
+      className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100"
     >
       <div>
-        <label className="block text-sm mb-1 text-[#213f5b] font-medium">
+        <label className="block text-sm mb-1 text-gray-700 font-medium">
           Provenance
         </label>
         <select
           value={payment.provenance || ""}
           onChange={(e) => onChange("provenance", e.target.value)}
-          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
         >
           {PAYMENT_SOURCES.map((source) => (
             <option key={source.value} value={source.value}>
@@ -105,26 +110,26 @@ const PaymentForm: FC<{
         </select>
       </div>
       <div>
-        <label className="block text-sm mb-1 text-[#213f5b] font-medium">
+        <label className="block text-sm mb-1 text-gray-700 font-medium">
           Montant
         </label>
         <input
           type="text"
           value={payment.amount || ""}
           onChange={(e) => onChange("amount", e.target.value)}
-          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           placeholder="ex: 1200€"
           required
         />
       </div>
       <div>
-        <label className="block text-sm mb-1 text-[#213f5b] font-medium">
+        <label className="block text-sm mb-1 text-gray-700 font-medium">
           Statut
         </label>
         <select
           value={payment.status || ""}
           onChange={(e) => onChange("status", e.target.value)}
-          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
         >
           {PAYMENT_STATUSES.map((status) => (
             <option key={status.value} value={status.value}>
@@ -134,15 +139,15 @@ const PaymentForm: FC<{
         </select>
       </div>
       <div>
-        <label className="block text-sm mb-1 text-[#213f5b] font-medium">
+        <label className="block text-sm mb-1 text-gray-700 font-medium">
           Date de paiement
         </label>
         <input
           type="date"
           value={payment.paymentDate || ""}
           onChange={(e) => onChange("paymentDate", e.target.value)}
-          className={`w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-            payment.status !== "PAIEMENT RECU" ? "bg-gray-100" : ""
+          className={`w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+            payment.status !== "PAIEMENT RECU" ? "bg-gray-50" : ""
           }`}
           disabled={payment.status !== "PAIEMENT RECU"}
         />
@@ -152,19 +157,19 @@ const PaymentForm: FC<{
           </p>
         )}
       </div>
-      <div className="md:col-span-4 flex justify-end space-x-3">
+      <div className="md:col-span-4 flex justify-end space-x-3 mt-4">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 transition hover:bg-gray-100"
+          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
         >
           Annuler
         </button>
         <button
           type="submit"
-          className="bg-[#213f5b] text-white px-6 py-2 rounded-md transition hover:bg-opacity-90 inline-flex items-center"
+          className="bg-indigo-600 text-white px-6 py-2 rounded-lg transition hover:bg-indigo-700 inline-flex items-center"
         >
-          <Check size={16} className="mr-1" />
+          <CheckIcon className="h-4 w-4 mr-1" />
           {submitLabel}
         </button>
       </div>
@@ -183,46 +188,52 @@ const ConfirmDialog: FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 shadow-xl max-w-md w-full">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="bg-white rounded-xl p-6 shadow-2xl max-w-md w-full"
+      >
         <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
         <p className="text-gray-600 mb-6">{message}</p>
         <div className="flex justify-end space-x-3">
           <button
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 transition hover:bg-gray-100"
+            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
             onClick={onCancel}
           >
             Annuler
           </button>
           <button
-            className="bg-red-600 text-white px-4 py-2 rounded-md transition hover:bg-red-700"
+            className="bg-red-600 text-white px-4 py-2 rounded-lg transition hover:bg-red-700"
             onClick={onConfirm}
           >
             {confirmLabel}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
 
 const EmptyState: FC<{ onAddClick: () => void }> = ({ onAddClick }) => (
-  <div className="py-12 text-center bg-gray-50 rounded-lg">
-    <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-      <CreditCard className="text-blue-600" size={28} />
+  <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl py-12 px-4">
+    <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+      <CreditCardIcon className="h-10 w-10 text-indigo-600" />
     </div>
-    <h3 className="text-lg font-medium text-gray-900 mb-2">
+    <h3 className="text-xl font-semibold text-gray-900 mb-2">
       Aucun paiement trouvé
     </h3>
-    <p className="text-gray-500 mb-4 max-w-md mx-auto">
+    <p className="text-gray-500 mb-6 max-w-md text-center">
       Il n&apos;y a pas encore de paiements enregistrés pour ce contact. Commencez par
       ajouter votre premier paiement.
     </p>
     <button
       onClick={onAddClick}
-      className="bg-[#213f5b] text-white px-4 py-2 rounded-md transition hover:bg-opacity-90 inline-flex items-center"
+      className="bg-indigo-600 text-white px-4 py-2 rounded-lg transition hover:bg-indigo-700 inline-flex items-center"
     >
-      <Plus size={16} className="mr-1" />
+      <PlusIcon className="h-5 w-5 mr-1" />
       Ajouter un paiement
     </button>
   </div>
@@ -486,314 +497,366 @@ const ReglementTab: FC<ReglementTabProps> = ({ contactId }) => {
   };
 
   return (
-    <div className="">
-      <div className="">
-        <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-          {/* Header */}
-          <header className="bg-[#213f5b] text-white p-6 flex items-center justify-between">
+    <div className="h-full flex flex-col bg-white rounded-2xl shadow-xl overflow-hidden">
+      {/* Enhanced Header with Background */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.6 }}
+        className="relative bg-gradient-to-r from-indigo-600 to-indigo-400 px-10 py-8"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full -mr-16 -mt-20 opacity-30" />
+        <div className="absolute bottom-0 right-24 w-32 h-32 bg-indigo-300 rounded-full -mb-10 opacity-20" />
+        
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center">
+            <div className="flex items-center justify-center bg-white text-indigo-600 rounded-full w-16 h-16 mr-6 shadow-xl">
+              <CreditCardIcon className="w-8 h-8" />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold">Paiements</h1>
-              <p className="text-sm opacity-80">
-                Vue d&apos;ensemble de vos solutions énergétiques
-              </p>
+              <h2 className="text-3xl font-extrabold text-white">
+                Paiements
+              </h2>
+              <p className="text-indigo-100 mt-1">Vue d&apos;ensemble de vos solutions énergétiques</p>
             </div>
-            <div className="p-3 bg-white rounded-full">
-              <CreditCard className="text-[#213f5b]" size={32} />
-            </div>
-          </header>
-
-          {/* Summary Cards */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6 bg-[#bfddf9]">
-            <div className="bg-white p-4 rounded-xl shadow transition transform hover:scale-105 flex items-center space-x-4">
-              <Clock className="text-[#213f5b]" size={24} />
-              <div>
-                <p className="text-gray-500 text-sm">Paiements à venir</p>
-                <p className="text-2xl font-bold text-[#213f5b]">
-                  {paiementsAVenirCount}
-                </p>
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-xl shadow transition transform hover:scale-105 flex items-center space-x-4">
-              <CheckCircle className="text-[#213f5b]" size={24} />
-              <div>
-                <p className="text-gray-500 text-sm">Paiements reçus</p>
-                <p className="text-2xl font-bold text-[#213f5b]">
-                  {paiementRecuCount}
-                </p>
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-xl shadow transition transform hover:scale-105 flex items-center space-x-4">
-              <CreditCard className="text-[#213f5b]" size={24} />
-              <div>
-                <p className="text-gray-500 text-sm">Montant total</p>
-                <p className="text-2xl font-bold text-[#213f5b]">
-                  {totalAmount}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Add Payment Toggle & Form */}
-          <section className="bg-[#d2fcb2] px-6 pt-6 pb-3">
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={() => {
-                  setShowAddForm((prev) => !prev);
-                  if (showAddForm) {
-                    setNewPayment({ ...DEFAULT_NEW_PAYMENT });
-                  }
-                }}
-                className="bg-[#213f5b] text-white px-6 py-2 rounded-md transition hover:bg-opacity-90 flex items-center"
-              >
-                {showAddForm ? (
-                  <>
-                    <X size={16} className="mr-1" />
-                    Annuler
-                  </>
-                ) : (
-                  <>
-                    <Plus size={16} className="mr-1" />
-                    Ajouter un Paiement
-                  </>
-                )}
-              </button>
-            </div>
-
-            {showAddForm && (
-              <div className="mb-6 animate-fadeIn">
-                <h2 className="text-xl font-bold mb-4 text-[#213f5b]">
-                  Ajouter un Paiement
-                </h2>
-                <PaymentForm
-                  payment={newPayment}
-                  onSubmit={handleAddPayment}
-                  onChange={handleNewPaymentChange}
-                  onCancel={() => {
-                    setShowAddForm(false);
-                    setNewPayment({ ...DEFAULT_NEW_PAYMENT });
-                  }}
-                  submitLabel="Enregistrer"
-                />
-              </div>
+          </div>
+          
+          <button
+            onClick={() => {
+              setShowAddForm((prev) => !prev);
+              if (showAddForm) {
+                setNewPayment({ ...DEFAULT_NEW_PAYMENT });
+              }
+            }}
+            className="px-4 py-2 bg-white text-indigo-700 rounded-lg shadow-md hover:bg-indigo-50 transition-colors flex items-center gap-2"
+          >
+            {showAddForm ? (
+              <>
+                <XMarkIcon className="h-5 w-5" />
+                <span>Annuler</span>
+              </>
+            ) : (
+              <>
+                <PlusIcon className="h-5 w-5" />
+                <span>Ajouter un paiement</span>
+              </>
             )}
-          </section>
+          </button>
+        </div>
+      </motion.div>
 
-          {/* Filters and Sorting */}
-          <section className="px-6 py-4 bg-[#d2fcb2] flex flex-col md:flex-row md:items-center md:justify-between">
-            <div className="flex space-x-2 mb-4 md:mb-0">
-              <button
-                onClick={() => setFilterStatus(null)}
-                className={`px-4 py-2 rounded-full text-sm transition inline-flex items-center ${
-                  filterStatus === null
-                    ? "bg-[#213f5b] text-white"
-                    : "bg-white text-[#213f5b] border border-[#213f5b]"
-                }`}
-              >
-                <Filter size={14} className="mr-1" />
-                Tous
-              </button>
-              <button
-                onClick={() => setFilterStatus("PAIEMENT A VENIR")}
-                className={`px-4 py-2 rounded-full text-sm transition inline-flex items-center ${
-                  filterStatus === "PAIEMENT A VENIR"
-                    ? "bg-[#213f5b] text-white"
-                    : "bg-white text-[#213f5b] border border-[#213f5b]"
-                }`}
-              >
-                <Clock size={14} className="mr-1" />
-                Paiements à venir
-              </button>
-              <button
-                onClick={() => setFilterStatus("PAIEMENT RECU")}
-                className={`px-4 py-2 rounded-full text-sm transition inline-flex items-center ${
-                  filterStatus === "PAIEMENT RECU"
-                    ? "bg-[#213f5b] text-white"
-                    : "bg-white text-[#213f5b] border border-[#213f5b]"
-                }`}
-              >
-                <CheckCircle size={14} className="mr-1" />
-                Paiements reçus
-              </button>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-indigo-50 border-b border-indigo-100">
+        <motion.div
+          whileHover={{ y: -5, scale: 1.02 }}
+          transition={{ duration: 0.2 }}
+          className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
+        >
+          <div className="p-3 bg-blue-100 rounded-lg">
+            <ClockIcon className="h-8 w-8 text-blue-600" />
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm">Paiements à venir</p>
+            <p className="text-2xl font-bold text-gray-900">{paiementsAVenirCount}</p>
+          </div>
+        </motion.div>
+        
+        <motion.div
+          whileHover={{ y: -5, scale: 1.02 }}
+          transition={{ duration: 0.2 }}
+          className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
+        >
+          <div className="p-3 bg-green-100 rounded-lg">
+            <CheckCircleIcon className="h-8 w-8 text-green-600" />
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm">Paiements reçus</p>
+            <p className="text-2xl font-bold text-gray-900">{paiementRecuCount}</p>
+          </div>
+        </motion.div>
+        
+        <motion.div
+          whileHover={{ y: -5, scale: 1.02 }}
+          transition={{ duration: 0.2 }}
+          className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
+        >
+          <div className="p-3 bg-amber-100 rounded-lg">
+            <BanknotesIcon className="h-8 w-8 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm">Montant total</p>
+            <p className="text-2xl font-bold text-gray-900">{totalAmount}</p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Add Payment Form */}
+      <AnimatePresence>
+        {showAddForm && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white px-6 py-4 border-b border-gray-200 overflow-hidden"
+          >
+            <h2 className="text-xl font-bold mb-4 text-gray-800">
+              Ajouter un paiement
+            </h2>
+            <PaymentForm
+              payment={newPayment}
+              onSubmit={handleAddPayment}
+              onChange={handleNewPaymentChange}
+              onCancel={() => {
+                setShowAddForm(false);
+                setNewPayment({ ...DEFAULT_NEW_PAYMENT });
+              }}
+              submitLabel="Enregistrer"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Filters and Sorting */}
+      <div className="p-4 bg-white border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex space-x-2 mb-4 sm:mb-0">
+          <button
+            onClick={() => setFilterStatus(null)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition inline-flex items-center gap-1 ${
+              filterStatus === null
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            <FunnelIcon className="h-4 w-4" />
+            Tous
+          </button>
+          <button
+            onClick={() => setFilterStatus("PAIEMENT A VENIR")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition inline-flex items-center gap-1 ${
+              filterStatus === "PAIEMENT A VENIR"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            <ClockIcon className="h-4 w-4" />
+            À venir
+          </button>
+          <button
+            onClick={() => setFilterStatus("PAIEMENT RECU")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition inline-flex items-center gap-1 ${
+              filterStatus === "PAIEMENT RECU"
+                ? "bg-green-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            <CheckCircleIcon className="h-4 w-4" />
+            Reçus
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600 font-medium">Trier par</span>
+          <div className="relative">
+            <select
+              className="appearance-none bg-white border border-gray-300 rounded-lg pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              value={sortConfig.key}
+              onChange={(e) => handleSort(e.target.value as keyof Payment)}
+            >
+              <option value="provenance">Provenance</option>
+              <option value="amount">Montant</option>
+              <option value="paymentDate">Date de paiement</option>
+            </select>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+              {sortConfig.direction === "asc" ? (
+                <ArrowsUpDownIcon className="h-4 w-4" />
+              ) : (
+                <ArrowsUpDownIcon className="h-4 w-4 rotate-180" />
+              )}
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-[#213f5b] font-medium">Trier par</span>
-              <div className="relative">
-                <select
-                  className="appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 text-sm"
-                  value={sortConfig.key}
-                  onChange={(e) => handleSort(e.target.value as keyof Payment)}
-                >
-                  <option value="provenance">Provenance</option>
-                  <option value="amount">Montant</option>
-                  <option value="paymentDate">Date de paiement</option>
-                </select>
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                  {sortConfig.direction === "asc" ? (
-                    <ArrowDownUp size={16} />
-                  ) : (
-                    <ArrowDownUp size={16} className="rotate-180" />
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Loading, Error and Empty states */}
-          {isLoading ? (
-            <div className="p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#213f5b]"></div>
-              <p className="mt-2 text-gray-600">Chargement des paiements...</p>
-            </div>
-          ) : error ? (
-            <div className="p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-4">
-                <AlertCircle className="text-red-600" size={24} />
-              </div>
-              <p className="text-gray-600">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-4 px-4 py-2 bg-[#213f5b] text-white rounded-md"
-              >
-                Réessayer
-              </button>
-            </div>
-          ) : payments.length === 0 ? (
-            <EmptyState onAddClick={() => setShowAddForm(true)} />
-          ) : (
-            /* Payments Table */
-            <section className="p-6">
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead>
-                    <tr className="bg-[#bfddf9] text-[#213f5b]">
-                      <th
-                        className="px-4 py-3 text-left rounded-l-lg cursor-pointer"
-                        onClick={() => handleSort("provenance")}
-                      >
-                        <div className="flex items-center">
-                          Provenance
-                          {sortConfig.key === "provenance" && (
-                            <span className="ml-1">
-                              {sortConfig.direction === "asc" ? "↑" : "↓"}
-                            </span>
-                          )}
-                        </div>
-                      </th>
-                      <th
-                        className="px-4 py-3 text-left cursor-pointer"
-                        onClick={() => handleSort("amount")}
-                      >
-                        <div className="flex items-center">
-                          Montant
-                          {sortConfig.key === "amount" && (
-                            <span className="ml-1">
-                              {sortConfig.direction === "asc" ? "↑" : "↓"}
-                            </span>
-                          )}
-                        </div>
-                      </th>
-                      <th
-                        className="px-4 py-3 text-left cursor-pointer"
-                        onClick={() => handleSort("paymentDate")}
-                      >
-                        <div className="flex items-center">
-                          Date de paiement
-                          {sortConfig.key === "paymentDate" && (
-                            <span className="ml-1">
-                              {sortConfig.direction === "asc" ? "↑" : "↓"}
-                            </span>
-                          )}
-                        </div>
-                      </th>
-                      <th className="px-4 py-3 text-left">Statut</th>
-                      <th className="px-4 py-3 text-right rounded-r-lg">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedPayments.map((payment) => (
-                      <tr
-                        key={payment.id}
-                        className="border-b border-gray-200 hover:bg-blue-50 transition-colors"
-                      >
-                        {/* Editing mode */}
-                        {editingPaymentId === payment.id && editedPayment ? (
-                          <td colSpan={5} className="px-4 py-4">
-                            <PaymentForm
-                              payment={editedPayment}
-                              onSubmit={handleSaveEdit}
-                              onChange={handleEditChange}
-                              onCancel={cancelEditing}
-                              submitLabel="Mettre à jour"
-                            />
-                          </td>
-                        ) : (
-                          <>
-                            {/* Provenance */}
-                            <td className="px-4 py-4">
-                              <span className="text-[#213f5b] font-medium">
-                                {payment.provenance}
-                              </span>
-                            </td>
-
-                            {/* Montant */}
-                            <td className="px-4 py-4">
-                              <FormattedAmount amount={payment.amount} />
-                            </td>
-
-                            {/* Date de paiement */}
-                            <td className="px-4 py-4">
-                              <span className="text-[#213f5b]">
-                                {formatDate(payment.paymentDate)}
-                              </span>
-                            </td>
-
-                            {/* Statut */}
-                            <td className="px-4 py-4">
-                              <PaymentStatusBadge status={payment.status} />
-                            </td>
-
-                            {/* Actions */}
-                            <td className="px-4 py-4 text-right">
-                              <div className="flex justify-end space-x-2">
-                                <button
-                                  onClick={() => startEditing(payment)}
-                                  className="text-blue-600 hover:text-blue-800"
-                                >
-                                  <Edit size={16} />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    openDeleteConfirmation(payment.id)
-                                  }
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
+          </div>
         </div>
       </div>
 
+      {/* Main Content Area */}
+      <div className="flex-grow overflow-y-auto">
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+              <p className="text-indigo-500">Chargement des paiements...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-64 p-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <ExclamationCircleIcon className="h-8 w-8 text-red-600" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur</h3>
+            <p className="text-gray-600 mb-6 text-center">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+            >
+              <ArrowPathIcon className="h-5 w-5" />
+              Réessayer
+            </button>
+          </div>
+        ) : payments.length === 0 ? (
+          <div className="p-6">
+            <EmptyState onAddClick={() => setShowAddForm(true)} />
+          </div>
+        ) : (
+          <div className="p-6">
+            <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort("provenance")}
+                    >
+                      <div className="flex items-center">
+                        Provenance
+                        {sortConfig.key === "provenance" && (
+                          <span className="ml-1">
+                            {sortConfig.direction === "asc" ? "↑" : "↓"}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort("amount")}
+                    >
+                      <div className="flex items-center">
+                        Montant
+                        {sortConfig.key === "amount" && (
+                          <span className="ml-1">
+                            {sortConfig.direction === "asc" ? "↑" : "↓"}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort("paymentDate")}
+                    >
+                      <div className="flex items-center">
+                        Date de paiement
+                        {sortConfig.key === "paymentDate" && (
+                          <span className="ml-1">
+                            {sortConfig.direction === "asc" ? "↑" : "↓"}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {displayedPayments.map((payment) => (
+                    <tr
+                      key={payment.id}
+                      className="hover:bg-indigo-50/50 transition-colors"
+                    >
+                      {/* Editing mode */}
+                      {editingPaymentId === payment.id && editedPayment ? (
+                        <td colSpan={5} className="px-6 py-4">
+                          <PaymentForm
+                            payment={editedPayment}
+                            onSubmit={handleSaveEdit}
+                            onChange={handleEditChange}
+                            onCancel={cancelEditing}
+                            submitLabel="Mettre à jour"
+                          />
+                        </td>
+                      ) : (
+                        <>
+                          {/* Provenance */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                                <ChartBarIcon className="h-5 w-5 text-indigo-600" />
+                              </div>
+                              <span className="text-gray-700 font-medium">
+                                {payment.provenance}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Montant */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-gray-900">
+                              <FormattedAmount amount={payment.amount} />
+                            </div>
+                          </td>
+
+                          {/* Date de paiement */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              {payment.paymentDate && (
+                                <CalendarIcon className="h-4 w-4 text-gray-400 mr-1" />
+                              )}
+                              <span className="text-gray-700">
+                                {formatDate(payment.paymentDate)}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Statut */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <PaymentStatusBadge status={payment.status} />
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-6 py-4 whitespace-nowrap text-right">
+                            <div className="flex justify-end space-x-3">
+                              <button
+                                onClick={() => startEditing(payment)}
+                                className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition-colors"
+                                title="Modifier"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => openDeleteConfirmation(payment.id)}
+                                className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                                title="Supprimer"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Confirm Delete Dialog */}
-      <ConfirmDialog
-        isOpen={deleteConfirmation.isOpen}
-        title="Confirmer la suppression"
-        message="Êtes-vous sûr de vouloir supprimer ce paiement ?"
-        confirmLabel="Supprimer"
-        onConfirm={handleDeletePayment}
-        onCancel={closeDeleteConfirmation}
-      />
+      <AnimatePresence>
+        {deleteConfirmation.isOpen && (
+          <ConfirmDialog
+            isOpen={deleteConfirmation.isOpen}
+            title="Confirmer la suppression"
+            message="Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible."
+            confirmLabel="Supprimer"
+            onConfirm={handleDeletePayment}
+            onCancel={closeDeleteConfirmation}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

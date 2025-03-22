@@ -225,8 +225,20 @@ export default function AdminAgendaPage() {
     waitingForParts: 2,
     overdueInterventions: 4,
     todayInterventions: 7,
-    totalScheduled: 37
+    totalScheduled: 37,
+    reminders: 5,        // Add this new property
+    appointments: 9      // Add this new property
   };
+
+  {/* Helper function to calculate current time position */}
+const getCurrentTimePosition = () => {
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  
+  // Convert to position in time slots array (2 slots per hour)
+  return Math.max(0, (hours - 7) * 2 + Math.floor(minutes / 30));
+};
 
   // Sample admin staff data
   const sampleStaff: User[] = [
@@ -2082,12 +2094,30 @@ export default function AdminAgendaPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
-                className="mb-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8 gap-3"
+                className="mb-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-6 gap-3"
               >
+                <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col">
+                  <div className="text-[#213f5b] text-sm font-medium mb-1 flex items-center gap-1">
+                    <FolderIcon className="h-4 w-4" />
+                    <span>Total</span>
+                  </div>
+                  <div className="text-2xl font-bold">{statistics.totalScheduled}</div>
+                  <div className="text-xs text-gray-500 mt-1">Dossiers actifs</div>
+                </div>
+                
+                <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col">
+                  <div className="text-green-600 text-sm font-medium mb-1 flex items-center gap-1">
+                    <CalendarIcon className="h-4 w-4" />
+                    <span>Aujourd&apos;hui</span>
+                  </div>
+                  <div className="text-2xl font-bold">{statistics.todayInterventions}</div>
+                  <div className="text-xs text-gray-500 mt-1">Interventions</div>
+                </div>
+                
                 <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col">
                   <div className="text-blue-600 text-sm font-medium mb-1 flex items-center gap-1">
                     <CubeIcon className="h-4 w-4" />
-                    <span>Installations</span>
+                    <span>Installation</span>
                   </div>
                   <div className="text-2xl font-bold">{statistics.pendingInstallations}</div>
                   <div className="text-xs text-gray-500 mt-1">En attente</div>
@@ -2103,57 +2133,21 @@ export default function AdminAgendaPage() {
                 </div>
                 
                 <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col">
-                  <div className="text-teal-600 text-sm font-medium mb-1 flex items-center gap-1">
-                    <ArrowPathIcon className="h-4 w-4" />
-                    <span>Maintenance</span>
+                  <div className="text-purple-600 text-sm font-medium mb-1 flex items-center gap-1">
+                    <BellAlertIcon className="h-4 w-4" />
+                    <span>Rappel</span>
                   </div>
-                  <div className="text-2xl font-bold">{statistics.scheduledMaintenance}</div>
-                  <div className="text-xs text-gray-500 mt-1">Programmées</div>
+                  <div className="text-2xl font-bold">{statistics.reminders || 5}</div>
+                  <div className="text-xs text-gray-500 mt-1">À effectuer</div>
                 </div>
                 
                 <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col">
-                  <div className="text-red-600 text-sm font-medium mb-1 flex items-center gap-1">
-                    <ExclamationTriangleIcon className="h-4 w-4" />
-                    <span>Réclamations</span>
+                  <div className="text-indigo-600 text-sm font-medium mb-1 flex items-center gap-1">
+                    <ClockIcon className="h-4 w-4" />
+                    <span>RDV</span>
                   </div>
-                  <div className="text-2xl font-bold">{statistics.unresolvedClaims}</div>
-                  <div className="text-xs text-gray-500 mt-1">Non résolues</div>
-                </div>
-                
-                <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col">
-                  <div className="text-gray-600 text-sm font-medium mb-1 flex items-center gap-1">
-                    <TruckIcon className="h-4 w-4" />
-                    <span>Pièces</span>
-                  </div>
-                  <div className="text-2xl font-bold">{statistics.waitingForParts}</div>
-                  <div className="text-xs text-gray-500 mt-1">Attente pièces</div>
-                </div>
-                
-                <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col">
-                  <div className="text-orange-600 text-sm font-medium mb-1 flex items-center gap-1">
-                    <ExclamationCircleIcon className="h-4 w-4" />
-                    <span>Retards</span>
-                  </div>
-                  <div className="text-2xl font-bold">{statistics.overdueInterventions}</div>
-                  <div className="text-xs text-gray-500 mt-1">Interventions</div>
-                </div>
-                
-                <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col">
-                  <div className="text-green-600 text-sm font-medium mb-1 flex items-center gap-1">
-                    <CalendarIcon className="h-4 w-4" />
-                    <span>Aujourd&apos;hui</span>
-                  </div>
-                  <div className="text-2xl font-bold">{statistics.todayInterventions}</div>
-                  <div className="text-xs text-gray-500 mt-1">Interventions</div>
-                </div>
-                
-                <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col">
-                  <div className="text-[#213f5b] text-sm font-medium mb-1 flex items-center gap-1">
-                    <FolderIcon className="h-4 w-4" />
-                    <span>Total</span>
-                  </div>
-                  <div className="text-2xl font-bold">{statistics.totalScheduled}</div>
-                  <div className="text-xs text-gray-500 mt-1">Dossiers actifs</div>
+                  <div className="text-2xl font-bold">{statistics.appointments || 9}</div>
+                  <div className="text-xs text-gray-500 mt-1">Planifiés</div>
                 </div>
                 
                 <button 
@@ -2633,11 +2627,15 @@ export default function AdminAgendaPage() {
                     {viewType === 'week' && (
                       <div className="h-full flex flex-col">
                         {/* Day Headers */}
-                        <div className="grid grid-cols-7 border-b">
+                        <div className="grid grid-cols-8 border-b">
+                          {/* Empty cell for time column */}
+                          <div className="p-2 text-center border-r bg-gray-50 w-20"></div>
+                          
+                          {/* Day headers */}
                           {calendarDates.map((date, index) => (
                             <div 
                               key={index} 
-                              className={`p-2 text-center ${isToday(date) ? 'bg-blue-50' : ''}`}
+                              className={`p-2 text-center border-r ${isToday(date) ? 'bg-blue-50' : ''}`}
                             >
                               <div className="text-sm font-medium">
                                 {formatDate(date, 'weekday')}
@@ -2653,13 +2651,18 @@ export default function AdminAgendaPage() {
                         
                         {/* All-day Events */}
                         <div className="border-b py-1">
-                          <div className="px-2 pt-1 pb-2">
-                            <h3 className="text-xs font-medium text-gray-500 mb-1">Toute la journée</h3>
-                            <div className="grid grid-cols-7 gap-1">
+                          <div className="grid grid-cols-8">
+                            {/* Label for all-day events */}
+                            <div className="px-2 pt-1 pb-2 text-xs font-medium text-gray-500 border-r bg-gray-50 w-20">
+                              Toute la journée
+                            </div>
+                            
+                            {/* All-day events by day */}
+                            <div className="col-span-7 grid grid-cols-7 gap-1">
                               {calendarDates.map((date, dateIndex) => {
                                 const allDayEvents = getAllDayEvents(date);
                                 return (
-                                  <div key={dateIndex} className="min-h-[30px]">
+                                  <div key={dateIndex} className="min-h-[40px] border-r p-1">
                                     {allDayEvents.slice(0, 2).map((event, eventIndex) => (
                                       <div 
                                         key={`${event.id}-${eventIndex}`} 
@@ -2683,72 +2686,94 @@ export default function AdminAgendaPage() {
                         
                         {/* Time-based Events */}
                         <div className="flex-1 overflow-y-auto">
-                          <div className="grid grid-cols-7 divide-x">
-                            {calendarDates.map((date, dateIndex) => (
-                              <div key={dateIndex} className="relative min-h-[800px]">
-                                {/* Time labels on the first column only */}
-                                {dateIndex === 0 && generateTimeSlots().map((slot, slotIndex) => (
+                          <div className="relative">
+                            <div className="grid grid-cols-8">
+                              {/* Time labels in the first column */}
+                              <div className="w-20 flex-shrink-0 text-right pr-2 text-xs text-gray-500 bg-gray-50 border-r">
+                                {generateTimeSlots().map((slot, slotIndex) => (
                                   <div 
                                     key={slotIndex} 
-                                    className="absolute w-full border-t text-xs text-gray-500 px-1"
-                                    style={{ top: `${slotIndex * 30}px` }}
+                                    className={`h-[30px] flex items-center justify-end pr-2 ${slotIndex % 2 === 0 ? 'font-medium border-t' : ''}`}
                                   >
-                                    {slot}
+                                    {slotIndex % 2 === 0 && slot}
                                   </div>
                                 ))}
-                                
-                                {/* Events */}
-                                {filteredEvents
-                                  .filter(event => {
-                                    if (event.all_day) return false; // All-day events are shown separately
-                                    
-                                    const eventDate = new Date(event.start_time);
-                                    return (
-                                      eventDate.getDate() === date.getDate() &&
-                                      eventDate.getMonth() === date.getMonth() &&
-                                      eventDate.getFullYear() === date.getFullYear()
-                                    );
-                                  })
-                                  .map((event) => {
-                                    const startTime = new Date(event.start_time);
-                                    const endTime = new Date(event.end_time);
-                                    
-                                    // Calculate position and height
-                                    const startHours = startTime.getHours() + startTime.getMinutes() / 60;
-                                    const endHours = endTime.getHours() + endTime.getMinutes() / 60;
-                                    const durationHours = endHours - startHours;
-                                    
-                                    const top = Math.max(0, (startHours - 7) * 60); // 7 AM is our start time
-                                    const height = durationHours * 60;
-                                    
-                                    return (
-                                      <div 
-                                        key={event.id} 
-                                        className={`absolute left-0 right-0 mx-1 rounded px-2 py-1 overflow-hidden cursor-pointer ${getCategoryColor(event.category)}`}
-                                        style={{ 
-                                          top: `${top}px`, 
-                                          height: `${height}px`,
-                                          minHeight: '25px'
-                                        }}
-                                        onClick={() => handleEventClick(event)}
-                                      >
-                                        <div className="text-xs font-medium truncate">
-                                          {event.reference_number && `[${event.reference_number}] `}
-                                          {event.title}
-                                        </div>
-                                        <div className="text-xs opacity-80 truncate">
-                                          {formatTime(event.start_time)} - {formatTime(event.end_time)}
-                                        </div>
-                                        {height > 50 && event.client_name && (
-                                          <div className="text-xs opacity-80 truncate mt-0.5">
-                                            Client: {event.client_name}
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
                               </div>
-                            ))}
+                              
+                              {/* Day columns with events */}
+                              <div className="col-span-7 grid grid-cols-7 divide-x relative">
+                                {/* Horizontal time grid lines that span all days */}
+                                <div className="absolute left-0 right-0 top-0 bottom-0 pointer-events-none">
+                                  {generateTimeSlots().map((slot, slotIndex) => (
+                                    <div 
+                                      key={slotIndex} 
+                                      className={`absolute left-0 right-0 border-t ${slotIndex % 2 === 0 ? 'border-gray-200' : 'border-gray-100'}`}
+                                      style={{ top: `${slotIndex * 30}px` }}
+                                    >
+                                      {/* Current time indicator */}
+                                      {isToday(selectedDate) && getCurrentTimePosition() === slotIndex && (
+                                        <div className="absolute left-0 right-0 border-t-2 border-red-500 z-20"></div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                                
+                                {calendarDates.map((date, dateIndex) => (
+                                  <div key={dateIndex} className="relative min-h-[800px]">
+                                    {/* Events */}
+                                    {filteredEvents
+                                      .filter(event => {
+                                        if (event.all_day) return false; // All-day events are shown separately
+                                        
+                                        const eventDate = new Date(event.start_time);
+                                        return (
+                                          eventDate.getDate() === date.getDate() &&
+                                          eventDate.getMonth() === date.getMonth() &&
+                                          eventDate.getFullYear() === date.getFullYear()
+                                        );
+                                      })
+                                      .map((event) => {
+                                        const startTime = new Date(event.start_time);
+                                        const endTime = new Date(event.end_time);
+                                        
+                                        // Calculate position and height
+                                        const startHours = startTime.getHours() + startTime.getMinutes() / 60;
+                                        const endHours = endTime.getHours() + endTime.getMinutes() / 60;
+                                        const durationHours = endHours - startHours;
+                                        
+                                        const top = Math.max(0, (startHours - 7) * 60); // 7 AM is our start time
+                                        const height = durationHours * 60;
+                                        
+                                        return (
+                                          <div 
+                                            key={event.id} 
+                                            className={`absolute left-0 right-0 mx-1 rounded px-2 py-1 overflow-hidden cursor-pointer shadow-sm ${getCategoryColor(event.category)} z-10`}
+                                            style={{ 
+                                              top: `${top}px`, 
+                                              height: `${height}px`,
+                                              minHeight: '25px'
+                                            }}
+                                            onClick={() => handleEventClick(event)}
+                                          >
+                                            <div className="text-xs font-medium truncate">
+                                              {event.reference_number && `[${event.reference_number}] `}
+                                              {event.title}
+                                            </div>
+                                            <div className="text-xs opacity-80 truncate">
+                                              {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                                            </div>
+                                            {height > 50 && event.client_name && (
+                                              <div className="text-xs opacity-80 truncate mt-0.5">
+                                                {event.client_name}
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

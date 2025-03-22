@@ -1,41 +1,38 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import {CameraIcon} from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import {
   ClipboardDocumentCheckIcon,
   HomeIcon,
-  // BriefcaseIcon,
   ClockIcon,
   UserCircleIcon,
   LightBulbIcon,
   SunIcon,
   FireIcon,
   PaintBrushIcon,
-  // LightBulbIcon,
   ExclamationTriangleIcon,
+  CurrencyEuroIcon,
   ChevronDownIcon,
   CalendarIcon,
   PhoneIcon,
   MapIcon,
-  IdentificationIcon,
+  // IdentificationIcon,
   PencilIcon,
-  // CurrencyRupeeIcon,
   LockClosedIcon,
   WrenchScrewdriverIcon,
   UserIcon,
   EnvelopeIcon,
-  // CheckIcon,
-  // ChevronRightIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon,
-  // InformationCircleIcon,
+  // ExclamationCircleIcon,
   QuestionMarkCircleIcon,
   XCircleIcon,
-  // BriefcaseIcon,
+  PaperAirplaneIcon,
+  PaperClipIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
-import CommentsSection from "./CommentsSection";
+// import CommentsSection from "./CommentsSection";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
@@ -98,10 +95,8 @@ export interface DossierFormData {
   profil?: string;
   typeTravaux?: string;
   mprColor?: string;
-  // Additional properties expected by InfoTab
-  nombrePersonne?: string;  // if different from nombrePersonnes
+  nombrePersonne?: string;
   codePostal?: string;
-  // New field for API/COMMENTAIRES:
   commentaire?: string;
   informationLogement?: {
     typeDeLogement: string;
@@ -176,14 +171,6 @@ export interface Contact {
   nombrePersonnes?: string;
 }
 
-// Weather data type
-// interface WeatherData {
-//   icon: string;
-//   condition: string;
-//   temp: number;
-// }
-
-// User type
 interface User {
   gender?: string; // Now optional
   email: string;
@@ -333,6 +320,114 @@ const EditableField: React.FC<EditableFieldProps> = ({
           className="h-4 w-4 text-gray-400 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={() => setEditing(true)}
         />
+      )}
+    </div>
+  );
+};
+
+{/* Enhanced EditableField with Map Hover for Address */}
+interface EditableFieldWithMapProps {
+  label: string;
+  value: string | undefined | null;
+  onChange: (value: string) => void;
+  icon?: React.ElementType;
+  inputType?: string;
+  readOnly?: boolean;
+  mapAddress?: boolean;
+}
+
+const EditableFieldWithMap: React.FC<EditableFieldWithMapProps> = ({
+  label,
+  value,
+  onChange,
+  icon: Icon,
+  inputType = "text",
+  readOnly = true,
+  mapAddress
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(String(value ?? ""));
+  const [showMap, setShowMap] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  const handleClick = () => {
+    if (!readOnly) {
+      setEditing(true);
+    }
+  };
+
+  // Reset mapLoaded state when showMap changes
+  useEffect(() => {
+    if (!showMap) {
+      setMapLoaded(false);
+    }
+  }, [showMap]);
+
+  return (
+    <div 
+      className="group relative flex items-center gap-3 hover:bg-blue-50 p-2 rounded-lg transition-colors"
+      onMouseEnter={() => mapAddress && setShowMap(true)}
+      onMouseLeave={() => setShowMap(false)}
+    >
+      {Icon && (
+        <Icon className="h-5 w-5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+      )}
+      <div className="flex-1 min-w-0">
+        <label className="block text-sm font-medium text-gray-500 mb-1">
+          {label}
+        </label>
+        {editing && !readOnly ? (
+          <input
+            type={inputType}
+            value={tempValue}
+            onChange={(e) => setTempValue(e.target.value)}
+            onBlur={() => {
+              setEditing(false);
+              onChange(tempValue);
+            }}
+            className="w-full border-b-2 border-blue-500 focus:outline-none bg-transparent py-1"
+            autoFocus
+          />
+        ) : (
+          <div
+            onClick={handleClick}
+            className={`cursor-pointer truncate text-gray-900 ${
+              readOnly ? "pointer-events-none" : ""
+            }`}
+          >
+            {value !== undefined && value !== null && value !== ""
+              ? String(value)
+              : <span className="text-gray-400 italic">Non défini</span>}
+          </div>
+        )}
+      </div>
+      {!readOnly && (
+        <PencilIcon
+          className="h-4 w-4 text-gray-400 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={() => setEditing(true)}
+        />
+      )}
+
+      {/* Map Popup on Hover */}
+      {showMap && value && (
+        <div className="absolute z-50 top-full mt-2 left-0 w-full max-w-2xl bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+          {!mapLoaded && (
+            <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center text-gray-500 text-xs z-10">
+              Chargement de la carte...
+            </div>
+          )}
+          <iframe 
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(value)}&t=k&z=18&ie=UTF8&iwloc=&output=embed`}
+            className="w-full h-64 border-none" 
+            allowFullScreen
+            loading="lazy"
+            title="Carte d'adresse"
+            onLoad={() => setMapLoaded(true)}
+          />
+          <div className="absolute top-2 right-2 rounded-full bg-white w-6 h-6 flex items-center justify-center shadow-md cursor-pointer" onClick={() => setShowMap(false)}>
+            <XCircleIcon className="w-5 h-5 text-gray-500" />
+          </div>
+        </div>
       )}
     </div>
   );
@@ -973,14 +1068,6 @@ useEffect(() => {
   }
 }, [formData.assignedTeam]);
 
-// Format the user details as a string (you can adjust the format as needed)
-// const formattedUserDetails = assignedUserDetails
-//   ? `Email: ${assignedUserDetails.email}
-// Role: ${assignedUserDetails.role}
-// First Name: ${assignedUserDetails.firstName}
-// Last Name: ${assignedUserDetails.lastName}`
-//   : "";
-
   useEffect(() => {
     if (formData.assignedTeam) {
       fetch(`/api/users?id=${formData.assignedTeam}`)
@@ -1018,18 +1105,6 @@ useEffect(() => {
     router.push(`/dashboard/admin/projects/modifier/${dossier._id}`);
   };
 
-  // Add this utility function above your component
-// const getColorPosition = (mprColor: string): number => {
-//   const COLOR_POSITIONS: Record<string, number> = {
-//     "Bleu": 25,   // Lower third (blue segment)
-//     "Jaune": 50,  // Middle (yellow segment)
-//     "Violet": 75, // Upper middle (purple segment)
-//     "Rose": 90    // Top position (beyond main gradient)
-//   };
-
-//   return COLOR_POSITIONS[mprColor] || 0;
-// };
-
   return (
     <div className="flex gap-8">
       {/* Left Column: Main Sections */}
@@ -1037,485 +1112,808 @@ useEffect(() => {
         {/* "Modifier" Button on top */}
         <div className="flex justify-end">
         <Button
-    onClick={handleEditClick}
-    className="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded"
-  >
+          onClick={handleEditClick}
+          className="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded"
+        >
             Modifier
           </Button>
         </div>
 
-        {/* --- Information du client --- */}
+        {/* --- Information du client (IMPROVED) --- */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.6 }}
-          className="bg-white rounded-2xl p-10 border border-blue-100"
+          className="bg-white rounded-2xl overflow-hidden shadow-lg border border-blue-100"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
-            <div className="flex items-center">
-              <div className="flex items-center justify-center bg-gradient-to-r from-blue-700 to-blue-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
+          {/* Enhanced Header with Background */}
+          <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-10 py-8">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full -mr-16 -mt-20 opacity-30" />
+            <div className="absolute bottom-0 right-24 w-32 h-32 bg-blue-300 rounded-full -mb-10 opacity-20" />
+            
+            <div className="flex items-center relative z-10">
+              <div className="flex items-center justify-center bg-white text-blue-600 rounded-full w-20 h-20 mr-6 shadow-xl">
                 <UserCircleIcon className="w-10 h-10" />
               </div>
-              <h2 className="text-3xl font-extrabold text-gray-800">
-                Information du client
-              </h2>
+              <div>
+                <h2 className="text-3xl font-extrabold text-white">
+                  Information du client
+                </h2>
+                <p className="text-blue-100 mt-1">Détails personnels et coordonnées</p>
+              </div>
             </div>
           </div>
 
-          {/* Form Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* <EditableField
-              label="Photo de profil (facultatif)"
-              value={contact?.imageUrl || ""}
-              onChange={() => {}}
-              icon={UserCircleIcon}
-              inputType="text"
-              readOnly={true}
-            /> */}
-            <EditableField
-              label="Nom"
-              value={contact?.firstName || ""}
-              onChange={() => {}}
-              icon={UserCircleIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Prénom"
-              value={contact?.lastName || ""}
-              onChange={() => {}}
-              icon={UserCircleIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Date de naissance"
-              value={contact?.dateOfBirth || ""}
-              onChange={() => {}}
-              icon={CalendarIcon}
-              inputType="date"
-              readOnly={true}
-            />
-            <EditableField
-              label="Adresse"
-              value={contact?.mailingAddress || ""}
-              onChange={() => {}}
-              icon={HomeIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Téléphone"
-              value={contact?.phone || ""}
-              onChange={() => {}}
-              icon={PhoneIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Email"
-              value={contact?.email || ""}
-              onChange={() => {}}
-              icon={MapIcon}
-              inputType="email"
-              readOnly={true}
-            />
-            <EditableField
-              label="Numéro de dossier"
-              value={dossier?.numero || ""}
-              onChange={() => {}}
-              icon={ClipboardDocumentCheckIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Département"
-              value={contact?.department || ""}
-              onChange={() => {}}
-              icon={HomeIcon}
-              inputType="select"
-              options={DEPARTMENT_OPTIONS}
-              readOnly={true}
-            />
-            {/* <EditableField
-              label="Contact ID"
-              value={contact?._id || ""}
-              onChange={() => {}}
-              icon={IdentificationIcon}
-              readOnly={true}
-            /> */}
-            {/* {assignedUserDetails ? (
-              <UserDetailsCard user={assignedUserDetails} />
-            ) : (
-              <div className="border p-4 rounded-lg bg-white shadow-sm">
-                <p className="text-sm text-gray-500">Aucun gestionnaire de suivi assigné</p>
+          {/* Client Card */}
+          <div className="p-6 bg-blue-50 border-b border-blue-100">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-xl">
+                {contact?.firstName?.charAt(0) || "?"}{contact?.lastName?.charAt(0) || "?"}
               </div>
-            )} */}
-            {/* <EditableField
-              label="Commentaires"
-              value={commentData?.commentaire || ""}
-              onChange={() => {}}
-              icon={PencilIcon}
-              inputType="textarea"
-              readOnly={true}
-            /> */}
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {contact?.firstName || "Prénom"} {contact?.lastName || "Nom"}
+                </h3>
+                <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                  <PhoneIcon className="h-4 w-4" /> 
+                  <span>{contact?.phone || "Téléphone non renseigné"}</span>
+                  <span className="h-1 w-1 rounded-full bg-gray-400"></span>
+                  <EnvelopeIcon className="h-4 w-4" /> 
+                  <span>{contact?.email || "Email non renseigné"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
+          {/* Form Fields - Enhanced Layout */}
+          <div className="p-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Group 1: Personal Info */}
+              <div className="space-y-6">
+                <h4 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 border-b pb-2">
+                  Informations personnelles
+                </h4>
+                
+                <EditableField
+                  label="Nom"
+                  value={contact?.firstName || ""}
+                  onChange={() => {}}
+                  icon={UserCircleIcon}
+                  inputType="text"
+                  readOnly={true}
+                />
+                
+                <EditableField
+                  label="Prénom"
+                  value={contact?.lastName || ""}
+                  onChange={() => {}}
+                  icon={UserCircleIcon}
+                  inputType="text"
+                  readOnly={true}
+                />
+                
+                <EditableField
+                  label="Date de naissance"
+                  value={contact?.dateOfBirth || ""}
+                  onChange={() => {}}
+                  icon={CalendarIcon}
+                  inputType="date"
+                  readOnly={true}
+                />
+              </div>
+              
+              {/* Group 2: Contact Info */}
+              <div className="space-y-6">
+                <h4 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 border-b pb-2">
+                  Coordonnées
+                </h4>
+                
+                <EditableFieldWithMap
+                  label="Adresse"
+                  value={contact?.mailingAddress || ""}
+                  onChange={() => {}}
+                  icon={HomeIcon}
+                  inputType="text"
+                  readOnly={true}
+                  mapAddress={true}
+                />
+                
+                <EditableField
+                  label="Téléphone"
+                  value={contact?.phone || ""}
+                  onChange={() => {}}
+                  icon={PhoneIcon}
+                  inputType="text"
+                  readOnly={true}
+                />
+                
+                <EditableField
+                  label="Email"
+                  value={contact?.email || ""}
+                  onChange={() => {}}
+                  icon={EnvelopeIcon}
+                  inputType="email"
+                  readOnly={true}
+                />
+              </div>
+            </div>
+            
+            {/* Administrative Info */}
+            <div className="mt-10">
+              <h4 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 border-b pb-2">
+                Informations administratives
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <EditableField
+                  label="Numéro de dossier"
+                  value={dossier?.numero || ""}
+                  onChange={() => {}}
+                  icon={ClipboardDocumentCheckIcon}
+                  inputType="text"
+                  readOnly={true}
+                />
+                
+                <EditableField
+                  label="Département"
+                  value={contact?.department || ""}
+                  onChange={() => {}}
+                  icon={MapIcon}
+                  inputType="select"
+                  options={DEPARTMENT_OPTIONS}
+                  readOnly={true}
+                />
+              </div>
+            </div>
           </div>
         </motion.section>
 
-        {/* --- Information de l'habitation --- */}
+        {/* --- Information de l'habitation (IMPROVED) --- */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.6 }}
-          className="bg-white rounded-2xl p-10 border border-green-100"
+          className="bg-white rounded-2xl overflow-hidden shadow-lg border border-green-100 mt-10"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
-            <div className="flex items-center">
-              <div className="flex items-center justify-center bg-gradient-to-r from-green-700 to-green-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
-                <FireIcon className="w-10 h-10" />
+          {/* Enhanced Header with Background */}
+          <div className="relative bg-gradient-to-r from-green-600 to-green-400 px-10 py-8">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-green-500 rounded-full -mr-16 -mt-20 opacity-30" />
+            <div className="absolute bottom-0 right-24 w-32 h-32 bg-green-300 rounded-full -mb-10 opacity-20" />
+            
+            <div className="flex items-center relative z-10">
+              <div className="flex items-center justify-center bg-white text-green-600 rounded-full w-20 h-20 mr-6 shadow-xl">
+                <HomeIcon className="w-10 h-10" />
               </div>
-              <h2 className="text-3xl font-extrabold text-gray-800">
-                Information de l&apos;habitation
-              </h2>
+              <div>
+                <h2 className="text-3xl font-extrabold text-white">
+                  Information de l&apos;habitation
+                </h2>
+                <p className="text-green-100 mt-1">Caractéristiques et spécifications du logement</p>
+              </div>
             </div>
           </div>
 
-          {/* Form Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <EditableField
-              label="Type de logement"
-              value={dossier?.typeDeLogement || ""}
-              onChange={() => {}}
-              icon={HomeIcon}
-              inputType="select"
-              readOnly={true}
-            />
-            <EditableField
-              label="Type de travaux"
-              value={dossier.typeTravaux || ""}
-              onChange={() => {}}
-              // Use a more relevant icon:
-              icon={WrenchScrewdriverIcon}
-              inputType="select"
-              readOnly={true}
-            />
-            <EditableField
-              label="Profil"
-              value={dossier?.profil || ""}
-              onChange={() => {}}
-              icon={UserCircleIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Système de chauffage"
-              value={dossier?.informationLogement?.systemeChauffage || ""}
-              onChange={() => {}}
-              icon={FireIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Surface habitable (m²)"
-              value={dossier?.surfaceChauffee || ""}
-              onChange={() => {}}
-              icon={HomeIcon}
-              inputType="number"
-              readOnly={true}
-            />
-            <EditableField
-              label="Type de compteur électrique"
-              value={dossier?.typeCompteurElectrique || ""}
-              onChange={() => {}}
-              icon={LightBulbIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Année de construction"
-              value={dossier?.anneeConstruction || ""}
-              onChange={() => {}}
-              icon={CalendarIcon}
-              inputType="number"
-              readOnly={true}
-            />
-            <div className="group flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors">
-      {MapIcon && (
-        <MapIcon className="h-5 w-5 text-gray-400 flex-shrink-0" aria-hidden="true" />
-      )}
-      <div className="flex-1 min-w-0">
-        <label className="block text-sm font-medium text-gray-500 mb-1">
-          Projet proposé
-        </label>
-        {dossier?.solution ? (
-          <div className="flex flex-wrap gap-2">
-            {dossier.solution.split(',').map((sol, index) => (
-              <span
-                key={index}
-                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-              >
-                {sol.trim()}
-              </span>
-            ))}
+          {/* Property Summary Card */}
+          <div className="p-6 bg-green-50 border-b border-green-100">
+            <div className="flex flex-wrap items-center gap-8">
+              {/* Type */}
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700">
+                  <HomeIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Type de logement</p>
+                  <p className="font-semibold text-gray-900">{dossier?.typeDeLogement || "Non défini"}</p>
+                </div>
+              </div>
+              
+              {/* Construction Year */}
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700">
+                  <CalendarIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Année de construction</p>
+                  <p className="font-semibold text-gray-900">{dossier?.anneeConstruction || "Non défini"}</p>
+                </div>
+              </div>
+              
+              {/* Surface */}
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700">
+                  <span className="text-sm font-bold">m²</span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Surface</p>
+                  <p className="font-semibold text-gray-900">{dossier?.surfaceChauffee || "0"} m²</p>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="cursor-pointer truncate text-gray-900">
-            <span className="text-gray-400 italic">Non défini</span>
-          </div>
-        )}
-      </div>
-    </div>
+
+          {/* Form Fields - Enhanced Layout */}
+          <div className="p-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              {/* Group 1: Property Details */}
+              <div className="space-y-6">
+                <h4 className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-4 border-b pb-2">
+                  Caractéristiques du logement
+                </h4>
+                
+                <EditableField
+                  label="Type de logement"
+                  value={dossier?.typeDeLogement || ""}
+                  onChange={() => {}}
+                  icon={HomeIcon}
+                  inputType="select"
+                  readOnly={true}
+                />
+                
+                <EditableField
+                  label="Surface habitable (m²)"
+                  value={dossier?.surfaceChauffee || ""}
+                  onChange={() => {}}
+                  icon={HomeIcon}
+                  inputType="number"
+                  readOnly={true}
+                />
+                
+                <EditableField
+                  label="Année de construction"
+                  value={dossier?.anneeConstruction || ""}
+                  onChange={() => {}}
+                  icon={CalendarIcon}
+                  inputType="number"
+                  readOnly={true}
+                />
+              </div>
+              
+              {/* Group 2: Technical Details */}
+              <div className="space-y-6">
+                <h4 className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-4 border-b pb-2">
+                  Caractéristiques techniques
+                </h4>
+                
+                <EditableField
+                  label="Système de chauffage"
+                  value={dossier?.informationLogement?.systemeChauffage || ""}
+                  onChange={() => {}}
+                  icon={FireIcon}
+                  inputType="text"
+                  readOnly={true}
+                />
+                
+                <EditableField
+                  label="Type de compteur électrique"
+                  value={dossier?.typeCompteurElectrique || ""}
+                  onChange={() => {}}
+                  icon={LightBulbIcon}
+                  inputType="text"
+                  readOnly={true}
+                />
+              </div>
+            </div>
+            
+            {/* Project Info */}
+            <div className="mt-10">
+              <h4 className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-4 border-b pb-2">
+                Projet et travaux
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <EditableField
+                  label="Type de travaux"
+                  value={dossier.typeTravaux || ""}
+                  onChange={() => {}}
+                  icon={WrenchScrewdriverIcon}
+                  inputType="select"
+                  readOnly={true}
+                />
+                
+                <EditableField
+                  label="Profil"
+                  value={dossier?.profil || ""}
+                  onChange={() => {}}
+                  icon={UserCircleIcon}
+                  inputType="text"
+                  readOnly={true}
+                />
+              </div>
+              
+              {/* Project Solutions */}
+              <div className="mt-8 bg-gray-50 p-6 rounded-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-700">
+                    <LightBulbIcon className="h-5 w-5" />
+                  </div>
+                  <h5 className="text-lg font-semibold text-gray-900">Solutions proposées</h5>
+                </div>
+                
+                {dossier?.solution ? (
+                  <div className="flex flex-wrap gap-3">
+                    {dossier.solution.split(',').map((sol, index) => (
+                      <div key={index} className="bg-white border border-green-200 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="text-gray-800 font-medium">{sol.trim()}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-100 rounded-lg p-4 text-center text-gray-500 italic">
+                    Aucune solution proposée pour le moment
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </motion.section>
 
-        {/* --- Information des aides --- */}
+        {/* --- Information des aides (IMPROVED) --- */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="bg-white rounded-2xl p-10 border border-yellow-100"
+          className="bg-white rounded-2xl overflow-hidden shadow-lg border border-yellow-100 mt-10"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
-            <div className="flex items-center">
-              <div className="flex items-center justify-center bg-gradient-to-r from-yellow-700 to-yellow-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
+          {/* Enhanced Header with Background */}
+          <div className="relative bg-gradient-to-r from-yellow-600 to-yellow-400 px-10 py-8">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500 rounded-full -mr-16 -mt-20 opacity-30" />
+            <div className="absolute bottom-0 right-24 w-32 h-32 bg-yellow-300 rounded-full -mb-10 opacity-20" />
+            
+            <div className="flex items-center relative z-10">
+              <div className="flex items-center justify-center bg-white text-yellow-600 rounded-full w-20 h-20 mr-6 shadow-xl">
                 <ClipboardDocumentCheckIcon className="w-10 h-10" />
               </div>
-              <h2 className="text-3xl font-extrabold text-gray-800">
-                Information des aides
-              </h2>
+              <div>
+                <h2 className="text-3xl font-extrabold text-white">
+                  Information des aides
+                </h2>
+                <p className="text-yellow-100 mt-1">Éligibilité et aides financières disponibles</p>
+              </div>
             </div>
           </div>
-          {/* Aides Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
-            <EditableField
-              label="Accès Ma Prime Renov - Email"
-              value={contact?.mpremail || ""}
-              onChange={() => {}}
-              icon={MapIcon}
-              inputType="email"
-              readOnly={true}
-            />
-            <PasswordField
-              label="Accès Ma Prime Renov - Mot de passe"
-              password={contact?.mprpassword || ""}
-              icon={LockClosedIcon}
-            />
-            {/* Updated "Phase du projet" field */}
-          <div className="group flex items-center gap-4 p-3 rounded-lg transition-colors bg-white shadow-sm hover:shadow-md">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-blue-50 group-hover:bg-blue-100" />
-              <CalendarIcon
-                className="h-6 w-6 text-blue-600 relative z-10 flex-shrink-0"
-                aria-hidden="true"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Phase du projet
-              </label>
-              {formData.etape ? (
-                <span
-                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${getPhaseBadgeColor(
-                    formData.etape
-                  )}`}
-                >
-                  {formatPhaseLabel(formData.etape)}
-                </span>
-              ) : (
-                <span className="text-gray-400 italic">Non défini</span>
-              )}
-            </div>
-          </div>
-            <EditableField
-              label="Nombre de personne"
-              value={dossier?.nombrePersonne || ""}
-              onChange={() => {}}
-              icon={UserCircleIcon}
-              inputType="number"
-              readOnly={true}
-            />
-            <EditableField
-              label="Numéro de dossier MPR"
-              value={contact?.maprNumero || ""}
-              onChange={() => {}}
-              icon={ClipboardDocumentCheckIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Code postal"
-              value={dossier?.codePostal || ""}
-              onChange={() => {}}
-              icon={HomeIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="Zone climatique"
-              value={contact?.climateZone || ""}
-              onChange={() => {}}
-              icon={CalendarIcon}
-              inputType="text"
-              readOnly={true}
-            />
-            <EditableField
-              label="RFR"
-              value={contact?.rfr || ""}
-              onChange={() => {}}
-              icon={CalendarIcon}
-              inputType="text"
-              readOnly={true}
-            />
 
-              {/* MaPrimeRénov’ Color Indicator - Simplified Professional */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 transition-all hover:border-gray-200">
-                {/* Official Header with Logo */}
-                <div className="flex items-center gap-2 mb-3">
-                  <Image 
-                    src="/Group 9.svg"
-                    alt="MaPrimeRénov’ Logo"
-                    width={24}
-                    height={24}
-                    className="w-6 h-6"
-                  />
-                  <span className="text-sm font-semibold text-gray-700">MaPrimeRénov’</span>
-                </div>
-
-                {/* Core Information */}
-                <div className="flex items-center gap-4">
-                  {/* Color Indicator */}
-                  <div className="h-12 w-12 rounded-lg border-2 border-gray-100 shadow-inner"
-                      style={{ 
-                        backgroundColor: dossierState?.mprColor ? getColorHex(dossierState.mprColor) : '#f3f4f6',
-                        borderColor: dossierState?.mprColor ? `${getColorHex(dossierState.mprColor)}30` : '#e5e7eb'
-                      }}>
-                    {!dossierState?.mprColor && (
-                      <QuestionMarkCircleIcon className="w-5 h-5 text-gray-400 m-auto" />
-                    )}
-                  </div>
-
-                  {/* Text Info */}
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Niveau de prime</div>
-                    <div className="text-lg font-semibold text-gray-800">
-                      {dossierState?.mprColor || (
-                        <span className="text-amber-600 text-sm flex items-center gap-1">
-                          <ExclamationCircleIcon className="w-4 h-4" />
-                          Non défini
-                        </span>
-                      )}
-                    </div>
-                  </div>
+          {/* MaPrimeRénov Banner */}
+          <div className="p-6 bg-yellow-50 border-b border-yellow-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Image 
+                  src="/Group 9.svg"
+                  alt="MaPrimeRénov' Logo"
+                  width={40}
+                  height={40}
+                />
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">MaPrimeRénov&apos;</h3>
+                  <p className="text-sm text-gray-600">Programme national d&apos;aide à la rénovation énergétique</p>
                 </div>
               </div>
+              
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-lg shadow-inner" style={{ 
+                  backgroundColor: dossierState?.mprColor ? getColorHex(dossierState.mprColor) : '#f3f4f6',
+                  borderColor: dossierState?.mprColor ? `${getColorHex(dossierState.mprColor)}30` : '#e5e7eb'
+                }}>
+                  {!dossierState?.mprColor && (
+                    <QuestionMarkCircleIcon className="w-5 h-5 text-gray-400 m-auto" />
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Niveau</span>
+                  <p className="font-semibold text-gray-900">{dossierState?.mprColor || "Non défini"}</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-              {/* Eligible Field */}
-              <div className="group relative bg-white rounded-xl p-5 shadow-sm border border-gray-100 transition-all hover:shadow-md hover:border-gray-200">
-                {/* Subtle background pattern */}
-                <div className="absolute inset-0 bg-[radial-gradient(#f5f5f5_1px,transparent_1px)] bg-[size:16px_16px] opacity-10" />
-                
-                <div className="relative z-10 flex items-center gap-5">
-                  {/* Icon container with subtle gradient */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-gray-50 to-white shadow-inner">
-                    <IdentificationIcon className="h-6 w-6 text-gray-600" />
+          {/* Form Fields - Enhanced Layout */}
+          <div className="p-10">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+              {/* Left column: 7 columns wide */}
+              <div className="md:col-span-7 space-y-10">
+                {/* Credentials Group */}
+                <div>
+                  <h4 className="text-sm font-semibold text-yellow-600 uppercase tracking-wider mb-4 border-b pb-2">
+                    Accès au compte MaPrimeRénov&apos;
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <EditableField
+                      label="Accès Ma Prime Renov - Email"
+                      value={contact?.mpremail || ""}
+                      onChange={() => {}}
+                      icon={EnvelopeIcon}
+                      inputType="email"
+                      readOnly={true}
+                    />
+                    
+                    <PasswordField
+                      label="Accès Ma Prime Renov - Mot de passe"
+                      password={contact?.mprpassword || ""}
+                      icon={LockClosedIcon}
+                    />
                   </div>
-
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                      Éligibilité MaPrimeRénov’
+                </div>
+                
+                {/* Administrative Info Group */}
+                <div>
+                  <h4 className="text-sm font-semibold text-yellow-600 uppercase tracking-wider mb-4 border-b pb-2">
+                    Informations administratives
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <EditableField
+                      label="Numéro de dossier MPR"
+                      value={contact?.maprNumero || ""}
+                      onChange={() => {}}
+                      icon={ClipboardDocumentCheckIcon}
+                      inputType="text"
+                      readOnly={true}
+                    />
+                    
+                    <EditableField
+                      label="Nombre de personne"
+                      value={dossier?.nombrePersonne || ""}
+                      onChange={() => {}}
+                      icon={UserCircleIcon}
+                      inputType="number"
+                      readOnly={true}
+                    />
+                    
+                    <EditableField
+                      label="Code postal"
+                      value={dossier?.codePostal || ""}
+                      onChange={() => {}}
+                      icon={HomeIcon}
+                      inputType="text"
+                      readOnly={true}
+                    />
+                    
+                    <EditableField
+                      label="Zone climatique"
+                      value={contact?.climateZone || ""}
+                      onChange={() => {}}
+                      icon={SunIcon}
+                      inputType="text"
+                      readOnly={true}
+                    />
+                  </div>
+                </div>
+                
+                {/* Project Phase */}
+                <div>
+                  <h4 className="text-sm font-semibold text-yellow-600 uppercase tracking-wider mb-4 border-b pb-2">
+                    Statut du projet
+                  </h4>
+                  
+                  <div className="p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="relative">
+                        <div className="absolute inset-0 rounded-full bg-blue-50" />
+                        <CalendarIcon className="h-6 w-6 text-blue-600 relative z-10 flex-shrink-0" />
+                      </div>
+                      <h5 className="text-lg font-semibold text-gray-900">Phase actuelle</h5>
                     </div>
                     
-                    {contact?.eligible !== undefined ? (
-                      <div className="flex items-center gap-3">
-                        {/* Animated status indicator */}
-                        <motion.div 
-                          initial={{ scale: 0.9 }}
-                          animate={{ scale: 1 }}
-                          className={`relative p-2 rounded-full ${
-                            formatEligible(contact.eligible) === "oui" 
-                              ? "bg-green-50" 
-                              : "bg-red-50"
-                          }`}
-                        >
-                          {formatEligible(contact.eligible) === "oui" ? (
-                            <CheckCircleIcon className="h-6 w-6 text-green-600" />
-                          ) : (
-                            <XCircleIcon className="h-6 w-6 text-red-600" />
-                          )}
-                          {/* Subtle pulse effect */}
-                          <div className="absolute inset-0 animate-pulse rounded-full border-2 opacity-50" />
-                        </motion.div>
-
-                        {/* Status text */}
-                        <div className="space-y-1">
-                          <span className={`text-xl font-semibold ${
-                            formatEligible(contact.eligible) === "oui"
-                              ? "text-green-700"
-                              : "text-red-700"
-                          }`}>
-                            {formatEligible(contact.eligible) === "oui" ? "Éligible" : "Non éligible"}
-                          </span>
-                          <p className="text-sm text-gray-600">
-                            {formatEligible(contact.eligible) === "oui"
-                              ? "Répond aux critères du programme"
-                              : "Ne répond pas aux exigences"}
-                          </p>
+                    {formData.etape ? (
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-3">
+                          <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${parseInt(formData.etape.split(' ')[0]) * 14}%` }}></div>
                         </div>
+                        <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${getPhaseBadgeColor(formData.etape)}`}>
+                          {formatPhaseLabel(formData.etape)}
+                        </span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full bg-gray-100">
-                          <QuestionMarkCircleIcon className="h-6 w-6 text-gray-500" />
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-xl font-semibold text-gray-600">Statut inconnu</span>
-                          <p className="text-sm text-gray-500">Informations manquantes</p>
-                        </div>
-                      </div>
+                      <span className="text-gray-400 italic">Non défini</span>
                     )}
                   </div>
                 </div>
-
-                {/* Hover effect layer */}
-                <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-transparent opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity" />
               </div>
-
-
+              
+              {/* Right column: 5 columns wide */}
+              <div className="md:col-span-5">
+                {/* Financial Information */}
+                <div className="sticky top-4">
+                  <h4 className="text-sm font-semibold text-yellow-600 uppercase tracking-wider mb-4 border-b pb-2">
+                    Informations financières
+                  </h4>
+                  
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    {/* RFR Card */}
+                    <div className="p-5 border-b border-gray-100">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Revenu Fiscal de Référence
+                          </p>
+                          <div className="mt-1 flex items-baseline">
+                            <h5 className="text-2xl font-bold text-gray-900">{contact?.rfr ? new Intl.NumberFormat('fr-FR').format(parseInt(contact.rfr)) : "0"} €</h5>
+                          </div>
+                        </div>
+                        <div className="p-2 bg-yellow-100 rounded-lg">
+                          <CurrencyEuroIcon className="h-5 w-5 text-yellow-700" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* MPR Color Level Visualization */}
+                    <div className="p-5 bg-gray-50">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                        Niveau MaPrimeRénov&apos;
+                      </p>
+                      
+                      <div className="flex space-x-2">
+                        {["Bleu", "Jaune", "Violet", "Rose"].map((color) => (
+                          <div key={color} className="flex-1">
+                            <div 
+                              className={`h-8 rounded-md w-full ${
+                                dossierState?.mprColor === color 
+                                ? `ring-2 ring-offset-2 ring-${color === 'Bleu' ? 'blue' : color === 'Jaune' ? 'yellow' : color === 'Violet' ? 'purple' : 'pink'}-500` 
+                                : ''
+                              }`}
+                              style={{ 
+                                backgroundColor: getColorHex(color)
+                              }}
+                            />
+                            <p className="text-xs mt-1 text-center text-gray-600">{color}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Eligibility Status */}
+                    <div className="p-5 border-t border-gray-100">
+                      <div className="group relative bg-white rounded-xl p-4 transition-all">
+                        <div className="relative z-10 flex items-center gap-5">
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-gray-50 to-white shadow-inner">
+                            <Image 
+                              src="/Group 9.svg"
+                              alt="MaPrimeRénov' Logo"
+                              width={24}
+                              height={24}
+                              className="w-6 h-6"
+                            />
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                              Éligibilité MaPrimeRénov&apos;
+                            </div>
+                            
+                            {contact?.eligible !== undefined ? (
+                              <div className="flex items-center gap-3">
+                                <motion.div 
+                                  initial={{ scale: 0.9 }}
+                                  animate={{ scale: 1 }}
+                                  className={`relative p-2 rounded-full ${
+                                    formatEligible(contact.eligible) === "oui" 
+                                      ? "bg-green-50" 
+                                      : "bg-red-50"
+                                  }`}
+                                >
+                                  {formatEligible(contact.eligible) === "oui" ? (
+                                    <CheckCircleIcon className="h-6 w-6 text-green-600" />
+                                  ) : (
+                                    <XCircleIcon className="h-6 w-6 text-red-600" />
+                                  )}
+                                  <div className="absolute inset-0 animate-pulse rounded-full border-2 opacity-50" />
+                                </motion.div>
+                                
+                                <div className="space-y-1">
+                                  <span className={`text-xl font-semibold ${
+                                    formatEligible(contact.eligible) === "oui"
+                                      ? "text-green-700"
+                                      : "text-red-700"
+                                  }`}>
+                                    {formatEligible(contact.eligible) === "oui" ? "Éligible" : "Non éligible"}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-full bg-gray-100">
+                                  <QuestionMarkCircleIcon className="h-6 w-6 text-gray-500" />
+                                </div>
+                                <span className="text-xl font-semibold text-gray-600">Statut inconnu</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </motion.section>
 
-        {/* Le projet */}
+        {/* iMessage-style Comments Section */}
+        {/* Replace the entire Comments Section with: */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.6 }}
-          className="bg-white rounded-2xl p-10 border border-purple-100"
+          className="bg-white rounded-2xl overflow-hidden shadow-lg border border-purple-100 mt-10"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
-            <div className="flex items-center">
-              <div className="flex items-center justify-center bg-gradient-to-r from-purple-700 to-purple-500 text-white rounded-full w-20 h-20 mr-6 shadow-lg">
-                <ClipboardDocumentCheckIcon className="w-10 h-10" />
+          {/* Enhanced Header with Background */}
+          <div className="relative bg-gradient-to-r from-purple-600 to-purple-400 px-10 py-8">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500 rounded-full -mr-16 -mt-20 opacity-30" />
+            <div className="absolute bottom-0 right-24 w-32 h-32 bg-purple-300 rounded-full -mb-10 opacity-20" />
+            
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center bg-white text-purple-600 rounded-full w-20 h-20 mr-6 shadow-xl">
+                  <ClipboardDocumentCheckIcon className="w-10 h-10" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-extrabold text-white">
+                    Commentaires
+                  </h2>
+                  <p className="text-purple-100 mt-1">Suivi et historique des interactions</p>
+                </div>
               </div>
-              <h2 className="text-3xl font-extrabold text-gray-800">
-                Commentaires
-              </h2>
+              
+              <button className="px-4 py-2 bg-white text-purple-700 rounded-lg shadow-md hover:bg-purple-50 transition-colors flex items-center gap-2">
+                <PencilIcon className="h-4 w-4" />
+                <span>Nouveau commentaire</span>
+              </button>
             </div>
           </div>
-          {/* Projet Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <CommentsSection dossier={dossier} />
+
+          {/* iMessage-like Comments Section */}
+          <div className="p-6 bg-gray-50">
+            {/* Comment Timeline Header */}
+            <div className="flex items-center justify-center mb-8">
+              <div className="relative flex items-center">
+                <div className="h-px w-16 bg-gray-300"></div>
+                <div className="bg-gray-200 text-gray-500 text-xs px-3 py-1 rounded-full">
+                  Historique des commentaires
+                </div>
+                <div className="h-px w-16 bg-gray-300"></div>
+              </div>
+            </div>
+
+            {/* Comments Timeline */}
+            <div className="flex flex-col space-y-6 px-4 max-w-4xl mx-auto">
+              {/* Date Separator */}
+              <div className="flex justify-center">
+                <div className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+                  15 mars 2025
+                </div>
+              </div>
+
+              {/* Comment 1 */}
+              <div className="flex flex-col max-w-3xl mx-auto w-full">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold flex-shrink-0">
+                    SM
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h5 className="font-semibold text-gray-900">Sophie Martin</h5>
+                      <span className="text-xs text-gray-500 font-medium px-2 py-0.5 rounded-full bg-blue-50">Chargée de clientèle</span>
+                    </div>
+                    
+                    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                      <p className="text-gray-700">Premier contact téléphonique effectué. Le client est très intéressé par l&apos;installation d&apos;une pompe à chaleur air/eau. Il souhaite recevoir un devis détaillé incluant les aides MaPrimeRénov&apos; dont il pourrait bénéficier.</p>
+                    </div>
+                    
+                    <div className="flex items-center mt-1.5 ml-1">
+                      <span className="text-xs text-gray-500">15:32</span>
+                      <div className="ml-3 flex items-center gap-1.5">
+                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Premier contact</span>
+                        <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Pompe à chaleur</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comment 2 */}
+              <div className="flex flex-col max-w-3xl mx-auto w-full">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold flex-shrink-0">
+                    TD
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h5 className="font-semibold text-gray-900">Thomas Dupont</h5>
+                      <span className="text-xs text-gray-500 font-medium px-2 py-0.5 rounded-full bg-green-50">Conseiller technique</span>
+                    </div>
+                    
+                    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                      <p className="text-gray-700">Visite technique réalisée. La maison est compatible pour l&apos;installation d&apos;une PAC air/eau. Situation optimale pour les unités extérieures côté jardin. Diagnostic de performance énergétique à jour. Client prêt à démarrer les travaux dès l&apos;acceptation du dossier MaPrimeRénov&apos;.</p>
+                    </div>
+                    
+                    <div className="flex items-center mt-1.5 ml-1">
+                      <span className="text-xs text-gray-500">17:45</span>
+                      <div className="ml-3 flex items-center gap-1.5">
+                        <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Visite technique</span>
+                        <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Installation validée</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Date Separator */}
+              <div className="flex justify-center">
+                <div className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+                  20 mars 2025
+                </div>
+              </div>
+
+              {/* Comment 3 */}
+              <div className="flex flex-col max-w-3xl mx-auto w-full">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-700 font-bold flex-shrink-0">
+                    LD
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h5 className="font-semibold text-gray-900">Lucie Durand</h5>
+                      <span className="text-xs text-gray-500 font-medium px-2 py-0.5 rounded-full bg-red-50">Responsable administrative</span>
+                    </div>
+                    
+                    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                      <p className="text-gray-700">Dossier MaPrimeRénov&apos; déposé. Tous les documents ont été validés et transmis. Le client a fourni l&apos;ensemble des pièces justificatives nécessaires dans les délais. En attente de confirmation d&apos;éligibilité de l&apos;ANAH. Rappel programmé dans 10 jours pour suivi.</p>
+                    </div>
+                    
+                    <div className="flex items-center mt-1.5 ml-1">
+                      <span className="text-xs text-gray-500">10:15</span>
+                      <div className="ml-3 flex items-center gap-1.5">
+                        <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Administratif</span>
+                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Dossier déposé</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* iMessage-style Comment Form */}
+          <div className="border-t border-gray-200 bg-white px-6 py-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-end gap-3">
+                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold flex-shrink-0">
+                  {/* Current user initials */}
+                  ME
+                </div>
+                
+                <div className="flex-1 relative">
+                  <div className="absolute top-2 right-2 flex items-center gap-2">
+                    <button className="text-gray-400 hover:text-gray-600">
+                      <PaperClipIcon className="h-5 w-5" />
+                    </button>
+                    <button className="text-gray-400 hover:text-gray-600">
+                      <CameraIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  <textarea 
+                    className="w-full bg-gray-100 border border-gray-200 rounded-2xl p-4 pr-20 min-h-[120px] focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-colors"
+                    placeholder="Ajouter un commentaire..."
+                    rows={3}
+                  ></textarea>
+                </div>
+                
+                <button className="h-12 w-12 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center justify-center shadow-md transition-colors">
+                  <PaperAirplaneIcon className="h-6 w-6 text-white -rotate-45" />
+                </button>
+              </div>
+              
+              <div className="flex justify-end mt-2">
+                <div className="text-xs text-gray-500">
+                  <span className="font-semibold">Conseils :</span> Ajoutez des notes sur les interactions, les demandes ou les préférences du client
+                </div>
+              </div>
+            </div>
           </div>
         </motion.section>
 
-        {/* Auto-Save Status */}
-        {/* <div className="text-right text-xs text-gray-500 italic">{saveStatus}</div> */}
       </div>
 
       {/* Right Column: Additional Info Boxes */}
