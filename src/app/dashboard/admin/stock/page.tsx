@@ -25,7 +25,6 @@ import {
   ShoppingCartIcon,
   TruckIcon,
   TagIcon,
-  PresentationChartBarIcon,
   ArrowTrendingUpIcon,
   EyeIcon,
   PencilIcon,
@@ -498,9 +497,14 @@ export default function StockPage() {
     // Calculate summary statistics
     const totalStock = stockProducts.reduce((sum, product) => sum + product.stock.current, 0);
     const totalProducts = stockProducts.length;
-    const lowStockCount = stockProducts.filter(p => p.stock.current <= p.stock.min).length;
-    const outOfStockCount = stockProducts.filter(p => p.stock.current === 0).length;
-    const totalValue = stockProducts.reduce((sum, product) => sum + (product.stock.current * product.prixTTC), 0);
+    const reservedProducts = stockProducts.reduce((sum, product) => sum + product.stock.reserved, 0);
+    // This is a placeholder since there's no "installed" field in the data
+    // We could use a fake calculation or add this field to the data model
+    const installedProducts = stockProducts.reduce((sum, product) => {
+      // For demo purposes, let's say 40% of products that aren't in stock or reserved have been installed
+      const potentiallyInstalled = Math.floor((product.quantite - product.stock.current - product.stock.reserved) * 0.4);
+      return sum + Math.max(0, potentiallyInstalled);
+    }, 0);
     
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -538,19 +542,20 @@ export default function StockPage() {
         >
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs text-[#213f5b] opacity-75">Stocks bas</p>
-              <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{lowStockCount}</h3>
+              <p className="text-xs text-[#213f5b] opacity-75">Produit en stock</p>
+              <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{totalStock}</h3>
               <p className="text-xs text-[#213f5b] opacity-75 mt-1">
-                {outOfStockCount} produits en rupture
+                {stockProducts.filter(p => p.stock.current > 0).length} produits disponibles
               </p>
             </div>
-            <div className="p-3 bg-amber-50 rounded-lg">
-              <BellAlertIcon className="h-6 w-6 text-amber-500" />
+            <div className="p-3 bg-green-50 rounded-lg">
+              <CheckCircleIcon className="h-6 w-6 text-green-500" />
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-[#eaeaea]">
-            <div className="flex items-center gap-1 text-amber-500 text-xs">
-              <span>Nécessitant attention</span>
+            <div className="flex items-center gap-1 text-green-500 text-xs">
+              <ArrowTrendingUpIcon className="h-3 w-3" />
+              <span>+2.5% depuis le mois dernier</span>
             </div>
           </div>
         </motion.div>
@@ -563,20 +568,19 @@ export default function StockPage() {
         >
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs text-[#213f5b] opacity-75">Valeur du stock</p>
-              <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{totalValue.toLocaleString()} €</h3>
+              <p className="text-xs text-[#213f5b] opacity-75">Produit réservé</p>
+              <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{reservedProducts}</h3>
               <p className="text-xs text-[#213f5b] opacity-75 mt-1">
-                Coût moyen: {(totalValue / totalStock).toFixed(2)} €/unité
+                {stockProducts.filter(p => p.stock.reserved > 0).length} produits avec réservations
               </p>
             </div>
-            <div className="p-3 bg-green-50 rounded-lg">
-              <PresentationChartBarIcon className="h-6 w-6 text-green-500" />
+            <div className="p-3 bg-amber-50 rounded-lg">
+              <ClockIcon className="h-6 w-6 text-amber-500" />
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-[#eaeaea]">
-            <div className="flex items-center gap-1 text-green-500 text-xs">
-              <ArrowTrendingUpIcon className="h-3 w-3" />
-              <span>+5.2% depuis le mois dernier</span>
+            <div className="flex items-center gap-1 text-amber-500 text-xs">
+              <span>En attente de livraison</span>
             </div>
           </div>
         </motion.div>
@@ -589,22 +593,20 @@ export default function StockPage() {
         >
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs text-[#213f5b] opacity-75">Commandes en cours</p>
-              <h3 className="text-2xl font-bold text-[#213f5b] mt-1">
-                {stockProducts.reduce((sum, p) => sum + p.stock.incoming, 0)}
-              </h3>
+              <p className="text-xs text-[#213f5b] opacity-75">Produit installé</p>
+              <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{installedProducts}</h3>
               <p className="text-xs text-[#213f5b] opacity-75 mt-1">
-                {stockProducts.filter(p => p.stock.incoming > 0).length} produits en attente
+                {Math.round(installedProducts / (totalProducts * 0.4) * 100)}% du total
               </p>
             </div>
             <div className="p-3 bg-indigo-50 rounded-lg">
-              <TruckIcon className="h-6 w-6 text-indigo-500" />
+              <TagIcon className="h-6 w-6 text-indigo-500" />
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-[#eaeaea]">
             <div className="flex items-center gap-1 text-indigo-500 text-xs">
-              <ClockIcon className="h-3 w-3" />
-              <span>Prochaine livraison: 2 jours</span>
+              <CheckCircleIcon className="h-3 w-3" />
+              <span>Projets complétés</span>
             </div>
           </div>
         </motion.div>
@@ -891,20 +893,31 @@ export default function StockPage() {
                   {/* Product Info */}
                   <div className="md:col-span-2">
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#eaeaea]">
-                      <div className="p-6 border-b border-[#eaeaea] bg-gradient-to-r from-white to-[#f8fafc]">
-                        <div className="flex items-center gap-3">
-                          <div className="p-3 bg-[#bfddf9] bg-opacity-70 rounded-lg">
+                    <div className="p-6 border-b border-[#eaeaea] bg-gradient-to-r from-white to-[#f8fafc]">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-[#bfddf9] bg-opacity-70 rounded-lg">
+                          {/* Add product logo based on category */}
+                          {selectedProduct.categorie === "MONO GESTE" ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          ) : selectedProduct.categorie === "PANNEAUX PHOTOVOLTAIQUE" ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                          ) : (
                             <CubeIcon className="h-8 w-8 text-[#213f5b]" />
-                          </div>
-                          <div>
-                            <h2 className="text-xl font-bold text-[#213f5b]">{selectedProduct.libelle}</h2>
-                            <p className="text-[#213f5b] opacity-75">{selectedProduct.reference}</p>
-                          </div>
-                          <div className="ml-auto">
-                            {renderStockStatus(selectedProduct)}
-                          </div>
+                          )}
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-[#213f5b]">{selectedProduct.libelle}</h2>
+                          <p className="text-[#213f5b] opacity-75">{selectedProduct.reference}</p>
+                        </div>
+                        <div className="ml-auto">
+                          {renderStockStatus(selectedProduct)}
                         </div>
                       </div>
+                    </div>
                       
                       <div className="p-6">
                         <div className="grid grid-cols-2 gap-6 mb-6">
@@ -1222,7 +1235,6 @@ export default function StockPage() {
                 </motion.div>
               )}
               
-              {/* Products Grid View */}
               {viewMode === "cards" && (
                 <>
                   {paginatedProducts.length === 0 ? (
@@ -1251,7 +1263,18 @@ export default function StockPage() {
                             <div className="flex justify-between items-start mb-2">
                               <div className="flex items-start gap-3">
                                 <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
-                                  <CubeIcon className="h-6 w-6 text-[#213f5b]" />
+                                  {/* Add product logo based on category or brand */}
+                                  {product.categorie === "MONO GESTE" ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                  ) : product.categorie === "PANNEAUX PHOTOVOLTAIQUE" ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                  ) : (
+                                    <CubeIcon className="h-6 w-6 text-[#213f5b]" />
+                                  )}
                                 </div>
                                 <div>
                                   <h3 className="font-bold text-[#213f5b] line-clamp-1">{product.libelle || product.reference}</h3>
@@ -1333,14 +1356,16 @@ export default function StockPage() {
                   )}
                 </>
               )}
-              
-              {/* Products Table View */}
+
               {viewMode === "table" && (
                 <div className="bg-white rounded-xl shadow-md overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-[#eaeaea]">
                       <thead className="bg-[#f8fafc]">
                         <tr>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-[#213f5b] uppercase tracking-wider">
+                            Logo
+                          </th>
                           <th 
                             scope="col" 
                             className="px-6 py-4 text-left text-xs font-medium text-[#213f5b] uppercase tracking-wider cursor-pointer hover:bg-[#f0f7ff]"
@@ -1439,6 +1464,22 @@ export default function StockPage() {
                       <tbody className="bg-white divide-y divide-[#eaeaea]">
                         {paginatedProducts.map((product) => (
                           <tr key={product.id} className="hover:bg-[#f8fafc] transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg inline-flex">
+                                {/* Add product logo based on category or brand */}
+                                {product.categorie === "MONO GESTE" ? (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                  </svg>
+                                ) : product.categorie === "PANNEAUX PHOTOVOLTAIQUE" ? (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                  </svg>
+                                ) : (
+                                  <CubeIcon className="h-5 w-5 text-[#213f5b]" />
+                                )}
+                              </div>
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#213f5b]">
                               {product.reference}
                             </td>

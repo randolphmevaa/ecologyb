@@ -4,21 +4,12 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import {
-  // ChartBarIcon,
   CurrencyEuroIcon,
-  // CalendarIcon,
   UserGroupIcon,
-  // ArrowUpIcon,
   ArrowDownIcon,
-  // ArrowPathIcon,
   AdjustmentsHorizontalIcon,
-  // FunnelIcon,
   BuildingOfficeIcon,
-  // BanknotesIcon,
-  // WrenchScrewdriverIcon,
-  // SunIcon,
   HomeModernIcon,
-  // PresentationChartLineIcon,
   PlusIcon,
   DocumentTextIcon,
   MagnifyingGlassIcon,
@@ -29,10 +20,12 @@ import {
   XMarkIcon,
   ClockIcon,
   ArrowTrendingUpIcon,
-  // CubeIcon,
   ShieldCheckIcon,
   UsersIcon,
-  MapPinIcon
+  MapPinIcon,
+  // PhoneIcon,
+  TicketIcon,
+  BanknotesIcon
 } from "@heroicons/react/24/outline";
 
 // For charts
@@ -52,8 +45,6 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
-  // RadialBarChart,
-  // RadialBar,
   ReferenceLine,
   RadarChart,
   Radar,
@@ -61,8 +52,6 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis
 } from "recharts";
-// import { Button } from "@headlessui/react";
-// import { Button as HeadlessButton } from "@headlessui/react";
 
 interface ButtonProps {
   children: React.ReactNode;
@@ -76,8 +65,6 @@ const Button: React.FC<ButtonProps> = ({
   children, 
   className = "", 
   onClick,
-  // variant,
-  // size,
   ...props 
 }) => {
   return (
@@ -130,16 +117,16 @@ interface Regie {
   revenueByCategory: CategoryRevenue[];
 }
 
-interface SavType {
-  name: string;
-  value: number;
-}
+// interface SavType {
+//   name: string;
+//   value: number;
+// }
 
-interface SavStatus {
-  name: string;
-  value: number;
-  color: string;
-}
+// interface SavStatus {
+//   name: string;
+//   value: number;
+//   color: string;
+// }
 
 interface TotalStats {
   installations: number;
@@ -340,26 +327,6 @@ const CATEGORIES_COLORS: Record<string, string> = {
   panneauxPV: "#f6ad55"
 };
 
-// const CATEGORIES_ICONS: Record<string, JSX.Element> = {
-//   monoGeste: <WrenchScrewdriverIcon className="h-4 w-4" />,
-//   financement: <BanknotesIcon className="h-4 w-4" />,
-//   renovationAmpleur: <HomeModernIcon className="h-4 w-4" />,
-//   panneauxPV: <SunIcon className="h-4 w-4" />
-// };
-
-const SAV_TYPES: SavType[] = [
-  { name: "Problème technique", value: 45 },
-  { name: "Installation", value: 25 },
-  { name: "Utilisation", value: 20 },
-  { name: "Autre", value: 10 }
-];
-
-const SAV_STATUSES: SavStatus[] = [
-  { name: "Résolu", value: 68, color: "#4ade80" },
-  { name: "En cours", value: 24, color: "#facc15" },
-  { name: "En attente", value: 8, color: "#f97316" }
-];
-
 export default function StatsPage() {
   // States
   const [timeRange, setTimeRange] = useState<string>("year");
@@ -514,7 +481,7 @@ export default function StatsPage() {
             </div>
           </motion.div>
 
-          {/* Pending + Received Amounts */}
+          {/* Meilleur Régie - Replacing "Performance Telepro" */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -524,33 +491,31 @@ export default function StatsPage() {
           >
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs text-[#213f5b] opacity-75">En Attente + Reçu</p>
-                <h3 className="text-2xl font-bold text-[#213f5b] mt-1">
-                  {formatCurrency(totalStats.pendingAmount + totalStats.receivedAmount)}
+                <p className="text-xs text-[#213f5b] opacity-75">Meilleur Régie</p>
+                <h3 className="text-xl font-bold text-[#213f5b] mt-1 truncate">
+                  Régie Paris Centre
                 </h3>
-                <p className="text-xs text-[#213f5b] opacity-75 mt-1">
-                  {formatCurrency(totalStats.pendingAmount)} en attente
-                </p>
+
               </div>
-              <div className="p-3 bg-amber-50 rounded-lg">
-                <ClockIcon className="h-6 w-6 text-amber-500" />
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <BuildingOfficeIcon className="h-6 w-6 text-purple-500" />
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-[#eaeaea]">
               <div className="flex justify-between text-xs">
-                <span className="text-[#213f5b] opacity-75">En attente</span>
-                <span className="text-amber-500 font-medium">{Math.round((totalStats.pendingAmount / (totalStats.pendingAmount + totalStats.receivedAmount)) * 100)}%</span>
+                <span className="text-[#213f5b] opacity-75">Performance globale</span>
+                <span className="text-purple-500 font-medium">+8.2%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                 <div 
-                  className="h-1.5 rounded-full bg-amber-500"
-                  style={{ width: `${(totalStats.pendingAmount / (totalStats.pendingAmount + totalStats.receivedAmount)) * 100}%` }}
+                  className="h-1.5 rounded-full bg-purple-500"
+                  style={{ width: `92%` }}
                 ></div>
               </div>
             </div>
           </motion.div>
 
-          {/* Top Performer */}
+          {/* Meilleur Commercial - Removed Régie info */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -560,26 +525,20 @@ export default function StatsPage() {
           >
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs text-[#213f5b] opacity-75">Meilleure Performance</p>
+                <p className="text-xs text-[#213f5b] opacity-75">Meilleur Commercial</p>
                 <h3 className="text-xl font-bold text-[#213f5b] mt-1 truncate">
-                  {totalStats.topPerformer.name}
+                  Martin Dupont
                 </h3>
-                <p className="text-xs text-[#213f5b] opacity-75 mt-1">
-                  Score: {totalStats.topPerformer.performance}%
-                </p>
               </div>
               <div className="p-3 bg-indigo-50 rounded-lg">
                 <UserGroupIcon className="h-6 w-6 text-indigo-500" />
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-[#eaeaea]">
-              <button 
-                onClick={() => handleSelectRegie(totalStats.topPerformer)}
-                className="text-indigo-500 text-xs flex items-center"
-              >
-                <span>Voir les détails</span>
-                <ChevronRightIcon className="h-3 w-3 ml-1" />
-              </button>
+              <div className="flex justify-between text-xs">
+                <span className="text-[#213f5b] opacity-75">Performance</span>
+                <span className="text-indigo-500 font-medium">96%</span>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -803,7 +762,7 @@ export default function StatsPage() {
 
         {/* SAV and Performance Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* SAV Stats */}
+          {/* SAV Stats - Updated UI with ticket numbers */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -814,68 +773,92 @@ export default function StatsPage() {
               <h3 className="font-semibold text-[#213f5b]">Statistiques SAV</h3>
             </div>
             <div className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-xs text-[#213f5b] opacity-75">Taux moyen</p>
-                  <p className="text-2xl font-bold text-[#213f5b]">{totalStats.averageSAVRate.toFixed(1)}%</p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <div className="text-xs text-green-500 flex items-center">
-                    <ArrowDownIcon className="h-3 w-3 mr-1" />
-                    <span>0.3% vs période précédente</span>
+              {/* New UI with ticket counts */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="p-3 rounded-lg bg-blue-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-blue-800">Tickets ouverts</p>
+                    <TicketIcon className="h-4 w-4 text-blue-600" />
                   </div>
-                  <p className="text-xs text-[#213f5b] opacity-75 mt-1">Objectif: &lt;3.0%</p>
+                  <p className="text-lg font-bold text-blue-800">153</p>
+                  <p className="text-xs text-blue-600 mt-1">+12 cette semaine</p>
+                </div>
+                
+                <div className="p-3 rounded-lg bg-amber-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-amber-800">Tickets en attente</p>
+                    <ClockIcon className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <p className="text-lg font-bold text-amber-800">47</p>
+                  <p className="text-xs text-amber-600 mt-1">Délai moyen: 3j</p>
                 </div>
               </div>
               
-              <div className="space-y-4">
-                <p className="text-sm font-medium text-[#213f5b]">Types d&apos;interventions</p>
-                {SAV_TYPES.map((type, index) => (
-                  <div key={index}>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-lg bg-green-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-green-800">Tickets clôturés</p>
+                    <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                  </div>
+                  <p className="text-lg font-bold text-green-800">386</p>
+                  <p className="text-xs text-green-600 mt-1">Ce mois-ci</p>
+                </div>
+                
+                <div className="p-3 rounded-lg bg-indigo-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-indigo-800">Taux de résolution</p>
+                    <ShieldCheckIcon className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  <p className="text-lg font-bold text-indigo-800">92%</p>
+                  <p className="text-xs text-indigo-600 mt-1">Sous 48h</p>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-[#eaeaea]">
+                <p className="text-sm font-medium text-[#213f5b] mb-3">Répartition par priorité</p>
+                <div className="space-y-3">
+                  <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-xs text-[#213f5b]">{type.name}</span>
-                      <span className="text-xs font-medium text-[#213f5b]">{type.value}%</span>
+                      <span className="text-xs text-[#213f5b]">Haute</span>
+                      <span className="text-xs font-medium text-[#213f5b]">24</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div 
+                        className="h-1.5 rounded-full bg-red-500"
+                        style={{ width: '15%' }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs text-[#213f5b]">Moyenne</span>
+                      <span className="text-xs font-medium text-[#213f5b]">83</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div 
+                        className="h-1.5 rounded-full bg-amber-500"
+                        style={{ width: '55%' }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs text-[#213f5b]">Basse</span>
+                      <span className="text-xs font-medium text-[#213f5b]">46</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div 
                         className="h-1.5 rounded-full bg-blue-500"
-                        style={{ width: `${type.value}%` }}
+                        style={{ width: '30%' }}
                       ></div>
                     </div>
                   </div>
-                ))}
-              </div>
-              
-              <div className="mt-6 pt-4 border-t border-[#eaeaea]">
-                <p className="text-sm font-medium text-[#213f5b] mb-3">Statut des demandes</p>
-                <div className="flex items-center gap-3">
-                  {SAV_STATUSES.map((status, index) => (
-                    <div 
-                      key={index} 
-                      className="flex-1 p-3 rounded-lg"
-                      style={{ backgroundColor: `${status.color}20` }}
-                    >
-                      <div className="flex items-center gap-1 mb-1">
-                        <span 
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: status.color }}
-                        ></span>
-                        <p className="text-xs text-[#213f5b]">{status.name}</p>
-                      </div>
-                      <p 
-                        className="text-lg font-bold"
-                        style={{ color: status.color }}
-                      >
-                        {status.value}%
-                      </p>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
           </motion.div>
           
-          {/* Facturation Stats */}
+          {/* Facturation Stats - Updated categories */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -891,9 +874,10 @@ export default function StatsPage() {
                   <PieChart>
                     <Pie
                       data={[
-                        { name: "Payées", value: 68, color: "#4ade80" },
-                        { name: "En attente", value: 24, color: "#facc15" },
-                        { name: "Retard", value: 8, color: "#f97316" }
+                        { name: "Payé", value: 62, color: "#4ade80" },
+                        { name: "En attente de paiement", value: 20, color: "#facc15" },
+                        { name: "À modifier", value: 10, color: "#f97316" },
+                        { name: "À payé", value: 8, color: "#3b82f6" }
                       ]}
                       cx="50%"
                       cy="50%"
@@ -902,10 +886,10 @@ export default function StatsPage() {
                       dataKey="value"
                       paddingAngle={2}
                     >
-                      {[0, 1, 2].map((index) => (
+                      {[0, 1, 2, 3].map((index) => (
                         <Cell 
                           key={`cell-${index}`} 
-                          fill={index === 0 ? "#4ade80" : index === 1 ? "#facc15" : "#f97316"} 
+                          fill={index === 0 ? "#4ade80" : index === 1 ? "#facc15" : index === 2 ? "#f97316" : "#3b82f6"} 
                         />
                       ))}
                     </Pie>
@@ -922,30 +906,41 @@ export default function StatsPage() {
                 </ResponsiveContainer>
               </div>
               
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="p-3 rounded-lg bg-green-50">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs text-green-800">Payées</p>
+                    <p className="text-xs text-green-800">Payé</p>
                     <CheckCircleIcon className="h-4 w-4 text-green-600" />
                   </div>
-                  <p className="text-lg font-bold text-green-700">68%</p>
-                  <p className="text-xs text-green-700 mt-1">+5% vs précédent</p>
+                  <p className="text-lg font-bold text-green-700">62%</p>
+                  <p className="text-xs text-green-700 mt-1">{formatCurrency(1430000)}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-amber-50">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs text-amber-800">En attente</p>
+                    <p className="text-xs text-amber-800">En attente de paiement</p>
                     <ClockIcon className="h-4 w-4 text-amber-600" />
                   </div>
-                  <p className="text-lg font-bold text-amber-700">24%</p>
-                  <p className="text-xs text-amber-700 mt-1">-2% vs précédent</p>
+                  <p className="text-lg font-bold text-amber-700">20%</p>
+                  <p className="text-xs text-amber-700 mt-1">{formatCurrency(462000)}</p>
                 </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-orange-50">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs text-orange-800">Retard</p>
+                    <p className="text-xs text-orange-800">À modifier</p>
                     <ExclamationCircleIcon className="h-4 w-4 text-orange-600" />
                   </div>
-                  <p className="text-lg font-bold text-orange-700">8%</p>
-                  <p className="text-xs text-orange-700 mt-1">-3% vs précédent</p>
+                  <p className="text-lg font-bold text-orange-700">10%</p>
+                  <p className="text-xs text-orange-700 mt-1">{formatCurrency(231000)}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-blue-50">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs text-blue-800">À payé</p>
+                    <BanknotesIcon className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <p className="text-lg font-bold text-blue-700">8%</p>
+                  <p className="text-xs text-blue-700 mt-1">{formatCurrency(184000)}</p>
                 </div>
               </div>
               
@@ -1098,7 +1093,7 @@ export default function StatsPage() {
         </div>
         
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Installations */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1164,46 +1159,7 @@ export default function StatsPage() {
               </div>
             </div>
           </motion.div>
-          
-          {/* En attente + Reçu */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="bg-white rounded-xl p-5 shadow-sm border border-[#eaeaea] hover:shadow-md transition-all"
-            whileHover={{ y: -4 }}
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs text-[#213f5b] opacity-75">En Attente + Reçu</p>
-                <h3 className="text-2xl font-bold text-[#213f5b] mt-1">
-                  {formatCurrency(selectedRegie.pendingAmount + selectedRegie.receivedAmount)}
-                </h3>
-                <p className="text-xs text-[#213f5b] opacity-75 mt-1">
-                  {formatCurrency(selectedRegie.pendingAmount)} en attente
-                </p>
-              </div>
-              <div className="p-3 bg-amber-50 rounded-lg">
-                <ClockIcon className="h-6 w-6 text-amber-500" />
-              </div>
-            </div>
-            
-            <div className="mt-3 pt-3 border-t border-[#eaeaea]">
-              <div className="flex justify-between text-xs">
-                <span className="text-[#213f5b] opacity-75">En attente</span>
-                <span className="text-amber-500 font-medium">
-                  {Math.round((selectedRegie.pendingAmount / (selectedRegie.pendingAmount + selectedRegie.receivedAmount)) * 100)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                <div 
-                  className="h-1.5 rounded-full bg-amber-500"
-                  style={{ width: `${(selectedRegie.pendingAmount / (selectedRegie.pendingAmount + selectedRegie.receivedAmount)) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          </motion.div>
-          
+
           {/* Satisfaction */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1511,7 +1467,7 @@ export default function StatsPage() {
             </div>
           </motion.div>
           
-          {/* Facturation */}
+          {/* Facturation - Updated with new categories */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1528,16 +1484,16 @@ export default function StatsPage() {
                   <div className="space-y-3">
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="text-xs text-[#213f5b]">Payées</span>
-                        <span className="text-xs font-medium text-green-600">72%</span>
+                        <span className="text-xs text-[#213f5b]">Payé</span>
+                        <span className="text-xs font-medium text-green-600">62%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1.5">
-                        <div className="h-1.5 rounded-full bg-green-500" style={{ width: '72%' }}></div>
+                        <div className="h-1.5 rounded-full bg-green-500" style={{ width: '62%' }}></div>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="text-xs text-[#213f5b]">En attente</span>
+                        <span className="text-xs text-[#213f5b]">En attente de paiement</span>
                         <span className="text-xs font-medium text-amber-600">20%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1.5">
@@ -1546,11 +1502,20 @@ export default function StatsPage() {
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="text-xs text-[#213f5b]">Retard</span>
-                        <span className="text-xs font-medium text-orange-600">8%</span>
+                        <span className="text-xs text-[#213f5b]">À modifier</span>
+                        <span className="text-xs font-medium text-orange-600">10%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1.5">
-                        <div className="h-1.5 rounded-full bg-orange-500" style={{ width: '8%' }}></div>
+                        <div className="h-1.5 rounded-full bg-orange-500" style={{ width: '10%' }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-xs text-[#213f5b]">À payé</span>
+                        <span className="text-xs font-medium text-blue-600">8%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-1.5">
+                        <div className="h-1.5 rounded-full bg-blue-500" style={{ width: '8%' }}></div>
                       </div>
                     </div>
                   </div>
@@ -1779,11 +1744,11 @@ export default function StatsPage() {
                     Exporter
                   </Button>
                   <Button
-                    className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
-                  >
-                    <PlusIcon className="h-4 w-4 mr-2" />
-                    Nouveau rapport
-                  </Button>
+  className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
+>
+  <PlusIcon className="h-4 w-4 mr-2" />
+  Nouveau rapport
+</Button>
                 </div>
               </div>
             </div>

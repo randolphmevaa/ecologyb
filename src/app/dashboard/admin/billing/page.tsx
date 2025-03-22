@@ -611,7 +611,7 @@ export default function AdminFacturationPage() {
                   whileHover={{ scale: 1.02 }}
                 >
                   <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">En attente d&apos;approbation</p>
+                    <p className="text-sm font-medium text-[#213f5b]">En attente</p>
                     <div className="p-2 rounded-full bg-white/60">
                       <ClockIcon className="h-5 w-5 text-[#213f5b]" />
                     </div>
@@ -629,7 +629,7 @@ export default function AdminFacturationPage() {
                   whileHover={{ scale: 1.02 }}
                 >
                   <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">En attente de verification</p>
+                    <p className="text-sm font-medium text-[#213f5b]">A modifier</p>
                     <div className="p-2 rounded-full bg-white/60">
                       <MagnifyingGlassIcon className="h-5 w-5 text-[#213f5b]" />
                     </div>
@@ -665,7 +665,7 @@ export default function AdminFacturationPage() {
                   whileHover={{ scale: 1.02 }}
                 >
                   <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">Facture payé</p>
+                    <p className="text-sm font-medium text-[#213f5b]">Payé</p>
                     <div className="p-2 rounded-full bg-white/60">
                       <CheckBadgeIcon className="h-5 w-5 text-[#213f5b]" />
                     </div>
@@ -971,7 +971,7 @@ export default function AdminFacturationPage() {
               >
                 <div className="bg-white rounded-xl shadow-sm p-6 h-full">
                   <h3 className="text-lg font-semibold text-[#213f5b] mb-4">
-                    Par utilisateur
+                    Par partenaires
                   </h3>
                   
                   {/* Chart visualization */}

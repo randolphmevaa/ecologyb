@@ -1,6 +1,7 @@
 "use client";
 
 import React, {useRef} from 'react';
+// import ProfessionalCalendar from './ProfessionalCalendar';
 import SignaturePad from 'signature_pad';
 import { useEffect, useState, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -14,15 +15,12 @@ import { Button } from "@/components/ui/Button";
 import { jsPDF } from 'jspdf';
 import { LineChart, customTooltip } from "@/components/ui/Charts/LineChart";
 import EventDetailsModal from "./Modal2";
-// import jsPDF from "jspdf"; // Make sure to install jsPDF (npm install jspdf)
 import Modal from "react-modal"; // Or use your preferred modal library
 
 import {
   LifebuoyIcon,
   ClockIcon,
   CheckCircleIcon,
-  // DocumentArrowDownIcon,
-  // AdjustmentsHorizontalIcon,
   BellIcon,
   ShieldCheckIcon,
   PlusIcon,
@@ -31,17 +29,7 @@ import {
   UserCircleIcon,
   MapPinIcon,
   ChatBubbleLeftRightIcon,
-  // DocumentMagnifyingGlassIcon,
   FireIcon,
-  // ViewColumnsIcon,
-  // TableCellsIcon,
-  SunIcon,
-  // EllipsisVerticalIcon,
-  ChartBarIcon,
-  EllipsisHorizontalIcon,
-  FunnelIcon,
-  ArrowDownTrayIcon,
-  Cog6ToothIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
 } from "@heroicons/react/24/outline";
@@ -53,7 +41,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Calendar, momentLocalizer, Views} from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { CalendarDaysIcon, Clipboard, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, Clock, MapPin, MessageCircle, PencilIcon, PrinterIcon, SearchIcon, TrashIcon, User, X } from "lucide-react";
+import { Clipboard, Clock, MapPin, MessageCircle, User, X } from "lucide-react";
 
 
 // Define your types (adjust as needed)
@@ -2418,7 +2406,7 @@ export default function SupportPage() {
               </div>
             )}
 
-            {/* RIGHT: Enhanced Big Calendar (French) */}
+            {/* ELITE S.A.V. Calendar Interface */}
             <motion.div
               className="space-y-8"
               initial={{ x: 20, opacity: 0 }}
@@ -2426,74 +2414,71 @@ export default function SupportPage() {
               transition={{ delay: 0.1, duration: 0.4 }}
             >
               <motion.div
-                className="bg-white rounded-3xl overflow-hidden border border-[#e0eeff]"
-                whileHover={{ y: -8 }}
+                className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-xl"
+                whileHover={{ y: -4 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
               >
-                {/* En-tête du calendrier */}
-                <div className="bg-gradient-to-r from-[#1a365d] to-[#0f2942] p-7 text-white">
+                {/* En-tête du calendrier - Design Premium */}
+                <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-900 p-6 text-white">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex items-center gap-5">
-                      <div className="p-4 bg-white/15 rounded-2xl backdrop-blur-md flex items-center justify-center">
-                        <CalendarIcon className="h-8 w-8 text-[#e2ffc2]" />
+                    <div className="flex items-center gap-4">
+                      <div className="p-3.5 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold tracking-tight">Calendrier S.A.V.</h2>
-                        <p className="text-white/90 font-medium mt-1.5">
-                          Planifiez, gérez et organisez vos rendez-vous
-                        </p>
-                      </div>
-                    </div>
-                    {/* <div className="flex items-center gap-3">
-                      <div className="relative group">
-                        <button className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors">
-                          <BellIcon className="h-5 w-5" />
-                        </button>
-                        <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 p-3 border border-gray-100">
-                          <h4 className="font-semibold text-gray-800 mb-2">Notifications</h4>
-                          <div className="space-y-2">
-                            <div className="p-2 bg-blue-50 rounded-lg border-l-4 border-blue-500 text-sm">
-                              <p className="font-medium text-blue-800">Réunion d&apos;équipe</p>
-                              <p className="text-blue-700 mt-1">Aujourd&apos;hui, 14:00 - 15:30</p>
-                            </div>
-                          </div>
+                        <h2 className="text-xl font-bold text-white tracking-tight">Calendrier S.A.V.</h2>
+                        <div className="flex items-center gap-2 text-white/70 text-sm font-medium mt-1">
+                          <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                          <span>Planifiez, gérez et organisez vos rendez-vous</span>
                         </div>
                       </div>
-                      <div className="relative group">
-                        <button className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors">
-                          <UserCircleIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div> */}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        className="text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg p-2.5 transition-all duration-150 backdrop-blur-sm"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
                     {/* Left: Today and Navigation */}
                     <div className="flex flex-wrap items-center gap-3">
                       <button
-                        onClick={handleToday}
-                        className="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors text-sm font-medium backdrop-blur-md flex items-center gap-2"
+                        onClick={() => handleToday()}
+                        className="px-5 py-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors text-sm font-medium backdrop-blur-sm flex items-center gap-2 shadow-inner"
                       >
-                        <CalendarDaysIcon className="h-4 w-4" />
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
                         Aujourd&apos;hui
                       </button>
                       <div className="flex gap-1.5">
                         <button
-                          onClick={handlePrev}
-                          className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors"
+                          onClick={() => handlePrev()}
+                          className="p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
                         >
-                          <ChevronLeftIcon className="h-5 w-5" />
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
                         </button>
                         <button
-                          onClick={handleNext}
-                          className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors"
+                          onClick={() => handleNext()}
+                          className="p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
                         >
-                          <ChevronRightIcon className="h-5 w-5" />
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                          </svg>
                         </button>
                       </div>
                     </div>
 
                     {/* Center: Current Date Label */}
-                    <h3 className="text-xl font-semibold text-white whitespace-nowrap">
+                    <h3 className="text-xl font-semibold text-white whitespace-nowrap tracking-wide">
                       {currentDate.toLocaleString("fr-FR", { month: "long", year: "numeric" })}
                     </h3>
 
@@ -2501,36 +2486,41 @@ export default function SupportPage() {
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                       <div className="relative w-full sm:w-64">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <SearchIcon className="h-4 w-4 text-white/60" />
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white/60" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                          </svg>
                         </div>
                         <input
                           type="text"
                           placeholder="Rechercher un événement..."
-                          className="w-full text-sm border-none bg-white/15 hover:bg-white/20 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all text-white placeholder-white/60"
+                          className="w-full text-sm border-none bg-white/15 hover:bg-white/20 rounded-full pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all text-white placeholder-white/60"
                         />
                       </div>
-                      <Button className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#e2ffc2] to-[#c5f7a5] hover:opacity-90 text-[#1a365d] rounded-xl text-sm font-semibold transition-colors"
-                      onClick={() => setShowNewEventModal(true)}>
-                        <PlusIcon className="h-4 w-4" />
+                      <button 
+                        className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg transform hover:translate-y-[-2px]"
+                        onClick={() => setShowNewEventModal(true)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                        </svg>
                         <span className="hidden sm:inline">Nouvel événement</span>
                         <span className="sm:hidden">Nouveau</span>
-                      </Button>
-                      
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Onglets de vue */}
-                <div className="px-4 sm:px-7 pt-4 bg-white border-b border-gray-100 overflow-x-auto">
+                {/* Onglets de vue premium */}
+                <div className="px-4 sm:px-6 pt-4 bg-white border-b border-gray-100 overflow-x-auto sticky top-0 z-10 shadow-sm">
                   <div className="flex gap-2 min-w-max">
                     {viewTabs.map((view, index) => (
                       <motion.button
                         key={index}
                         onClick={() => handleViewChange(view)}
-                        className={`px-3 sm:px-5 py-2.5 text-sm font-medium rounded-t-xl transition-colors ${
+                        className={`px-3 sm:px-5 py-2.5 text-sm font-medium rounded-t-xl transition-all duration-200 ${
                           activeViewTab === view
-                            ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600"
-                            : "text-gray-600 hover:bg-gray-50"
+                            ? "bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600 shadow-[0_4px_6px_-1px_rgba(79,70,229,0.05)]"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-indigo-600"
                         }`}
                         whileHover={{ y: -2 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -2539,20 +2529,24 @@ export default function SupportPage() {
                       </motion.button>
                     ))}
                     <div className="ml-auto flex items-center gap-2">
-                      <button className="p-2 text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
-                        <SunIcon className="h-5 w-5" />
+                      <button className="p-2 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                        </svg>
                       </button>
-                      <button className="p-2 text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
-                        <ChartBarIcon className="h-5 w-5" />
+                      <button className="p-2 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                        </svg>
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Composant Calendrier */}
-                <div className="p-4 sm:p-7 pt-5">
+                {/* Composant Calendrier avec style ultra-premium */}
+                <div className="p-4 sm:p-6">
                   <motion.div 
-                    className="rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm"
+                    className="rounded-xl overflow-hidden border border-gray-200 bg-white shadow-lg"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
@@ -2586,19 +2580,19 @@ export default function SupportPage() {
                       style={
                         {
                           height: "75vh",
-                          "--c-primary": "#1a365d",
-                          "--c-secondary": "#0f2942",
-                          "--c-accent": "#c5f7a5",
+                          "--c-primary": "#4338ca",
+                          "--c-secondary": "#3730a3",
+                          "--c-accent": "#818cf8",
                         } as CustomCSSProperties
                       }
                       className="calendrier-premium"
                       eventPropGetter={(event) => ({
                         style: {
-                          backgroundColor: event.type === "réunion" ? "var(--c-primary)" : "var(--c-accent)",
-                          border: `1px solid ${event.type === "réunion" ? "var(--c-secondary)" : "#b3e19f"}`,
+                          backgroundColor: event.type === "réunion" ? "#4f46e5" : "#c7d2fe",
+                          border: `1px solid ${event.type === "réunion" ? "#4338ca" : "#a5b4fc"}`,
                           borderRadius: "10px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                          color: event.type === "réunion" ? "white" : "var(--c-secondary)",
+                          boxShadow: "0 4px 12px rgba(79, 70, 229, 0.1)",
+                          color: event.type === "réunion" ? "white" : "#1e293b",
                           padding: "8px 14px",
                           fontSize: "0.875rem",
                           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -2606,25 +2600,28 @@ export default function SupportPage() {
                       })}
                       dayPropGetter={(date) => ({
                         className:
-                          date.getDate() === new Date().getDate()
-                            ? "jour-actuel bg-gradient-to-br from-blue-50/70 to-blue-100/40 border-l-4 border-blue-500"
+                          date.getDate() === new Date().getDate() && date.getMonth() === new Date().getMonth()
+                            ? "jour-actuel bg-gradient-to-br from-indigo-50/70 to-indigo-100/40 border-l-4 border-indigo-500"
                             : "",
                       })}
                       components={{
                         event: ({ event }) => (
                           <motion.div
-                            className="h-full p-2"
+                            className="h-full p-2 group"
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             whileHover={{ scale: 1.03, y: -1 }}
                             transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                            onClick={() => setEventDetails(event)}
                           >
                             <div className="flex items-start gap-3">
-                              <div className={`h-2.5 w-2.5 rounded-full mt-1.5 ${event.type === "réunion" ? "bg-white/90" : "bg-[#1a365d]/80"}`} />
+                              <div className={`h-2.5 w-2.5 rounded-full mt-1.5 ${event.type === "réunion" ? "bg-white" : "bg-indigo-800"}`} />
                               <div className="flex-1">
                                 <p className="font-medium truncate">{event.title}</p>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <ClockIcon className={`h-3.5 w-3.5 ${event.type === "réunion" ? "text-white/80" : "text-gray-600"}`} />
+                                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-3.5 w-3.5 ${event.type === "réunion" ? "text-white/80" : "text-gray-600"}`} viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                  </svg>
                                   <span className={`text-xs font-medium ${event.type === "réunion" ? "text-white/90" : "text-gray-600"}`}>
                                     {event.start.toLocaleTimeString("fr-FR", {
                                       hour: "2-digit",
@@ -2634,21 +2631,31 @@ export default function SupportPage() {
                                   {event.location && (
                                     <>
                                       <span className={`${event.type === "réunion" ? "text-white/60" : "text-gray-400"}`}>•</span>
-                                      <MapPinIcon className={`h-3.5 w-3.5 ${event.type === "réunion" ? "text-white/80" : "text-gray-600"}`} />
+                                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-3.5 w-3.5 ${event.type === "réunion" ? "text-white/80" : "text-gray-600"}`} viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                      </svg>
                                       <span className={`text-xs ${event.type === "réunion" ? "text-white/90" : "text-gray-600"}`}>{event.location}</span>
                                     </>
                                   )}
                                 </div>
                               </div>
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button className="p-1 hover:bg-white/10 rounded-full">
-                                  <EllipsisHorizontalIcon className={`h-4 w-4 ${event.type === "réunion" ? "text-white/90" : "text-gray-600"}`} />
+                                <button 
+                                  className="p-1 hover:bg-white/10 rounded-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEventDetails(event);
+                                  }}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${event.type === "réunion" ? "text-white/90" : "text-gray-600"}`} viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                  </svg>
                                 </button>
                               </div>
                             </div>
                           </motion.div>
                         ),
-                        toolbar: ( ) => (
+                        toolbar: () => (
                           <motion.div
                             className="border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
                             initial={{ y: -10, opacity: 0 }}
@@ -2657,21 +2664,27 @@ export default function SupportPage() {
                         ),
                         timeGutterHeader: () => (
                           <div className="h-full bg-gray-50 flex items-center justify-center text-sm font-semibold text-gray-600 border-r border-gray-100">
-                            <ClockIcon className="h-4 w-4 mr-1.5 text-blue-500" /> Horaire
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                            Horaire
                           </div>
                         ),
                         agenda: {
                           event: ({ event }) => (
                             <motion.div
-                              className="flex items-center gap-4 p-4 my-2.5 bg-white border-l-4 border-[#1a365d] rounded-xl shadow-sm hover:shadow-md transition-all group"
+                              className="flex items-center gap-4 p-4 my-2.5 bg-white border-l-4 border-indigo-500 rounded-xl shadow-sm hover:shadow-md transition-all group"
                               whileHover={{ x: 5, backgroundColor: "#f8fafc" }}
+                              onClick={() => setEventDetails(event)}
                             >
-                              <div className={`h-3.5 w-3.5 rounded-full ${event.type === "réunion" ? "bg-[#c5f7a5]" : "bg-[#1a365d]"}`} />
+                              <div className={`h-3.5 w-3.5 rounded-full ${event.type === "réunion" ? "bg-indigo-600" : "bg-indigo-300"}`} />
                               <div className="flex-1">
                                 <p className="font-semibold text-gray-900">{event.title}</p>
                                 <div className="flex flex-wrap items-center gap-y-2 gap-x-3 mt-1.5">
                                   <div className="flex items-center gap-1.5">
-                                    <ClockIcon className="h-4 w-4 text-gray-500" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                    </svg>
                                     <span className="text-sm text-gray-600">
                                       {event.start.toLocaleTimeString("fr-FR", {
                                         hour: "2-digit",
@@ -2686,7 +2699,9 @@ export default function SupportPage() {
                                   </div>
                                   <span className="text-gray-400 hidden sm:inline">|</span>
                                   <div className="flex items-center gap-1.5">
-                                    <UserCircleIcon className="h-4 w-4 text-gray-500" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                    </svg>
                                     <span className="text-sm text-gray-600">
                                       {event.participants || "Aucun participant"}
                                     </span>
@@ -2695,19 +2710,37 @@ export default function SupportPage() {
                                     <>
                                       <span className="text-gray-400 hidden sm:inline">|</span>
                                       <div className="flex items-center gap-1.5">
-                                        <MapPinIcon className="h-4 w-4 text-gray-500" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                        </svg>
                                         <span className="text-sm text-gray-600">{event.location}</span>
                                       </div>
                                     </>
                                   )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                  <PencilIcon className="h-4 w-4 text-gray-500" />
+                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button 
+                                  className="p-2 hover:bg-indigo-50 rounded-lg transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Modifier l'événement
+                                  }}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                  </svg>
                                 </button>
-                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                  <TrashIcon className="h-4 w-4 text-gray-500" />
+                                <button 
+                                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Supprimer l'événement
+                                  }}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                  </svg>
                                 </button>
                               </div>
                             </motion.div>
@@ -2720,11 +2753,16 @@ export default function SupportPage() {
                         },
                         week: {
                           header: ({ date }) => (
-                            <div className="text-center py-3 bg-gradient-to-b from-blue-50 to-white border-b border-gray-100">
-                              <p className="text-sm font-bold text-blue-600 mb-1 uppercase">
+                            <div className="text-center py-3 bg-gradient-to-b from-indigo-50 to-white border-b border-gray-100">
+                              <p className="text-sm font-bold text-indigo-600 mb-1 uppercase">
                                 {date.toLocaleDateString("fr-FR", { weekday: "short" })}
                               </p>
-                              <p className={`text-xl ${date.getDate() === new Date().getDate() ? "text-blue-600 font-bold" : "text-gray-800 font-semibold"}`}>
+                              <p className={`text-xl ${
+                                date.getDate() === new Date().getDate() && 
+                                date.getMonth() === new Date().getMonth() ? 
+                                "text-indigo-600 font-bold" : 
+                                "text-gray-800 font-semibold"
+                              }`}>
                                 {date.getDate()}
                               </p>
                               <p className="text-xs text-gray-500 mt-1">
@@ -2735,16 +2773,18 @@ export default function SupportPage() {
                         },
                         day: {
                           header: ({ date }) => (
-                            <div className="text-center py-6 bg-blue-50 border-b border-blue-100">
+                            <div className="text-center py-6 bg-indigo-50 border-b border-indigo-100">
                               <div className="flex items-center justify-center gap-2 mb-2">
-                                <CalendarDaysIcon className="h-5 w-5 text-blue-600" />
-                                <p className="text-lg font-bold text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                </svg>
+                                <p className="text-lg font-bold text-indigo-600">
                                   {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                                 </p>
                               </div>
-                              <div className="flex items-center justify-center text-sm text-blue-700">
+                              <div className="flex items-center justify-center text-sm text-indigo-700">
                                 {isToday(date) && (
-                                  <span className="px-3 py-1 bg-blue-100 rounded-full font-medium">Aujourd&apos;hui</span>
+                                  <span className="px-3 py-1 bg-indigo-100 rounded-full font-medium">Aujourd&apos;hui</span>
                                 )}
                               </div>
                             </div>
@@ -2757,12 +2797,35 @@ export default function SupportPage() {
                         console.log("Événement sélectionné:", event);
                         setEventDetails(event);
                       }}
-                      onSelectSlot={(slotInfo) => console.log("Créneau sélectionné:", slotInfo)}
+                      onSelectSlot={(slotInfo) => {
+                        console.log("Créneau sélectionné:", slotInfo);
+                        // Ouvrir le modal pour créer un nouvel événement
+                      }}
                       culture="fr"
                     />
                   </motion.div>
 
-
+                  {/* Legend - Premium Addition */}
+                  <div className="flex flex-wrap items-center gap-4 mt-4 p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <span className="text-sm font-medium text-gray-700">Types d&apos;événements:</span>
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full bg-indigo-600"></div>
+                      <span className="text-sm text-gray-600">Réunions</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full bg-indigo-300"></div>
+                      <span className="text-sm text-gray-600">Interventions</span>
+                    </div>
+                    <div className="ml-auto flex items-center gap-3">
+                      <span className="text-xs text-gray-500">{calendarEvents.length} événements ce mois-ci</span>
+                      <div className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                        </svg>
+                        <span>Dernière mise à jour: aujourd&apos;hui</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Custom CSS */}
@@ -2774,10 +2837,11 @@ export default function SupportPage() {
                       background: linear-gradient(to bottom right, #f8fafc, #ffffff);
                       border-radius: 12px;
                       overflow: hidden;
+                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
                     }
                     .rbc-header {
                       padding: 1.25rem 1rem;
-                      background: #f9fafb;
+                      background: #f8fafc;
                       color: #4b5563;
                       font-weight: 600;
                       border-bottom: 1px solid #e5e7eb;
@@ -2811,11 +2875,11 @@ export default function SupportPage() {
                       border-color: #e5e7eb;
                     }
                     .rbc-current-time-indicator {
-                      background: #3b82f6;
+                      background: #6366f1;
                       height: 2px;
                     }
                     .rbc-today {
-                      background-color: rgba(239, 246, 255, 0.6);
+                      background-color: rgba(238, 242, 255, 0.6);
                     }
                     .rbc-label {
                       font-weight: 500;
@@ -2859,7 +2923,7 @@ export default function SupportPage() {
                       color: #4b5563;
                     }
                     .rbc-date-cell.rbc-now {
-                      color: #2563eb;
+                      color: #4f46e5;
                       font-weight: 700;
                     }
                     .rbc-button-link {
@@ -2906,11 +2970,65 @@ export default function SupportPage() {
                       font-weight: 600;
                       font-size: 0.9rem;
                     }
+
+                    /* Improved hover states */
+                    .rbc-day-bg.rbc-today:hover {
+                      background: rgba(238, 242, 255, 0.8);
+                    }
+
+                    .rbc-row-segment .rbc-event {
+                      border-radius: 10px;
+                      overflow: hidden;
+                    }
+
+                    .rbc-show-more {
+                      background-color: transparent;
+                      color: #4f46e5;
+                      font-weight: 500;
+                      font-size: 0.75rem;
+                      padding: 2px 5px;
+                      margin-top: 2px;
+                      border-radius: 4px;
+                      transition: background-color 0.2s;
+                    }
+
+                    .rbc-show-more:hover {
+                      background-color: rgba(238, 242, 255, 0.7);
+                      text-decoration: underline;
+                    }
+
+                    .rbc-toolbar button {
+                      color: #4b5563;
+                      border: 1px solid #e5e7eb;
+                      border-radius: 0.375rem;
+                      padding: 0.4rem 0.75rem;
+                      font-weight: 500;
+                      transition: all 0.2s;
+                    }
+                    
+                    .rbc-toolbar button:hover {
+                      background-color: #f5f7fa;
+                      color: #4f46e5;
+                    }
+                    
+                    .rbc-toolbar button.rbc-active {
+                      background-color: #eef2ff;
+                      color: #4f46e5;
+                      border-color: #c7d2fe;
+                      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                    }
+                    
+                    .rbc-toolbar button.rbc-active:hover {
+                      background-color: #e0e7ff;
+                      color: #4338ca;
+                    }
                   }
+                  
                   .jour-actuel {
-                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(255,255,255,0) 70%);
+                    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(255,255,255,0) 70%);
                     position: relative;
                   }
+                  
                   .jour-actuel::after {
                     content: "";
                     position: absolute;
@@ -2918,36 +3036,42 @@ export default function SupportPage() {
                     left: 0;
                     right: 0;
                     height: 3px;
-                    background: #3b82f6;
+                    background: #6366f1;
                     border-radius: 3px 3px 0 0;
                   }
                 `}</style>
 
                 {/* Pied de page - Actions rapides */}
-                <div className="px-4 sm:px-7 py-5 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="px-4 sm:px-6 py-5 bg-white border-t border-gray-100 rounded-b-xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-inner">
                   <div className="flex items-center gap-4 w-full sm:w-auto">
-                    <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#1a365d] to-[#0f2942] hover:from-[#1e4269] hover:to-[#133356] text-white rounded-xl text-sm font-medium transition-colors shadow-sm">
-                      <CalendarDaysIcon className="h-4 w-4" />
+                    <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg transform hover:translate-y-[-2px]">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                      </svg>
                       Synchroniser
                     </button>
                     <div className="relative group">
-                      <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                        <FunnelIcon className="h-4 w-4" />
+                      <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+                        </svg>
                         <span className="hidden sm:inline">Filtrer</span>
-                        <ChevronDownIcon className="h-4 w-4 ml-1" />
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
                       </button>
                       <div className="absolute left-0 top-full mt-2 p-3 bg-white rounded-xl shadow-lg z-10 border border-gray-100 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                         <div className="space-y-2">
                           <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" checked />
+                            <input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500" defaultChecked />
                             <span>Réunions</span>
                           </label>
                           <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" checked />
+                            <input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500" defaultChecked />
                             <span>Rendez-vous clients</span>
                           </label>
                           <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" checked />
+                            <input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500" defaultChecked />
                             <span>Interventions</span>
                           </label>
                         </div>
@@ -2955,29 +3079,37 @@ export default function SupportPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-3 justify-center sm:justify-end w-full sm:w-auto">
-                    <button className="flex-1 sm:flex-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                      <ArrowDownTrayIcon className="h-4 w-4" />
+                    <button className="flex-1 sm:flex-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
                       <span className="hidden sm:inline">Exporter</span>
                     </button>
-                    <button className="flex-1 sm:flex-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                      <PrinterIcon className="h-4 w-4" />
+                    <button className="flex-1 sm:flex-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clipRule="evenodd" />
+                      </svg>
                       <span className="hidden sm:inline">Imprimer</span>
                     </button>
                     <div className="relative group flex-1 sm:flex-auto">
-                      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                        <Cog6ToothIcon className="h-4 w-4" />
+                      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                        </svg>
                         <span className="hidden sm:inline">Paramètres</span>
-                        <ChevronDownIcon className="h-4 w-4 ml-1" />
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
                       </button>
                       <div className="absolute right-0 top-full mt-2 p-3 bg-white rounded-xl shadow-lg z-10 border border-gray-100 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                         <div className="space-y-2">
-                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors">
                             Apparence
                           </button>
-                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors">
                             Notifications
                           </button>
-                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors">
                             Intégrations
                           </button>
                         </div>
@@ -2987,228 +3119,454 @@ export default function SupportPage() {
                 </div>
                 
               </motion.div>
-
             </motion.div>
           </div>
 
           {/* Statistique S.A.V. (Line Chart) */}
           <SAVStatistics/>
 
-          {/* IMPROVED SECTION: Unified S.A.V. Interface with Modern UI */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#bfddf9]">
-            {/* Unified Header */}
+          {/* PREMIUM S.A.V. Interface - Executive Edition */}
+          <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100 mx-auto">
+            {/* Ultra-Modern Header */}
             <div className="bg-gradient-to-r from-[#213f5b] to-[#1d3349] p-6 text-white">
               <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-semibold">Toutes les S.A.V.</h2>
-                  <p className="text-white/80 font-medium mt-1">
-                    Gestion complète des interventions
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="bg-white/10 backdrop-blur-sm p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                      <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white tracking-tight">Tout les S.A.V.</h2>
+                    <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                      <span>{activeEvent ? `Conversation avec ${activeEvent.customerFirstName}` : "Système en ligne"}</span>
+                    </div>
+                  </div>
                 </div>
-                {activeEvent && (
-                  <button
-                    onClick={() => setActiveEvent(null)}
-                    className="text-white bg-white/10 hover:bg-white/20 border border-white/30 rounded-lg px-4 py-2 transition-all duration-300 flex items-center gap-2"
+                <div className="flex items-center gap-3">
+                  {activeEvent && (
+                    <button
+                      onClick={() => setActiveEvent(null)}
+                      className="text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg px-4 py-2 transition-all duration-150 font-medium text-sm backdrop-blur-sm"
+                    >
+                      Retour aux conversations
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => alert('Tableau de bord ouvert')}
+                    className="text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg p-2 transition-all duration-150"
                   >
-                    <span>Retour</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                   </button>
-                )}
+                </div>
               </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="flex flex-col lg:flex-row">
-              {/* Left Panel - Event List (Hidden on mobile when an event is selected) */}
-              <div className={`border-r border-[#e5f1fd] ${activeEvent ? 'hidden lg:block' : 'block'} lg:w-1/2`}>
-                <div className="p-4">
-                  <div className="relative mb-4">
+            <div className="flex h-[80vh] bg-gray-50/50">
+              {/* Left Panel - Enhanced Conversations List */}
+              <div className={`${activeEvent ? 'hidden lg:block' : 'block'} lg:w-1/3 border-r border-gray-100 bg-white`}>
+                {/* Premium Search & Filter Interface */}
+                <div className="sticky top-0 bg-white border-b border-gray-100 p-4 z-10">
+                  <div className="relative">
                     <input
                       type="text"
-                      placeholder="Rechercher une intervention..."
-                      className="w-full pl-10 pr-4 py-2 bg-[#f5faff] border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#213f5b]"
+                      placeholder="Rechercher une conversation..."
+                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-full text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                      onChange={() => alert('Recherche en cours...')}
                     />
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#5a6e87] absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
-                  <div className="max-h-[500px] overflow-auto pr-2">
-                    {savEvents.map((event) => (
-                      <motion.div
-                        key={event.id}
-                        className={`mb-3 bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition-all duration-300 cursor-pointer ${
-                          activeEvent && activeEvent.id === event.id
-                            ? 'border-[#213f5b] bg-[#f5faff]'
-                            : 'border-[#bfddf9]'
-                        }`}
-                        whileHover={{ x: 5 }}
-                        onClick={() => setActiveEvent(event)}
-                      >
-                        <div className="flex items-start gap-3">
-                          {/* Status indicator */}
-                          <div className="mt-1.5 relative">
-                            <div
-                              className={`w-3 h-3 rounded-full ${
-                                event.status === "completed"
-                                  ? "bg-green-500 ring-4 ring-green-100"
-                                  : event.status === "pending"
-                                  ? "bg-amber-500 ring-4 ring-amber-100 animate-pulse"
-                                  : "bg-blue-500 ring-4 ring-blue-100"
-                              }`}
-                            />
-                            <div className="absolute top-4 left-1.5 h-full w-px bg-[#e5f1fd]"></div>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <h3 className="text-lg font-semibold text-[#213f5b]">
-                                {`${event.customerFirstName} ${event.customerLastName}`}
-                              </h3>
-                              <div className="text-right">
-                                <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-[#f5faff] text-[#213f5b]">
+                  
+                  {/* Enhanced Status Filters */}
+                  <div className="mt-4 bg-gray-50 rounded-full p-1 flex">
+                    <button 
+                      onClick={() => alert('Affichage de toutes les conversations')}
+                      className="flex-1 py-2 text-sm font-medium rounded-full flex justify-center items-center bg-indigo-600 text-white shadow-sm"
+                    >
+                      Tous
+                    </button>
+                    <button 
+                      onClick={() => alert('Filtrage par statut: En attente')}
+                      className="flex-1 py-2 text-sm font-medium rounded-full flex justify-center items-center text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                      En attente
+                    </button>
+                    <button 
+                      onClick={() => alert('Filtrage par statut: Terminé')}
+                      className="flex-1 py-2 text-sm font-medium rounded-full flex justify-center items-center text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                      Terminé
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Premium Conversation List */}
+                <div className="overflow-auto h-[calc(80vh-116px)]">
+                  {savEvents && savEvents.length > 0 ? (
+                    <div className="p-3">
+                      <h3 className="px-3 text-xs font-medium uppercase text-gray-400 tracking-wider my-2">Récentes</h3>
+                      {savEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          className={`mb-2 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-50 flex ${
+                            activeEvent && activeEvent.id === event.id
+                              ? 'bg-indigo-50 border-l-4 border-indigo-500'
+                              : 'border-l-4 border-transparent'
+                          }`}
+                          onClick={() => setActiveEvent(event)}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {/* Premium Customer Avatar */}
+                            <div className={`h-12 w-12 rounded-full flex items-center justify-center text-white font-bold shadow-md ${
+                              event.status === "completed"
+                                ? "bg-gradient-to-br from-emerald-400 to-emerald-600"
+                                : event.status === "pending"
+                                ? "bg-gradient-to-br from-amber-400 to-amber-600"
+                                : "bg-gradient-to-br from-indigo-400 to-indigo-600"
+                            }`}>
+                              {event.customerFirstName.charAt(0)}
+                              {event.customerLastName ? event.customerLastName.charAt(0) : ''}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start">
+                                <h3 className="font-semibold text-gray-900 truncate">
+                                  {`${event.customerFirstName} ${event.customerLastName || ''}`}
+                                </h3>
+                                <span className="text-xs text-gray-500 whitespace-nowrap">
                                   {new Date(event.createdAt).toLocaleDateString("fr-FR", {
                                     day: "numeric",
                                     month: "short",
                                   })}
                                 </span>
                               </div>
-                            </div>
-                            <p className="text-[#5a6e87] text-sm mt-1">
-                              {event.problem || "Intervention programmée"}
-                            </p>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-xs text-[#5a6e87]">
-                                {new Date(event.createdAt).toLocaleTimeString("fr-FR", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </span>
-                              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                event.status === "completed"
-                                  ? "bg-green-100 text-green-700"
-                                  : event.status === "pending"
-                                  ? "bg-amber-100 text-amber-700"
-                                  : "bg-blue-100 text-blue-700"
-                              }`}>
-                                {event.status === "completed" ? "Terminé" : 
-                                event.status === "pending" ? "En attente" : "En cours"}
-                              </span>
+                              
+                              <p className="text-sm text-gray-600 truncate mt-1">
+                                {event.problem || "Intervention programmée"}
+                              </p>
+                              
+                              <div className="flex justify-between items-center mt-2">
+                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                  event.status === "completed"
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : event.status === "pending"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-indigo-100 text-indigo-700"
+                                }`}>
+                                  {event.status === "completed" ? "Terminé" : 
+                                  event.status === "pending" ? "En attente" : "En cours"}
+                                </span>
+                                
+                                {/* New Messages Badge */}
+                                {event.conversation && event.conversation.length > 0 && (
+                                  <span className="inline-flex items-center justify-center h-5 w-5 text-xs font-bold bg-indigo-600 text-white rounded-full shadow-sm">
+                                    {event.conversation.length}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                      <div className="bg-gray-100 rounded-full p-6 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500 mb-2">Aucune conversation disponible</p>
+                      <button 
+                        onClick={() => alert('Création d\'une nouvelle intervention')}
+                        className="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full text-sm shadow-sm transition-colors"
+                      >
+                        Nouvelle intervention
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Right Panel - Conversation View (Full width on mobile when an event is selected) */}
-              <div className={`${activeEvent ? 'block' : 'hidden lg:block'} lg:w-1/2 bg-[#fafcff]`}>
+              {/* Right Panel - Premium Chat Experience */}
+              <div className={`${activeEvent ? 'block' : 'hidden lg:block'} lg:w-2/3 flex flex-col bg-gray-50`}>
                 {activeEvent ? (
-                  <div className="h-full flex flex-col">
-                    <div className="p-4 border-b border-[#e5f1fd] bg-white">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${
-                            activeEvent.status === "completed"
-                              ? "bg-green-500 ring-4 ring-green-100"
-                              : activeEvent.status === "pending"
-                              ? "bg-amber-500 ring-4 ring-amber-100"
-                              : "bg-blue-500 ring-4 ring-blue-100"
-                          }`} />
-                          <div>
-                            <h3 className="font-semibold text-[#213f5b]">{`${activeEvent.customerFirstName} ${activeEvent.customerLastName}`}</h3>
-                            <p className="text-sm text-[#5a6e87]">{activeEvent.problem}</p>
-                          </div>
+                  <div className="flex flex-col h-full">
+                    {/* Enhanced Conversation Header */}
+                    <div className="bg-white p-4 border-b border-gray-100 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-3">
+                        {/* Premium Customer Avatar */}
+                        <div className={`h-12 w-12 rounded-full flex items-center justify-center text-white font-bold shadow ${
+                          activeEvent.status === "completed"
+                            ? "bg-gradient-to-br from-emerald-400 to-emerald-600"
+                            : activeEvent.status === "pending"
+                            ? "bg-gradient-to-br from-amber-400 to-amber-600"
+                            : "bg-gradient-to-br from-indigo-400 to-indigo-600"
+                        }`}>
+                          {activeEvent?.customerFirstName?.charAt(0)}
+                          {activeEvent.customerLastName ? activeEvent.customerLastName.charAt(0) : ''}
                         </div>
-                        <div className="flex gap-2">
-                          <button className="p-2 rounded-lg text-[#213f5b] hover:bg-[#f5faff]">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                          </button>
-                          <button className="p-2 rounded-lg text-[#213f5b] hover:bg-[#f5faff]">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Conversation messages */}
-                    <div className="flex-1 overflow-auto p-4 space-y-4">
-                      {activeEvent.conversation && activeEvent.conversation.length > 0 ? (
-                        activeEvent.conversation.map((msg, index) => (
-                          <div 
-                            key={index} 
-                            className={`max-w-[80%] ${
-                              msg.sender === "Technicien" 
-                                ? "ml-auto bg-[#213f5b] text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl" 
-                                : "bg-white border border-[#e5f1fd] shadow-sm rounded-tl-2xl rounded-tr-2xl rounded-br-2xl"
-                            } p-4`}
-                          >
-                            <div className="flex justify-between items-start mb-1">
-                              <p className={`text-sm font-semibold ${
-                                msg.sender === "Technicien" ? "text-white/90" : "text-[#213f5b]"
-                              }`}>
-                                {msg.sender}
-                              </p>
-                              <span className={`text-xs ${
-                                msg.sender === "Technicien" ? "text-white/70" : "text-[#5a6e87]"
-                              }`}>
-                                {new Date(msg.timestamp).toLocaleTimeString("fr-FR", {
-                                  hour: "2-digit",
-                                  minute: "2-digit"
-                                })}
-                              </span>
-                            </div>
-                            <p className={`text-sm ${
-                              msg.sender === "Technicien" ? "text-white/90" : "text-[#5a6e87]"
-                            }`}>
-                              {msg.content}
+                        
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            {`${activeEvent.customerFirstName} ${activeEvent.customerLastName || ''}`}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block w-2 h-2 rounded-full ${
+                              activeEvent.status === "completed"
+                                ? "bg-emerald-500"
+                                : activeEvent.status === "pending"
+                                ? "bg-amber-500"
+                                : "bg-indigo-500"
+                            }`}></span>
+                            <p className="text-xs text-gray-500">
+                              {activeEvent.status === "completed" ? "Intervention terminée" : 
+                              activeEvent.status === "pending" ? "En attente de traitement" : "Intervention en cours"}
                             </p>
                           </div>
-                        ))
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-center text-[#5a6e87] p-6">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-[#bfddf9] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                          </svg>
-                          <p>Aucune conversation disponible pour cette intervention</p>
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* Message input area */}
-                    <div className="p-4 border-t border-[#e5f1fd] bg-white">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Tapez votre message..."
-                          className="flex-1 bg-[#f5faff] border border-[#bfddf9] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#213f5b]"
-                        />
-                        <button className="bg-[#213f5b] hover:bg-[#1a324a] text-white rounded-lg p-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </div>
+                      
+                      {/* Status Action Dropdown */}
+                      <div className="relative">
+                        <button 
+                          onClick={() => alert('Statut modifié')}
+                          className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+                            activeEvent.status === "completed"
+                              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                              : activeEvent.status === "pending"
+                              ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                              : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                          } transition-colors shadow-sm`}
+                        >
+                          <span>Modifier le statut</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                           </svg>
                         </button>
                       </div>
                     </div>
+                    
+                    {/* Detailed Problem Info */}
+                    <div className="bg-white px-4 py-3 border-b border-gray-100">
+                      <div className="flex items-start gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 uppercase">Problème signalé</p>
+                          <p className="text-sm text-gray-700">{activeEvent.problem || "Intervention programmée"}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Premium Chat Messages Area */}
+                    <div className="flex-1 overflow-auto p-4 space-y-4">
+                      {/* Date Header */}
+                      <div className="flex items-center justify-center my-4">
+                        <div className="bg-gray-100 text-gray-500 text-xs font-medium px-3 py-1 rounded-full shadow-sm">
+                          {new Date(activeEvent.createdAt).toLocaleDateString("fr-FR", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long"
+                          })}
+                        </div>
+                      </div>
+                      
+                      {activeEvent.conversation && activeEvent.conversation.length > 0 ? (
+                        activeEvent.conversation.map((msg, index) => (
+                          <div 
+                            key={index} 
+                            className={`flex ${msg.sender === "Technicien" ? "justify-end" : "justify-start"} group`}
+                          >
+                            {/* Enhanced Message Bubbles */}
+                            <div 
+                              className={`max-w-[75%] relative ${
+                                msg.sender === "Technicien" 
+                                  ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-tl-2xl rounded-bl-2xl rounded-tr-lg shadow-lg" 
+                                  : "bg-white text-gray-800 rounded-tr-2xl rounded-br-2xl rounded-tl-lg shadow-md"
+                              } p-4`}
+                            >
+                              <p className="text-sm whitespace-pre-wrap mb-4">
+                                {msg.content}
+                              </p>
+                              
+                              {/* Improved Timestamp */}
+                              <div className={`absolute bottom-1 ${
+                                msg.sender === "Technicien" ? "right-3 text-indigo-200" : "left-3 text-gray-400"
+                              } text-xs flex items-center gap-1`}>
+                                <span>
+                                  {new Date(msg.timestamp).toLocaleTimeString("fr-FR", {
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                  })}
+                                </span>
+                                
+                                {/* Delivered/Read Indicator for tech messages */}
+                                {msg.sender === "Technicien" && (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                              
+                              {/* Message Options on Hover */}
+                              <div className={`absolute -top-10 ${
+                                msg.sender === "Technicien" ? "right-0" : "left-0"
+                              } opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
+                                <div className="bg-white rounded-full shadow-md p-1 flex gap-1">
+                                  <button 
+                                    onClick={() => alert('Message copié')}
+                                    className="p-1.5 rounded-full hover:bg-gray-100"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
+                                      <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z" />
+                                    </svg>
+                                  </button>
+                                  <button 
+                                    onClick={() => alert('Action rapide effectuée')}
+                                    className="p-1.5 rounded-full hover:bg-gray-100"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-center">
+                          <div className="bg-indigo-50 rounded-full p-8 mb-6 shadow-inner">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-800 mb-2">Aucun message</h3>
+                          <p className="text-sm text-gray-500 max-w-xs">
+                            Cette conversation n&apos;a pas encore démarré. Envoyez un message pour commencer.
+                          </p>
+                          <button 
+                            onClick={() => alert('Nouveau message créé')}
+                            className="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-full text-sm font-medium shadow-md transition-colors flex items-center gap-2"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                            </svg>
+                            <span>Commencer la conversation</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Premium Message Input */}
+                    <div className="p-4 bg-white border-t border-gray-100 shadow-inner">
+                      {/* Quick Reply Suggestions */}
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        <button 
+                          onClick={() => alert('Réponse rapide envoyée')}
+                          className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors"
+                        >
+                          Intervention planifiée
+                        </button>
+                        <button 
+                          onClick={() => alert('Réponse rapide envoyée')}
+                          className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors"
+                        >
+                          Pièce commandée
+                        </button>
+                        <button 
+                          onClick={() => alert('Réponse rapide envoyée')}
+                          className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors"
+                        >
+                          Problème résolu
+                        </button>
+                      </div>
+                      
+                      {/* Enhanced Message Form */}
+                      <form 
+                        className="flex gap-3 items-end" 
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          alert('Message envoyé avec succès');
+                        }}
+                      >
+                        <div className="flex-1 relative">
+                          <textarea
+                            rows={2}
+                            placeholder="Votre message..."
+                            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 pt-3 pb-8 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none shadow-sm"
+                          />
+                          <div className="absolute bottom-2 left-4">
+                            <button 
+                              type="button"
+                              onClick={() => alert('Pièce jointe ajoutée')}
+                              className="p-1.5 rounded-full text-gray-400 hover:text-indigo-500 hover:bg-gray-100 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className="absolute bottom-2 right-4">
+                            <span className="text-xs text-gray-400">Entrée pour envoyer</span>
+                          </div>
+                        </div>
+                        <button 
+                          type="submit"
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl p-3 transition-all duration-200 shadow-md"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                          </svg>
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center text-[#5a6e87] p-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-[#bfddf9] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                    </svg>
-                    <p className="font-medium text-lg text-[#213f5b] mb-1">Aucune conversation sélectionnée</p>
-                    <p>Sélectionnez un S.A.V. dans la liste pour voir les détails</p>
+                  <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                    <div className="bg-indigo-50 rounded-full p-8 mb-6 shadow-inner">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-medium text-gray-800 mb-3">Centre de conversations</h3>
+                    <p className="text-gray-500 max-w-sm mb-6 leading-relaxed">
+                      Sélectionnez une intervention dans la liste pour consulter les détails et communiquer avec vos clients
+                    </p>
+                    <div className="flex gap-4">
+                      <button 
+                        onClick={() => alert('Nouvelle intervention créée')}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-full flex items-center gap-2 transition-colors shadow-md"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                        </svg>
+                        <span>Nouvelle intervention</span>
+                      </button>
+                      <button 
+                        onClick={() => alert('Tableau de bord ouvert')}
+                        className="bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-full flex items-center gap-2 transition-colors shadow-sm border border-gray-200"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                        </svg>
+                        <span>Voir les statistiques</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-
           </div>
 
         </main>

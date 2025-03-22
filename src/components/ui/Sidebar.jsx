@@ -152,7 +152,7 @@ export function Sidebar({ role }) {
       { name: "Agenda", href: "/dashboard/admin/calendar", icon: CalendarIcon },
       { name: "Produits & Prestations", href: "/dashboard/admin/products-services", icon: ShoppingBagIcon },
       { 
-        name: "Sous-traitants", 
+        name: "Installateur", 
         href: "/dashboard/admin/sous-traitants", 
         icon: BuildingStorefrontIcon 
       },

@@ -16,12 +16,8 @@ import {
   ChevronLeftIcon,
   UserIcon,
   DocumentCheckIcon,
-  // CertificateIcon, // We'll use this for certifications
-  // InformationCircleIcon,
   PhoneIcon,
   EnvelopeIcon,
-  // IdentificationIcon,
-  // ClockIcon,
 } from "@heroicons/react/24/outline";
 
 // Interface for Sous-traitant data model
@@ -82,10 +78,6 @@ interface SousTraitant {
   qualiPv: boolean;
   dateDebutQualiPv: string;
   dateFinQualiPv: string;
-  
-  numeroCNOA: string;
-  dateDebutCNOA: string;
-  dateFinCNOA: string;
 }
 
 // Interface for the form state
@@ -146,10 +138,6 @@ interface SousTraitantForm {
   qualiPv: boolean;
   dateDebutQualiPv: string;
   dateFinQualiPv: string;
-  
-  numeroCNOA: string;
-  dateDebutCNOA: string;
-  dateFinCNOA: string;
 }
 
 // Sample data for sous-traitants (now with expanded fields)
@@ -211,10 +199,6 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     qualiPv: false,
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
-    
-    numeroCNOA: "",
-    dateDebutCNOA: "",
-    dateFinCNOA: "",
   },
   {
     id: "ST002",
@@ -273,10 +257,6 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     qualiPv: true,
     dateDebutQualiPv: "2022-11-01",
     dateFinQualiPv: "2025-10-31",
-    
-    numeroCNOA: "CNOA-2022-789",
-    dateDebutCNOA: "2022-11-01",
-    dateFinCNOA: "2025-10-31",
   },
   {
     id: "ST003",
@@ -335,10 +315,6 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     qualiPv: false,
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
-    
-    numeroCNOA: "",
-    dateDebutCNOA: "",
-    dateFinCNOA: "",
   },
   {
     id: "ST004",
@@ -397,10 +373,6 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     qualiPv: false,
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
-    
-    numeroCNOA: "",
-    dateDebutCNOA: "",
-    dateFinCNOA: "",
   }
 ];
 
@@ -471,10 +443,6 @@ export default function SousTraitantPage() {
     qualiPv: false,
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
-    
-    numeroCNOA: "",
-    dateDebutCNOA: "",
-    dateFinCNOA: "",
   });
 
   // State for active form section (for accordion-like UI)
@@ -555,10 +523,6 @@ export default function SousTraitantPage() {
       qualiPv: false,
       dateDebutQualiPv: "",
       dateFinQualiPv: "",
-      
-      numeroCNOA: "",
-      dateDebutCNOA: "",
-      dateFinCNOA: "",
     });
     setViewMode("form");
     setActiveSection("general"); // Start with first section for new sous-traitant
@@ -1271,44 +1235,6 @@ export default function SousTraitantPage() {
                                   {sousTraitantForm.signatureTampon}
                                 </span>
                               )}
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="numeroCNOA">Numéro de certification CNOA</label>
-                            <input
-                              id="numeroCNOA"
-                              type="text"
-                              name="numeroCNOA"
-                              value={sousTraitantForm.numeroCNOA}
-                              onChange={handleSousTraitantChange}
-                              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="dateDebutCNOA">Date de début CNOA</label>
-                              <input
-                                id="dateDebutCNOA"
-                                type="date"
-                                name="dateDebutCNOA"
-                                value={sousTraitantForm.dateDebutCNOA}
-                                onChange={handleSousTraitantChange}
-                                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="dateFinCNOA">Date de fin CNOA</label>
-                              <input
-                                id="dateFinCNOA"
-                                type="date"
-                                name="dateFinCNOA"
-                                value={sousTraitantForm.dateFinCNOA}
-                                onChange={handleSousTraitantChange}
-                                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                              />
                             </div>
                           </div>
                         </div>
