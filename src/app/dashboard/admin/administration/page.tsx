@@ -14,7 +14,6 @@ import {
   LifebuoyIcon,
   MagnifyingGlassIcon,
   UserGroupIcon,
-  // TrashIcon,
   PencilIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -31,6 +30,7 @@ import { INewUser } from "@/types/INewUser";
 export interface IUser extends INewUser {
   _id: string;
   createdAt: string;
+  gender?: "Homme" | "Femme" | string; // Added gender field
 }
 
 /* --- Définition d'un type utilisateur unifié --- */
@@ -38,6 +38,7 @@ export interface IUser {
   _id: string;
   email: string;
   role: string;
+  gender?: "Homme" | "Femme" | string; // Added gender field
   createdAt: string;
   firstName?: string;
   lastName?: string;
@@ -54,27 +55,81 @@ export type RoleKey =
   | "Client / Customer (Client Portal)";
 
 /* --- Configuration des rôles (valeurs envoyées au backend) --- */
-const rolesConfig: Record<RoleKey, { color: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }> = {
-  "Sales Representative / Account Executive": { color: "#bfddf9", icon: UserGroupIcon },
-  "Project / Installation Manager": { color: "#d2fcb2", icon: Cog6ToothIcon },
-  "Technician / Installer": { color: "#89c4f7", icon: Cog6ToothIcon },
-  "Customer Support / Service Representative": { color: "#b3f99c", icon: LifebuoyIcon },
-  "Super Admin": { color: "#213f5b", icon: ShieldCheckIcon },
-  "Client / Customer (Client Portal)": { color: "#abd4f6", icon: UserCircleIcon },
+const rolesConfig: Record<RoleKey, { 
+  color: string; 
+  gradient: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  logo?: string;
+}> = {
+  "Sales Representative / Account Executive": { 
+    color: "#bfddf9", 
+    gradient: "from-blue-500 to-blue-600",
+    icon: UserGroupIcon 
+  },
+  "Project / Installation Manager": { 
+    color: "#d2fcb2", 
+    gradient: "from-green-500 to-green-600",
+    icon: Cog6ToothIcon,
+    logo: "https://cdn-icons-png.flaticon.com/512/4108/4108061.png" // Logo for Régie
+  },
+  "Technician / Installer": { 
+    color: "#89c4f7", 
+    gradient: "from-cyan-500 to-cyan-600",
+    icon: Cog6ToothIcon 
+  },
+  "Customer Support / Service Representative": { 
+    color: "#b3f99c", 
+    gradient: "from-emerald-500 to-emerald-600",
+    icon: LifebuoyIcon 
+  },
+  "Super Admin": { 
+    color: "#213f5b", 
+    gradient: "from-indigo-500 to-purple-600",
+    icon: ShieldCheckIcon 
+  },
+  "Client / Customer (Client Portal)": { 
+    color: "#abd4f6", 
+    gradient: "from-amber-400 to-orange-500",
+    icon: UserCircleIcon 
+  },
 };
 
 /* --- Traductions des rôles pour l'affichage en français --- */
 const roleTranslations: Record<RoleKey, string> = {
   "Sales Representative / Account Executive": "Représentant commercial / Chargé de compte",
-  "Project / Installation Manager": "Chef de projet / Responsable installation",
+  "Project / Installation Manager": "Régie",
   "Technician / Installer": "Technicien / Installateur",
-  "Customer Support / Service Representative": "Support client / Représentant du service",
+  "Customer Support / Service Representative": "Télépro - Assistance clients",
   "Super Admin": "Super administrateur",
   "Client / Customer (Client Portal)": "Client (portail client)",
 };
 
 /* --- Configuration par défaut si le rôle n'est pas reconnu --- */
-const defaultRoleConfig = { color: "#bfddf9", icon: UserCircleIcon };
+const defaultRoleConfig = { 
+  color: "#bfddf9", 
+  gradient: "from-gray-500 to-gray-600",
+  icon: UserCircleIcon 
+};
+
+// Image URLs based on role and gender
+const getRoleImage = (role: string, gender?: string) => {
+  const femaleImage = "https://www.hotesse-interim.fr/ressources/images/ab4fec7ce0ed.jpg";
+  const maleImage = "https://www.advancia-teleservices.com/wp-content/uploads/2023/11/Centre-dappels-tunisie.jpg";
+  
+  // For Project / Installation Manager (Régie), return the logo
+  if (role === "Project / Installation Manager") {
+    return rolesConfig["Project / Installation Manager"].logo;
+  }
+  
+  // For specified roles, return gender-based images
+  if (role === "Customer Support / Service Representative" || 
+      role === "Sales Representative / Account Executive") {
+    return gender === "Femme" ? femaleImage : maleImage;
+  }
+  
+  // Default role-based placeholders
+  return `https://api.dicebear.com/7.x/personas/svg?seed=${role}`;
+};
 
 export default function AdministrationPage() {
   // Global theme settings for consistent UI
@@ -112,14 +167,21 @@ export default function AdministrationPage() {
           throw new Error("Échec de la récupération des utilisateurs");
         }
         const data: IUser[] = await res.json();
-        setUsers(data);
+        
+        // Temporarily add gender to users data for demonstration
+        const enrichedData = data.map(user => ({
+          ...user,
+          gender: ["Homme", "Femme"][Math.floor(Math.random() * 2)], // Random gender for demo
+        }));
+        
+        setUsers(enrichedData);
         
         // Calculate stats
         setStats({
-          totalUsers: data.length,
-          admins: data.filter(u => u.role === "Super Admin").length,
-          commercial: data.filter(u => u.role === "Sales Representative / Account Executive").length,
-          tech: data.filter(u => u.role === "Technician / Installer").length
+          totalUsers: enrichedData.length,
+          admins: enrichedData.filter(u => u.role === "Super Admin").length,
+          commercial: enrichedData.filter(u => u.role === "Sales Representative / Account Executive").length,
+          tech: enrichedData.filter(u => u.role === "Technician / Installer").length
         });
       } catch (err) {
         if (err instanceof Error) {
@@ -174,24 +236,6 @@ export default function AdministrationPage() {
                   <p className="text-[#213f5b] opacity-75 pl-2">Gérez vos utilisateurs et leur accès à la plateforme</p>
                   <div className="absolute -z-10 -top-10 -left-10 w-40 h-40 bg-[#bfddf9] opacity-10 rounded-full blur-3xl"></div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-green-500 border-2 border-white shadow-md flex items-center justify-center text-white text-xs font-bold">JD</div>
-                    <div className="w-8 h-8 rounded-full bg-[#bfddf9] border-2 border-white shadow-md -ml-2 flex items-center justify-center text-[#213f5b] text-xs font-bold">AL</div>
-                    <div className="w-8 h-8 rounded-full bg-[#d2fcb2] border-2 border-white shadow-md -ml-2 flex items-center justify-center text-[#213f5b] text-xs font-bold">MC</div>
-                    <div className="w-8 h-8 rounded-full bg-[#213f5b] border-2 border-white shadow-md -ml-2 flex items-center justify-center text-white text-xs font-bold">+2</div>
-                  </div>
-                  <div className="h-8 w-px bg-gray-200 mx-2"></div>
-                  <Button
-                    onClick={() => {/* Handle action */}}
-                    className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-colors rounded-lg px-4 py-2 flex items-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Nouvelle Équipe
-                  </Button>
-                </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -199,10 +243,10 @@ export default function AdministrationPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.4 }}
-                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
+                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_30px_-15px_rgba(33,63,91,0.15)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
                   whileHover={{ scale: 1.02 }}
                 >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#bfddf9] to-[#d2fcb2] group-hover:h-1.5 transition-all"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#bfddf9] to-[#d2fcb2] transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                   <div className="absolute -z-10 right-0 bottom-0 w-32 h-32 bg-[#bfddf9] opacity-5 rounded-full blur-2xl group-hover:opacity-10 transition-opacity"></div>
                   <div className="flex justify-between items-start">
                     <div>
@@ -213,8 +257,8 @@ export default function AdministrationPage() {
                       </div>
                       <p className="text-xs text-[#213f5b] opacity-60 mt-1">depuis le mois dernier</p>
                     </div>
-                    <div className="p-3 bg-[#bfddf9] rounded-xl">
-                      <UserGroupIcon className="h-6 w-6 text-[#213f5b]" />
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 shadow-lg shadow-blue-200">
+                      <UserGroupIcon className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </motion.div>
@@ -223,10 +267,10 @@ export default function AdministrationPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.4 }}
-                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
+                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_30px_-15px_rgba(33,63,91,0.15)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
                   whileHover={{ scale: 1.02 }}
                 >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-[#213f5b] group-hover:h-1.5 transition-all"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#213f5b] to-[#415d7c] transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                   <div className="absolute -z-10 right-0 bottom-0 w-32 h-32 bg-[#213f5b] opacity-5 rounded-full blur-2xl group-hover:opacity-10 transition-opacity"></div>
                   <div className="flex justify-between items-start">
                     <div>
@@ -237,7 +281,7 @@ export default function AdministrationPage() {
                       </div>
                       <p className="text-xs text-[#213f5b] opacity-60 mt-1">privilèges complets</p>
                     </div>
-                    <div className="p-3 bg-[#213f5b] rounded-xl">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-200">
                       <ShieldCheckIcon className="h-6 w-6 text-white" />
                     </div>
                   </div>
@@ -247,10 +291,10 @@ export default function AdministrationPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.4 }}
-                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
+                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_30px_-15px_rgba(33,63,91,0.15)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
                   whileHover={{ scale: 1.02 }}
                 >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-[#d2fcb2] group-hover:h-1.5 transition-all"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#d2fcb2] to-[#a7f17f] transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                   <div className="absolute -z-10 right-0 bottom-0 w-32 h-32 bg-[#d2fcb2] opacity-5 rounded-full blur-2xl group-hover:opacity-10 transition-opacity"></div>
                   <div className="flex justify-between items-start">
                     <div>
@@ -261,8 +305,8 @@ export default function AdministrationPage() {
                       </div>
                       <p className="text-xs text-[#213f5b] opacity-60 mt-1">équipe en expansion</p>
                     </div>
-                    <div className="p-3 bg-[#d2fcb2] rounded-xl">
-                      <UserGroupIcon className="h-6 w-6 text-[#213f5b]" />
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-green-200">
+                      <UserGroupIcon className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </motion.div>
@@ -271,10 +315,10 @@ export default function AdministrationPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.4 }}
-                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
+                  className="bg-white backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-[0_10px_30px_-15px_rgba(33,63,91,0.15)] p-5 md:p-6 border border-[#f0f0f0] hover:border-[#bfddf9] transition-colors overflow-hidden relative group"
                   whileHover={{ scale: 1.02 }}
                 >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-[#bfddf9] group-hover:h-1.5 transition-all"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#bfddf9] to-[#8cc7ff] transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                   <div className="absolute -z-10 right-0 bottom-0 w-32 h-32 bg-[#bfddf9] opacity-5 rounded-full blur-2xl group-hover:opacity-10 transition-opacity"></div>
                   <div className="flex justify-between items-start">
                     <div>
@@ -285,8 +329,8 @@ export default function AdministrationPage() {
                       </div>
                       <p className="text-xs text-[#213f5b] opacity-60 mt-1">support technique</p>
                     </div>
-                    <div className="p-3 bg-[#bfddf9] rounded-xl">
-                      <Cog6ToothIcon className="h-6 w-6 text-[#213f5b]" />
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-200">
+                      <Cog6ToothIcon className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </motion.div>
@@ -302,15 +346,15 @@ export default function AdministrationPage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.4 }}
               >
-                <div className="bg-white backdrop-blur-sm bg-opacity-95 rounded-2xl shadow-[0_10px_35px_-15px_rgba(33,63,91,0.1)] overflow-hidden border border-[#f0f0f0] relative">
+                <div className="bg-white backdrop-blur-sm bg-opacity-95 rounded-2xl shadow-[0_15px_45px_-15px_rgba(33,63,91,0.15)] overflow-hidden border border-[#f0f0f0] relative">
                   <div className="absolute -z-10 right-0 top-0 w-96 h-96 bg-[#bfddf9] opacity-5 rounded-full blur-3xl"></div>
                   <div className="absolute -z-10 left-0 bottom-0 w-96 h-96 bg-[#d2fcb2] opacity-5 rounded-full blur-3xl"></div>
                   <div className="p-8 border-b border-[#f0f0f0] bg-gradient-to-r from-white to-[#f8fafc]">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="h-8 w-1 rounded-full bg-[#213f5b]"></div>
-                          <h2 className="text-2xl font-bold text-[#213f5b] flex items-center gap-2">
+                          <div className="h-8 w-1 rounded-full bg-gradient-to-b from-[#213f5b] to-[#3978b5]"></div>
+                          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#213f5b] to-[#3978b5] flex items-center gap-2">
                             Gestion des Utilisateurs
                           </h2>
                         </div>
@@ -321,14 +365,14 @@ export default function AdministrationPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => {/* Handle Import */}}
-                          className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9] transition-colors rounded-lg px-4 py-2 flex items-center"
+                          className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9] transition-colors rounded-lg px-4 py-2 flex items-center shadow-sm hover:shadow"
                         >
                           <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
                           Importer
                         </Button>
                         <Button
                           onClick={() => setIsAddModalOpen(true)}
-                          className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
+                          className="bg-gradient-to-r from-[#213f5b] to-[#3978b5] hover:from-[#152a3d] hover:to-[#2d5e8e] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
                         >
                           <PlusIcon className="h-4 w-4 mr-2" />
                           Nouvel Utilisateur
@@ -407,7 +451,7 @@ export default function AdministrationPage() {
                     </div>
                       
                     {(roleFilter || searchTerm) && (
-                      <div className="mt-3 flex items-center">
+                      <div className="mt-3 flex items-center flex-wrap gap-2">
                         <div className="text-sm text-[#213f5b] mr-2">Filtres actifs:</div>
                         {roleFilter && (
                           <div className="flex items-center bg-[#f0f0f0] text-[#213f5b] text-sm rounded-full px-3 py-1 mr-2">
@@ -435,7 +479,7 @@ export default function AdministrationPage() {
                           variant="ghost" 
                           size="sm" 
                           onClick={clearFilters}
-                          className="text-[#213f5b] hover:text-[#152a3d] ml-2 text-sm"
+                          className="text-[#213f5b] hover:text-[#152a3d] ml-auto text-sm"
                         >
                           Tout effacer
                         </Button>
@@ -549,7 +593,7 @@ export default function AdministrationPage() {
                       </div>
                     )}
     
-                    {/* User Grid Layout */}
+                    {/* User Grid Layout - ENHANCED VERSION */}
                     {!loading && !error && currentUsers.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
                         {currentUsers.map((user, index) => {
@@ -557,20 +601,23 @@ export default function AdministrationPage() {
                             user.role in rolesConfig
                               ? rolesConfig[user.role as RoleKey]
                               : defaultRoleConfig;
-                          const { color, icon: Icon } = roleConfig;
+                          const { color,   icon: Icon } = roleConfig;
                           const displayName = user.firstName && user.lastName 
                             ? `${user.firstName} ${user.lastName}`
                             : user.email;
                             
-                          // Generate initials for avatar
-                          const initials = user.firstName && user.lastName
-                            ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
-                            : user.email[0].toUpperCase();
+                          // Generate initials for fallback
+                          // const initials = user.firstName && user.lastName
+                          //   ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+                          //   : user.email[0].toUpperCase();
                             
+                          // Get role-specific image
+                          const profileImage = getRoleImage(user.role, user.gender);
+                          
                           return (
                             <motion.div
                               key={user._id}
-                              className="group bg-white backdrop-blur-sm bg-opacity-95 border border-[#eaeaea] hover:border-[#bfddf9] rounded-2xl overflow-hidden shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] hover:shadow-[0_15px_35px_-15px_rgba(33,63,91,0.25)] transition-all duration-300"
+                              className="group bg-white backdrop-blur-sm bg-opacity-95 border border-[#eaeaea] hover:border-[#bfddf9] rounded-2xl overflow-hidden shadow-[0_15px_35px_-15px_rgba(33,63,91,0.15)] hover:shadow-[0_20px_45px_-15px_rgba(33,63,91,0.25)] transition-all duration-300"
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ 
@@ -582,49 +629,61 @@ export default function AdministrationPage() {
                             >
                               {/* Card Top Gradient */}
                               <div 
-                                className="h-2 group-hover:h-3 transition-all duration-300"
+                                className="h-2 group-hover:h-3 transition-all duration-300 bg-gradient-to-r"
                                 style={{ 
-                                  background: `linear-gradient(90deg, ${color} 0%, #ffffff 150%)` 
+                                  backgroundImage: `linear-gradient(90deg, ${color} 0%, #ffffff 150%)` 
                                 }}
                               />
                               
-                              {/* User Avatar & Role */}
-                              <div className="px-4 sm:px-6 pt-6 pb-4 flex items-start justify-between">
-                                <div className="flex items-center gap-3 sm:gap-4">
-                                  <div 
-                                    className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-full text-white font-bold text-lg sm:text-xl shadow-md transform group-hover:scale-110 transition-transform duration-300 overflow-hidden relative"
-                                    style={{ 
-                                      background: `linear-gradient(135deg, ${color} 0%, #213f5b 100%)` 
-                                    }}
-                                  >
-                                    {initials}
-                                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-bold text-[#213f5b] text-base sm:text-lg leading-tight truncate max-w-[120px] sm:max-w-[150px]">{displayName}</h4>
-                                    <div 
-                                      className="inline-flex items-center px-2.5 py-1 mt-1 rounded-full text-xs font-medium"
-                                      style={{ backgroundColor: `${color}40`, color: '#213f5b' }}
-                                    >
-                                      <Icon className="h-3 w-3 mr-1" />
-                                      <span className="truncate max-w-[100px] sm:max-w-full">
-                                        {roleTranslations[user.role as RoleKey] || user.role}
-                                      </span>
+                              {/* User Header with Image */}
+                              <div className="relative">
+                                {/* Profile Image/Logo Section */}
+                                <div className="relative h-32 w-full overflow-hidden bg-gradient-to-r group-hover:scale-105 transition-transform duration-700"
+                                     style={{ 
+                                       backgroundImage: `linear-gradient(to right, ${color}40, ${color}80)` 
+                                     }}>
+                                  
+                                  {/* Handle Different Types of Profile Display Based on Role */}
+                                  {user.role === "Project / Installation Manager" ? (
+                                    // Logo for Régie
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="bg-white p-3 rounded-xl shadow-lg">
+                                        <img 
+                                          src={profileImage} 
+                                          alt="Logo" 
+                                          className="w-20 h-20 object-contain"
+                                        />
+                                      </div>
                                     </div>
-                                  </div>
+                                  ) : (
+                                    // Profile image for other roles
+                                    <>
+                                      <img 
+                                        src={profileImage}
+                                        alt={displayName}
+                                        className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                                      />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                    </>
+                                  )}
                                 </div>
                                 
-                                {/* Badge - Can be used for status */}
-                                <div className="flex items-center">
-                                  <span className="inline-flex h-2.5 w-2.5 relative">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                                  </span>
+                                {/* User Details Overlay */}
+                                <div className="absolute bottom-3 left-4 text-white">
+                                  <h4 className="font-bold text-white text-lg leading-tight drop-shadow-md">{displayName}</h4>
+                                  <div 
+                                    className="inline-flex items-center px-2.5 py-1 mt-1 rounded-full text-xs font-medium bg-black/30 backdrop-blur-sm"
+                                  >
+                                    <Icon className="h-3 w-3 mr-1" />
+                                    <span className="truncate max-w-[150px]">
+                                      {roleTranslations[user.role as RoleKey] || user.role}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                               
                               {/* Contact Info */}
-                              <div className="px-4 sm:px-6 py-3 bg-gradient-to-r from-[#f8fafc] to-white relative overflow-hidden">
+                              <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-[#f8fafc] to-white relative overflow-hidden">
                                 <div className="absolute -right-10 -bottom-10 w-20 h-20 rounded-full bg-[#bfddf9] opacity-10 blur-xl"></div>
                                 <div className="flex flex-col gap-2 relative">
                                   <div className="relative group/email">
@@ -645,6 +704,16 @@ export default function AdministrationPage() {
                                         <span className="truncate">{user.phone}</span>
                                       </p>
                                       <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#bfddf9] group-hover/phone:w-full transition-all duration-300 ml-6"></div>
+                                    </div>
+                                  )}
+                                  {user.gender && (
+                                    <div className="relative group/gender mt-1">
+                                      <p className="text-xs sm:text-sm text-[#213f5b] truncate flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[#213f5b] opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        <span className="truncate capitalize">{user.gender}</span>
+                                      </p>
                                     </div>
                                   )}
                                 </div>
@@ -691,7 +760,7 @@ export default function AdministrationPage() {
                                   </Button>
                                   
                                   <Button
-                                    className="rounded-full text-xs font-medium px-2 sm:px-3 py-1 h-7 sm:h-8 bg-gradient-to-r from-[#213f5b] to-[#2c5681] text-white hover:shadow-md transition-all hover:from-[#152a3d] hover:to-[#213f5b] relative overflow-hidden"
+                                    className="rounded-full text-xs font-medium px-2 sm:px-3 py-1 h-7 sm:h-8 bg-gradient-to-r from-[#213f5b] to-[#3978b5] text-white hover:shadow-md transition-all hover:from-[#152a3d] hover:to-[#2d5e8e] relative overflow-hidden"
                                     onClick={() => setSelectedUserForEdit(user)}
                                   >
                                     <span className="relative z-10">Gérer</span>
@@ -749,7 +818,7 @@ export default function AdministrationPage() {
                                 onClick={() => setCurrentPage(pageNum)}
                                 className={`rounded-xl w-10 h-10 flex items-center justify-center transition-all ${
                                   isActive
-                                    ? "bg-[#213f5b] text-white hover:bg-[#152a3d] shadow-md transform scale-110"
+                                    ? "bg-gradient-to-r from-[#213f5b] to-[#3978b5] text-white transform scale-110 shadow-md"
                                     : "bg-white text-[#213f5b] hover:bg-[#f0f0f0] border border-[#eaeaea]"
                                 }`}
                               >
@@ -789,16 +858,16 @@ export default function AdministrationPage() {
                 transition={{ delay: 0.6, duration: 0.4 }}
               >
                 {/* Quick Actions Panel */}
-                <div className="bg-white backdrop-blur-sm bg-opacity-95 rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] border border-[#f0f0f0] overflow-hidden relative group">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-[#213f5b] group-hover:h-1.5 transition-all"></div>
+                <div className="bg-white backdrop-blur-sm bg-opacity-95 rounded-2xl shadow-[0_15px_35px_-15px_rgba(33,63,91,0.15)] border border-[#f0f0f0] overflow-hidden relative group">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#213f5b] to-[#3978b5] transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                   <div className="absolute -z-10 right-0 bottom-0 w-64 h-64 bg-[#bfddf9] opacity-5 rounded-full blur-3xl"></div>
 
                   <div className="p-6 md:p-8 border-b border-[#eaeaea]">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-xl bg-[#213f5b] bg-opacity-10 flex items-center justify-center">
-                        <Cog6ToothIcon className="h-5 w-5 text-[#213f5b]" />
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#213f5b] to-[#3978b5] flex items-center justify-center shadow-md">
+                        <Cog6ToothIcon className="h-5 w-5 text-white" />
                       </div>
-                      <h2 className="text-xl font-bold text-[#213f5b]">
+                      <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#213f5b] to-[#3978b5]">
                         Actions rapides
                       </h2>
                     </div>
@@ -808,11 +877,11 @@ export default function AdministrationPage() {
                   <div className="p-5 md:p-6 grid grid-cols-1 gap-4">
                     <motion.button
                       className="flex items-center gap-4 p-4 rounded-xl border border-[#eaeaea] hover:border-[#bfddf9] shadow-sm hover:shadow-md bg-white hover:bg-gradient-to-r hover:from-white hover:to-[#f8fafc] transition-all duration-300 text-left group relative overflow-hidden"
-                      whileHover={{ y: -2 }}
+                      whileHover={{ y: -4, scale: 1.01 }}
                     >
                       <div className="absolute top-0 left-0 w-0 h-full bg-[#bfddf9] opacity-10 group-hover:w-full transition-all duration-700 ease-out"></div>
-                      <div className="relative p-3 bg-[#d2fcb2] bg-opacity-50 rounded-xl group-hover:bg-opacity-80 transition-colors">
-                        <UserGroupIcon className="h-6 w-6 text-[#213f5b]" />
+                      <div className="relative p-3 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl shadow-md shadow-green-100 group-hover:shadow-lg transition-shadow">
+                        <UserGroupIcon className="h-6 w-6 text-white" />
                       </div>
                       <div className="relative">
                         <h4 className="font-semibold text-[#213f5b] text-base md:text-lg mb-1 group-hover:text-[#152a3d] transition-colors">Inviter des utilisateurs</h4>
@@ -827,11 +896,11 @@ export default function AdministrationPage() {
                     
                     <motion.button
                       className="flex items-center gap-4 p-4 rounded-xl border border-[#eaeaea] hover:border-[#bfddf9] shadow-sm hover:shadow-md bg-white hover:bg-gradient-to-r hover:from-white hover:to-[#f8fafc] transition-all duration-300 text-left group relative overflow-hidden"
-                      whileHover={{ y: -2 }}
+                      whileHover={{ y: -4, scale: 1.01 }}
                     >
                       <div className="absolute top-0 left-0 w-0 h-full bg-[#bfddf9] opacity-10 group-hover:w-full transition-all duration-700 ease-out"></div>
-                      <div className="relative p-3 bg-[#bfddf9] bg-opacity-50 rounded-xl group-hover:bg-opacity-80 transition-colors">
-                        <DocumentTextIcon className="h-6 w-6 text-[#213f5b]" />
+                      <div className="relative p-3 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-md shadow-blue-100 group-hover:shadow-lg transition-shadow">
+                        <DocumentTextIcon className="h-6 w-6 text-white" />
                       </div>
                       <div className="relative">
                         <h4 className="font-semibold text-[#213f5b] text-base md:text-lg mb-1 group-hover:text-[#152a3d] transition-colors">Rapport d&apos;utilisation</h4>
@@ -846,10 +915,10 @@ export default function AdministrationPage() {
                     
                     <motion.button
                       className="flex items-center gap-4 p-4 rounded-xl border border-[#eaeaea] hover:border-[#bfddf9] shadow-sm hover:shadow-md bg-white hover:bg-gradient-to-r hover:from-white hover:to-[#f8fafc] transition-all duration-300 text-left group relative overflow-hidden"
-                      whileHover={{ y: -2 }}
+                      whileHover={{ y: -4, scale: 1.01 }}
                     >
                       <div className="absolute top-0 left-0 w-0 h-full bg-[#bfddf9] opacity-10 group-hover:w-full transition-all duration-700 ease-out"></div>
-                      <div className="relative p-3 bg-[#213f5b] bg-opacity-90 rounded-xl group-hover:bg-opacity-100 transition-colors">
+                      <div className="relative p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-md shadow-indigo-100 group-hover:shadow-lg transition-shadow">
                         <ShieldCheckIcon className="h-6 w-6 text-white" />
                       </div>
                       <div className="relative">
@@ -865,19 +934,19 @@ export default function AdministrationPage() {
                   </div>
                 </div>
                 
-                {/* Tips Panel */}
-                <div className="relative rounded-2xl shadow-[0_10px_25px_-15px_rgba(33,63,91,0.1)] overflow-hidden group">
+                {/* Tips Panel - Now with enhanced styling */}
+                <div className="relative rounded-2xl shadow-[0_15px_35px_-15px_rgba(33,63,91,0.2)] overflow-hidden group">
                   <div className="absolute inset-0 bg-gradient-to-br from-[#bfddf9] via-[#c7e8fa] to-[#d2fcb2] group-hover:from-[#add6f8] group-hover:via-[#c0e4f9] group-hover:to-[#c5f599] transition-colors duration-700"></div>
                   <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik0yOS41IDE0LjVMNDQgMjlsLTE0LjUgMTQuNUwxNSAyOSAyOS41IDE0LjV6IiBzdHJva2U9IiMyMTNmNWIiIHN0cm9rZS1vcGFjaXR5PSIuMDUiIGZpbGw9Im5vbmUiLz4KPC9zdmc+')]"></div>
                   
                   <div className="relative p-6 md:p-8">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-white bg-opacity-30 backdrop-blur-sm flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-white bg-opacity-30 backdrop-blur-sm flex items-center justify-center shadow-inner">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
                       </div>
-                      <h2 className="text-xl font-bold text-[#213f5b]">
+                      <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#213f5b] to-[#3978b5]">
                         Conseils d&apos;administration
                       </h2>
                     </div>
@@ -891,10 +960,10 @@ export default function AdministrationPage() {
                     <ul className="space-y-3">
                       <motion.li 
                         className="flex items-start gap-3 bg-white bg-opacity-40 backdrop-blur-sm rounded-xl p-3 shadow-sm hover:bg-opacity-60 transition-all group/item"
-                        whileHover={{ x: 5 }}
+                        whileHover={{ x: 5, scale: 1.02 }}
                       >
-                        <div className="p-2 bg-[#213f5b] bg-opacity-10 rounded-full mt-0.5">
-                          <CheckIcon className="h-4 w-4 text-[#213f5b]" />
+                        <div className="p-2 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full mt-0.5 shadow-sm">
+                          <CheckIcon className="h-4 w-4 text-white" />
                         </div>
                         <div>
                           <span className="text-sm font-medium text-[#213f5b] group-hover/item:text-[#152a3d] transition-colors">Vérifiez régulièrement les journaux d&apos;activité</span>
@@ -904,10 +973,10 @@ export default function AdministrationPage() {
                       
                       <motion.li 
                         className="flex items-start gap-3 bg-white bg-opacity-40 backdrop-blur-sm rounded-xl p-3 shadow-sm hover:bg-opacity-60 transition-all group/item"
-                        whileHover={{ x: 5 }}
+                        whileHover={{ x: 5, scale: 1.02 }}
                       >
-                        <div className="p-2 bg-[#213f5b] bg-opacity-10 rounded-full mt-0.5">
-                          <CheckIcon className="h-4 w-4 text-[#213f5b]" />
+                        <div className="p-2 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full mt-0.5 shadow-sm">
+                          <CheckIcon className="h-4 w-4 text-white" />
                         </div>
                         <div>
                           <span className="text-sm font-medium text-[#213f5b] group-hover/item:text-[#152a3d] transition-colors">Attribuez les rôles appropriés aux utilisateurs</span>
@@ -917,10 +986,10 @@ export default function AdministrationPage() {
                       
                       <motion.li 
                         className="flex items-start gap-3 bg-white bg-opacity-40 backdrop-blur-sm rounded-xl p-3 shadow-sm hover:bg-opacity-60 transition-all group/item"
-                        whileHover={{ x: 5 }}
+                        whileHover={{ x: 5, scale: 1.02 }}
                       >
-                        <div className="p-2 bg-[#213f5b] bg-opacity-10 rounded-full mt-0.5">
-                          <CheckIcon className="h-4 w-4 text-[#213f5b]" />
+                        <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mt-0.5 shadow-sm">
+                          <CheckIcon className="h-4 w-4 text-white" />
                         </div>
                         <div>
                           <span className="text-sm font-medium text-[#213f5b] group-hover/item:text-[#152a3d] transition-colors">Supprimez rapidement les comptes inactifs</span>
@@ -931,7 +1000,7 @@ export default function AdministrationPage() {
                     
                     <motion.button
                       className="mt-5 w-full bg-white bg-opacity-50 hover:bg-opacity-70 text-[#213f5b] font-medium py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all relative overflow-hidden group-hover:shadow-md"
-                      whileHover={{ y: -2 }}
+                      whileHover={{ y: -2, scale: 1.01 }}
                     >
                       <span>En savoir plus</span>
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -957,6 +1026,7 @@ export default function AdministrationPage() {
               const fullUser: IUser = {
                 _id: Math.random().toString(36).substr(2, 9),
                 createdAt: new Date().toISOString(),
+                gender: Math.random() > 0.5 ? "Homme" : "Femme", // Added random gender for demo
                 ...newUser,
               };
               setUsers((prev) => [...prev, fullUser]);

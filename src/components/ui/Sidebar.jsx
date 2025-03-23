@@ -12,6 +12,7 @@ import {
   // CurrencyDollarIcon,
   CurrencyEuroIcon,
   BriefcaseIcon,
+  ChatBubbleBottomCenterIcon,
   FolderIcon,
   EnvelopeIcon,
   CalendarIcon,
@@ -176,6 +177,18 @@ export function Sidebar({ role }) {
       { name: "Support & Tickets", href: "/dashboard/admin/support", icon: LifebuoyIcon },
       // { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
       { name: "Tout les rôles", href: "/dashboard/admin/administration", icon: UserGroupIcon },
+      {
+        name: "Modèles",
+        icon: DocumentIcon,
+        children: [
+          // { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
+          // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
+          { name: "E-mail", href: "/dashboard/admin/email-model", icon: EnvelopeIcon},
+          { name: "SMS", href: "/dashboard/admin/sms-model", icon: ChatBubbleBottomCenterIcon },
+          // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
+          // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
+        ],
+      },
       { name: "Paramètres de l'Administrateur", href: "/dashboard/admin/reglages", icon: SettingsIcon }
       // { name: "Intégrations / API", href: "/dashboard/admin/integrations", icon: CodeBracketIcon }
     ];
