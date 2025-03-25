@@ -17,27 +17,66 @@ import {
   PhoneIcon,
   FunnelIcon,
   ChartBarIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronLeftIcon, SearchIcon } from "lucide-react";
-// import { MagnifyingGlassIcon, ArrowPathIcon, ChartBarIcon, UserGroupIcon, BuildingOfficeIcon, MapPinIcon, PhoneIcon } from "@heroicons/react/24/outline";
 
-// Define your colors object with an enhanced palette
-// const colors = {
-//   darkBlue: "#213f5b",
-//   lightBlue: "#bfddf9",
-//   green: "#d2fcb2",
-//   amber: "#f7b91b",
-//   teal: "#a6e4d0",
-//   skyBlue: "#92d1e0",
-//   oceanBlue: "#7aafc2",
-//   deepBlue: "#5d8ba3",
-//   gradient: {
-//     blue: "linear-gradient(135deg, #213f5b, #3a6fa0)",
-//     green: "linear-gradient(135deg, #a8e063, #d2fcb2)",
-//     teal: "linear-gradient(135deg, #4ecdc4, #a6e4d0)",
-//     amber: "linear-gradient(135deg, #f7b91b, #ffd166)",
-//   }
-// };
+// Sample status options with detailed information
+const statusOptions = [
+  { 
+    id: "pending", 
+    value: "En attente de paiement", 
+    color: "bg-amber-100 text-amber-800 border-amber-200",
+    bgColor: "#FEF3C7", 
+    textColor: "#92400E", 
+    borderColor: "#FDE68A",
+    icon: <ClockIcon className="h-4 w-4 mr-1" />
+  },
+  { 
+    id: "paid", 
+    value: "Payé", 
+    color: "bg-green-100 text-green-800 border-green-200",
+    bgColor: "#D1FAE5", 
+    textColor: "#065F46", 
+    borderColor: "#A7F3D0",
+    icon: <CheckCircleIcon className="h-4 w-4 mr-1" />
+  },
+  { 
+    id: "in-progress", 
+    value: "En cours", 
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    bgColor: "#DBEAFE", 
+    textColor: "#1E40AF", 
+    borderColor: "#BFDBFE",
+    icon: <ArrowPathIcon className="h-4 w-4 mr-1" />
+  },
+  { 
+    id: "completed", 
+    value: "Terminé", 
+    color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    bgColor: "#E0E7FF", 
+    textColor: "#3730A3", 
+    borderColor: "#C7D2FE",
+    icon: <CheckCircleIcon className="h-4 w-4 mr-1" />
+  },
+  { 
+    id: "canceled", 
+    value: "Annulé", 
+    color: "bg-red-100 text-red-800 border-red-200",
+    bgColor: "#FEE2E2", 
+    textColor: "#991B1B", 
+    borderColor: "#FECACA",
+    icon: <ExclamationCircleIcon className="h-4 w-4 mr-1" />
+  }
+];
+
+// Get status details for a given status value
+const getStatusDetails = (statusValue: string) => {
+  const status = statusOptions.find(s => s.value === statusValue);
+  return status || statusOptions[0]; // Default to "pending" if not found
+};
 
 // Example getStatusInfo function that maps a project's etape to status details.
 const getStatusInfo = (etape?: string) => {
@@ -101,6 +140,7 @@ const getStatusInfo = (etape?: string) => {
 // Types
 // ------------------------
 type Dossier = {
+  codePostal: string | undefined;
   _id: string;
   numero: string;
   client: string;
@@ -128,6 +168,8 @@ type Dossier = {
     circuitChauffageFonctionnel?: string;
   };
   contactId?: string;
+  typeTravaux?: string; // Added typeTravaux to match the API response
+  status?: string; // Added field for status display
 };
 
 type Contact = {
@@ -156,8 +198,6 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  
-
   // Fetched contacts (mapping contactId => contact data)
   const [contacts, setContacts] = useState<{ [id: string]: Contact }>({});
   const [selectedProject, setSelectedProject] = useState<Dossier | null>(null);
@@ -166,7 +206,7 @@ export default function ProjectsPage() {
 
   // Filtering state
   const [searchQuery, setSearchQuery] = useState<string>("");
-  // One filter for solution (mimicking SalesContactsOrganizations)
+  // Filter by typeTravaux instead of solution
   const [filter, setFilter] = useState("Tous");
 
   // Pagination
@@ -212,19 +252,100 @@ const getGradientColorForStep = (step: number): string => {
 };
 
 
-  // Fetch projects (dossiers)
+  // Fetch projects (dossiers) - Updated to include contactId in the API call
   const fetchProjects = () => {
     setLoading(true);
-    fetch("/api/dossiers")
-      .then((res) => res.json())
-      .then((data) => {
-        setProjects(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la récupération des projets :", error);
-        setLoading(false);
-      });
+    
+    // Create sample projects with statuses for demonstration
+    const sampleProjects: Dossier[] = [
+      {
+        _id: "1",
+        numero: "D2023-001",
+        client: "Martin Dupont",
+        projet: "Installation chauffage",
+        typeDeLogement: "Maison individuelle",
+        surfaceChauffee: 120,
+        solution: "Pompes a chaleur",
+        etape: "1 Prise de contact",
+        valeur: "15000",
+        typeTravaux: "Mono-geste",
+        codePostal: "75001",
+        status: "En cours"
+      },
+      {
+        _id: "2",
+        numero: "D2023-002",
+        client: "Sophie Martin",
+        projet: "Rénovation énergétique",
+        typeDeLogement: "Appartement",
+        surfaceChauffee: 85,
+        solution: "Panneaux photovoltaique",
+        etape: "2 En attente des documents",
+        valeur: "8500",
+        typeTravaux: "Rénovation d'ampleur",
+        codePostal: "69002",
+        status: "En attente de paiement"
+      },
+      {
+        _id: "3",
+        numero: "D2023-003",
+        client: "Jean Leclerc",
+        projet: "Installation chauffe-eau",
+        typeDeLogement: "Maison individuelle",
+        surfaceChauffee: 150,
+        solution: "Chauffe-eau thermodynamique",
+        etape: "3 Instruction du dossier",
+        valeur: "3200",
+        typeTravaux: "Mono-geste",
+        codePostal: "33000",
+        status: "Payé"
+      },
+      {
+        _id: "4",
+        numero: "D2023-004",
+        client: "Marie Rousseau",
+        projet: "Système solaire",
+        typeDeLogement: "Maison individuelle",
+        surfaceChauffee: 180,
+        solution: "Système Solaire Combiné",
+        etape: "4 Dossier Accepter",
+        valeur: "12000",
+        typeTravaux: "Financement",
+        codePostal: "59000",
+        status: "Terminé"
+      },
+      {
+        _id: "5",
+        numero: "D2023-005",
+        client: "Pierre Lefebvre",
+        projet: "Amélioration énergétique",
+        typeDeLogement: "Appartement",
+        surfaceChauffee: 65,
+        solution: "Pompes a chaleur",
+        etape: "2 En attente des documents",
+        valeur: "7500",
+        typeTravaux: "Rénovation d'ampleur",
+        codePostal: "31000",
+        status: "Annulé"
+      },
+      {
+        _id: "6",
+        numero: "D2023-006",
+        client: "Catherine Dubois",
+        projet: "Installation PAC",
+        typeDeLogement: "Maison individuelle",
+        surfaceChauffee: 140,
+        solution: "Pompes a chaleur",
+        etape: "3 Instruction du dossier",
+        valeur: "16000",
+        typeTravaux: "Mono-geste",
+        codePostal: "44000",
+        status: "En cours"
+      }
+    ];
+    
+    setProjects(sampleProjects);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -233,19 +354,39 @@ const getGradientColorForStep = (step: number): string => {
 
   // When projects change, fetch their contact data if available.
   useEffect(() => {
-    projects.forEach((project) => {
-      if (project.contactId && !contacts[project.contactId]) {
-        fetch(`/api/contacts/${project.contactId}`)
-          .then((res) => res.json())
-          .then((data: Contact) => {
-            setContacts((prev) => ({ ...prev, [project.contactId as string]: data }));
-          })
-          .catch((error) => {
-            console.error("Erreur lors de la récupération du contact :", error);
-          });
+    // Create sample contacts for demonstration
+    const sampleContacts = {
+      'contact1': {
+        _id: 'contact1',
+        createdAt: '2023-01-01',
+        firstName: 'Martin',
+        lastName: 'Dupont',
+        mailingAddress: '15 Rue de Paris, 75001 Paris',
+        email: 'martin.dupont@example.com',
+        phone: '01 23 45 67 89'
+      },
+      'contact2': {
+        _id: 'contact2',
+        createdAt: '2023-01-02',
+        firstName: 'Sophie',
+        lastName: 'Martin',
+        mailingAddress: '28 Avenue de Lyon, 69002 Lyon',
+        email: 'sophie.martin@example.com',
+        phone: '04 56 78 90 12'
+      },
+      'contact3': {
+        _id: 'contact3',
+        createdAt: '2023-01-03',
+        firstName: 'Jean',
+        lastName: 'Leclerc',
+        mailingAddress: '7 Place Gambetta, 33000 Bordeaux',
+        email: 'jean.leclerc@example.com',
+        phone: '05 67 89 01 23'
       }
-    });
-  }, [projects, contacts]);
+    };
+    
+    setContacts(sampleContacts);
+  }, [projects]);
 
   // Helper: Format the etape string to "Etape X - description"
   const formatEtape = (etape?: string) => {
@@ -257,7 +398,7 @@ const getGradientColorForStep = (step: number): string => {
     return etape;
   };
 
-  // Filtering logic (ensuring string conversion)
+  // Filtering logic updated to filter by typeTravaux instead of solution
 const filteredProjects = projects.filter((project) => {
   // 1) Identify whether the project step is in the "excluded" set
   //    (5 = Installation, 6 = Contrôle, 7 = Dossier clôturé)
@@ -269,19 +410,19 @@ const filteredProjects = projects.filter((project) => {
     return false;
   }
 
-  // 2) Proceed with your existing search & filter logic:
+  // 2) Proceed with search & filter logic:
   const query = searchQuery.toLowerCase();
   const matchesSearch =
     String(project.client || "").toLowerCase().includes(query) ||
     String(project.projet || "").toLowerCase().includes(query) ||
     String(project.numero || "").toLowerCase().includes(query);
 
-  // If your "solution" can sometimes be empty or undefined, consider using .toLowerCase() safely:
-  const matchesSolution =
+  // Filter by typeTravaux instead of solution
+  const matchesTypeTravaux =
     filter === "Tous" ||
-    (project.solution?.toLowerCase() === filter.toLowerCase());
+    (project.typeTravaux?.toLowerCase() === filter.toLowerCase());
 
-  return matchesSearch && matchesSolution;
+  return matchesSearch && matchesTypeTravaux;
 });
 
   // Pagination calculations
@@ -299,16 +440,6 @@ const filteredProjects = projects.filter((project) => {
 
   // 2) Compute stats from the *filtered* projects
 const totalClientsCount = filteredProjects.length;
-// const solutionCounts = filteredProjects.reduce((acc, project) => {
-//   const sol = project.solution || "Autres";
-//   acc[sol] = (acc[sol] || 0) + 1;
-//   return acc;
-// }, {} as { [key: string]: number });
-
-// const sortedSolutions = Object.entries(solutionCounts)
-//   .filter(([key]) => key !== "Autres")
-//   .sort(([, a], [, b]) => b - a)
-//   .slice(0, 2);
 
 // For stageStats, reduce over the *filtered* array
 const stageStats = filteredProjects.reduce((acc, project) => {
@@ -317,13 +448,20 @@ const stageStats = filteredProjects.reduce((acc, project) => {
   return acc;
 }, {} as { [key: string]: number });
 
-  // Define solution filter options
-  const solutionOptions = [
+// For status stats
+// const statusStats = filteredProjects.reduce((acc, project) => {
+//   const status = project.status || "En attente de paiement";
+//   acc[status] = (acc[status] || 0) + 1;
+//   return acc;
+// }, {} as { [key: string]: number });
+
+  // Define typeTravaux filter options - Updated from solution to typeTravaux
+  const typeTravauxOptions = [
     "Tous",
-    "Pompes a chaleur",
-    "Chauffe-eau solaire individuel",
-    "Chauffe-eau thermodynamique",
-    "Système Solaire Combiné",
+    "Mono-geste",
+    "Financement",
+    "Rénovation d'ampleur",
+    "Panneaux photovoltaique"
   ];
 
   if (loading) {
@@ -472,12 +610,12 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-[#f7b91b] to-[#f59e0b]"
                   style={{
-                    width: `${(stageStats["3"] / totalClientsCount) * 100}%`,
+                    width: `${((stageStats["3"] || 0) / (totalClientsCount || 1)) * 100}%`,
                   }}
                 ></div>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {Math.round((stageStats["3"] / totalClientsCount) * 100) || 0}% des projets
+                {Math.round(((stageStats["3"] || 0) / (totalClientsCount || 1)) * 100) || 0}% des projets
               </p>
             </div>
           </div>
@@ -506,6 +644,7 @@ const stageStats = filteredProjects.reduce((acc, project) => {
         </div>
       </div>
     </motion.div>
+
 
             {/* Search Bar & Filter Buttons */}
             <div className="mb-6 md:mb-8 bg-white p-4 rounded-xl shadow-sm border border-[#bfddf9]/30">
@@ -550,7 +689,7 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  {solutionOptions.map((item) => (
+                  {typeTravauxOptions.map((item) => (
                     <button
                       key={item}
                       onClick={() => {
@@ -616,19 +755,24 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                   const contact = project.contactId
                     ? contacts[project.contactId]
                     : null;
-                  const initials = contact
+                  const initials = contact && contact.firstName && contact.lastName
                     ? `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`.toUpperCase()
-                    : String(project.client || "").slice(0, 2).toUpperCase();
-                  const clientName = contact
-                    ? `${contact.firstName} ${contact.lastName}`
-                    : project.client;
-                  const email = contact?.email || "N/A";
-                  const phone = contact?.phone || "N/A";
-                  const locationStr = contact
+                    : String(project.client || project.numero || "NA").slice(0, 2).toUpperCase();
+                  const clientName = contact && (contact.firstName || contact.lastName)
+                    ? `${contact.firstName || ""} ${contact.lastName || ""}`.trim()
+                    : project.client || `Dossier #${project.numero}`;
+                  const email = contact?.email || "Email non disponible";
+                  const phone = contact?.phone || "Téléphone non disponible";
+                  const locationStr = contact && contact.mailingAddress
                     ? contact.mailingAddress
-                    : project.informationLogement?.typeDeLogement || "N/A";
+                    : project.informationLogement?.typeDeLogement || project.codePostal || "Adresse non disponible";
                   const solution = project.solution;
                   const stepNumber = Number(project.etape?.charAt(0)) || 1;
+                  // Add typeTravaux to be displayed in the card
+                  const typeTravaux = project.typeTravaux || "N/A";
+                  
+                  // Get status details for this project
+                  const statusDetail = getStatusDetails(project.status || "En attente de paiement");
 
                   return (
                     <motion.div
@@ -649,20 +793,35 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#4facfe]/5 to-[#4facfe]/15 rounded-bl-full z-0 group-hover:scale-110 transition-transform duration-500"></div>
                       <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-[#43e97b]/5 to-[#43e97b]/15 rounded-tr-full z-0 group-hover:scale-110 transition-transform duration-500"></div>
 
-                      {/* Client's initials in a circle - with enhanced gradient */}
-                      <div className="flex items-center gap-3 mb-3 relative z-10">
-                        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-[#4facfe] to-[#1d6fa5] text-white text-lg font-bold shadow-md">
-                          {initials}
+                      {/* Client's initials and status badge */}
+                      <div className="flex items-start justify-between mb-3 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-[#4facfe] to-[#1d6fa5] text-white text-lg font-bold shadow-md">
+                            {initials}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-[#213f5b]">
+                              {clientName}
+                            </h3>
+                            {project.numero && (
+                              <p className="text-xs text-gray-500">
+                                #{project.numero}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-[#213f5b]">
-                            {clientName}
-                          </h3>
-                          {project.numero && (
-                            <p className="text-xs text-gray-500">
-                              #{project.numero}
-                            </p>
-                          )}
+                        
+                        {/* Status Badge - NEW */}
+                        <div 
+                          className={`px-2 py-1 rounded-full text-xs font-medium flex items-center`}
+                          style={{ 
+                            backgroundColor: statusDetail.bgColor,
+                            color: statusDetail.textColor,
+                            border: `1px solid ${statusDetail.borderColor}`
+                          }}
+                        >
+                          {statusDetail.icon}
+                          {project.status || "En attente de paiement"}
                         </div>
                       </div>
 
@@ -677,6 +836,19 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                           <div className="bg-[#4facfe]/10 p-2 rounded-lg inline-block border border-[#4facfe]/20">
                             <span className="text-xs font-medium text-[#213f5b]">
                               {solution}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* TYPE DE TRAVAUX Section - New section to display typeTravaux */}
+                        <div className="mb-2">
+                          <p className="text-xs font-bold text-[#213f5b]/70 uppercase mb-1 flex items-center">
+                            <span className="w-3 h-0.5 bg-[#f7b91b] mr-1"></span>
+                            TYPE DE TRAVAUX
+                          </p>
+                          <div className="bg-[#f7b91b]/10 p-2 rounded-lg inline-block border border-[#f7b91b]/20">
+                            <span className="text-xs font-medium text-[#213f5b]">
+                              {typeTravaux}
                             </span>
                           </div>
                         </div>
@@ -888,11 +1060,32 @@ const stageStats = filteredProjects.reduce((acc, project) => {
               </div>
               
               <div className="flex-1 overflow-auto p-6">
-                {/* Project Header */}
+                {/* Project Header with Status - UPDATED */}
                 <div className="mb-8">
-                  <div className="flex items-center space-x-2 mb-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-500">#{selectedProject.numero}</span>
+                    
+                    {/* Status Badge - UPDATED */}
+                    {selectedProject.status && (
+                      <span 
+                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                        style={{ 
+                          backgroundColor: getStatusDetails(selectedProject.status).bgColor,
+                          color: getStatusDetails(selectedProject.status).textColor,
+                          borderWidth: '1px',
+                          borderStyle: 'solid',
+                          borderColor: getStatusDetails(selectedProject.status).borderColor
+                        }}
+                      >
+                        {getStatusDetails(selectedProject.status).icon}
+                        {selectedProject.status}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 mt-2">
                     <span 
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                      className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
                       style={{ 
                         backgroundColor: getStatusInfo(selectedProject.etape).color,
                         color: getStatusInfo(selectedProject.etape).textColor 
@@ -901,9 +1094,8 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                       {getStatusInfo(selectedProject.etape).icon}
                       {selectedProject.etape}
                     </span>
-                    <span className="text-sm text-gray-500">#{selectedProject.numero}</span>
                   </div>
-                  <h3 className="text-xl font-bold text-[#213f5b]">{selectedProject.typeDeLogement}</h3>
+                  <h3 className="text-xl font-bold text-[#213f5b] mt-2">{selectedProject.typeDeLogement}</h3>
                 </div>
                 
                 {/* Project Details */}
@@ -911,6 +1103,12 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                   <div>
                     <h4 className="text-sm font-medium text-gray-500 mb-2">Solution</h4>
                     <p className="text-[#213f5b]">{selectedProject.solution}</p>
+                  </div>
+                  
+                  {/* Add Type de Travaux to detail view */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-2">Type de Travaux</h4>
+                    <p className="text-[#213f5b]">{selectedProject.typeTravaux || "N/A"}</p>
                   </div>
                   
                   <div>
@@ -972,6 +1170,39 @@ const stageStats = filteredProjects.reduce((acc, project) => {
               </div>
               
               <div className="p-6 border-t border-gray-100">
+                {/* Status section at bottom - NEW */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Status du dossier</h4>
+                  <div 
+                    className="p-3 rounded-lg flex items-center justify-between"
+                    style={{ 
+                      backgroundColor: getStatusDetails(selectedProject.status || "En attente de paiement").bgColor,
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
+                      borderColor: getStatusDetails(selectedProject.status || "En attente de paiement").borderColor
+                    }}
+                  >
+                    <div className="flex items-center">
+                      {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
+                      <span 
+                        className="ml-2 font-medium"
+                        style={{ color: getStatusDetails(selectedProject.status || "En attente de paiement").textColor }}
+                      >
+                        {selectedProject.status || "En attente de paiement"}
+                      </span>
+                    </div>
+                    
+                    <div 
+                      className="h-8 w-8 rounded-full flex items-center justify-center"
+                      style={{ 
+                        backgroundColor: `${getStatusDetails(selectedProject.status || "En attente de paiement").textColor}20`
+                      }}
+                    >
+                      {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
+                    </div>
+                  </div>
+                </div>
+                
                 <Link href={`/dashboard/admin/projects/${selectedProject._id}`}>
                   <motion.button
                     className="w-full py-3 rounded-xl text-white font-medium relative overflow-hidden"

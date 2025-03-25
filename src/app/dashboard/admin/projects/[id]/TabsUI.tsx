@@ -10,7 +10,8 @@ import {
   FolderIcon,
   ChevronDownIcon,
   XMarkIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  ClockIcon
 } from "@heroicons/react/24/outline";
 import { Menu } from "@headlessui/react";
 
@@ -22,6 +23,9 @@ interface PremiumTabsProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   chatMessageCount: number;
+  dossierStatus?: string; // New prop for the status
+  onStatusChange?: (newStatus: string) => void; // Callback for status changes
+  contactId?: string; // Contact ID for API updates
 }
 
 // Define the dropdown menu items (all except "Informations client")
@@ -34,16 +38,89 @@ const dropdownItems = [
   { id: "reglement", label: "Règlement", icon: CurrencyEuroIcon, description: "Gérer les paiements" },
 ];
 
-const PremiumTabs: FC<PremiumTabsProps> = ({ activeTab, setActiveTab, chatMessageCount }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [expanded, setExpanded] = useState(false);
+// Available statuses with colors and API values
+const statusOptions = [
+  { id: "pending", value: "En attente de paiement", color: "bg-amber-100 text-amber-800 border-amber-200", apiValue: "EN_ATTENTE_PAIEMENT" },
+  { id: "paid", value: "Payé", color: "bg-green-100 text-green-800 border-green-200", apiValue: "PAYE" },
+  { id: "in-progress", value: "En cours", color: "bg-blue-100 text-blue-800 border-blue-200", apiValue: "EN_COURS" },
+  { id: "to-invoice", value: "À facturer", color: "bg-amber-100 text-amber-800 border-amber-200", apiValue: "A_FACTURER" },
+  { id: "completed", value: "Terminé", color: "bg-indigo-100 text-indigo-800 border-indigo-200", apiValue: "TERMINE" },
+  { id: "canceled", value: "Annulé", color: "bg-red-100 text-red-800 border-red-200", apiValue: "ANNULE" }
+];
 
-  // Close dropdown when clicking outside
+// Get color for a specific status
+const getStatusColor = (status: string) => {
+  const option = statusOptions.find(opt => opt.value === status);
+  return option ? option.color : "bg-gray-100 text-gray-800 border-gray-200";
+};
+
+const PremiumTabs: FC<PremiumTabsProps> = ({ 
+  activeTab, 
+  setActiveTab, 
+  chatMessageCount,
+  dossierStatus = "En attente de paiement", // Default status
+  onStatusChange = () => {}, // Default empty callback
+  contactId
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(dossierStatus);
+
+  // Update local status when prop changes
+  useEffect(() => {
+    setCurrentStatus(dossierStatus);
+  }, [dossierStatus]);
+  
+  // State for API request status
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  
+  // Function to update status via API
+  const updateStatusViaApi = async (newStatus: string) => {
+    if (!contactId) return;
+    
+    // Find the API value for the selected status
+    const statusOption = statusOptions.find(opt => opt.value === newStatus);
+    if (!statusOption) return;
+    
+    setIsUpdating(true);
+    setUpdateError(null);
+    
+    try {
+      const response = await fetch(`/api/contacts/${contactId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          statut: statusOption.apiValue
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Status update failed: ${response.status}`);
+      }
+      
+      // Success - status is already updated in the UI
+    } catch (error) {
+      console.error('Error updating status:', error);
+      setUpdateError(error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+      }
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setIsStatusOpen(false);
       }
     };
 
@@ -55,6 +132,9 @@ const PremiumTabs: FC<PremiumTabsProps> = ({ activeTab, setActiveTab, chatMessag
 
   // Find the active item for display in the dropdown button
   const activeItem = activeTab !== "info" ? dropdownItems.find((item) => item.id === activeTab) : undefined;
+
+  // Get status color based on current status - FIXED: Now using currentStatus
+  const statusColor = getStatusColor(currentStatus);
 
   // Animation variants
   const dropdownVariants = {
@@ -137,6 +217,82 @@ const PremiumTabs: FC<PremiumTabsProps> = ({ activeTab, setActiveTab, chatMessag
                 </span>
                 <span className="text-sm font-semibold tracking-wide">Informations client</span>
               </motion.button>
+
+              {/* Status dossier with dropdown - UPDATED ELEMENT */}
+              <div className="relative" ref={statusDropdownRef}>
+                <motion.button
+                  onClick={() => setIsStatusOpen(!isStatusOpen)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={isUpdating}
+                  className={`flex-shrink-0 flex flex-col justify-center px-5 py-3 rounded-xl border ${statusColor} shadow-sm cursor-pointer transition-colors duration-300 ${isUpdating ? 'opacity-75' : ''}`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <ClockIcon className="w-4 h-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">Status dossier</span>
+                    <ChevronDownIcon className={`w-3 h-3 transition-transform ${isStatusOpen ? "rotate-180" : ""}`} />
+                  </div>
+                  <div className="flex items-center">
+                    <p className="text-sm font-semibold mt-1">{currentStatus}</p>
+                    {isUpdating && (
+                      <span className="ml-2 mt-1">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                  {updateError && (
+                    <p className="text-xs text-red-600 mt-1">Erreur: {updateError}</p>
+                  )}
+                </motion.button>
+                
+                {/* Status dropdown */}
+                <AnimatePresence>
+                  {isStatusOpen && (
+                    <motion.div
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={dropdownVariants}
+                      className="absolute z-50 mt-2 w-64 origin-top-left rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden"
+                    >
+                      <div className="py-2 max-h-60 overflow-y-auto">
+                        {statusOptions.map((status) => (
+                          <motion.button
+                            key={status.id}
+                            variants={itemVariants}
+                                                          onClick={() => {
+                              onStatusChange(status.value);
+                              setCurrentStatus(status.value);
+                              setIsStatusOpen(false);
+                              updateStatusViaApi(status.value);
+                            }}
+                            className={`flex w-full items-center px-4 py-2 text-left hover:bg-gray-50 ${
+                              currentStatus === status.value ? "bg-gray-50" : ""
+                            }`}
+                          >
+                            <div className={`w-3 h-3 rounded-full mr-3 ${status.color.split(" ")[0]}`} />
+                            <span className="text-sm">{status.value}</span>
+                            {currentStatus === status.value && (
+                              <motion.div
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="ml-auto flex items-center justify-center text-blue-600"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </motion.div>
+                            )}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Dropdown menu */}
               <div className="relative w-full sm:w-auto sm:flex-1 md:max-w-sm" ref={dropdownRef}>

@@ -40,6 +40,7 @@ import {
   UserCircleIcon,
   UserGroupIcon,
   UsersIcon,
+  WrenchScrewdriverIcon,
   // ChartBarIcon
 } from "@heroicons/react/24/outline";
 
@@ -348,6 +349,31 @@ export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const [savStats ] = useState({
+    openTickets: 12,
+    pendingTickets: 5,
+    solvedTickets: 42,
+    totalTickets: 59,
+    avgResponseTime: 8, // hours
+    ticketsTrend: -15, // percentage trend vs last period
+  });
+
+  // Simulate fetching SAV data
+  useEffect(() => {
+    // Replace with actual API call
+    // const fetchSAVData = async () => {
+    //   // const response = await fetch('/api/sav/stats');
+    //   // const data = await response.json();
+    //   // setSavStats(data);
+    // };
+    
+    // Comment out when implementing real API call
+    // fetchSAVData();
+  }, []);
+
+  // Calculate percentage of solved tickets
+  // const solvedPercentage = Math.round((savStats.solvedTickets / savStats.totalTickets) * 100);
   
   // Load admin info from localStorage
   useEffect(() => {
@@ -1324,7 +1350,7 @@ export default function AdminDashboardPage() {
               <div className="space-y-6">
                 {/* New KPI Stats Cards - Replaces the Alert Banner */}
                 <motion.div 
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
@@ -1474,6 +1500,59 @@ export default function AdminDashboardPage() {
                         <div className="h-1 w-8 bg-[#f9e5bf] rounded-full mt-1"></div>
                       </div>
                     </div>
+                  </motion.div>
+
+                  {/* SAV Support KPI */}
+                  <motion.div 
+                    className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all"
+                    whileHover={{ y: -5 }}
+                  >
+                    <Link href="/dashboard/admin/support">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm font-medium text-[#213f5b]/80">SAV</p>
+                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{savStats.openTickets}</h3>
+                          <div className="flex items-center gap-1 mt-2">
+                            <span className={`text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium ${
+                              savStats.ticketsTrend < 0 ? 'bg-[#d2fcb2] text-[#213f5b]' : 'bg-[#f9e5bf] text-[#213f5b]'
+                            }`}>
+                              {savStats.ticketsTrend < 0 ? (
+                                <ArrowTrendingDownIcon className="h-3 w-3" />
+                              ) : (
+                                <ArrowTrendingUpIcon className="h-3 w-3" />
+                              )}
+                              {Math.abs(savStats.ticketsTrend)}%
+                            </span>
+                            <span className="text-xs text-[#213f5b]/60">vs mois précédent</span>
+                          </div>
+                        </div>
+                        <div className="p-3 rounded-full bg-[#d2fcb2]/40">
+                          <WrenchScrewdriverIcon className="h-6 w-6 text-[#213f5b]" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex justify-between items-center text-sm">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-full bg-[#f9e5bf]"></span>
+                            <span className="text-xs text-[#213f5b]/70">En attente: {savStats.pendingTickets}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-full bg-[#bfddf9]"></span>
+                            <span className="text-xs text-[#213f5b]/70">En cours: {savStats.openTickets - savStats.pendingTickets}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-full bg-[#d2fcb2]"></span>
+                            <span className="text-xs text-[#213f5b]/70">Résolus: {savStats.solvedTickets}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-full bg-[#213f5b]"></span>
+                            <span className="text-xs text-[#213f5b]/70">Total: {savStats.totalTickets}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
                   </motion.div>
                 </motion.div>
 

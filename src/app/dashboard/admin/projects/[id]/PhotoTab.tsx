@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   XMarkIcon, 
@@ -7,11 +7,12 @@ import {
   ArrowLeftIcon, 
   ArrowRightIcon,
   CalendarIcon,
-  // InformationCircleIcon,
-  // ChevronDownIcon,
   CameraIcon,
   TrashIcon,
-  PencilIcon
+  PencilIcon,
+  CloudArrowUpIcon,
+  DocumentTextIcon,
+  ExclamationCircleIcon
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 
@@ -25,6 +26,18 @@ interface PhotoData {
   date: string;
   caption?: string;
   phase?: string; // "before" or "after"
+}
+
+interface PhotoUpload {
+  id: string;
+  file: File;
+  preview: string;
+  caption: string;
+  phase: "before" | "after";
+  date: string;
+  isUploading?: boolean;
+  progress?: number;
+  error?: string;
 }
 
 // Sample data for demonstration purposes
@@ -73,18 +86,38 @@ const SAMPLE_PHOTOS: PhotoData[] = [
   }
 ];
 
+// Format date to DD/MM/YYYY
+const formatDate = (date: Date): string => {
+  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+};
+
+// Get current date formatted
+const getCurrentDate = (): string => {
+  return formatDate(new Date());
+};
+
 function PhotoTab({ contactId }: PhotoTabProps) {
   const [photos, setPhotos] = useState<PhotoData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [ , setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [ , setPhotoToEdit] = useState<PhotoData | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<PhotoData | null>(null);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error ] = useState<string>("");
-  // const [showBeforePhotos ] = useState<boolean>(true);
-  // const [showAfterPhotos ] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<"all" | "before" | "after">("all");
+  
+  // For upload modal
+  const [uploadedPhotos, setUploadedPhotos] = useState<PhotoUpload[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadStep, setUploadStep] = useState<"select" | "details" | "uploading" | "complete">("select");
+  const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
+  const [batchPhase, setBatchPhase] = useState<"before" | "after" | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [overallProgress, setOverallProgress] = useState(0);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   // For this demo, we'll use the sample data instead of fetching from API
   useEffect(() => {
@@ -96,6 +129,7 @@ function PhotoTab({ contactId }: PhotoTabProps) {
     }, 800);
   }, [contactId]);
 
+  // Filter photos
   const beforePhotos = photos.filter(photo => photo.phase === "before");
   const afterPhotos = photos.filter(photo => photo.phase === "after");
 
@@ -112,6 +146,7 @@ function PhotoTab({ contactId }: PhotoTabProps) {
     return photo.phase === activeTab && matchesSearch;
   });
 
+  // Photo preview navigation
   const handleNextPhoto = () => {
     if (!previewPhoto) return;
     const currentFiltered = filteredPhotos;
@@ -140,6 +175,175 @@ function PhotoTab({ contactId }: PhotoTabProps) {
     setPreviewPhoto(photo);
     const index = filteredPhotos.findIndex(p => p.id === photo.id);
     setCurrentPhotoIndex(index);
+  };
+
+  // File upload handlers
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+
+    const newUploads: PhotoUpload[] = Array.from(files).map(file => {
+      // Generate preview URL
+      const preview = URL.createObjectURL(file);
+      
+      return {
+        id: `temp-${Math.random().toString(36).substring(2, 11)}`,
+        file,
+        preview,
+        caption: "",
+        phase: batchPhase || "before",
+        date: getCurrentDate(),
+        progress: 0
+      };
+    });
+
+    setUploadedPhotos([...uploadedPhotos, ...newUploads]);
+    
+    // Move to details step if there are photos
+    if (uploadStep === "select" && newUploads.length > 0) {
+      setUploadStep("details");
+      if (newUploads.length > 0) {
+        setActivePhotoId(newUploads[0].id);
+      }
+    }
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    handleFileSelect(files);
+  }, [batchPhase, uploadedPhotos, uploadStep]);
+
+  const removeUploadedPhoto = (id: string) => {
+    const photoToRemove = uploadedPhotos.find(p => p.id === id);
+    if (photoToRemove?.preview) {
+      URL.revokeObjectURL(photoToRemove.preview);
+    }
+    
+    const updatedPhotos = uploadedPhotos.filter(p => p.id !== id);
+    setUploadedPhotos(updatedPhotos);
+    
+    // Update active photo if needed
+    if (activePhotoId === id) {
+      setActivePhotoId(updatedPhotos.length > 0 ? updatedPhotos[0].id : null);
+    }
+    
+    // Go back to select step if no photos left
+    if (updatedPhotos.length === 0) {
+      setUploadStep("select");
+    }
+  };
+
+  const updatePhotoDetails = (id: string, updates: Partial<PhotoUpload>) => {
+    setUploadedPhotos(prev => 
+      prev.map(p => p.id === id ? { ...p, ...updates } : p)
+    );
+  };
+
+  const applyBatchSettings = () => {
+    if (!batchPhase) return;
+    
+    setUploadedPhotos(prev => 
+      prev.map(p => ({ ...p, phase: batchPhase }))
+    );
+  };
+
+  // Simulate photo upload
+  const uploadPhotos = async () => {
+    setIsUploading(true);
+    setUploadStep("uploading");
+    
+    // Simulate individual upload progress
+    for (let i = 0; i < uploadedPhotos.length; i++) {
+      const photo = uploadedPhotos[i];
+      
+      // Update status to uploading
+      setUploadedPhotos(prev => 
+        prev.map(p => p.id === photo.id ? { ...p, isUploading: true } : p)
+      );
+      
+      // Simulate progress
+      for (let progress = 0; progress <= 100; progress += 10) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        setUploadedPhotos(prev => 
+          prev.map(p => p.id === photo.id ? { ...p, progress } : p)
+        );
+        
+        // Update overall progress
+        const overallPercent = Math.floor(((i * 100) + progress) / (uploadedPhotos.length * 100) * 100);
+        setOverallProgress(overallPercent);
+      }
+    }
+    
+    // Simulate API call delay for saving all photos
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Create new photos from uploads
+    const newPhotos = uploadedPhotos.map((upload, index) => ({
+      id: (photos.length + index + 1).toString(),
+      url: upload.preview, // In a real app, this would be the URL from your server
+      date: upload.date,
+      caption: upload.caption,
+      phase: upload.phase
+    }));
+    
+    // Update photos state with new ones
+    setPhotos(prev => [...prev, ...newPhotos]);
+    
+    // Complete the upload
+    setUploadStep("complete");
+    setIsUploading(false);
+    setOverallProgress(100);
+    
+    // Wait 2 seconds then close modal
+    setTimeout(() => {
+      closeModal();
+    }, 2000);
+  };
+
+  const closeModal = () => {
+    // Clean up previews
+    uploadedPhotos.forEach(photo => {
+      if (photo.preview) {
+        URL.revokeObjectURL(photo.preview);
+      }
+    });
+    
+    setIsModalOpen(false);
+    setUploadedPhotos([]);
+    setUploadStep("select");
+    setActivePhotoId(null);
+    setBatchPhase(null);
+    setIsUploading(false);
+    setOverallProgress(0);
+  };
+
+  const resetUpload = () => {
+    // Clean up previews
+    uploadedPhotos.forEach(photo => {
+      if (photo.preview) {
+        URL.revokeObjectURL(photo.preview);
+      }
+    });
+    
+    setUploadedPhotos([]);
+    setUploadStep("select");
+    setActivePhotoId(null);
   };
 
   return (
@@ -455,6 +659,479 @@ function PhotoTab({ contactId }: PhotoTabProps) {
                 <div className="mt-2 text-xs text-gray-500">
                   {currentPhotoIndex + 1} sur {filteredPhotos.length}
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Multi-Upload Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={( ) => {
+              if (!isUploading) closeModal();
+            }}
+          >
+            <motion.div
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-400 text-white p-6 flex justify-between items-center">
+                <div className="flex items-center">
+                  <CloudArrowUpIcon className="h-8 w-8 mr-3" />
+                  <div>
+                    <h3 className="text-xl font-bold">Ajouter des photos</h3>
+                    <p className="text-indigo-100 text-sm">
+                      {uploadStep === "select" && "Sélectionnez les photos à télécharger"}
+                      {uploadStep === "details" && "Renseignez les détails des photos"}
+                      {uploadStep === "uploading" && "Téléchargement en cours..."}
+                      {uploadStep === "complete" && "Téléchargement terminé !"}
+                    </p>
+                  </div>
+                </div>
+                
+                {!isUploading && (
+                  <button
+                    onClick={closeModal}
+                    className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                )}
+              </div>
+
+              {/* Progress bar when uploading */}
+              {uploadStep === "uploading" && (
+                <div className="h-2 bg-gray-200 w-full">
+                  <div 
+                    className="h-full bg-indigo-500 transition-all duration-300"
+                    style={{ width: `${overallProgress}%` }}
+                  />
+                </div>
+              )}
+              
+              {/* Modal Content */}
+              <div className="p-0">
+                {/* Step 1: Select Files */}
+                {uploadStep === "select" && (
+                  <div className="p-6">
+                    <div 
+                      ref={dropZoneRef}
+                      className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${
+                        isDragging 
+                          ? "border-indigo-500 bg-indigo-50" 
+                          : "border-gray-300 hover:border-indigo-400 hover:bg-gray-50"
+                      }`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e.target.files)}
+                      />
+                      
+                      <motion.div
+                        initial={{ scale: 1 }}
+                        animate={{ scale: isDragging ? 1.05 : 1 }}
+                        className="space-y-4"
+                      >
+                        <div className="mx-auto w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+                          <CloudArrowUpIcon className="h-10 w-10" />
+                        </div>
+                        
+                        <div>
+                          <h4 className="text-lg font-medium text-gray-900">
+                            Glissez-déposez vos photos ici
+                          </h4>
+                          <p className="text-gray-500 mt-1">
+                            ou <button onClick={() => fileInputRef.current?.click()} className="text-indigo-600 font-medium hover:text-indigo-800">parcourez vos fichiers</button>
+                          </p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            Formats acceptés: JPG, PNG, HEIC - Max 10MB par photo
+                          </p>
+                        </div>
+                      </motion.div>
+                    </div>
+                    
+                    {/* Batch Settings */}
+                    <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-3">Paramètres par défaut pour toutes les photos</h4>
+                      <div className="flex items-center space-x-4">
+                        <span className="text-sm text-gray-600">Phase:</span>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => setBatchPhase("before")}
+                            className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                              batchPhase === "before" 
+                                ? "bg-amber-500 text-white" 
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
+                          >
+                            Avant installation
+                          </button>
+                          <button
+                            onClick={() => setBatchPhase("after")}
+                            className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                              batchPhase === "after" 
+                                ? "bg-green-500 text-white" 
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
+                          >
+                            Après installation
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Step 2: Photo Details */}
+                {uploadStep === "details" && (
+                  <div className="flex h-[60vh]">
+                    {/* Sidebar with thumbnail list */}
+                    <div className="w-1/3 border-r overflow-y-auto p-4 bg-gray-50">
+                      <h4 className="font-medium text-gray-700 mb-3">Photos sélectionnées ({uploadedPhotos.length})</h4>
+                      
+                      <div className="space-y-2">
+                        {uploadedPhotos.map((photo) => (
+                          <div
+                            key={photo.id}
+                            onClick={() => setActivePhotoId(photo.id)}
+                            className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors ${
+                              activePhotoId === photo.id 
+                                ? "bg-indigo-100 border border-indigo-300" 
+                                : "hover:bg-gray-100"
+                            }`}
+                          >
+                            <div className="w-16 h-16 relative rounded-md overflow-hidden mr-3 flex-shrink-0">
+                              <Image
+                                src={photo.preview}
+                                alt="Thumbnail"
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {photo.file.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {(photo.file.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                              <div className="flex items-center mt-1">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                                  photo.phase === "before" 
+                                    ? "bg-amber-100 text-amber-800" 
+                                    : "bg-green-100 text-green-800"
+                                }`}>
+                                  {photo.phase === "before" ? "Avant" : "Après"}
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeUploadedPhoto(photo.id);
+                              }}
+                              className="ml-2 text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-200"
+                            >
+                              <XMarkIcon className="h-5 w-5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <button
+                        onClick={() => {
+                          setUploadStep("select");
+                          fileInputRef.current?.click();
+                        }}
+                        className="mt-4 w-full flex items-center justify-center p-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
+                      >
+                        <PlusIcon className="h-5 w-5 mr-1" />
+                        <span className="text-sm">Ajouter plus de photos</span>
+                      </button>
+                    </div>
+                    
+                    {/* Details editing area */}
+                    <div className="flex-1 p-6 overflow-y-auto">
+                      {activePhotoId ? (
+                        <>
+                          {(() => {
+                            const activePhoto = uploadedPhotos.find(p => p.id === activePhotoId);
+                            if (!activePhoto) return null;
+                            
+                            return (
+                              <div>
+                                <div className="mb-6 relative rounded-xl overflow-hidden shadow-md h-56 bg-gray-100">
+                                  <Image
+                                    src={activePhoto.preview}
+                                    alt="Preview"
+                                    fill
+                                    className="object-contain"
+                                  />
+                                </div>
+                                
+                                <div className="space-y-4">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      Nom du fichier
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={activePhoto.file.name}
+                                      disabled
+                                      className="w-full bg-gray-100 rounded-lg border border-gray-300 p-2 text-sm text-gray-700"
+                                    />
+                                  </div>
+                                  
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      Légende
+                                    </label>
+                                    <textarea
+                                      value={activePhoto.caption}
+                                      onChange={(e) => updatePhotoDetails(activePhotoId, { caption: e.target.value })}
+                                      placeholder="Décrivez ce qui est visible sur cette photo..."
+                                      className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                      rows={3}
+                                    />
+                                  </div>
+                                  
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      Date
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={activePhoto.date}
+                                      onChange={(e) => updatePhotoDetails(activePhotoId, { date: e.target.value })}
+                                      placeholder="JJ/MM/AAAA"
+                                      className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                  </div>
+                                  
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Phase d&apos;installation
+                                    </label>
+                                    <div className="flex space-x-4">
+                                      <button
+                                        onClick={() => updatePhotoDetails(activePhotoId, { phase: "before" })}
+                                        className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                                          activePhoto.phase === "before" 
+                                            ? "bg-amber-500 text-white" 
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        }`}
+                                      >
+                                        Avant installation
+                                      </button>
+                                      <button
+                                        onClick={() => updatePhotoDetails(activePhotoId, { phase: "after" })}
+                                        className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                                          activePhoto.phase === "after" 
+                                            ? "bg-green-500 text-white" 
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        }`}
+                                      >
+                                        Après installation
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </>
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <div className="text-center text-gray-500">
+                            <DocumentTextIcon className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                            <p>Sélectionnez une photo pour modifier ses détails</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Step 3: Uploading in progress */}
+                {uploadStep === "uploading" && (
+                  <div className="p-6 max-h-[60vh] overflow-y-auto">
+                    <div className="mb-4 text-center">
+                      <p className="text-lg font-medium text-gray-900">
+                        Téléchargement des photos en cours...
+                      </p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        {Math.round(overallProgress)}% terminé - Ne fermez pas cette fenêtre
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3 mt-6">
+                      {uploadedPhotos.map((photo) => (
+                        <div key={photo.id} className="flex items-center bg-gray-50 p-3 rounded-lg">
+                          <div className="w-12 h-12 relative rounded-md overflow-hidden mr-3 flex-shrink-0">
+                            <Image
+                              src={photo.preview}
+                              alt="Thumbnail"
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {photo.file.name}
+                            </p>
+                            <div className="mt-1 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-indigo-500 transition-all duration-300"
+                                style={{ width: `${photo.progress || 0}%` }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="ml-3 flex-shrink-0">
+                            {photo.error ? (
+                              <div className="text-red-500">
+                                <ExclamationCircleIcon className="h-5 w-5" />
+                              </div>
+                            ) : photo.progress === 100 ? (
+                              <div className="text-green-500">
+                                <CheckIcon className="h-5 w-5" />
+                              </div>
+                            ) : (
+                              <div className="text-gray-400">
+                                <span className="text-xs">{photo.progress || 0}%</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Step 4: Upload complete */}
+                {uploadStep === "complete" && (
+                  <div className="p-10 text-center">
+                    <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                      <CheckIcon className="h-10 w-10" />
+                    </div>
+                    
+                    <h3 className="mt-4 text-xl font-bold text-gray-900">
+                      Téléchargement terminé !
+                    </h3>
+                    <p className="mt-2 text-gray-600">
+                      {uploadedPhotos.length} photo{uploadedPhotos.length > 1 ? 's' : ''} ajoutée{uploadedPhotos.length > 1 ? 's' : ''} avec succès.
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Modal Footer */}
+              <div className="border-t p-4 flex justify-between items-center bg-gray-50">
+                {uploadStep === "select" && (
+                  <>
+                    <div className="text-sm text-gray-500">
+                      {uploadedPhotos.length} photo{uploadedPhotos.length !== 1 ? 's' : ''} sélectionnée{uploadedPhotos.length !== 1 ? 's' : ''}
+                    </div>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={closeModal}
+                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (uploadedPhotos.length > 0) {
+                            setUploadStep("details");
+                            setActivePhotoId(uploadedPhotos[0].id);
+                          } else {
+                            fileInputRef.current?.click();
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-lg transition-colors ${
+                          uploadedPhotos.length > 0
+                            ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                            : "bg-indigo-200 text-indigo-500 cursor-not-allowed"
+                        }`}
+                        disabled={uploadedPhotos.length === 0}
+                      >
+                        Continuer
+                      </button>
+                    </div>
+                  </>
+                )}
+                
+                {uploadStep === "details" && (
+                  <>
+                    <div>
+                      <button
+                        onClick={applyBatchSettings}
+                        className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center"
+                        disabled={!batchPhase}
+                      >
+                        <span>Appliquer le type à toutes les photos</span>
+                      </button>
+                    </div>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => {
+                          setUploadStep("select");
+                        }}
+                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Retour
+                      </button>
+                      <button
+                        onClick={resetUpload}
+                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Réinitialiser
+                      </button>
+                      <button
+                        onClick={uploadPhotos}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                      >
+                        Télécharger les photos
+                      </button>
+                    </div>
+                  </>
+                )}
+                
+                {uploadStep === "uploading" && (
+                  <div className="w-full text-center text-sm text-gray-500">
+                    Le téléchargement est en cours, veuillez patienter...
+                  </div>
+                )}
+                
+                {uploadStep === "complete" && (
+                  <div className="w-full flex justify-center">
+                    <button
+                      onClick={closeModal}
+                      className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      Terminer
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
