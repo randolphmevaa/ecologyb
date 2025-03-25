@@ -2419,7 +2419,7 @@ export default function SupportPage() {
                 transition={{ duration: 0.4, ease: "easeOut" }}
               >
                 {/* En-tête du calendrier - Design Premium */}
-                <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-900 p-6 text-white">
+                <div className="bg-gradient-to-r from-[#213f5b] to-[#1d3349] p-6 text-white">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="p-3.5 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner">
@@ -2562,6 +2562,23 @@ export default function SupportPage() {
                       onView={(view) => setCurrentView(view as "month" | "week" | "day" | "agenda")}
                       defaultView={Views.MONTH}
                       views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+
+                      // Add these format properties:
+                      formats={{
+                        timeGutterFormat: (date ) => 
+                          date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                        eventTimeRangeFormat: ({ start, end } ) => {
+                          return `${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+                        },
+                        agendaTimeRangeFormat: ({ start, end } ) => {
+                          return `${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+                        },
+                        dayRangeHeaderFormat: ({ start, end } ) => {
+                          // For date ranges in headers
+                          return `${start.toLocaleDateString('fr-FR')} - ${end.toLocaleDateString('fr-FR')}`
+                        },
+                      }}
+
                       messages={{
                         month: "Mois",
                         week: "Semaine",

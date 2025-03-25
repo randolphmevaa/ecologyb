@@ -48,34 +48,42 @@ interface SousTraitant {
 
   // Certification fields
   qualibat: boolean;
+  qualibatNumeroQualification: string; // <--- newly added
   dateDebutQualibat: string;
   dateFinQualibat: string;
   
   qualisol: boolean;
+  qualisolNumeroQualification: string; // <--- newly added
   dateDebutQualisol: string;
   dateFinQualisol: string;
   
   qualipac: boolean;
+  qualipacNumeroQualification: string; // <--- newly added
   dateDebutQualipac: string;
   dateFinQualipac: string;
   
   qualibois: boolean;
+  qualiboisNumeroQualification: string; // <--- newly added
   dateDebutQualibois: string;
   dateFinQualibois: string;
   
   opqibi: boolean;
+  opqibiNumeroQualification: string; // <--- newly added
   dateDebutOpqibi: string;
   dateFinOpqibi: string;
   
   ventilation: boolean;
+  ventilationNumeroQualification: string; // <--- newly added
   dateDebutVentilation: string;
   dateFinVentilation: string;
   
   rgeEtude: boolean;
+  rgeEtudeNumeroQualification: string; // <--- newly added
   dateDebutRGEEtude: string;
   dateFinRGEEtude: string;
   
   qualiPv: boolean;
+  qualiPvNumeroQualification: string; // <--- newly added
   dateDebutQualiPv: string;
   dateFinQualiPv: string;
 }
@@ -108,34 +116,42 @@ interface SousTraitantForm {
 
   // Certification fields
   qualibat: boolean;
+  qualibatNumeroQualification: string; // <--- newly added
   dateDebutQualibat: string;
   dateFinQualibat: string;
   
   qualisol: boolean;
+  qualisolNumeroQualification: string; // <--- newly added
   dateDebutQualisol: string;
   dateFinQualisol: string;
   
   qualipac: boolean;
+  qualipacNumeroQualification: string; // <--- newly added
   dateDebutQualipac: string;
   dateFinQualipac: string;
   
   qualibois: boolean;
+  qualiboisNumeroQualification: string; // <--- newly added
   dateDebutQualibois: string;
   dateFinQualibois: string;
   
   opqibi: boolean;
+  opqibiNumeroQualification: string; // <--- newly added
   dateDebutOpqibi: string;
   dateFinOpqibi: string;
   
   ventilation: boolean;
+  ventilationNumeroQualification: string; // <--- newly added
   dateDebutVentilation: string;
   dateFinVentilation: string;
   
   rgeEtude: boolean;
+  rgeEtudeNumeroQualification: string; // <--- newly added
   dateDebutRGEEtude: string;
   dateFinRGEEtude: string;
   
   qualiPv: boolean;
+  qualiPvNumeroQualification: string; // <--- newly added
   dateDebutQualiPv: string;
   dateFinQualiPv: string;
 }
@@ -169,34 +185,42 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     
     // Certifications
     qualibat: true,
+    qualibatNumeroQualification: "1234-QB", // <--- sample
     dateDebutQualibat: "2022-01-01",
     dateFinQualibat: "2024-12-31",
     
     qualisol: true,
+    qualisolNumeroQualification: "SOL-9876", // <--- sample
     dateDebutQualisol: "2022-03-15",
     dateFinQualisol: "2025-03-14",
     
     qualipac: true,
+    qualipacNumeroQualification: "PAC-4567", // <--- sample
     dateDebutQualipac: "2021-11-20",
     dateFinQualipac: "2024-11-19",
     
     qualibois: false,
+    qualiboisNumeroQualification: "",
     dateDebutQualibois: "",
     dateFinQualibois: "",
     
     opqibi: false,
+    opqibiNumeroQualification: "",
     dateDebutOpqibi: "",
     dateFinOpqibi: "",
     
     ventilation: true,
+    ventilationNumeroQualification: "VENT-3333", // <--- sample
     dateDebutVentilation: "2023-01-01",
     dateFinVentilation: "2025-12-31",
     
     rgeEtude: false,
+    rgeEtudeNumeroQualification: "",
     dateDebutRGEEtude: "",
     dateFinRGEEtude: "",
     
     qualiPv: false,
+    qualiPvNumeroQualification: "",
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
   },
@@ -227,36 +251,44 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     
     // Certifications
     qualibat: true,
-    dateDebutQualibat: "2022-05-10",
-    dateFinQualibat: "2025-05-09",
+    qualibatNumeroQualification: "1234-QB", // <--- sample
+    dateDebutQualibat: "2022-01-01",
+    dateFinQualibat: "2024-12-31",
     
     qualisol: true,
-    dateDebutQualisol: "2021-07-01",
-    dateFinQualisol: "2024-06-30",
+    qualisolNumeroQualification: "SOL-9876", // <--- sample
+    dateDebutQualisol: "2022-03-15",
+    dateFinQualisol: "2025-03-14",
     
-    qualipac: false,
-    dateDebutQualipac: "",
-    dateFinQualipac: "",
+    qualipac: true,
+    qualipacNumeroQualification: "PAC-4567", // <--- sample
+    dateDebutQualipac: "2021-11-20",
+    dateFinQualipac: "2024-11-19",
     
     qualibois: false,
+    qualiboisNumeroQualification: "",
     dateDebutQualibois: "",
     dateFinQualibois: "",
     
     opqibi: false,
+    opqibiNumeroQualification: "",
     dateDebutOpqibi: "",
     dateFinOpqibi: "",
     
-    ventilation: false,
-    dateDebutVentilation: "",
-    dateFinVentilation: "",
+    ventilation: true,
+    ventilationNumeroQualification: "VENT-3333", // <--- sample
+    dateDebutVentilation: "2023-01-01",
+    dateFinVentilation: "2025-12-31",
     
-    rgeEtude: true,
-    dateDebutRGEEtude: "2023-02-15",
-    dateFinRGEEtude: "2026-02-14",
+    rgeEtude: false,
+    rgeEtudeNumeroQualification: "",
+    dateDebutRGEEtude: "",
+    dateFinRGEEtude: "",
     
-    qualiPv: true,
-    dateDebutQualiPv: "2022-11-01",
-    dateFinQualiPv: "2025-10-31",
+    qualiPv: false,
+    qualiPvNumeroQualification: "",
+    dateDebutQualiPv: "",
+    dateFinQualiPv: "",
   },
   {
     id: "ST003",
@@ -284,35 +316,43 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     signatureTampon: "",
     
     // Certifications
-    qualibat: false,
-    dateDebutQualibat: "",
-    dateFinQualibat: "",
+    qualibat: true,
+    qualibatNumeroQualification: "1234-QB", // <--- sample
+    dateDebutQualibat: "2022-01-01",
+    dateFinQualibat: "2024-12-31",
     
-    qualisol: false,
-    dateDebutQualisol: "",
-    dateFinQualisol: "",
+    qualisol: true,
+    qualisolNumeroQualification: "SOL-9876", // <--- sample
+    dateDebutQualisol: "2022-03-15",
+    dateFinQualisol: "2025-03-14",
     
-    qualipac: false,
-    dateDebutQualipac: "",
-    dateFinQualipac: "",
+    qualipac: true,
+    qualipacNumeroQualification: "PAC-4567", // <--- sample
+    dateDebutQualipac: "2021-11-20",
+    dateFinQualipac: "2024-11-19",
     
-    qualibois: true,
-    dateDebutQualibois: "2021-04-01",
-    dateFinQualibois: "2024-03-31",
+    qualibois: false,
+    qualiboisNumeroQualification: "",
+    dateDebutQualibois: "",
+    dateFinQualibois: "",
     
     opqibi: false,
+    opqibiNumeroQualification: "",
     dateDebutOpqibi: "",
     dateFinOpqibi: "",
     
-    ventilation: false,
-    dateDebutVentilation: "",
-    dateFinVentilation: "",
+    ventilation: true,
+    ventilationNumeroQualification: "VENT-3333", // <--- sample
+    dateDebutVentilation: "2023-01-01",
+    dateFinVentilation: "2025-12-31",
     
     rgeEtude: false,
+    rgeEtudeNumeroQualification: "",
     dateDebutRGEEtude: "",
     dateFinRGEEtude: "",
     
     qualiPv: false,
+    qualiPvNumeroQualification: "",
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
   },
@@ -343,38 +383,47 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     
     // Certifications
     qualibat: true,
-    dateDebutQualibat: "2021-09-01",
-    dateFinQualibat: "2024-08-31",
+    qualibatNumeroQualification: "1234-QB", // <--- sample
+    dateDebutQualibat: "2022-01-01",
+    dateFinQualibat: "2024-12-31",
     
-    qualisol: false,
-    dateDebutQualisol: "",
-    dateFinQualisol: "",
+    qualisol: true,
+    qualisolNumeroQualification: "SOL-9876", // <--- sample
+    dateDebutQualisol: "2022-03-15",
+    dateFinQualisol: "2025-03-14",
     
     qualipac: true,
-    dateDebutQualipac: "2022-03-15",
-    dateFinQualipac: "2025-03-14",
+    qualipacNumeroQualification: "PAC-4567", // <--- sample
+    dateDebutQualipac: "2021-11-20",
+    dateFinQualipac: "2024-11-19",
     
     qualibois: false,
+    qualiboisNumeroQualification: "",
     dateDebutQualibois: "",
     dateFinQualibois: "",
     
-    opqibi: true,
-    dateDebutOpqibi: "2022-06-01",
-    dateFinOpqibi: "2025-05-31",
+    opqibi: false,
+    opqibiNumeroQualification: "",
+    dateDebutOpqibi: "",
+    dateFinOpqibi: "",
     
     ventilation: true,
-    dateDebutVentilation: "2022-07-15",
-    dateFinVentilation: "2025-07-14",
+    ventilationNumeroQualification: "VENT-3333", // <--- sample
+    dateDebutVentilation: "2023-01-01",
+    dateFinVentilation: "2025-12-31",
     
     rgeEtude: false,
+    rgeEtudeNumeroQualification: "",
     dateDebutRGEEtude: "",
     dateFinRGEEtude: "",
     
     qualiPv: false,
+    qualiPvNumeroQualification: "",
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
-  }
+  },
 ];
+
 
 export default function SousTraitantPage() {
   // View mode state (list or form)
@@ -413,37 +462,46 @@ export default function SousTraitantPage() {
     
     // Certification fields initialization
     qualibat: false,
+    qualibatNumeroQualification: "", // <--- newly added
     dateDebutQualibat: "",
     dateFinQualibat: "",
     
     qualisol: false,
+    qualisolNumeroQualification: "",  // <--- newly added
     dateDebutQualisol: "",
     dateFinQualisol: "",
     
     qualipac: false,
+    qualipacNumeroQualification: "",  // <--- newly added
     dateDebutQualipac: "",
     dateFinQualipac: "",
     
     qualibois: false,
+    qualiboisNumeroQualification: "", // <--- newly added
     dateDebutQualibois: "",
     dateFinQualibois: "",
     
     opqibi: false,
+    opqibiNumeroQualification: "",    // <--- newly added
     dateDebutOpqibi: "",
     dateFinOpqibi: "",
     
     ventilation: false,
+    ventilationNumeroQualification: "", // <--- newly added
     dateDebutVentilation: "",
     dateFinVentilation: "",
     
     rgeEtude: false,
+    rgeEtudeNumeroQualification: "",   // <--- newly added
     dateDebutRGEEtude: "",
     dateFinRGEEtude: "",
     
     qualiPv: false,
+    qualiPvNumeroQualification: "",    // <--- newly added
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
   });
+
 
   // State for active form section (for accordion-like UI)
   const [activeSection, setActiveSection] = useState<"general" | "contact" | "administrative" | "certifications">("general");
@@ -463,11 +521,11 @@ export default function SousTraitantPage() {
     setSousTraitants(sousTraitants.filter(sousTraitant => sousTraitant.id !== id));
   };
 
-  // Add new sous-traitant handler
+  // Add new sous-traitant
   const handleAddNewSousTraitant = () => {
     setSelectedSousTraitant(null);
     setSousTraitantForm({
-      id: `ST${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      id: `ST${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
       raisonSociale: "",
       typeSociete: "",
       telephone: "",
@@ -477,7 +535,6 @@ export default function SousTraitantPage() {
       active: true,
       sousTraitant: true,
       
-      // New fields
       nomDirigeant: "",
       prenomDirigeant: "",
       fonction: "",
@@ -490,42 +547,49 @@ export default function SousTraitantPage() {
       numeroTVA: "",
       numeroRepertoireMetiers: "",
       signatureTampon: "",
-      
-      // Certification defaults
+
       qualibat: false,
+      qualibatNumeroQualification: "",
       dateDebutQualibat: "",
       dateFinQualibat: "",
       
       qualisol: false,
+      qualisolNumeroQualification: "",
       dateDebutQualisol: "",
       dateFinQualisol: "",
       
       qualipac: false,
+      qualipacNumeroQualification: "",
       dateDebutQualipac: "",
       dateFinQualipac: "",
       
       qualibois: false,
+      qualiboisNumeroQualification: "",
       dateDebutQualibois: "",
       dateFinQualibois: "",
       
       opqibi: false,
+      opqibiNumeroQualification: "",
       dateDebutOpqibi: "",
       dateFinOpqibi: "",
       
       ventilation: false,
+      ventilationNumeroQualification: "",
       dateDebutVentilation: "",
       dateFinVentilation: "",
       
       rgeEtude: false,
+      rgeEtudeNumeroQualification: "",
       dateDebutRGEEtude: "",
       dateFinRGEEtude: "",
       
       qualiPv: false,
+      qualiPvNumeroQualification: "",
       dateDebutQualiPv: "",
       dateFinQualiPv: "",
     });
     setViewMode("form");
-    setActiveSection("general"); // Start with first section for new sous-traitant
+    setActiveSection("general");
   };
 
   // Save handler
@@ -590,13 +654,16 @@ export default function SousTraitantPage() {
     sousTraitant.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Render certification form component
+  // Modify this function to handle the qualification number and show a logo
   const renderCertificationField = (
     label: string,
+    logoSrc: string,                  // <--- ADDED: path to logo
     checkboxName: string,
+    qualificationNumberName: string,  // <--- ADDED: which form field holds the qualification number
     startDateName: string,
     endDateName: string,
     checkboxValue: boolean,
+    qualificationNumberValue: string, // <--- ADDED: the actual qualification number
     startDateValue: string,
     endDateValue: string
   ) => {
@@ -604,27 +671,56 @@ export default function SousTraitantPage() {
       <div className="p-4 border border-[#e5e7eb] rounded-lg mb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center">
+            {/* Logo in front of the certification */}
+            <img 
+              src={logoSrc} 
+              alt={`${label} Logo`} 
+              className="h-6 w-6 mr-2" 
+            />
+
             <input
               type="checkbox"
               id={checkboxName}
               name={checkboxName}
               checked={checkboxValue}
-              onChange={(e) => setSousTraitantForm({
-                ...sousTraitantForm,
-                [checkboxName]: e.target.checked
-              })}
+              onChange={(e) =>
+                setSousTraitantForm({
+                  ...sousTraitantForm,
+                  [checkboxName]: e.target.checked,
+                })
+              }
               className="h-4 w-4 text-[#213f5b] focus:ring-[#213f5b] border-gray-300 rounded"
             />
-            <label htmlFor={checkboxName} className="ml-2 block text-sm font-medium text-[#213f5b]">
+            <label
+              htmlFor={checkboxName}
+              className="ml-2 block text-sm font-medium text-[#213f5b]"
+            >
               {label}
             </label>
           </div>
         </div>
-        
+
         {checkboxValue && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Numero de Qualification */}
+            <div className="md:col-span-2 space-y-2">
+              <label className="block text-xs font-medium text-[#213f5b]">
+                Numéro de Qualification
+              </label>
+              <input
+                type="text"
+                name={qualificationNumberName}
+                value={qualificationNumberValue}
+                onChange={handleSousTraitantChange}
+                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b] text-sm"
+              />
+            </div>
+
+            {/* Date de début */}
             <div className="space-y-2">
-              <label className="block text-xs font-medium text-[#213f5b]">Date de début</label>
+              <label className="block text-xs font-medium text-[#213f5b]">
+                Date de début
+              </label>
               <input
                 type="date"
                 name={startDateName}
@@ -633,8 +729,12 @@ export default function SousTraitantPage() {
                 className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b] text-sm"
               />
             </div>
+
+            {/* Date de fin */}
             <div className="space-y-2">
-              <label className="block text-xs font-medium text-[#213f5b]">Date de fin</label>
+              <label className="block text-xs font-medium text-[#213f5b]">
+                Date de fin
+              </label>
               <input
                 type="date"
                 name={endDateName}
@@ -648,6 +748,7 @@ export default function SousTraitantPage() {
       </div>
     );
   };
+
 
   return (
     <div className="flex h-screen bg-gradient-to-b from-[#f8fafc] to-[#f0f7ff]">
@@ -1250,95 +1351,113 @@ export default function SousTraitantPage() {
                           <div className="h-8 w-1 rounded-full bg-[#213f5b]"></div>
                           <h2 className="text-xl font-bold text-[#213f5b]">Certifications</h2>
                         </div>
-                        <p className="text-[#213f5b] opacity-75 ml-3 pl-3">Certifications et qualifications du sous-traitant</p>
+                        <p className="text-[#213f5b] opacity-75 ml-3 pl-3">
+                          Certifications et qualifications du sous-traitant
+                        </p>
                       </div>
-                      
+
                       <div className="p-6">
                         <div className="grid grid-cols-1 gap-4">
-                          {/* Qualibat certification */}
                           {renderCertificationField(
-                            "Qualibat",
-                            "qualibat",
-                            "dateDebutQualibat",
-                            "dateFinQualibat",
-                            sousTraitantForm.qualibat,
-                            sousTraitantForm.dateDebutQualibat,
-                            sousTraitantForm.dateFinQualibat
+                            /* label */                  "Qualibat",
+                            /* logoSrc */               "/logos/qualibat.png",
+                            /* checkboxName */          "qualibat",
+                            /* qualificationNumberName*/"qualibatNumeroQualification",
+                            /* startDateName */         "dateDebutQualibat",
+                            /* endDateName */           "dateFinQualibat",
+                            /* checkboxValue */         sousTraitantForm.qualibat,
+                            /* qualificationValue */    sousTraitantForm.qualibatNumeroQualification,
+                            /* startDateValue */        sousTraitantForm.dateDebutQualibat,
+                            /* endDateValue */          sousTraitantForm.dateFinQualibat
                           )}
-                          
-                          {/* Qualisol certification */}
+
                           {renderCertificationField(
                             "Qualisol",
+                            "/logos/qualisol.png",
                             "qualisol",
+                            "qualisolNumeroQualification",
                             "dateDebutQualisol",
                             "dateFinQualisol",
                             sousTraitantForm.qualisol,
+                            sousTraitantForm.qualisolNumeroQualification,
                             sousTraitantForm.dateDebutQualisol,
                             sousTraitantForm.dateFinQualisol
                           )}
-                          
-                          {/* Qualipac certification */}
+
                           {renderCertificationField(
                             "Qualipac",
+                            "/logos/qualipac.png",
                             "qualipac",
+                            "qualipacNumeroQualification",
                             "dateDebutQualipac",
                             "dateFinQualipac",
                             sousTraitantForm.qualipac,
+                            sousTraitantForm.qualipacNumeroQualification,
                             sousTraitantForm.dateDebutQualipac,
                             sousTraitantForm.dateFinQualipac
                           )}
-                          
-                          {/* Qualibois certification */}
+
                           {renderCertificationField(
                             "Qualibois",
+                            "/logos/qualibois.png",
                             "qualibois",
+                            "qualiboisNumeroQualification",
                             "dateDebutQualibois",
                             "dateFinQualibois",
                             sousTraitantForm.qualibois,
+                            sousTraitantForm.qualiboisNumeroQualification,
                             sousTraitantForm.dateDebutQualibois,
                             sousTraitantForm.dateFinQualibois
                           )}
-                          
-                          {/* OPQIBI certification */}
+
                           {renderCertificationField(
                             "OPQIBI",
+                            "/logos/opqibi.png",
                             "opqibi",
+                            "opqibiNumeroQualification",
                             "dateDebutOpqibi",
                             "dateFinOpqibi",
                             sousTraitantForm.opqibi,
+                            sousTraitantForm.opqibiNumeroQualification,
                             sousTraitantForm.dateDebutOpqibi,
                             sousTraitantForm.dateFinOpqibi
                           )}
-                          
-                          {/* Ventilation certification */}
+
                           {renderCertificationField(
                             "Ventilation",
+                            "/logos/ventilation.png",
                             "ventilation",
+                            "ventilationNumeroQualification",
                             "dateDebutVentilation",
                             "dateFinVentilation",
                             sousTraitantForm.ventilation,
+                            sousTraitantForm.ventilationNumeroQualification,
                             sousTraitantForm.dateDebutVentilation,
                             sousTraitantForm.dateFinVentilation
                           )}
-                          
-                          {/* RGE Etude certification */}
+
                           {renderCertificationField(
                             "RGE Etude",
+                            "/logos/rge-etude.jpg",
                             "rgeEtude",
+                            "rgeEtudeNumeroQualification",
                             "dateDebutRGEEtude",
                             "dateFinRGEEtude",
                             sousTraitantForm.rgeEtude,
+                            sousTraitantForm.rgeEtudeNumeroQualification,
                             sousTraitantForm.dateDebutRGEEtude,
                             sousTraitantForm.dateFinRGEEtude
                           )}
-                          
-                          {/* QualiPv certification */}
+
                           {renderCertificationField(
                             "QualiPv",
+                            "/logos/qualipv.png",
                             "qualiPv",
+                            "qualiPvNumeroQualification",
                             "dateDebutQualiPv",
                             "dateFinQualiPv",
                             sousTraitantForm.qualiPv,
+                            sousTraitantForm.qualiPvNumeroQualification,
                             sousTraitantForm.dateDebutQualiPv,
                             sousTraitantForm.dateFinQualiPv
                           )}

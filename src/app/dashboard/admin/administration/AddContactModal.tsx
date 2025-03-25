@@ -17,6 +17,25 @@ interface AddContactModalProps {
   onUserAdded: (newUser: INewUser) => void;
 }
 
+interface IUserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  role: string;
+  gender: string;
+  orgType?: string;
+  companyName?: string;
+  website?: string;
+  address?: string;
+  postalCode?: string;
+  siret?: string;
+  professionalEmail?: string;
+  professionalPhone?: string;
+  vatNumber?: string;
+}
+
+
 export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModalProps) {
   const [formData, setFormData] = useState({
     prenom: "",
@@ -25,7 +44,9 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
     telephone: "",
     role: "",
     gender: "",
-    // Additional Régie fields
+
+    // Additional “company” info
+    // (Used for both "Régie" and "Société" cases)
     nomEntreprise: "",
     siteWeb: "",
     adresse: "",
@@ -34,7 +55,11 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
     emailPro: "",
     telephonePro: "",
     tva: "",
-    logo: null as File | null
+    logo: null as File | null,
+
+    // New field to distinguish between "Employé" or "Société"
+    // for the three roles: commercial, support, installateur
+    orgType: ""
   });
   
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -43,8 +68,21 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Determine if we need to show the Régie specific fields
+  // Detect if the user has chosen the "Project / Installation Manager" role (Régie)
   const isRegieRole = formData.role === "Project / Installation Manager";
+
+  // Detect if the user’s role is among the three roles that can be "Employé" or "Société"
+  const isCompanyCapableRole = [
+    "Sales Representative / Account Executive", 
+    "Customer Support / Service Representative", 
+    "Technician / Installer"
+  ].includes(formData.role);
+
+  // If the user is one of the three roles AND chooses “Société”
+  const isSociete = formData.orgType === "Société";
+
+  // Should we show the company-like fields? (Either Régie or “Société”)
+  const showCompanyFields = isRegieRole || (isCompanyCapableRole && isSociete);
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -64,7 +102,8 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
         emailPro: "",
         telephonePro: "",
         tva: "",
-        logo: null
+        logo: null,
+        orgType: ""
       });
       setErrors({});
       setTouched({});
@@ -82,7 +121,9 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
   }, [onClose]);
 
   // Handle form field changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
     
@@ -151,22 +192,37 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
 
   // Field validation
   const validateField = (name: string, value: string | File | null): string => {
-    // Required fields
-    const requiredFields = ["prenom", "nom", "email", "telephone", "role", "gender"];
+    // Required for all users
+    const requiredFields = [
+      "prenom", 
+      "nom", 
+      "email", 
+      "telephone", 
+      "role", 
+      "gender"
+    ];
     
-    // Additional required fields for Régie role
-    const regieRequiredFields = ["nomEntreprise", "siret", "emailPro"];
+    // Company-required fields (applies to both “Régie” and “Société”)
+    const companyRequiredFields = [
+      "nomEntreprise", 
+      "siret", 
+      "emailPro"
+    ];
+
+    // Do we need company fields? => if role is “Régie” or user chose “Société”
+    const needCompanyFields = isRegieRole || isSociete;
     
-    // Check if the field is required and should be validated
+    // Check if the field is required
     const isRequired = 
       requiredFields.includes(name) || 
-      (isRegieRole && regieRequiredFields.includes(name));
-    
+      (needCompanyFields && companyRequiredFields.includes(name));
+
     // Skip validation for non-required fields if they're empty
     if (!isRequired && (!value || (typeof value === 'string' && !value.trim()))) {
       return "";
     }
-    
+
+    // If it's required but empty
     if (isRequired && (!value || (typeof value === 'string' && !value.trim()))) {
       return "Ce champ est requis";
     }
@@ -215,20 +271,32 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
   // Validate all form fields
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
+
+    // Always validate the basic fields
     const fieldsToValidate = [
-      "prenom", "nom", "email", "telephone", "role", "gender"
+      "prenom", 
+      "nom", 
+      "email", 
+      "telephone", 
+      "role", 
+      "gender"
     ];
-    
-    // Add Régie fields if that role is selected
-    if (isRegieRole) {
+
+    // If we need the company fields
+    if (showCompanyFields) {
       fieldsToValidate.push(
-        "nomEntreprise", "siteWeb", "adresse", "codePostalVille", 
-        "siret", "emailPro", "telephonePro", "tva"
+        "nomEntreprise", 
+        "siteWeb", 
+        "adresse", 
+        "codePostalVille", 
+        "siret", 
+        "emailPro", 
+        "telephonePro", 
+        "tva"
       );
     }
-    
-    // Validate each field
-    fieldsToValidate.forEach(field => {
+
+    fieldsToValidate.forEach((field) => {
       const error = validateField(field, formData[field as keyof typeof formData]);
       if (error) {
         newErrors[field] = error;
@@ -266,17 +334,19 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
       const submitData = new FormData();
       
       // Basic user data
-      const userData = {
+      const userData: IUserData = {
         firstName: formData.prenom,
         lastName: formData.nom,
         email: formData.email,
         phone: formData.telephone,
         role: formData.role,
         gender: formData.gender,
+        // For logging or downstream use
+        orgType: formData.orgType
       };
       
-      // Add Régie specific data if needed
-      if (isRegieRole) {
+      // If "Régie" or “Société,” add “company” info
+      if (showCompanyFields) {
         Object.assign(userData, {
           companyName: formData.nomEntreprise,
           website: formData.siteWeb,
@@ -339,7 +409,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
     // Format the current time
     const now = new Date();
     const formattedTime = `${now.getHours()}h${(now.getMinutes() < 10 ? "0" : "") + now.getMinutes()}`;
-  
+
     // Map role to French label
     const roleMapping: Record<string, string> = {
       "Sales Representative / Account Executive": "Commercial",
@@ -349,7 +419,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
       "Super Admin": "Super administrateur",
       "Client / Customer (Client Portal)": "Client",
     };
-    
+
     const roleLabel = roleMapping[role] || role;
     const logDetails = `${email} ajouté comme ${roleLabel}`;
   
@@ -416,9 +486,9 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
               }`}
             >
               <option value="">{placeholder}</option>
-              {options?.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
+              {options?.map(([val, lbl]) => (
+                <option key={val} value={val}>
+                  {lbl}
                 </option>
               ))}
             </select>
@@ -680,7 +750,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                     <button className="mt-3 text-sm font-medium text-white inline-flex items-center bg-white/20 hover:bg-white/30 transition-colors px-3 py-1.5 rounded-full">
                       <span>Consulter la documentation</span>
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </button>
                   </div>
@@ -751,8 +821,6 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                         </div>
                       </div>
                     </div>
-                    
-
                   </div>
                   
                   {/* Basic Information Section */}
@@ -820,7 +888,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                       
                       <h4 className="text-lg font-semibold text-[#213f5b] mb-6 flex items-center relative">
                         <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                          <Briefcase className="h-5 w-5 text-blue-700" />
+                          <Briefcase className="h-5 w-5 text-gray-400" />
                         </div>
                         Rôle et accès
                       </h4>
@@ -835,12 +903,13 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                             "Sélectionnez un rôle", 
                             true,
                             [
+                              // French label -> value
                               ["Sales Representative / Account Executive", "Représentant commercial / Chargé de compte"],
                               ["Project / Installation Manager", "Régie"],
                               ["Technician / Installer", "Technicien / Installateur"],
                               ["Customer Support / Service Representative", "Support client / Représentant du service"],
                               ["Super Admin", "Super administrateur"],
-                              // ["Client / Customer (Client Portal)", "Client"]
+                              // ["Client / Customer (Client Portal)", "Client"] // if needed
                             ]
                           )}
                         </div>
@@ -862,10 +931,41 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                       </div>
                     </div>
                   </div>
+
+                  {/* If the role is among the three that can be "Employé" or "Société", show the orgType select */}
+                  {isCompanyCapableRole && (
+                    <div className="mb-6 bg-white backdrop-blur-sm rounded-xl shadow-lg border border-blue-100/50 overflow-hidden">
+                      <div className="p-6 relative">
+                        <h4 className="text-lg font-semibold text-[#213f5b] mb-6 flex items-center relative">
+                          <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                            <Building2 className="h-5 w-5 text-gray-400" />
+                          </div>
+                          Type d&apos;utilisateur
+                        </h4>
+                        <p className="text-sm text-gray-500 mb-4">
+                          Sélectionnez si l’utilisateur est un Employé ou une Société.
+                        </p>
+                        <div className="max-w-sm">
+                          {renderField(
+                            "orgType", 
+                            "Type", 
+                            "select", 
+                            <Building2 className="h-5 w-5 text-gray-400" />, 
+                            "Employé ou Société", 
+                            false,
+                            [
+                              ["Employé", "Employé"],
+                              ["Société", "Société"]
+                            ]
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
-                  {/* Régie specific fields (conditionally rendered) */}
+                  {/* Company-like fields (Régie or Société) */}
                   <AnimatePresence>
-                    {isRegieRole && (
+                    {showCompanyFields && (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -885,10 +985,12 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                               <div className="p-2 bg-blue-200 rounded-lg mr-3">
                                 <Building2 className="h-5 w-5 text-blue-800" />
                               </div>
-                              Informations Régie
-                              <span className="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                                Entreprise
-                              </span>
+                              {isRegieRole ? "Informations Régie" : "Informations Société"}
+                              {!isRegieRole && (
+                                <span className="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                  Entreprise
+                                </span>
+                              )}
                             </h4>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -899,7 +1001,8 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                                   "text", 
                                   <Building2 className="h-5 w-5 text-gray-400" />, 
                                   "Entrez le nom de l'entreprise", 
-                                  true
+                                  // If we're showing these fields, we treat them as required
+                                  isRegieRole || isSociete
                                 )}
                                 
                                 {renderField(
@@ -933,8 +1036,8 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                                   "Numéro SIRET", 
                                   "text", 
                                   <CreditCard className="h-5 w-5 text-gray-400" />, 
-                                  "12345678900001", 
-                                  true
+                                  "12345678900001",
+                                  isRegieRole || isSociete
                                 )}
                                 
                                 {renderField(
@@ -943,7 +1046,7 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                                   "email", 
                                   <Mail className="h-5 w-5 text-gray-400" />, 
                                   "contact@entreprise.com", 
-                                  true
+                                  isRegieRole || isSociete
                                 )}
                                 
                                 {renderField(
@@ -987,12 +1090,16 @@ export function AddContactModal({ isOpen, onClose, onUserAdded }: AddContactModa
                 <div className="max-w-5xl mx-auto">
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="text-sm order-2 sm:order-1">
-                      {isRegieRole ? (
+                      {showCompanyFields ? (
                         <div className="flex items-center text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                           </svg>
-                          <span className="font-medium">Type de compte: Régie (entreprise)</span>
+                          <span className="font-medium">
+                            {isRegieRole
+                              ? "Type de compte: Régie (entreprise)"
+                              : "Type de compte: Société"}
+                          </span>
                         </div>
                       ) : (
                         <div className="flex items-center text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">

@@ -128,7 +128,7 @@ const getRoleImage = (role: string, gender?: string) => {
   }
   
   // Default role-based placeholders
-  return `https://api.dicebear.com/7.x/personas/svg?seed=${role}`;
+  return `https://www.hotesse-interim.fr/ressources/images/ab4fec7ce0ed.jpg`;
 };
 
 export default function AdministrationPage() {

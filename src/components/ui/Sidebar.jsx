@@ -4,6 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaWhatsapp } from "react-icons/fa";
+import { FaGoogleDrive } from "react-icons/fa";
+import { BiLogoGmail } from "react-icons/bi";
+import { FaPlus } from "react-icons/fa";
+import { IoIosApps } from "react-icons/io";
 import {
   HomeIcon,
   ClipboardDocumentCheckIcon,
@@ -13,6 +18,7 @@ import {
   CurrencyEuroIcon,
   BriefcaseIcon,
   ChatBubbleBottomCenterIcon,
+  BookOpenIcon,
   FolderIcon,
   EnvelopeIcon,
   CalendarIcon,
@@ -20,7 +26,7 @@ import {
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
   ShoppingBagIcon,
-  // ArchiveBoxIcon,
+  ArchiveBoxIcon,
   TruckIcon,
   CreditCardIcon,
   ChartBarIcon,
@@ -151,7 +157,7 @@ export function Sidebar({ role }) {
       },
       { name: "Chat", href: "/dashboard/admin/emails", icon: EnvelopeIcon, badge: 24 },
       { name: "Agenda", href: "/dashboard/admin/calendar", icon: CalendarIcon },
-      { name: "Produits & Prestations", href: "/dashboard/admin/products-services", icon: ShoppingBagIcon },
+      { name: "Catalogue", href: "/dashboard/admin/products-services", icon: BookOpenIcon },
       { 
         name: "Installateur", 
         href: "/dashboard/admin/sous-traitants", 
@@ -178,8 +184,31 @@ export function Sidebar({ role }) {
       // { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
       { name: "Tout les rôles", href: "/dashboard/admin/administration", icon: UserGroupIcon },
       {
-        name: "Modèles",
+        name: "Applications",
+        icon: IoIosApps,
+        children: [
+          { name: "Whatsapp", href: "/dashboard/admin/whatsapp", icon: FaWhatsapp },
+      { name: "Gmail", href: "/dashboard/admin/gmail", icon: BiLogoGmail },
+      { name: "Drive", href: "/dashboard/admin/drive", icon: FaGoogleDrive },
+      { name: "Effy Pro", href: "/dashboard/admin/effy-pro", icon: FaPlus },
+      { name: "Dext", href: "/dashboard/admin/dext", icon: FaPlus },
+      { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", icon: FaPlus },
+      { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", icon: FaPlus },
+        ],
+      },
+      
+      
+      {
+        name: "Modèles de documents",
         icon: DocumentIcon,
+        children: [
+          { name: "Mentions légales sur devis", href: "/dashboard/admin/mentions", icon: DocumentIcon },
+          { name: "Mentions légales sur factures", href: "/dashboard/admin/mentions-factures", icon: DocumentIcon },
+        ],
+      },
+      {
+        name: "Modèles",
+        icon: ArchiveBoxIcon,
         children: [
           // { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
           // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
@@ -189,7 +218,7 @@ export function Sidebar({ role }) {
           // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
         ],
       },
-      { name: "Paramètres de l'Administrateur", href: "/dashboard/admin/reglages", icon: SettingsIcon }
+      // { name: "Paramètres de l'Administrateur", href: "/dashboard/admin/reglages", icon: SettingsIcon }
       // { name: "Intégrations / API", href: "/dashboard/admin/integrations", icon: CodeBracketIcon }
     ];
   }
@@ -475,6 +504,64 @@ export function Sidebar({ role }) {
         animate={{ padding: isCollapsed ? "1rem 0.5rem" : "1rem" }}
         transition={springTransition}
       >
+        {/* Add Admin Settings above the profile info - only show for admin role */}
+        {role !== "Sales Representative / Account Executive" &&
+        role !== "Project / Installation Manager" &&
+        role !== "Technician / Installer" &&
+        role !== "Customer Support / Service Representative" &&
+        role !== "Client / Customer (Client Portal)" && (
+          <Link
+            href="/dashboard/admin/reglages"
+            onClick={() => {
+              setActiveItem("Paramètres de l'Administrateur");
+              localStorage.setItem("activeItem", "Paramètres de l'Administrateur");
+            }}
+            className={cn(
+              "flex items-center gap-x-3 rounded-xl p-3 mb-3",
+              "relative z-10 transition-colors duration-200",
+              activeItem === "Paramètres de l'Administrateur" ? "bg-gray-800 shadow-inner" : "hover:bg-primary/5"
+            )}
+          >
+            <motion.div
+              animate={{
+                rotate: activeItem === "Paramètres de l'Administrateur" ? [0, -10, 10, 0] : 0,
+                scale: activeItem === "Paramètres de l'Administrateur" ? 1.1 : 1,
+              }}
+              transition={{ duration: 0.4 }}
+              className="relative"
+            >
+              <SettingsIcon
+                className={cn(
+                  "h-6 w-6 transition-colors",
+                  activeItem === "Paramètres de l'Administrateur" ? "text-primary" : "text-gray-600"
+                )}
+              />
+            </motion.div>
+            <AnimatePresence initial={false}>
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className={cn(
+                    "font-body text-sm font-medium truncate",
+                    activeItem === "Paramètres de l'Administrateur" ? "text-primary font-semibold" : "text-gray-700"
+                  )}
+                >
+                  Paramètres de l'Administrateur
+                </motion.span>
+              )}
+            </AnimatePresence>
+            {!isCollapsed && activeItem === "Paramètres de l'Administrateur" && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="ml-auto w-2 h-2 bg-primary rounded-full"
+              />
+            )}
+          </Link>
+        )}
+
         <div className="flex items-center gap-x-3 overflow-hidden">
           <motion.div
             whileHover={{ rotate: 15 }}

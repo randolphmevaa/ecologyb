@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useRef } from "react";
+import { ReactNode } from "react";
+import { DraggableBounds, DraggableData, DraggableEvent } from 'react-draggable';
 import { Header } from "@/components/Header";
+import Draggable from 'react-draggable';
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -184,10 +188,37 @@ interface User {
   specialization?: string[];
 }
 
+// interface DragData {
+//   x: number;
+//   y: number;
+//   deltaX: number;
+//   deltaY: number;
+//   lastX: number;
+//   lastY: number;
+// }
+
+// 2. Define a type for the resizing state
+interface ResizingState {
+  event: Event;
+  startY: number;
+  initialEndTime: Date;
+}
+
+interface DraggableWrapperProps {
+  children: ReactNode;
+  /** Must match Draggable’s built-in union: string | false | DraggableBounds | undefined */
+  bounds?: string | false | DraggableBounds; // remove boolean/HTMLElement
+  axis?: "both" | "x" | "y" | "none";
+  grid?: [number, number];
+  onStop?: (e: DraggableEvent, data: DraggableData) => void;
+  [key: string]: unknown;
+}
+
 /** ---------------------
  *     MAIN COMPONENT
  *  --------------------- */
 export default function AdminAgendaPage() {
+  const [resizing, setResizing] = useState<ResizingState | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -216,6 +247,59 @@ export default function AdminAgendaPage() {
   const [, setUserInfo] = useState<{ _id: string; email: string } | null>(null);
   const [statsVisible, setStatsVisible] = useState(true);
 
+  // Handlers for clicking on calendar cells
+  const handleDateCellClick = (date: Date) => {
+    // Set default times (e.g., 9:00 AM - 10:00 AM)
+    const startTime = new Date(date);
+    startTime.setHours(9, 0, 0);
+    
+    const endTime = new Date(date);
+    endTime.setHours(10, 0, 0);
+    
+    // Initialize new event with these times
+    setNewEvent({
+      title: "",
+      description: "",
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+      category: "sav",
+      status: "scheduled",
+      priority: "medium",
+      all_day: false,
+      location: { name: "", virtual: false },
+      participants: [],
+    });
+    
+    // Open the new event modal
+    setShowNewEventModal(true);
+  };
+
+  const handleTimeSlotClick = (date: Date, hour: number, minute: number) => {
+    // Set times based on the clicked slot
+    const startTime = new Date(date);
+    startTime.setHours(hour, minute);
+    
+    const endTime = new Date(date);
+    endTime.setHours(hour + 1, minute); // Default 1 hour duration
+    
+    // Initialize new event with these times
+    setNewEvent({
+      title: "",
+      description: "",
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+      category: "sav",
+      status: "scheduled",
+      priority: "medium",
+      all_day: false,
+      location: { name: "", virtual: false },
+      participants: [],
+    });
+    
+    // Open the new event modal
+    setShowNewEventModal(true);
+  };
+
   // Sample statistics
   const statistics = {
     pendingInstallations: 8,
@@ -238,6 +322,29 @@ const getCurrentTimePosition = () => {
   
   // Convert to position in time slots array (2 slots per hour)
   return Math.max(0, (hours - 7) * 2 + Math.floor(minutes / 30));
+};
+
+const handleEventTimeDrag = (event: Event, date: Date, data: DraggableData): void => {
+  // Calculate new times based on the drag position
+  const minutesPerPixel = 0.5; // Adjust based on your time slot height (30px = 30 min)
+  const minutesShifted = Math.round(data.deltaY * minutesPerPixel);
+  
+  // Update start and end times
+  const newStart = new Date(event.start_time);
+  newStart.setMinutes(newStart.getMinutes() + minutesShifted);
+  
+  const newEnd = new Date(event.end_time);
+  newEnd.setMinutes(newEnd.getMinutes() + minutesShifted);
+  
+  // Create updated event
+  const updatedEvent = {
+    ...event,
+    start_time: newStart.toISOString(),
+    end_time: newEnd.toISOString()
+  };
+  
+  // Update events array
+  setEvents(events.map(e => e.id === event.id ? updatedEvent : e));
 };
 
   // Sample admin staff data
@@ -1495,6 +1602,43 @@ const getCurrentTimePosition = () => {
     });
   }, [events, searchTerm, filterCategory, filterPriority, filterStatus]);
 
+  const handleEventDrop = (event: Event, targetDate: Date): void => {
+    // Calculate the new date based on where it was dropped
+    const currentEventDate = new Date(event.start_time);
+    const currentEventEnd = new Date(event.end_time);
+    const duration = currentEventEnd.getTime() - currentEventDate.getTime();
+    
+    // Create new start and end dates (keep the time, change the date)
+    const newStart = new Date(targetDate);
+    newStart.setHours(
+      currentEventDate.getHours(),
+      currentEventDate.getMinutes()
+    );
+    
+    const newEnd = new Date(newStart.getTime() + duration);
+    
+    // Update the event
+    const updatedEvent = {
+      ...event,
+      start_time: newStart.toISOString(),
+      end_time: newEnd.toISOString()
+    };
+    
+    // Update events array with the modified event
+    setEvents(events.map(e => e.id === event.id ? updatedEvent : e));
+  };
+
+  const DraggableWrapper: React.FC<DraggableWrapperProps> = ({ children, ...props }) => {
+    const nodeRef = useRef<HTMLDivElement>(null);
+    return (
+      <Draggable {...props} nodeRef={nodeRef as React.RefObject<HTMLElement>}>
+        <div ref={nodeRef}>
+          {children}
+        </div>
+      </Draggable>
+    );
+  };
+  
   // Get events for a specific date
   const getEventsForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
@@ -1892,6 +2036,61 @@ const getCurrentTimePosition = () => {
         return "Non défini";
     }
   };
+
+  const startResizing = (event: Event, e: React.MouseEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    setResizing({
+      event,
+      startY: e.clientY,
+      initialEndTime: new Date(event.end_time)
+    });
+    
+    // Add event listeners for mousemove and mouseup
+    document.addEventListener('mousemove', handleResize);
+    document.addEventListener('mouseup', stopResize);
+  };
+  
+  const handleResize = (e: MouseEvent): void => {
+    if (!resizing) return;
+    
+    // Calculate time difference based on mouse movement
+    const pixelsPerMinute = 1; // Adjust based on your calendar's scale
+    const diffY = e.clientY - resizing.startY;
+    const diffMinutes = Math.round(diffY / pixelsPerMinute);
+    
+    // Create new end time
+    const newEndTime = new Date(resizing.initialEndTime);
+    newEndTime.setMinutes(newEndTime.getMinutes() + diffMinutes);
+    
+    // Don't allow end time to be before start time
+    const startTime = new Date(resizing.event.start_time);
+    if (newEndTime <= startTime) {
+      newEndTime.setMinutes(startTime.getMinutes() + 30); // Minimum 30 min
+    }
+    
+    // Update event temporarily (for visual feedback)
+    const updatedEvent = {
+      ...resizing.event,
+      end_time: newEndTime.toISOString()
+    };
+    
+    // Update UI to show the resizing in real-time
+    setEvents(events.map(e => e.id === updatedEvent.id ? updatedEvent : e));
+  };
+  
+  const stopResize = () => {
+    // Final update to event on mouseup
+    if (resizing) {
+      // You could call an API here to save the changes
+      // or just keep the state update we did during resize
+      setResizing(null);
+    }
+    
+    // Remove event listeners
+    document.removeEventListener('mousemove', handleResize);
+    document.removeEventListener('mouseup', stopResize);
+  };
+  
 
   // Get category icon
   const getCategoryIcon = (category: EventCategory) => {
@@ -2569,7 +2768,7 @@ const getCurrentTimePosition = () => {
                         </div>
                         
                         {/* Calendar Grid */}
-                        <div className="flex-1 grid grid-cols-7 grid-rows-6 auto-rows-fr">
+                        <div className="flex-1 grid grid-cols-7 grid-rows-6 auto-rows-fr calendar-grid">
                           {calendarDates.map((date, index) => {
                             const dayEvents = getEventsForDate(date);
                             const isCurrentDay = isToday(date);
@@ -2581,6 +2780,7 @@ const getCurrentTimePosition = () => {
                                 className={`border-b border-r min-h-[100px] p-1 ${
                                   inCurrentMonth ? '' : 'bg-gray-50'
                                 } ${isCurrentDay ? 'bg-blue-50' : ''}`}
+                                onClick={() => handleDateCellClick(date)}
                               >
                                 <div className="flex justify-between items-center p-1">
                                   <span className={`w-6 h-6 flex items-center justify-center rounded-full text-sm ${
@@ -2599,17 +2799,26 @@ const getCurrentTimePosition = () => {
                                 
                                 {/* Display events (limited to first 3) */}
                                 <div className="mt-1 space-y-1 overflow-hidden max-h-[calc(100%-2rem)]">
-                                  {dayEvents.slice(0, 3).map((event) => (
+                                {dayEvents.slice(0, 3).map((event) => (
+                                  <DraggableWrapper
+                                    key={event.id}
+                                    bounds=".calendar-grid" // Add this className to your grid container
+                                    grid={[1, 1]} // For more precise positioning
+                                    onStop={() => handleEventDrop(event, date)}
+                                  >
                                     <div 
-                                      key={event.id} 
                                       className={`px-2 py-1 rounded text-xs truncate cursor-pointer ${getCategoryColor(event.category)}`}
-                                      onClick={() => handleEventClick(event)}
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // Prevent triggering slot click
+                                        handleEventClick(event);
+                                      }}
                                     >
                                       {event.all_day ? '● ' : `${formatTime(event.start_time)} `}
                                       {event.reference_number ? `[${event.reference_number}] ` : ''}
                                       {truncateText(event.title, 18)}
                                     </div>
-                                  ))}
+                                  </DraggableWrapper>
+                                ))}
                                   {dayEvents.length > 3 && (
                                     <div className="px-2 py-0.5 text-xs text-gray-500 text-center">
                                       +{dayEvents.length - 3} plus
@@ -2745,6 +2954,13 @@ const getCurrentTimePosition = () => {
                                         const height = durationHours * 60;
                                         
                                         return (
+                                          <DraggableWrapper
+                                            key={event.id}
+                                            axis="y" // Only allow vertical dragging
+                                            grid={[1, 30]} // Snap to 30-pixel intervals (adjust to match your time slots)
+                                            bounds="parent"
+                                            onStop={(e, data) => handleEventTimeDrag(event, date, data)}
+                                          >
                                           <div 
                                             key={event.id} 
                                             className={`absolute left-0 right-0 mx-1 rounded px-2 py-1 overflow-hidden cursor-pointer shadow-sm ${getCategoryColor(event.category)} z-10`}
@@ -2753,7 +2969,10 @@ const getCurrentTimePosition = () => {
                                               height: `${height}px`,
                                               minHeight: '25px'
                                             }}
-                                            onClick={() => handleEventClick(event)}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleEventClick(event);
+                                            }}
                                           >
                                             <div className="text-xs font-medium truncate">
                                               {event.reference_number && `[${event.reference_number}] `}
@@ -2767,7 +2986,17 @@ const getCurrentTimePosition = () => {
                                                 {event.client_name}
                                               </div>
                                             )}
+                                            
+                                            {/* Resize handle */}
+                                            <div 
+                                              className="event-resize-handle"
+                                              onMouseDown={(e) => {
+                                                e.stopPropagation();
+                                                startResizing(event, e);
+                                              }}
+                                            />
                                           </div>
+                                          </DraggableWrapper>
                                         );
                                       })}
                                   </div>
@@ -2862,6 +3091,7 @@ const getCurrentTimePosition = () => {
                                 <div 
                                   key={index} 
                                   className={`flex border-t relative h-[30px] ${minute === 0 ? 'bg-gray-50' : ''}`}
+                                  onClick={() => handleTimeSlotClick(selectedDate, hour, minute)}
                                 >
                                   {/* Time label */}
                                   <div className="w-20 flex-shrink-0 text-right pr-2 text-xs text-gray-500">

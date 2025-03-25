@@ -175,6 +175,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     marque: "EcoTherm",
     unite: "Unité",
     operation: OPERATIONS.BAR_TH_171,
+    imageUrl: "https://images.unsplash.com/photo-1622219970016-09f07c1eed36?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     details: {
       classe: "A+++",
       efficaciteEnergetique: "195",
@@ -199,6 +200,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     marque: "Clim+",
     unite: "Unité",
     operation: OPERATIONS.BAR_TH_129,
+    imageUrl: "https://plus.unsplash.com/premium_photo-1674624682288-085eff4f98da?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     details: {
       cop: "4.1",
       scop: "4.3",
@@ -218,6 +220,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     marque: "BoisEco",
     unite: "Unité",
     operation: OPERATIONS.BAR_TH_112,
+    imageUrl: "https://plus.unsplash.com/premium_photo-1678509112086-a64a9499b922?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     details: {
       labelFlameVerte: "OUI",
       typeAppareil: "PEOLE",
@@ -238,6 +241,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     marque: "AquaTherm",
     unite: "Unité",
     operation: OPERATIONS.BAR_TH_148,
+    imageUrl: "https://images.unsplash.com/photo-1451847251646-8a6c0dd1510c?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     details: {
       cop: "3.5",
       scop: "3.7",
@@ -259,6 +263,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     marque: "SolarPlus",
     unite: "Unité",
     operation: OPERATIONS.BAR_TH_143,
+    imageUrl: "https://images.unsplash.com/photo-1516937941344-00b4e0337589?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     details: {
       productiviteCapteur: "580",
       capaciteStockage: "400",
@@ -280,6 +285,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     marque: "SolarPlus",
     unite: "Unité",
     operation: OPERATIONS.BAR_TH_101,
+    imageUrl: "https://images.unsplash.com/photo-1448317846460-907988886b33?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     details: {
       capaciteStockage: "300",
       efficaciteEnergetique: "B",
@@ -301,6 +307,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     marque: "BiomasseTech",
     unite: "Unité",
     operation: OPERATIONS.BAR_TH_113,
+    imageUrl: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     details: {
       efficaciteEnergetique: "92",
       puissanceNominale: "24kW",
@@ -1691,368 +1698,410 @@ export default function ProduitPrestationPage() {
                 </button>
               </div>
 
-              {/* Product Tab Content */}
-              <AnimatePresence mode="wait">
-                {activeTab === "produit" && (
-                  <>
-                    {viewMode === "list" && (
-                      <motion.div
-                        key="product-list"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {/* Products Grid/List View */}
-                        <div className="mb-4 flex justify-end">
-                          <div className="inline-flex rounded-md shadow-sm">
-                            <button 
-                              type="button" 
-                              className="px-4 py-2 text-sm font-medium text-[#213f5b] bg-white border border-[#bfddf9] rounded-l-lg hover:bg-[#f0f7ff] focus:z-10 focus:outline-none"
-                            >
-                              <TableCellsIcon className="w-5 h-5" />
-                            </button>
-                            <button 
-                              type="button" 
-                              className="px-4 py-2 text-sm font-medium text-white bg-[#213f5b] border border-[#213f5b] rounded-r-lg hover:bg-[#152a3d] focus:z-10 focus:outline-none"
-                            >
-                              <ListBulletIcon className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {filteredProducts.length === 0 ? (
-                            <div className="col-span-full flex flex-col items-center justify-center py-12 text-[#213f5b]">
-                              <CubeIcon className="h-16 w-16 mb-4 opacity-50" />
-                              <h3 className="text-xl font-semibold mb-2">Aucun produit trouvé</h3>
-                              <p className="text-sm opacity-75 mb-6">Ajoutez un nouveau produit ou modifiez vos critères de recherche</p>
-                              <Button
-                                onClick={handleAddNewProduct}
-                                className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
+                {/* Product Tab Content */}
+                <AnimatePresence mode="wait">
+                  {activeTab === "produit" && (
+                    <>
+                      {viewMode === "list" && (
+                        <motion.div
+                          key="product-list"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {/* Products Grid/List View */}
+                          <div className="mb-4 flex justify-end">
+                            <div className="inline-flex rounded-md shadow-sm">
+                              <button 
+                                type="button" 
+                                className="px-4 py-2 text-sm font-medium text-[#213f5b] bg-white border border-[#bfddf9] rounded-l-lg hover:bg-[#f0f7ff] focus:z-10 focus:outline-none"
                               >
-                                <PlusIcon className="h-4 w-4 mr-2" />
-                                Nouveau Produit
-                              </Button>
+                                <TableCellsIcon className="w-5 h-5" />
+                              </button>
+                              <button 
+                                type="button" 
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#213f5b] border border-[#213f5b] rounded-r-lg hover:bg-[#152a3d] focus:z-10 focus:outline-none"
+                              >
+                                <ListBulletIcon className="w-5 h-5" />
+                              </button>
                             </div>
-                          ) : (
-                            filteredProducts.map((product) => (
-                              <motion.div
-                                key={product.id}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="bg-white rounded-xl border border-[#eaeaea] shadow-sm hover:shadow-md hover:border-[#bfddf9] transition-all group"
-                                whileHover={{ y: -4 }}
-                              >
-                                {/* Product Image (if available) */}
-                                {product.imageUrl && (
-                                  <div className="w-full h-48 rounded-t-xl overflow-hidden">
-                                    <img 
-                                      src={product.imageUrl} 
-                                      alt={product.libelle || product.reference} 
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                )}
-                                
-                                <div className="p-5 border-b border-[#eaeaea] bg-gradient-to-r from-white to-[#f8fafc]">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <div className="flex items-start gap-3">
-                                      <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
-                                        <CubeIcon className="h-6 w-6 text-[#213f5b]" />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredProducts.length === 0 ? (
+                              <div className="col-span-full flex flex-col items-center justify-center py-12 text-[#213f5b]">
+                                <CubeIcon className="h-16 w-16 mb-4 opacity-50" />
+                                <h3 className="text-xl font-semibold mb-2">Aucun produit trouvé</h3>
+                                <p className="text-sm opacity-75 mb-6">Ajoutez un nouveau produit ou modifiez vos critères de recherche</p>
+                                <Button
+                                  onClick={handleAddNewProduct}
+                                  className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
+                                >
+                                  <PlusIcon className="h-4 w-4 mr-2" />
+                                  Nouveau Produit
+                                </Button>
+                              </div>
+                            ) : (
+                              filteredProducts.map((product) => (
+                                <motion.div
+                                  key={product.id}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  className="bg-white rounded-xl border border-[#eaeaea] shadow-md hover:shadow-xl transition-all group overflow-hidden h-full flex flex-col"
+                                  whileHover={{ 
+                                    y: -6,
+                                    transition: { duration: 0.3 } 
+                                  }}
+                                >
+                                  {/* Product Image Container */}
+                                  <div className="relative w-full h-64 overflow-hidden">
+                                    {/* Category Badge */}
+                                    <div className="absolute top-3 right-3 z-10">
+                                      <span className="text-xs font-medium rounded-full px-3 py-1.5 bg-[#213f5b] text-white shadow-md backdrop-blur-sm bg-opacity-80 border border-white border-opacity-30">
+                                        {product.categorie}
+                                      </span>
+                                    </div>
+
+                                    {/* Image with overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-[#213f5b] to-[#152a3d] opacity-10"></div>
+                                    
+                                    {product.imageUrl ? (
+                                      <img 
+                                        src={product.imageUrl} 
+                                        alt={product.libelle || product.reference} 
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1"
+                                      />
+                                    ) : (
+                                      <div className="flex items-center justify-center h-full bg-gradient-to-br from-[#f0f7ff] to-[#e6f0fd]">
+                                        <CubeIcon className="h-24 w-24 text-[#bfddf9]" />
                                       </div>
-                                      <div>
-                                        <h3 className="font-bold text-[#213f5b] line-clamp-1">{product.libelle || product.reference}</h3>
-                                        <p className="text-xs opacity-75">{product.reference}</p>
+                                    )}
+                                    
+                                    {/* Brand overlay at bottom of image */}
+                                    <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#000000cc] via-[#00000080] to-transparent py-4 px-4">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="text-xs text-[#bfddf9] font-medium mb-1">MARQUE</p>
+                                          <p className="text-white font-semibold">{product.marque}</p>
+                                        </div>
+                                        <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full p-2 border border-white border-opacity-30">
+                                          <CubeIcon className="h-6 w-6 text-white" />
+                                        </div>
                                       </div>
                                     </div>
-                                    <span className="text-xs font-medium rounded-full px-2 py-0.5 bg-[#213f5b] bg-opacity-10 text-[#213f5b]">
-                                      {product.categorie}
-                                    </span>
                                   </div>
-                                  <p className="text-sm text-[#213f5b] opacity-75 line-clamp-2 mt-1">{product.description}</p>
-                                </div>
-                                
-                                <div className="p-5">
-                                  <div className="grid grid-cols-2 gap-y-2 mb-4">
-                                    <div>
-                                      <p className="text-xs text-[#213f5b] opacity-75">Prix TTC</p>
-                                      <p className="font-semibold text-[#213f5b]">{product.prixTTC.toLocaleString()} € <span className="text-xs">({product.tva}%)</span></p>
+                                  
+                                  {/* Product Info */}
+                                  <div className="p-5 flex-grow">
+                                    <div className="mb-4">
+                                      <h3 className="font-bold text-[#213f5b] text-xl mb-2 leading-tight">{product.libelle || product.reference}</h3>
+                                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                                        <span className="bg-[#bfddf9] bg-opacity-30 px-2.5 py-1 rounded-md font-medium text-sm text-[#213f5b]">
+                                          {product.reference}
+                                        </span>
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#213f5b] opacity-50"></span>
+                                        <span className="text-sm text-[#213f5b] opacity-75 font-medium">{product.operation.split(':')[0]}</span>
+                                      </div>
                                     </div>
-                                    <div>
-                                      <p className="text-xs text-[#213f5b] opacity-75">Quantité</p>
-                                      <p className="font-semibold text-[#213f5b]">{product.quantite} <span className="text-xs">{product.unite}</span></p>
+                                    
+                                    <p className="text-sm text-[#213f5b] opacity-75 line-clamp-2 mb-4 leading-relaxed">{product.description}</p>
+                                    
+                                    <div className="grid grid-cols-2 gap-3 mb-4">
+                                      <div className="bg-[#f8fafc] rounded-xl p-3.5 border border-[#eaeaea] transition-all group-hover:border-[#bfddf9] group-hover:shadow-sm">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <div className="w-2 h-2 rounded-full bg-[#213f5b]"></div>
+                                          <p className="text-xs text-[#213f5b] font-semibold">Prix TTC</p>
+                                        </div>
+                                        <p className="font-bold text-[#213f5b] text-xl ml-4">{product.prixTTC.toLocaleString()} €</p>
+                                        <p className="text-xs text-[#213f5b] opacity-75 mt-0.5 ml-4">TVA {product.tva}%</p>
+                                      </div>
+                                      <div className="bg-[#f8fafc] rounded-xl p-3.5 border border-[#eaeaea] transition-all group-hover:border-[#bfddf9] group-hover:shadow-sm">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <div className="w-2 h-2 rounded-full bg-[#213f5b]"></div>
+                                          <p className="text-xs text-[#213f5b] font-semibold">Quantité</p>
+                                        </div>
+                                        <p className="font-bold text-[#213f5b] text-xl ml-4">{product.quantite}</p>
+                                        <p className="text-xs text-[#213f5b] opacity-75 mt-0.5 ml-4">{product.unite}</p>
+                                      </div>
                                     </div>
-                                    <div className="col-span-2 mt-1">
-                                      <p className="text-xs text-[#213f5b] opacity-75">Opération</p>
-                                      <p className="font-medium text-[#213f5b] text-sm truncate">{product.operation}</p>
-                                    </div>
-                                    <div className="col-span-2 mt-1">
-                                      <p className="text-xs text-[#213f5b] opacity-75">Marque</p>
-                                      <p className="font-medium text-[#213f5b] text-sm">{product.marque}</p>
-                                    </div>
+                                    
                                     {product.details.kwhCumac && (
-                                      <div className="col-span-2 mt-1">
-                                        <p className="text-xs text-[#213f5b] opacity-75">kWh Cumac</p>
-                                        <p className="font-medium text-[#213f5b] text-sm">{product.details.kwhCumac}</p>
+                                      <div className="mb-4 bg-[#f0f7ff] rounded-xl p-4 border-l-4 border-[#bfddf9] shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                          <div className="p-1.5 bg-[#bfddf9] rounded-lg">
+                                            <ChevronLeftIcon className="h-3 w-3 text-[#213f5b]" />
+                                          </div>
+                                          <p className="text-xs text-[#213f5b] font-semibold">kWh Cumac</p>
+                                        </div>
+                                        <p className="mt-1 ml-7 font-bold text-[#213f5b] text-lg">{parseInt(product.details.kwhCumac).toLocaleString()}</p>
                                       </div>
                                     )}
                                   </div>
                                   
-                                  <div className="flex justify-end gap-2 mt-4">
-                                    <button 
-                                      className="p-2 rounded-full text-[#213f5b] hover:bg-[#bfddf9] transition-colors"
-                                      onClick={() => handleEditProduct(product)}
-                                    >
-                                      <PencilIcon className="h-4 w-4" />
-                                    </button>
-                                    <button 
-                                      className="p-2 rounded-full text-[#213f5b] hover:bg-red-100 hover:text-red-500 transition-colors"
-                                      onClick={() => handleDeleteProduct(product.id)}
-                                    >
-                                      <TrashIcon className="h-4 w-4" />
-                                    </button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
-                                      onClick={() => handleEditProduct(product)}
-                                    >
-                                      Modifier
-                                    </Button>
+                                  {/* Action Buttons */}
+                                  <div className="p-4 border-t border-[#eaeaea] bg-gradient-to-b from-white to-[#f8fafc] mt-auto">
+                                    <div className="flex justify-between items-center">
+                                      <div className="flex items-center">
+                                        <div className="w-2 h-8 rounded-full bg-[#213f5b] mr-2 opacity-20"></div>
+                                        <p className="text-xs text-[#213f5b] opacity-75 font-medium">Réf. {product.id}</p>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <button 
+                                          className="p-2 rounded-full text-[#213f5b] hover:bg-[#bfddf9] transition-colors hover:shadow-sm"
+                                          onClick={() => handleEditProduct(product)}
+                                        >
+                                          <PencilIcon className="h-4 w-4" />
+                                        </button>
+                                        <button 
+                                          className="p-2 rounded-full text-[#213f5b] hover:bg-red-100 hover:text-red-500 transition-colors hover:shadow-sm"
+                                          onClick={() => handleDeleteProduct(product.id)}
+                                        >
+                                          <TrashIcon className="h-4 w-4" />
+                                        </button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9] hover:shadow-sm"
+                                          onClick={() => handleEditProduct(product)}
+                                        >
+                                          Modifier
+                                        </Button>
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-                              </motion.div>
-                            ))
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                    
-                    {viewMode === "form" && (
-                      <motion.div
-                        key="product-form"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                      >
-                        {/* Infos Générales */}
-                        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                          <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
-                            <div className="flex items-center gap-2">
-                              <div className="h-8 w-1 rounded-full bg-[#213f5b]"></div>
-                              <h2 className="text-xl font-bold text-[#213f5b]">Infos générales</h2>
-                            </div>
-                            <p className="text-[#213f5b] opacity-75 ml-3 pl-3">Informations de base du produit</p>
-                          </div>
-                          <div className="p-6 space-y-4">
-                            {/* Product Image Upload */}
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-[#213f5b] mb-1">Image du produit</label>
-                              <div className="flex items-center gap-4">
-                                {produitForm.imageUrl && (
-                                  <div className="w-24 h-24 border rounded-lg overflow-hidden flex items-center justify-center bg-gray-100">
-                                    <img 
-                                      src={produitForm.imageUrl} 
-                                      alt="Aperçu du produit" 
-                                      className="max-w-full max-h-full object-contain" 
-                                    />
-                                  </div>
-                                )}
-                                <div className="flex-1">
-                                  <label className="flex flex-col items-center px-4 py-6 bg-white border border-dashed border-[#bfddf9] rounded-lg cursor-pointer hover:bg-[#f0f7ff]">
-                                    <svg className="w-8 h-8 text-[#213f5b]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                                    </svg>
-                                    <span className="mt-2 text-sm text-[#213f5b]">Cliquez pour télécharger une image</span>
-                                    <input 
-                                      type="file" 
-                                      className="hidden" 
-                                      accept="image/*" 
-                                      onChange={handleProductImageChange}
-                                    />
-                                  </label>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="reference">Reference du produit *</label>
-                              <input
-                                id="reference"
-                                type="text"
-                                name="reference"
-                                value={produitForm.reference}
-                                onChange={handleProduitChange}
-                                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="description">Description *</label>
-                              <textarea
-  id="description"
-  name="description"
-  value={produitForm.description}
-  onChange={handleProduitChange}
-  rows={3}
-  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-/>
-</div>
-
-<div className="space-y-2">
-  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="libelle">Libellé</label>
-  <input
-    id="libelle"
-    type="text"
-    name="libelle"
-    value={produitForm.libelle}
-    onChange={handleProduitChange}
-    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-  />
-</div>
-
-<div className="grid grid-cols-2 gap-4">
-  <div className="space-y-2">
-    <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="quantite">Quantité *</label>
-    <input
-      id="quantite"
-      type="number"
-      name="quantite"
-      value={produitForm.quantite}
-      onChange={handleProduitChange}
-      className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-    />
-  </div>
-  <div className="space-y-2">
-    <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="prixTTC">Prix T.T.C *</label>
-    <input
-      id="prixTTC"
-      type="number"
-      name="prixTTC"
-      value={produitForm.prixTTC}
-      onChange={handleProduitChange}
-      className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-    />
-  </div>
-</div>
-
-<div className="space-y-2">
-  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="categorie">Categorie *</label>
-  <select
-    id="categorie"
-    name="categorie"
-    value={produitForm.categorie}
-    onChange={handleProduitChange}
-    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-  >
-    <option value="">Sélectionner une catégorie</option>
-    <option value="MONO GESTE">MONO GESTE</option>
-    <option value="RENO AMPLEUR">RENO AMPLEUR</option>
-    <option value="PANNEAUX PHOTOVOLTAIQUE">PANNEAUX PHOTOVOLTAIQUE</option>
-    <option value="FINANCEMENT">FINANCEMENT</option>
-  </select>
-</div>
-
-<div className="space-y-2">
-  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="tva">TVA *</label>
-  <select
-    id="tva"
-    name="tva"
-    value={produitForm.tva}
-    onChange={handleProduitChange}
-    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-  >
-    <option value="">Sélectionner un taux de TVA</option>
-    <option value="0">0%</option>
-    <option value="5.5">5,5%</option>
-    <option value="10">10%</option>
-    <option value="20">20%</option>
-  </select>
-</div>
-
-<div className="space-y-2">
-  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="marque">Marque *</label>
-  <select
-    id="marque"
-    name="marque"
-    value={produitForm.marque}
-    onChange={handleProduitChange}
-    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-  >
-    <option value="">Sélectionner une marque</option>
-    {brands.map(brand => (
-      <option key={brand.id} value={brand.name}>{brand.name}</option>
-    ))}
-  </select>
-</div>
-
-<div className="space-y-2">
-  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="unite">Unité</label>
-  <input
-    id="unite"
-    type="text"
-    name="unite"
-    value={produitForm.unite}
-    onChange={handleProduitChange}
-    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-  />
-</div>
-
-<div className="space-y-2">
-  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="operation">Opération *</label>
-  <select
-    id="operation"
-    name="operation"
-    value={selectedOperation}
-    onChange={handleOperationChange}
-    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-  >
-    <option value="">Sélectionner une opération</option>
-    {operations.map((operation) => (
-      <option key={operation.id} value={`${operation.code} : ${operation.name}`}>
-        {operation.code} : {operation.name}
-      </option>
-    ))}
-  </select>
-</div>
-                            </div>
-                          </div>
-
-                          {/* Détails */}
-                          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                            <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
-                              <div className="flex items-center gap-2">
-                                <div className="h-8 w-1 rounded-full bg-[#bfddf9]"></div>
-                                <h2 className="text-xl font-bold text-[#213f5b]">Détails</h2>
-                              </div>
-                              <p className="text-[#213f5b] opacity-75 ml-3 pl-3">Détails spécifiques selon l&apos;opération</p>
-                            </div>
-                            <div className="p-6">
-                              {renderOperationDetails()}
-                            </div>
-                          </div>
-
-                          {/* Submit Buttons - Full Width */}
-                          <div className="md:col-span-2 flex flex-wrap justify-end gap-3 mt-4">
-                            <Button
-                              variant="outline"
-                              className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
-                              onClick={handleCancelForm}
-                            >
-                              Annuler
-                            </Button>
-                            <Button
-                              className="bg-[#213f5b] hover:bg-[#152a3d] text-white"
-                              onClick={handleSaveProduct}
-                            >
-                              Enregistrer
-                            </Button>
+                                </motion.div>
+                              ))
+                            )}
                           </div>
                         </motion.div>
                       )}
+                    
+                      {viewMode === "form" && (
+                        <motion.div
+                          key="product-form"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                        >
+                          {/* Infos Générales */}
+                          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                            <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-1 rounded-full bg-[#213f5b]"></div>
+                                <h2 className="text-xl font-bold text-[#213f5b]">Infos générales</h2>
+                              </div>
+                              <p className="text-[#213f5b] opacity-75 ml-3 pl-3">Informations de base du produit</p>
+                            </div>
+                            <div className="p-6 space-y-4">
+                              {/* Product Image Upload */}
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1">Image du produit</label>
+                                <div className="flex items-center gap-4">
+                                  {produitForm.imageUrl && (
+                                    <div className="w-24 h-24 border rounded-lg overflow-hidden flex items-center justify-center bg-gray-100">
+                                      <img 
+                                        src={produitForm.imageUrl} 
+                                        alt="Aperçu du produit" 
+                                        className="max-w-full max-h-full object-contain" 
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="flex-1">
+                                    <label className="flex flex-col items-center px-4 py-6 bg-white border border-dashed border-[#bfddf9] rounded-lg cursor-pointer hover:bg-[#f0f7ff]">
+                                      <svg className="w-8 h-8 text-[#213f5b]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                      </svg>
+                                      <span className="mt-2 text-sm text-[#213f5b]">Cliquez pour télécharger une image</span>
+                                      <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept="image/*" 
+                                        onChange={handleProductImageChange}
+                                      />
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="reference">Reference du produit *</label>
+                                <input
+                                  id="reference"
+                                  type="text"
+                                  name="reference"
+                                  value={produitForm.reference}
+                                  onChange={handleProduitChange}
+                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="description">Description *</label>
+                                <textarea
+    id="description"
+    name="description"
+    value={produitForm.description}
+    onChange={handleProduitChange}
+    rows={3}
+    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+  />
+  </div>
+
+  <div className="space-y-2">
+    <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="libelle">Libellé</label>
+    <input
+      id="libelle"
+      type="text"
+      name="libelle"
+      value={produitForm.libelle}
+      onChange={handleProduitChange}
+      className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+    />
+  </div>
+
+  <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="quantite">Quantité *</label>
+      <input
+        id="quantite"
+        type="number"
+        name="quantite"
+        value={produitForm.quantite}
+        onChange={handleProduitChange}
+        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+      />
+    </div>
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="prixTTC">Prix T.T.C *</label>
+      <input
+        id="prixTTC"
+        type="number"
+        name="prixTTC"
+        value={produitForm.prixTTC}
+        onChange={handleProduitChange}
+        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+      />
+    </div>
+  </div>
+
+  <div className="space-y-2">
+    <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="categorie">Categorie *</label>
+    <select
+      id="categorie"
+      name="categorie"
+      value={produitForm.categorie}
+      onChange={handleProduitChange}
+      className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+    >
+      <option value="">Sélectionner une catégorie</option>
+      <option value="MONO GESTE">MONO GESTE</option>
+      <option value="RENO AMPLEUR">RENO AMPLEUR</option>
+      <option value="PANNEAUX PHOTOVOLTAIQUE">PANNEAUX PHOTOVOLTAIQUE</option>
+      <option value="FINANCEMENT">FINANCEMENT</option>
+    </select>
+  </div>
+
+  <div className="space-y-2">
+    <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="tva">TVA *</label>
+    <select
+      id="tva"
+      name="tva"
+      value={produitForm.tva}
+      onChange={handleProduitChange}
+      className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+    >
+      <option value="">Sélectionner un taux de TVA</option>
+      <option value="0">0%</option>
+      <option value="5.5">5,5%</option>
+      <option value="10">10%</option>
+      <option value="20">20%</option>
+    </select>
+  </div>
+
+  <div className="space-y-2">
+    <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="marque">Marque *</label>
+    <select
+      id="marque"
+      name="marque"
+      value={produitForm.marque}
+      onChange={handleProduitChange}
+      className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+    >
+      <option value="">Sélectionner une marque</option>
+      {brands.map(brand => (
+        <option key={brand.id} value={brand.name}>{brand.name}</option>
+      ))}
+    </select>
+  </div>
+
+  <div className="space-y-2">
+    <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="unite">Unité</label>
+    <input
+      id="unite"
+      type="text"
+      name="unite"
+      value={produitForm.unite}
+      onChange={handleProduitChange}
+      className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+    />
+  </div>
+
+  <div className="space-y-2">
+    <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="operation">Opération *</label>
+    <select
+      id="operation"
+      name="operation"
+      value={selectedOperation}
+      onChange={handleOperationChange}
+      className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+    >
+      <option value="">Sélectionner une opération</option>
+      {operations.map((operation) => (
+        <option key={operation.id} value={`${operation.code} : ${operation.name}`}>
+          {operation.code} : {operation.name}
+        </option>
+      ))}
+    </select>
+  </div>
+                              </div>
+                            </div>
+
+                            {/* Détails */}
+                            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                              <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-8 w-1 rounded-full bg-[#bfddf9]"></div>
+                                  <h2 className="text-xl font-bold text-[#213f5b]">Détails</h2>
+                                </div>
+                                <p className="text-[#213f5b] opacity-75 ml-3 pl-3">Détails spécifiques selon l&apos;opération</p>
+                              </div>
+                              <div className="p-6">
+                                {renderOperationDetails()}
+                              </div>
+                            </div>
+
+                            {/* Submit Buttons - Full Width */}
+                            <div className="md:col-span-2 flex flex-wrap justify-end gap-3 mt-4">
+                              <Button
+                                variant="outline"
+                                className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
+                                onClick={handleCancelForm}
+                              >
+                                Annuler
+                              </Button>
+                              <Button
+                                className="bg-[#213f5b] hover:bg-[#152a3d] text-white"
+                                onClick={handleSaveProduct}
+                              >
+                                Enregistrer
+                              </Button>
+                            </div>
+                          </motion.div>
+                        )}
                     </>
                   )}
                 </AnimatePresence>
@@ -2309,334 +2358,379 @@ export default function ProduitPrestationPage() {
                 </AnimatePresence>
 
                 {/* Prestation Tab Content */}
-              <AnimatePresence mode="wait">
-                {activeTab === "prestation" && (
-                  <>
-                    {viewMode === "list" && (
-                      <motion.div
-                        key="prestation-list"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {/* Prestations List View */}
-                        <div className="mb-4 flex justify-end">
-                          <div className="inline-flex rounded-md shadow-sm">
-                            <button 
-                              type="button" 
-                              className="px-4 py-2 text-sm font-medium text-[#213f5b] bg-white border border-[#bfddf9] rounded-l-lg hover:bg-[#f0f7ff] focus:z-10 focus:outline-none"
-                            >
-                              <TableCellsIcon className="w-5 h-5" />
-                            </button>
-                            <button 
-                              type="button" 
-                              className="px-4 py-2 text-sm font-medium text-white bg-[#213f5b] border border-[#213f5b] rounded-r-lg hover:bg-[#152a3d] focus:z-10 focus:outline-none"
-                            >
-                              <ListBulletIcon className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {filteredPrestations.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-12 text-[#213f5b]">
-                            <WrenchScrewdriverIcon className="h-16 w-16 mb-4 opacity-50" />
-                            <h3 className="text-xl font-semibold mb-2">Aucune prestation trouvée</h3>
-                            <p className="text-sm opacity-75 mb-6">Ajoutez une nouvelle prestation ou modifiez vos critères de recherche</p>
-                            <Button
-                              onClick={handleAddNewPrestation}
-                              className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
-                            >
-                              <PlusIcon className="h-4 w-4 mr-2" />
-                              Nouvelle Prestation
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-[#213f5b] uppercase bg-[#f8fafc]">
-                                  <tr>
-                                    <th scope="col" className="px-6 py-4">Référence</th>
-                                    <th scope="col" className="px-6 py-4">Désignation</th>
-                                    <th scope="col" className="px-6 py-4">Prix TTC</th>
-                                    <th scope="col" className="px-6 py-4">TVA</th>
-                                    <th scope="col" className="px-6 py-4">Statut</th>
-                                    <th scope="col" className="px-6 py-4 text-right">Actions</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {filteredPrestations.map((prestation) => (
-                                    <tr key={prestation.id} className="border-b hover:bg-[#f0f7ff] transition-colors">
-                                      <td className="px-6 py-4 font-medium text-[#213f5b]">{prestation.reference}</td>
-                                      <td className="px-6 py-4 text-[#213f5b] max-w-[300px] truncate">{prestation.designation}</td>
-                                      <td className="px-6 py-4 text-[#213f5b]">{prestation.prixTTC} €</td>
-                                      <td className="px-6 py-4 text-[#213f5b]">{prestation.tva}%</td>
-                                      <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${prestation.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                          {prestation.active ? 'Actif' : 'Inactif'}
-                                        </span>
-                                      </td>
-                                      <td className="px-6 py-4 text-right space-x-2">
-                                        <button 
-                                          className="font-medium text-[#213f5b] hover:text-[#152a3d] p-1 rounded hover:bg-[#bfddf9]"
-                                          onClick={() => handleEditPrestation(prestation)}
-                                        >
-                                          <PencilIcon className="h-4 w-4" />
-                                        </button>
-                                        <button 
-                                          className="font-medium text-[#213f5b] hover:text-red-500 p-1 rounded hover:bg-red-100"
-                                          onClick={() => handleDeletePrestation(prestation.id)}
-                                        >
-                                          <TrashIcon className="h-4 w-4" />
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
-                    
-                    {viewMode === "form" && (
-                      <motion.div
-                        key="prestation-form"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-6"
-                      >
-                        {/* Enregistrement prestation */}
-                        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                          <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
-                            <div className="flex items-center gap-2">
-                              <div className="h-8 w-1 rounded-full bg-[#213f5b]"></div>
-                              <h2 className="text-xl font-bold text-[#213f5b]">Enregistrement prestation</h2>
-                            </div>
-                            <p className="text-[#213f5b] opacity-75 ml-3 pl-3">Informations de base de la prestation</p>
-                          </div>
-                          <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="reference-prestation">Reference de la prestation *</label>
-                                <input
-                                  id="reference-prestation"
-                                  type="text"
-                                  name="reference"
-                                  value={prestationForm.reference}
-                                  onChange={handlePrestationChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="quantite-prestation">Quantité</label>
-                                <input
-                                  id="quantite-prestation"
-                                  type="number"
-                                  name="quantite"
-                                  value={prestationForm.quantite}
-                                  onChange={handlePrestationChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="unite-prestation">Selectionner une unité</label>
-                                <input
-                                  id="unite-prestation"
-                                  type="text"
-                                  name="unite"
-                                  value={prestationForm.unite}
-                                  onChange={handlePrestationChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="prixTTC-prestation">Prix TTC</label>
-                                <input
-                                  id="prixTTC-prestation"
-                                  type="number"
-                                  name="prixTTC"
-                                  value={prestationForm.prixTTC}
-                                  onChange={handlePrestationChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                />
-                              </div>
-
-                              <div className="space-y-2 md:col-span-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="designation-prestation">Désignation *</label>
-                                <textarea
-                                  id="designation-prestation"
-                                  name="designation"
-                                  value={prestationForm.designation}
-                                  onChange={handlePrestationChange}
-                                  rows={5}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="tva-prestation">TVA</label>
-                                <select
-                                  id="tva-prestation"
-                                  name="tva"
-                                  value={prestationForm.tva}
-                                  onChange={handlePrestationChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                >
-                                  <option value="">Sélectionner un taux de TVA</option>
-                                  <option value="0">0%</option>
-                                  <option value="5.5">5,5%</option>
-                                  <option value="10">10%</option>
-                                  <option value="20">20%</option>
-                                </select>
-                              </div>
-
-                              <div className="space-y-2">
-                              <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="codeComptable">Code comptable</label>
-                                <input
-                                  id="codeComptable"
-                                  type="text"
-                                  name="codeComptable"
-                                  value={prestationForm.codeComptable}
-                                  onChange={handlePrestationChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                />
-                              </div>
-
-                              <div className="flex items-center space-x-2">
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                  <input 
-                                    type="checkbox" 
-                                    className="sr-only peer"
-                                    checked={prestationForm.active}
-                                    onChange={() => setPrestationForm({...prestationForm, active: !prestationForm.active})}
-                                  />
-                                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-[#213f5b] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#213f5b]"></div>
-                                  <span className="ml-3 text-sm font-medium text-[#213f5b]">Active</span>
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Affecter cette prestation à une ou plusieurs opérations */}
-                        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                          <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
-                            <div className="flex items-center gap-2">
-                              <div className="h-8 w-1 rounded-full bg-[#bfddf9]"></div>
-                              <h2 className="text-xl font-bold text-[#213f5b]">Affecter cette prestation à une ou plusieurs opérations</h2>
-                            </div>
-                          </div>
-                          <div className="p-6">
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="operations">Opération(s)</label>
-                              <select
-                                id="operations"
-                                name="operations"
-                                onChange={handlePrestationOperationChange}
-                                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                <AnimatePresence mode="wait">
+                  {activeTab === "prestation" && (
+                    <>
+                      {viewMode === "list" && (
+                        <motion.div
+                          key="prestation-list"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {/* Prestations Grid View */}
+                          <div className="mb-4 flex justify-end">
+                            <div className="inline-flex rounded-md shadow-sm">
+                              <button 
+                                type="button" 
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#213f5b] border border-[#213f5b] rounded-l-lg hover:bg-[#152a3d] focus:z-10 focus:outline-none"
                               >
-                                <option value="">Sélectionner une opération</option>
-                                {operations.map((operation) => (
-                                  <option key={operation.id} value={`${operation.code} : ${operation.name}`}>
-                                    {operation.code} : {operation.name}
-                                  </option>
-                                ))}
-                              </select>
+                                <TableCellsIcon className="w-5 h-5" />
+                              </button>
+                              <button 
+                                type="button" 
+                                className="px-4 py-2 text-sm font-medium text-[#213f5b] bg-white border border-[#bfddf9] rounded-r-lg hover:bg-[#f0f7ff] focus:z-10 focus:outline-none"
+                              >
+                                <ListBulletIcon className="w-5 h-5" />
+                              </button>
                             </div>
-                            {selectedOperations.length > 0 && (
-                              <div className="mt-4">
-                                <p className="text-sm font-medium text-[#213f5b] mb-2">Opérations sélectionnées:</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {selectedOperations.map(op => (
-                                    <div key={op} className="bg-[#bfddf9] text-[#213f5b] rounded-lg px-3 py-1 text-sm flex items-center">
-                                      {op}
-                                      <button
-                                        onClick={() => setSelectedOperations(selectedOperations.filter(o => o !== op))}
-                                        className="ml-2 text-[#213f5b] hover:text-red-500"
-                                      >
-                                        <XMarkIcon className="h-4 w-4" />
-                                      </button>
+                          </div>
+
+                          {filteredPrestations.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-[#213f5b]">
+                              <WrenchScrewdriverIcon className="h-16 w-16 mb-4 opacity-50" />
+                              <h3 className="text-xl font-semibold mb-2">Aucune prestation trouvée</h3>
+                              <p className="text-sm opacity-75 mb-6">Ajoutez une nouvelle prestation ou modifiez vos critères de recherche</p>
+                              <Button
+                                onClick={handleAddNewPrestation}
+                                className="bg-[#213f5b] hover:bg-[#152a3d] text-white transition-all rounded-lg px-5 py-2.5 flex items-center shadow-md hover:shadow-lg"
+                              >
+                                <PlusIcon className="h-4 w-4 mr-2" />
+                                Nouvelle Prestation
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {filteredPrestations.map((prestation) => (
+                                <motion.div
+                                  key={prestation.id}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  className="bg-white rounded-xl border border-[#eaeaea] shadow-sm hover:shadow-md hover:border-[#bfddf9] transition-all group"
+                                  whileHover={{ y: -4 }}
+                                >
+                                  <div className="p-5 border-b border-[#eaeaea] bg-gradient-to-r from-white to-[#f8fafc]">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div className="flex items-start gap-3">
+                                        <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
+                                          <WrenchScrewdriverIcon className="h-6 w-6 text-[#213f5b]" />
+                                        </div>
+                                        <div>
+                                          <h3 className="font-bold text-[#213f5b] line-clamp-1">{prestation.reference}</h3>
+                                          <div className="flex items-center mt-1">
+                                            <span className="text-xs font-medium mr-2">Prix: {prestation.prixTTC} €</span>
+                                            <span className="text-xs font-medium">TVA: {prestation.tva}%</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${
+                                        prestation.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                      }`}>
+                                        {prestation.active ? 'Actif' : 'Inactif'}
+                                      </span>
                                     </div>
-                                  ))}
+                                    <p className="text-sm text-[#213f5b] opacity-75 line-clamp-3 mt-2">{prestation.designation}</p>
+                                  </div>
+                                  
+                                  <div className="p-5">
+                                    <div className="space-y-3">
+                                      {prestation.operations && prestation.operations.length > 0 && (
+                                        <div>
+                                          <p className="text-xs text-[#213f5b] opacity-75 mb-1">Opérations associées</p>
+                                          <div className="flex flex-wrap gap-2">
+                                            {prestation.operations.map(op => (
+                                              <span key={op} className="inline-flex text-xs bg-[#bfddf9] text-[#213f5b] rounded-lg px-2 py-1">
+                                                {op.split(" : ")[0]}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {prestation.produits && prestation.produits.length > 0 && (
+                                        <div>
+                                          <p className="text-xs text-[#213f5b] opacity-75 mb-1">Produits associés</p>
+                                          <div className="flex flex-wrap gap-2">
+                                            {prestation.produits.map(prodId => {
+                                              const product = products.find(p => p.id === prodId);
+                                              return (
+                                                <span key={prodId} className="inline-flex text-xs bg-[#d2fcb2] text-[#213f5b] rounded-lg px-2 py-1">
+                                                  {product ? (product.libelle || product.reference) : prodId}
+                                                </span>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="flex justify-end gap-2 mt-4">
+                                      <button 
+                                        className="p-2 rounded-full text-[#213f5b] hover:bg-[#bfddf9] transition-colors"
+                                        onClick={() => handleEditPrestation(prestation)}
+                                      >
+                                        <PencilIcon className="h-4 w-4" />
+                                      </button>
+                                      <button 
+                                        className="p-2 rounded-full text-[#213f5b] hover:bg-red-100 hover:text-red-500 transition-colors"
+                                        onClick={() => handleDeletePrestation(prestation.id)}
+                                      >
+                                        <TrashIcon className="h-4 w-4" />
+                                      </button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
+                                        onClick={() => handleEditPrestation(prestation)}
+                                      >
+                                        Modifier
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    
+                      {viewMode === "form" && (
+                        <motion.div
+                          key="prestation-form"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="space-y-6"
+                        >
+                          {/* Enregistrement prestation */}
+                          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                            <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-1 rounded-full bg-[#213f5b]"></div>
+                                <h2 className="text-xl font-bold text-[#213f5b]">Enregistrement prestation</h2>
+                              </div>
+                              <p className="text-[#213f5b] opacity-75 ml-3 pl-3">Informations de base de la prestation</p>
+                            </div>
+                            <div className="p-6">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="reference-prestation">Reference de la prestation *</label>
+                                  <input
+                                    id="reference-prestation"
+                                    type="text"
+                                    name="reference"
+                                    value={prestationForm.reference}
+                                    onChange={handlePrestationChange}
+                                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="quantite-prestation">Quantité</label>
+                                  <input
+                                    id="quantite-prestation"
+                                    type="number"
+                                    name="quantite"
+                                    value={prestationForm.quantite}
+                                    onChange={handlePrestationChange}
+                                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="unite-prestation">Selectionner une unité</label>
+                                  <input
+                                    id="unite-prestation"
+                                    type="text"
+                                    name="unite"
+                                    value={prestationForm.unite}
+                                    onChange={handlePrestationChange}
+                                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="prixTTC-prestation">Prix TTC</label>
+                                  <input
+                                    id="prixTTC-prestation"
+                                    type="number"
+                                    name="prixTTC"
+                                    value={prestationForm.prixTTC}
+                                    onChange={handlePrestationChange}
+                                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  />
+                                </div>
+
+                                <div className="space-y-2 md:col-span-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="designation-prestation">Désignation *</label>
+                                  <textarea
+                                    id="designation-prestation"
+                                    name="designation"
+                                    value={prestationForm.designation}
+                                    onChange={handlePrestationChange}
+                                    rows={5}
+                                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="tva-prestation">TVA</label>
+                                  <select
+                                    id="tva-prestation"
+                                    name="tva"
+                                    value={prestationForm.tva}
+                                    onChange={handlePrestationChange}
+                                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  >
+                                    <option value="">Sélectionner un taux de TVA</option>
+                                    <option value="0">0%</option>
+                                    <option value="5.5">5,5%</option>
+                                    <option value="10">10%</option>
+                                    <option value="20">20%</option>
+                                  </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="codeComptable">Code comptable</label>
+                                  <input
+                                    id="codeComptable"
+                                    type="text"
+                                    name="codeComptable"
+                                    value={prestationForm.codeComptable}
+                                    onChange={handlePrestationChange}
+                                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  />
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                  <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                      type="checkbox" 
+                                      className="sr-only peer"
+                                      checked={prestationForm.active}
+                                      onChange={() => setPrestationForm({...prestationForm, active: !prestationForm.active})}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-[#213f5b] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#213f5b]"></div>
+                                    <span className="ml-3 text-sm font-medium text-[#213f5b]">Active</span>
+                                  </label>
                                 </div>
                               </div>
-                            )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Affecter cette prestation à un ou plusieurs produits */}
-                        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                          <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
-                            <div className="flex items-center gap-2">
-                              <div className="h-8 w-1 rounded-full bg-[#d2fcb2]"></div>
-                              <h2 className="text-xl font-bold text-[#213f5b]">Affecter cette prestation à un ou plusieurs produits</h2>
+                          {/* Affecter cette prestation à une ou plusieurs opérations */}
+                          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                            <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-1 rounded-full bg-[#bfddf9]"></div>
+                                <h2 className="text-xl font-bold text-[#213f5b]">Affecter cette prestation à une ou plusieurs opérations</h2>
+                              </div>
                             </div>
-                          </div>
-                          <div className="p-6">
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="produits">Produit(s)</label>
-                              <select
-                                id="produits"
-                                name="produits"
-                                onChange={handleProduitSelection}
-                                className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                              >
-                                <option value="">Sélectionner un produit</option>
-                                {products.map(product => (
-                                  <option key={product.id} value={product.id}>{product.libelle || product.reference}</option>
-                                ))}
-                              </select>
-                            </div>
-                            {selectedProducts.length > 0 && (
-                              <div className="mt-4">
-                                <p className="text-sm font-medium text-[#213f5b] mb-2">Produits sélectionnés:</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {selectedProducts.map(prodId => {
-                                    const product = products.find(p => p.id === prodId);
-                                    return (
-                                      <div key={prodId} className="bg-[#d2fcb2] text-[#213f5b] rounded-lg px-3 py-1 text-sm flex items-center">
-                                        {product ? (product.libelle || product.reference) : prodId}
+                            <div className="p-6">
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="operations">Opération(s)</label>
+                                <select
+                                  id="operations"
+                                  name="operations"
+                                  onChange={handlePrestationOperationChange}
+                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                >
+                                  <option value="">Sélectionner une opération</option>
+                                  {operations.map((operation) => (
+                                    <option key={operation.id} value={`${operation.code} : ${operation.name}`}>
+                                      {operation.code} : {operation.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              {selectedOperations.length > 0 && (
+                                <div className="mt-4">
+                                  <p className="text-sm font-medium text-[#213f5b] mb-2">Opérations sélectionnées:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedOperations.map(op => (
+                                      <div key={op} className="bg-[#bfddf9] text-[#213f5b] rounded-lg px-3 py-1 text-sm flex items-center">
+                                        {op}
                                         <button
-                                          onClick={() => setSelectedProducts(selectedProducts.filter(p => p !== prodId))}
+                                          onClick={() => setSelectedOperations(selectedOperations.filter(o => o !== op))}
                                           className="ml-2 text-[#213f5b] hover:text-red-500"
                                         >
                                           <XMarkIcon className="h-4 w-4" />
                                         </button>
                                       </div>
-                                    );
-                                  })}
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Submit Buttons - Full Width */}
-                        <div className="flex flex-wrap justify-end gap-3 mt-4">
-                          <Button
-                            variant="outline"
-                            className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
-                            onClick={handleCancelForm}
-                          >
-                            Annuler
-                          </Button>
-                          <Button
-                            className="bg-[#213f5b] hover:bg-[#152a3d] text-white"
-                            onClick={handleSavePrestation}
-                          >
-                            Enregistrer
-                          </Button>
-                        </div>
-                      </motion.div>
-                    )}
+                          {/* Affecter cette prestation à un ou plusieurs produits */}
+                          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                            <div className="bg-gradient-to-r from-white to-[#f8fafc] border-b p-6">
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-1 rounded-full bg-[#d2fcb2]"></div>
+                                <h2 className="text-xl font-bold text-[#213f5b]">Affecter cette prestation à un ou plusieurs produits</h2>
+                              </div>
+                            </div>
+                            <div className="p-6">
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="produits">Produit(s)</label>
+                                <select
+                                  id="produits"
+                                  name="produits"
+                                  onChange={handleProduitSelection}
+                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                >
+                                  <option value="">Sélectionner un produit</option>
+                                  {products.map(product => (
+                                    <option key={product.id} value={product.id}>{product.libelle || product.reference}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              {selectedProducts.length > 0 && (
+                                <div className="mt-4">
+                                  <p className="text-sm font-medium text-[#213f5b] mb-2">Produits sélectionnés:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedProducts.map(prodId => {
+                                      const product = products.find(p => p.id === prodId);
+                                      return (
+                                        <div key={prodId} className="bg-[#d2fcb2] text-[#213f5b] rounded-lg px-3 py-1 text-sm flex items-center">
+                                          {product ? (product.libelle || product.reference) : prodId}
+                                          <button
+                                            onClick={() => setSelectedProducts(selectedProducts.filter(p => p !== prodId))}
+                                            className="ml-2 text-[#213f5b] hover:text-red-500"
+                                          >
+                                            <XMarkIcon className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Submit Buttons - Full Width */}
+                          <div className="flex flex-wrap justify-end gap-3 mt-4">
+                            <Button
+                              variant="outline"
+                              className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
+                              onClick={handleCancelForm}
+                            >
+                              Annuler
+                            </Button>
+                            <Button
+                              className="bg-[#213f5b] hover:bg-[#152a3d] text-white"
+                              onClick={handleSavePrestation}
+                            >
+                              Enregistrer
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
                   </>
                 )}
               </AnimatePresence>
@@ -2653,18 +2747,18 @@ export default function ProduitPrestationPage() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        {/* Operations List View */}
+                        {/* Operations Grid View */}
                         <div className="mb-4 flex justify-end">
                           <div className="inline-flex rounded-md shadow-sm">
                             <button 
                               type="button" 
-                              className="px-4 py-2 text-sm font-medium text-[#213f5b] bg-white border border-[#bfddf9] rounded-l-lg hover:bg-[#f0f7ff] focus:z-10 focus:outline-none"
+                              className="px-4 py-2 text-sm font-medium text-white bg-[#213f5b] border border-[#213f5b] rounded-l-lg hover:bg-[#152a3d] focus:z-10 focus:outline-none"
                             >
                               <TableCellsIcon className="w-5 h-5" />
                             </button>
                             <button 
                               type="button" 
-                              className="px-4 py-2 text-sm font-medium text-white bg-[#213f5b] border border-[#213f5b] rounded-r-lg hover:bg-[#152a3d] focus:z-10 focus:outline-none"
+                              className="px-4 py-2 text-sm font-medium text-[#213f5b] bg-white border border-[#bfddf9] rounded-r-lg hover:bg-[#f0f7ff] focus:z-10 focus:outline-none"
                             >
                               <ListBulletIcon className="w-5 h-5" />
                             </button>
@@ -2685,50 +2779,72 @@ export default function ProduitPrestationPage() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-[#213f5b] uppercase bg-[#f8fafc]">
-                                  <tr>
-                                    <th scope="col" className="px-6 py-4">Code</th>
-                                    <th scope="col" className="px-6 py-4">Nom</th>
-                                    <th scope="col" className="px-6 py-4">Description</th>
-                                    <th scope="col" className="px-6 py-4">Catégorie</th>
-                                    <th scope="col" className="px-6 py-4">Statut</th>
-                                    <th scope="col" className="px-6 py-4 text-right">Actions</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {filteredOperations.map((operation) => (
-                                    <tr key={operation.id} className="border-b hover:bg-[#f0f7ff] transition-colors">
-                                      <td className="px-6 py-4 font-medium text-[#213f5b]">{operation.code}</td>
-                                      <td className="px-6 py-4 text-[#213f5b]">{operation.name}</td>
-                                      <td className="px-6 py-4 text-[#213f5b] max-w-[300px] truncate">{operation.description}</td>
-                                      <td className="px-6 py-4 text-[#213f5b]">{operation.categorie}</td>
-                                      <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${operation.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                          {operation.active ? 'Actif' : 'Inactif'}
-                                        </span>
-                                      </td>
-                                      <td className="px-6 py-4 text-right space-x-2">
-                                        <button 
-                                          className="font-medium text-[#213f5b] hover:text-[#152a3d] p-1 rounded hover:bg-[#bfddf9]"
-                                          onClick={() => handleEditOperation(operation)}
-                                        >
-                                          <PencilIcon className="h-4 w-4" />
-                                        </button>
-                                        <button 
-                                          className="font-medium text-[#213f5b] hover:text-red-500 p-1 rounded hover:bg-red-100"
-                                          onClick={() => handleDeleteOperation(operation.id)}
-                                        >
-                                          <TrashIcon className="h-4 w-4" />
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredOperations.map((operation) => (
+                              <motion.div
+                                key={operation.id}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="bg-white rounded-xl border border-[#eaeaea] shadow-sm hover:shadow-md hover:border-[#bfddf9] transition-all group"
+                                whileHover={{ y: -4 }}
+                              >
+                                <div className="p-5 border-b border-[#eaeaea] bg-gradient-to-r from-white to-[#f8fafc]">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex items-start gap-3">
+                                      <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
+                                        <CogIcon className="h-6 w-6 text-[#213f5b]" />
+                                      </div>
+                                      <div>
+                                        <div className="flex items-center">
+                                          <h3 className="font-bold text-[#213f5b]">{operation.code}</h3>
+                                        </div>
+                                        <p className="text-sm font-medium text-[#213f5b]">{operation.name}</p>
+                                      </div>
+                                    </div>
+                                    <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${
+                                      operation.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
+                                      {operation.active ? 'Actif' : 'Inactif'}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-[#213f5b] opacity-75 line-clamp-3 mt-2">{operation.description}</p>
+                                </div>
+                                
+                                <div className="p-5">
+                                  <div className="space-y-3">
+                                    <div>
+                                      <p className="text-xs text-[#213f5b] opacity-75 mb-1">Catégorie</p>
+                                      <p className="text-sm font-medium text-[#213f5b]">{operation.categorie}</p>
+                                    </div>
+                                    
+                                    {/* You could add additional data here if needed */}
+                                  </div>
+                                  
+                                  <div className="flex justify-end gap-2 mt-4">
+                                    <button 
+                                      className="p-2 rounded-full text-[#213f5b] hover:bg-[#bfddf9] transition-colors"
+                                      onClick={() => handleEditOperation(operation)}
+                                    >
+                                      <PencilIcon className="h-4 w-4" />
+                                    </button>
+                                    <button 
+                                      className="p-2 rounded-full text-[#213f5b] hover:bg-red-100 hover:text-red-500 transition-colors"
+                                      onClick={() => handleDeleteOperation(operation.id)}
+                                    >
+                                      <TrashIcon className="h-4 w-4" />
+                                    </button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
+                                      onClick={() => handleEditOperation(operation)}
+                                    >
+                                      Modifier
+                                    </Button>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
                           </div>
                         )}
                       </motion.div>

@@ -57,3 +57,16 @@ h1, h2, h3, h4, h5, h6 {
 .hover\:paused:hover {
   animation-play-state: paused;
 }
+
+.event-resize-handle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  cursor: ns-resize;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+.event-resize-handle:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}

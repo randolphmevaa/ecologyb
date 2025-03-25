@@ -377,7 +377,7 @@ export default function MandataireMPRPage() {
                         <div className="p-5">
                           <div className="space-y-2 mb-4">
                             <div className="flex gap-2">
-                              <span className="text-xs text-[#213f5b] opacity-75">N° de mandat:</span>
+                              <span className="text-xs text-[#213f5b] opacity-75">N° de matricule:</span>
                               <span className="text-sm font-medium text-[#213f5b]">{mandataire.numeroMandat}</span>
                             </div>
                             <div className="flex gap-2">
@@ -510,10 +510,10 @@ export default function MandataireMPRPage() {
                         />
                       </div>
 
-                      {/* N° de Mandat */}
+                      {/* N° de matricule */}
                       <div className="space-y-2">
                         <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="numeroMandat">
-                          N° de Mandat
+                          N° de matricule
                         </label>
                         <input
                           id="numeroMandat"

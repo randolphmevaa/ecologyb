@@ -33,164 +33,171 @@ import {
 
 // Define Product interface
 interface Product {
-    id: string;
-    reference: string;
-    description: string;
-    libelle: string;
-    quantite: number;
-    prixTTC: number;
-    categorie: string;
-    tva: string;
-    marque: string;
-    unite: string;
-    operation: string;
-    details: Record<string, string | number | boolean | undefined>;
-  }
+  id: string;
+  reference: string;
+  description: string;
+  libelle: string;
+  quantite: number;
+  prixTTC: number;
+  categorie: string;
+  tva: string;
+  marque: string;
+  unite: string;
+  operation: string;
+  imageUrl?: string; // Added image URL property
+  details: Record<string, string | number | boolean | undefined>;
+}
 
 // Extended Product interface for stock functionality
 interface StockProduct extends Product {
-  stock: {
-    current: number;
-    min: number;
-    ordered: number;
-    reserved: number;
-    incoming: number;
-    lastUpdated: string;
-    locations?: Array<{
-      name: string;
-      quantity: number;
-    }>;
-    history?: Array<{
-      date: string;
-      type: "in" | "out" | "adjustment";
-      quantity: number;
-      note?: string;
-    }>;
-  };
+stock: {
+  current: number;
+  min: number;
+  ordered: number;
+  reserved: number;
+  incoming: number;
+  lastUpdated: string;
+  locations?: Array<{
+    name: string;
+    quantity: number;
+  }>;
+  history?: Array<{
+    date: string;
+    type: "in" | "out" | "adjustment";
+    quantity: number;
+    note?: string;
+  }>;
+};
 }
 
 const SAMPLE_PRODUCTS = [
-    {
-      id: "P001",
-      reference: "PAC-AW-PREMIUM",
-      description: "Pompe à chaleur Air/Eau haute performance énergétique",
-      libelle: "PAC Air/Eau Premium",
-      quantite: 1,
-      prixTTC: 8500,
-      categorie: "MONO GESTE",
-      tva: "5.5",
-      marque: "EcoTherm",
-      unite: "Unité",
-      operation: "BAR-TH-171 : POMPE A CHALEUR AIR/EAU",
-      details: {
-        classe: "A+++",
-        efficaciteEnergetique: "195",
-        temperaturePAC: "65°C",
-        classeRegulateur: "VI",
-        cop: "4.8",
-        scop: "5.2",
-        temperatureEau: "60°C",
-        temperatureArret: "-25°C"
-      }
-    },
-    {
-      id: "P002",
-      reference: "PAC-AA-MULTI",
-      description: "Système multi-split air/air pour habitation jusqu'à 120m²",
-      libelle: "PAC Air/Air Multisplit",
-      quantite: 1,
-      prixTTC: 4750,
-      categorie: "MONO GESTE",
-      tva: "5.5",
-      marque: "Clim+",
-      unite: "Unité",
-      operation: "BAR-TH-129 : POMPE A CHALEUR AIR/AIR",
-      details: {
-        cop: "4.1",
-        scop: "4.3",
-        puissanceNominale: "8kW"
-      }
-    },
-    {
-      id: "P003",
-      reference: "GRANULES-FLAMME7",
-      description: "Poêle à granulés avec technologie flamme verte 7*",
-      libelle: "Poêle à granulés Premium",
-      quantite: 1,
-      prixTTC: 3200,
-      categorie: "MONO GESTE",
-      tva: "5.5",
-      marque: "BoisEco",
-      unite: "Unité",
-      operation: "BAR-TH-112 : POELE A GRANULES",
-      details: {
-        labelFlameVerte: "OUI",
-        typeAppareil: "PEOLE",
-        utilisant: "granules de bois",
-        efficaciteEnergetique: "87"
-      }
-    },
-    {
-      id: "P004",
-      reference: "CET-AIR-AMBIANT",
-      description: "Chauffe-eau thermodynamique sur air ambiant 200L",
-      libelle: "CET 200L",
-      quantite: 1,
-      prixTTC: 2800,
-      categorie: "MONO GESTE",
-      tva: "5.5",
-      marque: "AquaTherm",
-      unite: "Unité",
-      operation: "BAR-TH-148 : CHAUFFE EAU THERMODYNAMIQUE",
-      details: {
-        cop: "3.5",
-        scop: "3.7",
-        typeInstallationBallon: "SUR AIR AMBIANT",
-        profilSousTirage: "L",
-        efficaciteEnergetique: "135"
-      }
-    },
-    {
-      id: "P005",
-      reference: "SSC-COMPLET",
-      description: "Système solaire combiné avec régulation intelligente",
-      libelle: "Système Solaire Combiné",
-      quantite: 1,
-      prixTTC: 9500,
-      categorie: "PANNEAUX PHOTOVOLTAIQUE",
-      tva: "5.5",
-      marque: "SolarPlus",
-      unite: "Unité",
-      operation: "BAR-TH-143 : SYSTEME SOLAIRE COMBINE",
-      details: {
-        productiviteCapteur: "580",
-        capaciteStockage: "400",
-        surfaceCapteurs: "8.5",
-        certificationCapteurs: "OUI",
-        capteursHybrides: "NON"
-      }
-    },
-    {
-      id: "P006",
-      reference: "CESI-COMPLET",
-      description: "Chauffe-eau solaire individuel avec capteurs plans",
-      libelle: "CESI 300L",
-      quantite: 1,
-      prixTTC: 4200,
-      categorie: "PANNEAUX PHOTOVOLTAIQUE",
-      tva: "5.5",
-      marque: "SolarPlus",
-      unite: "Unité",
-      operation: "BAR-TH-101 : CHAUFFE EAU SOLAIRE INDIVIDUEL",
-      details: {
-        capaciteStockage: "300",
-        efficaciteEnergetique: "B",
-        surfaceCapteurs: "4.5",
-        certificationCapteurs: "OUI",
-        capteursHybrides: "OUI"
-      }
+  {
+    id: "P001",
+    reference: "PAC-AW-PREMIUM",
+    description: "Pompe à chaleur Air/Eau haute performance énergétique",
+    libelle: "PAC Air/Eau Premium",
+    quantite: 1,
+    prixTTC: 8500,
+    categorie: "MONO GESTE",
+    tva: "5.5",
+    marque: "EcoTherm",
+    unite: "Unité",
+    operation: "BAR-TH-171 : POMPE A CHALEUR AIR/EAU",
+    imageUrl: "https://images.unsplash.com/photo-1588238323099-14abfe4a6015?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    details: {
+      classe: "A+++",
+      efficaciteEnergetique: "195",
+      temperaturePAC: "65°C",
+      classeRegulateur: "VI",
+      cop: "4.8",
+      scop: "5.2",
+      temperatureEau: "60°C",
+      temperatureArret: "-25°C"
     }
-  ];
+  },
+  {
+    id: "P002",
+    reference: "PAC-AA-MULTI",
+    description: "Système multi-split air/air pour habitation jusqu'à 120m²",
+    libelle: "PAC Air/Air Multisplit",
+    quantite: 1,
+    prixTTC: 4750,
+    categorie: "MONO GESTE",
+    tva: "5.5",
+    marque: "Clim+",
+    unite: "Unité",
+    operation: "BAR-TH-129 : POMPE A CHALEUR AIR/AIR",
+    imageUrl: "https://plus.unsplash.com/premium_photo-1728940153866-35e9ef596e0f?q=80&w=2012&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    details: {
+      cop: "4.1",
+      scop: "4.3",
+      puissanceNominale: "8kW"
+    }
+  },
+  {
+    id: "P003",
+    reference: "GRANULES-FLAMME7",
+    description: "Poêle à granulés avec technologie flamme verte 7*",
+    libelle: "Poêle à granulés Premium",
+    quantite: 1,
+    prixTTC: 3200,
+    categorie: "MONO GESTE",
+    tva: "5.5",
+    marque: "BoisEco",
+    unite: "Unité",
+    operation: "BAR-TH-112 : POELE A GRANULES",
+    imageUrl: "https://images.unsplash.com/photo-1562408954-be39449c4962?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    details: {
+      labelFlameVerte: "OUI",
+      typeAppareil: "PEOLE",
+      utilisant: "granules de bois",
+      efficaciteEnergetique: "87"
+    }
+  },
+  {
+    id: "P004",
+    reference: "CET-AIR-AMBIANT",
+    description: "Chauffe-eau thermodynamique sur air ambiant 200L",
+    libelle: "CET 200L",
+    quantite: 1,
+    prixTTC: 2800,
+    categorie: "MONO GESTE",
+    tva: "5.5",
+    marque: "AquaTherm",
+    unite: "Unité",
+    operation: "BAR-TH-148 : CHAUFFE EAU THERMODYNAMIQUE",
+    imageUrl: "https://images.unsplash.com/photo-1440342359743-84fcb8c21f21?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    details: {
+      cop: "3.5",
+      scop: "3.7",
+      typeInstallationBallon: "SUR AIR AMBIANT",
+      profilSousTirage: "L",
+      efficaciteEnergetique: "135"
+    }
+  },
+  {
+    id: "P005",
+    reference: "SSC-COMPLET",
+    description: "Système solaire combiné avec régulation intelligente",
+    libelle: "Système Solaire Combiné",
+    quantite: 1,
+    prixTTC: 9500,
+    categorie: "PANNEAUX PHOTOVOLTAIQUE",
+    tva: "5.5",
+    marque: "SolarPlus",
+    unite: "Unité",
+    operation: "BAR-TH-143 : SYSTEME SOLAIRE COMBINE",
+    imageUrl: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80",
+    details: {
+      productiviteCapteur: "580",
+      capaciteStockage: "400",
+      surfaceCapteurs: "8.5",
+      certificationCapteurs: "OUI",
+      capteursHybrides: "NON"
+    }
+  },
+  {
+    id: "P006",
+    reference: "CESI-COMPLET",
+    description: "Chauffe-eau solaire individuel avec capteurs plans",
+    libelle: "CESI 300L",
+    quantite: 1,
+    prixTTC: 4200,
+    categorie: "PANNEAUX PHOTOVOLTAIQUE",
+    tva: "5.5",
+    marque: "SolarPlus",
+    unite: "Unité",
+    operation: "BAR-TH-101 : CHAUFFE EAU SOLAIRE INDIVIDUEL",
+    imageUrl: "https://images.unsplash.com/photo-1622219970016-09f07c1eed36?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    details: {
+      capaciteStockage: "300",
+      efficaciteEnergetique: "B",
+      surfaceCapteurs: "4.5",
+      certificationCapteurs: "OUI",
+      capteursHybrides: "OUI"
+    }
+  }
+];
 
 // Generate stock data for sample products
 const STOCK_PRODUCTS: StockProduct[] = SAMPLE_PRODUCTS.map(product => ({
@@ -1256,60 +1263,81 @@ export default function StockPage() {
                           key={product.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="bg-white rounded-xl border border-[#eaeaea] shadow-sm hover:shadow-md hover:border-[#bfddf9] transition-all group"
+                          className="bg-white rounded-xl border border-[#eaeaea] shadow-sm hover:shadow-md hover:border-[#bfddf9] transition-all group overflow-hidden"
                           whileHover={{ y: -4 }}
                         >
-                          <div className="p-5 border-b border-[#eaeaea] bg-gradient-to-r from-white to-[#f8fafc]">
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="flex items-start gap-3">
-                                <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
-                                  {/* Add product logo based on category or brand */}
-                                  {product.categorie === "MONO GESTE" ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                  ) : product.categorie === "PANNEAUX PHOTOVOLTAIQUE" ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                    </svg>
-                                  ) : (
-                                    <CubeIcon className="h-6 w-6 text-[#213f5b]" />
-                                  )}
-                                </div>
-                                <div>
-                                  <h3 className="font-bold text-[#213f5b] line-clamp-1">{product.libelle || product.reference}</h3>
-                                  <p className="text-xs opacity-75">{product.reference}</p>
-                                </div>
-                              </div>
+                          {/* Product Image Section - Using product-specific images */}
+                          <div className="relative h-48 overflow-hidden bg-gradient-to-r from-[#f0f7ff] to-[#f8fafc] flex items-center justify-center">
+                            <div className="absolute top-2 right-2 z-10">
                               {renderStockStatus(product)}
                             </div>
-                            <p className="text-sm text-[#213f5b] opacity-75 line-clamp-2 mt-1">{product.description}</p>
+                            
+                            {/* Use the product's imageUrl if available, otherwise use a fallback based on category */}
+                            <img 
+                              src={product.imageUrl || (
+                                product.categorie === "PANNEAUX PHOTOVOLTAIQUE" 
+                                  ? "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80"
+                                  : "https://images.unsplash.com/photo-1643241281835-54659c3c6286?auto=format&fit=crop&w=800&q=80"
+                              )} 
+                              alt={product.libelle} 
+                              className="object-cover h-full w-full transition-transform duration-300 group-hover:scale-105"
+                              // onError={(e) => {
+                              //   // Fallback if image fails to load
+                              //   e.target.src = "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=800&q=80";
+                              // }}
+                            />
+                            
+                            {/* Category Badge */}
+                            <div className="absolute bottom-2 left-2 bg-white bg-opacity-90 rounded-full px-3 py-1 text-xs font-medium text-[#213f5b] shadow-sm">
+                              {product.categorie}
+                            </div>
+                            
+                            {/* Brand Badge */}
+                            <div className="absolute bottom-2 right-2 bg-[#213f5b] bg-opacity-90 rounded-full px-3 py-1 text-xs font-medium text-white shadow-sm">
+                              {product.marque}
+                            </div>
                           </div>
                           
-                          <div className="p-5">
-                            <div className="flex justify-between mb-4">
+                          {/* Product Info Section */}
+                          <div className="p-4">
+                            <div className="flex justify-between items-start mb-2">
                               <div>
+                                <h3 className="font-bold text-[#213f5b] text-lg line-clamp-1">{product.libelle || product.reference}</h3>
+                                <p className="text-xs text-[#213f5b] opacity-75">{product.reference}</p>
+                              </div>
+                              <div className="text-[#213f5b] font-bold text-lg">
+                                {product.prixTTC.toLocaleString()} €
+                              </div>
+                            </div>
+                            <p className="text-sm text-[#213f5b] opacity-75 line-clamp-2 mb-3">{product.description}</p>
+                            
+                            {/* Stock Information - Improved layout */}
+                            <div className="grid grid-cols-2 gap-4 mb-3">
+                              <div className="bg-[#f8fafc] rounded-lg p-2 text-center">
                                 <p className="text-xs text-[#213f5b] opacity-75">Stock actuel</p>
-                                <p className="font-semibold text-[#213f5b]">{product.stock.current} <span className="text-xs">{product.unite}</span></p>
+                                <p className="font-semibold text-[#213f5b]">
+                                  {product.stock.current} <span className="text-xs">{product.unite}</span>
+                                </p>
                               </div>
-                              <div>
-                                <p className="text-xs text-[#213f5b] opacity-75">Stock min</p>
-                                <p className="font-semibold text-[#213f5b]">{product.stock.min} <span className="text-xs">{product.unite}</span></p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-[#213f5b] opacity-75">Prix unitaire</p>
-                                <p className="font-semibold text-[#213f5b]">{product.prixTTC.toLocaleString()} €</p>
+                              <div className="bg-[#f8fafc] rounded-lg p-2 text-center">
+                                <p className="text-xs text-[#213f5b] opacity-75">Stock minimum</p>
+                                <p className="font-semibold text-[#213f5b]">
+                                  {product.stock.min} <span className="text-xs">{product.unite}</span>
+                                </p>
                               </div>
                             </div>
                             
+                            {/* Stock Level Bar */}
                             <div className="mb-4">
                               <div className="flex justify-between mb-1">
                                 <span className="text-xs font-medium text-[#213f5b]">Niveau de stock</span>
-                                <span className="text-xs text-[#213f5b] opacity-75"></span>
+                                <span className="text-xs text-[#213f5b] opacity-75">
+                                  {calculateStockHealth(product)}%
+                                </span>
                               </div>
-                              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                              <div className="w-full bg-gray-200 rounded-full h-2">
                                 <div 
-                                  className={`h-1.5 rounded-full ${
+                                  className={`h-2 rounded-full ${
                                     calculateStockHealth(product) > 66
                                       ? "bg-green-500"
                                       : calculateStockHealth(product) > 33
@@ -1321,30 +1349,27 @@ export default function StockPage() {
                               </div>
                             </div>
                             
-                            <div className="flex justify-between items-center">
+                            {/* Actions Section */}
+                            <div className="flex justify-between items-center pt-2 border-t border-[#eaeaea]">
                               <div className="text-xs text-[#213f5b] opacity-75">
-                                Mis à jour le {formatDate(product.stock.lastUpdated)}
+                                Mis à jour le {formatDate(product.stock.lastUpdated).split(' ')[0]}
                               </div>
                               
                               <div className="flex gap-2">
                                 <button 
                                   className="p-2 rounded-full text-[#213f5b] hover:bg-[#bfddf9] transition-colors"
                                   onClick={() => handleOpenUpdateModal(product)}
+                                  title="Mettre à jour le stock"
                                 >
                                   <ArrowPathIcon className="h-4 w-4" />
-                                </button>
-                                <button 
-                                  className="p-2 rounded-full text-[#213f5b] hover:bg-[#bfddf9] transition-colors"
-                                  onClick={() => handleViewProduct(product)}
-                                >
-                                  <EyeIcon className="h-4 w-4" />
                                 </button>
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9]"
+                                  className="border-[#bfddf9] text-[#213f5b] hover:bg-[#bfddf9] flex items-center"
                                   onClick={() => handleViewProduct(product)}
                                 >
+                                  <EyeIcon className="h-4 w-4 mr-1" />
                                   Détails
                                 </Button>
                               </div>

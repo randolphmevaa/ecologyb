@@ -19,6 +19,7 @@ import {
   UserCircleIcon,
   Cog6ToothIcon,
   UserIcon,
+  BookOpenIcon,
   EnvelopeIcon,
   CalendarIcon,
   FolderIcon,
@@ -1271,7 +1272,7 @@ function AdminHeader({ user, contactId }) {
       },
       { name: "Chat", href: "/dashboard/admin/emails", icon: EnvelopeIcon, badge: 24 },
       { name: "Agenda", href: "/dashboard/admin/calendar", icon: CalendarIcon },
-      { name: "Produits & Prestations", href: "/dashboard/admin/products-services", icon: ShoppingBagIcon },
+      { name: "Catalogue", href: "/dashboard/admin/products-services", icon: BookOpenIcon },
       { 
         name: "Installateur", 
         href: "/dashboard/admin/sous-traitants", 
