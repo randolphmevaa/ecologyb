@@ -1928,7 +1928,7 @@ export default function SupportPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-[#213f5b] mb-1">
-                  Support & S.A.V.
+                  Service Après-Vente
                 </h1>
                 <p className="text-[#5a6e87] font-medium">
                   {new Date().toLocaleDateString("fr-FR", {

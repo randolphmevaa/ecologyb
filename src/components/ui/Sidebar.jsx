@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaFacebook } from "react-icons/fa";
 import { FaWhatsapp } from "react-icons/fa";
 import { FaGoogleDrive } from "react-icons/fa";
 import { BiLogoGmail } from "react-icons/bi";
@@ -105,12 +106,12 @@ export function Sidebar({ role }) {
       { name: "Accueil", href: "/dashboard/pm", icon: HomeIcon },
       { name: "Projets", href: "/dashboard/pm/projects", icon: FolderIcon },
       { name: "Tâches", href: "/dashboard/pm/tasks", icon: ClipboardDocumentCheckIcon },
-      // { name: "Support & Tickets", href: "/dashboard/pm/tickets", icon: LifebuoyIcon },
+      // { name: "Service Après-Vente", href: "/dashboard/pm/tickets", icon: LifebuoyIcon },
       { name: "Agenda", href: "/dashboard/pm/calendar", icon: CalendarIcon },
       { name: "Chat", href: "/dashboard/pm/emails", icon: EnvelopeIcon },
       { name: "Facturation / Paiements", href: "/dashboard/pm/billing", icon: CreditCardIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/pm/documents", icon: DocumentIcon },
-      { name: "Support & Tickets", href: "/dashboard/pm/support", icon: LifebuoyIcon },
+      { name: "Service Après-Vente", href: "/dashboard/pm/support", icon: LifebuoyIcon },
       { name: "Paramètres de la Régie", href: "/dashboard/pm/reglages", icon: SettingsIcon },
     ];
   } else if (role === "Technician / Installer") {
@@ -124,7 +125,7 @@ export function Sidebar({ role }) {
   } else if (role === "Customer Support / Service Representative") {
     navigation = [
       { name: "Accueil", href: "/dashboard/support", icon: HomeIcon },
-      { name: "Support & Tickets", href: "/dashboard/support/tickets", icon: LifebuoyIcon },
+      { name: "Service Après-Vente", href: "/dashboard/support/tickets", icon: LifebuoyIcon },
       { name: "Clients & Organisations", href: "/dashboard/support/contacts-organizations", icon: UserCircleIcon },
       { name: "Chat", href: "/dashboard/support/emails", icon: EnvelopeIcon },
       { name: "Agenda", href: "/dashboard/support/calendar", icon: CalendarIcon },
@@ -182,7 +183,7 @@ export function Sidebar({ role }) {
       },
       { name: "Facturation / Paiements", href: "/dashboard/admin/billing", icon: CreditCardIcon },
       { name: "Rapports / Statistiques", href: "/dashboard/admin/reports", icon: ChartBarIcon },
-      { name: "Support & Tickets", href: "/dashboard/admin/support", icon: LifebuoyIcon },
+      { name: "Service Après-Vente", href: "/dashboard/admin/support", icon: LifebuoyIcon },
       // { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
       { name: "Tout les rôles", href: "/dashboard/admin/administration", icon: UserGroupIcon },
       {
@@ -192,9 +193,12 @@ export function Sidebar({ role }) {
           { name: "Whatsapp", href: "/dashboard/admin/whatsapp", icon: FaWhatsapp },
       { name: "Gmail", href: "/dashboard/admin/gmail", icon: BiLogoGmail },
       { name: "Drive", href: "/dashboard/admin/drive", icon: FaGoogleDrive },
-      { name: "Effy Pro", href: "/dashboard/admin/effy-pro", icon: FaPlus },
+      { name: "Facebook Ads", href: "/dashboard/admin/fb", icon: FaFacebook },
       { name: "Dext", href: "/dashboard/admin/dext", icon: FaPlus },
       { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", icon: FaPlus },
+      { name: "Effy Pro", href: "/dashboard/admin/effy-pro", icon: FaPlus },
+      { name: "Qualigaz", href: "/dashboard/admin/dext", icon: FaPlus },
+      { name: "Fidealis", href: "/dashboard/admin/mpr", icon: FaPlus },
       { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", icon: FaPlus },
         ],
       },

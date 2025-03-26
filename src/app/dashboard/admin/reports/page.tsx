@@ -427,25 +427,25 @@ export default function StatsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Total Installations */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="bg-white rounded-xl p-5 shadow-sm border border-[#eaeaea] hover:shadow-md transition-all"
-            whileHover={{ y: -4 }}
+            className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-blue-50/50 to-blue-100/20 border border-blue-100"
+            whileHover={{ scale: 1.02, y: -2 }}
           >
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs text-[#213f5b] opacity-75">Installations Totales</p>
+                <p className="text-sm font-medium text-[#213f5b]">Installations Totales</p>
                 <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{totalStats.installations}</h3>
-                <p className="text-xs text-[#213f5b] opacity-75 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   sur la période sélectionnée
                 </p>
               </div>
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <HomeModernIcon className="h-6 w-6 text-blue-500" />
+              <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                <HomeModernIcon className="h-5 w-5 text-blue-500" />
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-[#eaeaea]">
+            <div className="mt-3 pt-3 border-t border-blue-100/50">
               <div className="flex items-center gap-1 text-green-500 text-xs">
                 <ArrowTrendingUpIcon className="h-3 w-3" />
                 <span>+12% par rapport à la période précédente</span>
@@ -455,25 +455,25 @@ export default function StatsPage() {
 
           {/* Total Revenue */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
-            className="bg-white rounded-xl p-5 shadow-sm border border-[#eaeaea] hover:shadow-md transition-all"
-            whileHover={{ y: -4 }}
+            className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-green-50/50 to-green-100/20 border border-green-100"
+            whileHover={{ scale: 1.02, y: -2 }}
           >
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs text-[#213f5b] opacity-75">Chiffre d&apos;Affaires</p>
+                <p className="text-sm font-medium text-[#213f5b]">Chiffre d&apos;Affaires</p>
                 <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{formatCurrency(totalStats.revenue)}</h3>
-                <p className="text-xs text-[#213f5b] opacity-75 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   sur la période sélectionnée
                 </p>
               </div>
-              <div className="p-3 bg-green-50 rounded-lg">
-                <CurrencyEuroIcon className="h-6 w-6 text-green-500" />
+              <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                <CurrencyEuroIcon className="h-5 w-5 text-green-500" />
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-[#eaeaea]">
+            <div className="mt-3 pt-3 border-t border-green-100/50">
               <div className="flex items-center gap-1 text-green-500 text-xs">
                 <ArrowTrendingUpIcon className="h-3 w-3" />
                 <span>+8.5% par rapport à la période précédente</span>
@@ -481,27 +481,26 @@ export default function StatsPage() {
             </div>
           </motion.div>
 
-          {/* Meilleur Régie - Replacing "Performance Telepro" */}
+          {/* Meilleur Régie */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.3 }}
-            className="bg-white rounded-xl p-5 shadow-sm border border-[#eaeaea] hover:shadow-md transition-all"
-            whileHover={{ y: -4 }}
+            className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-purple-50/50 to-purple-100/20 border border-purple-100"
+            whileHover={{ scale: 1.02, y: -2 }}
           >
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs text-[#213f5b] opacity-75">Meilleur Régie</p>
+                <p className="text-sm font-medium text-[#213f5b]">Meilleur Régie</p>
                 <h3 className="text-xl font-bold text-[#213f5b] mt-1 truncate">
                   Régie Paris Centre
                 </h3>
-
               </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <BuildingOfficeIcon className="h-6 w-6 text-purple-500" />
+              <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                <BuildingOfficeIcon className="h-5 w-5 text-purple-500" />
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-[#eaeaea]">
+            <div className="mt-3 pt-3 border-t border-purple-100/50">
               <div className="flex justify-between text-xs">
                 <span className="text-[#213f5b] opacity-75">Performance globale</span>
                 <span className="text-purple-500 font-medium">+8.2%</span>
@@ -515,29 +514,35 @@ export default function StatsPage() {
             </div>
           </motion.div>
 
-          {/* Meilleur Commercial - Removed Régie info */}
+          {/* Meilleur Commercial */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.4 }}
-            className="bg-white rounded-xl p-5 shadow-sm border border-[#eaeaea] hover:shadow-md transition-all"
-            whileHover={{ y: -4 }}
+            className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-indigo-50/50 to-indigo-100/20 border border-indigo-100"
+            whileHover={{ scale: 1.02, y: -2 }}
           >
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs text-[#213f5b] opacity-75">Meilleur Commercial</p>
+                <p className="text-sm font-medium text-[#213f5b]">Meilleur Commercial</p>
                 <h3 className="text-xl font-bold text-[#213f5b] mt-1 truncate">
                   Martin Dupont
                 </h3>
               </div>
-              <div className="p-3 bg-indigo-50 rounded-lg">
-                <UserGroupIcon className="h-6 w-6 text-indigo-500" />
+              <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                <UserGroupIcon className="h-5 w-5 text-indigo-500" />
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-[#eaeaea]">
+            <div className="mt-3 pt-3 border-t border-indigo-100/50">
               <div className="flex justify-between text-xs">
                 <span className="text-[#213f5b] opacity-75">Performance</span>
                 <span className="text-indigo-500 font-medium">96%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                <div 
+                  className="h-1.5 rounded-full bg-indigo-500"
+                  style={{ width: `96%` }}
+                ></div>
               </div>
             </div>
           </motion.div>
@@ -1691,17 +1696,26 @@ export default function StatsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-b from-[#f8fafc] to-[#f0f7ff]">
+    <div className="flex h-screen bg-white">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8"
+        style={{
+          background: "linear-gradient(135deg, rgba(191,221,249,0.1) 0%, rgba(210,252,178,0.05) 100%)",
+        }}
+        >
           <div className="max-w-7xl mx-auto px-0 sm:px-2">
             {/* Page Header */}
             <div className="mb-10">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
                 <div className="relative">
+                  <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
                   <div className="absolute -left-3 md:-left-5 top-1 w-1.5 h-12 bg-gradient-to-b from-[#bfddf9] to-[#d2fcb2] rounded-full"></div>
-                  <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#213f5b] to-[#2c5681] mb-2 pl-2">
+                  <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#213f5b] to-[#2c5681] mb-2 pl-2">
                     {selectedRegie 
                       ? `Statistiques : ${selectedRegie.name}` 
                       : "Rapports & Statistiques"}
@@ -1712,6 +1726,8 @@ export default function StatsPage() {
                       : "Analysez les performances et suivez les indicateurs clés"}
                   </p>
                   <div className="absolute -z-10 -top-10 -left-10 w-40 h-40 bg-[#bfddf9] opacity-10 rounded-full blur-3xl"></div>
+
+                  </motion.div>
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-3">

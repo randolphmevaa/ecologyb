@@ -31,7 +31,11 @@ import {
   EyeIcon,
   FolderIcon,
   DocumentArrowDownIcon,
-  DocumentDuplicateIcon, // For the file upload area
+  DocumentDuplicateIcon,
+  ClipboardDocumentListIcon,
+  DocumentChartBarIcon,
+  LockClosedIcon,
+  UserIcon, // For the file upload area
 } from "@heroicons/react/24/outline";
 import { Header } from "@/components/Header";
 import PremiumTabs from "./TabsUI";
@@ -588,34 +592,37 @@ function StepProgress({ currentStep, onStepClick }: StepProgressProps) {
 // ------------------------
 // Types for Document Data
 // ------------------------
-
 interface DocumentData {
   id: string;
   type: string;
   date: string;
   status: string;
   filePath?: string;
+  isAdminOnly?: boolean;
+  author?: string;
 }
 
-// ------------------------
-// Component: DocumentsTab
-// ------------------------
-
+// Update the DocumentsTabProps interface
 interface DocumentsTabProps {
   contactId: string;
+  isAdmin?: boolean;
 }
 
-function DocumentsTab({ contactId }: DocumentsTabProps) {
+function DocumentsTab({ contactId, isAdmin = false }: DocumentsTabProps) {
   const [downloadableDocs, setDownloadableDocs] = useState<DocumentData[]>([]);
   const [transmittableDocs, setTransmittableDocs] = useState<DocumentData[]>([]);
+  const [adminDocs, setAdminDocs] = useState<DocumentData[]>([]);
   const [searchDownload, setSearchDownload] = useState("");
   const [searchTransmit, setSearchTransmit] = useState("");
+  const [searchAdmin, setSearchAdmin] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [docToEdit, setDocToEdit] = useState<DocumentData | null>(null);
   const [previewDoc, setPreviewDoc] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeDownloadTab, setActiveDownloadTab] = useState<string>("all");
   const [activeTransmitTab, setActiveTransmitTab] = useState<string>("all");
+  const [activeAdminTab, setActiveAdminTab] = useState<string>("all");
 
   // For demo purposes, use sample data
   useEffect(() => {
@@ -623,12 +630,15 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
     setTimeout(() => {
       setDownloadableDocs(SAMPLE_DOWNLOADABLE_DOCS);
       setTransmittableDocs(SAMPLE_TRANSMITTABLE_DOCS);
+      // Add some sample admin docs for demo
+      setAdminDocs(SAMPLE_ADMIN_DOCS || []);
       setLoading(false);
     }, 800);
     
     /* Commented out actual API call for demo
     if (contactId) {
       setLoading(true);
+      // Fetch regular documents
       fetch(`/api/documents?contactId=${contactId}`)
         .then((res) => res.json())
         .then((data: DocumentApiResponse[]) => {
@@ -638,11 +648,33 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
             date: doc.date,
             status: doc.statut,
             filePath: doc.filePath,
+            isAdminOnly: doc.isAdminOnly || false,
           }));
-          const downloadable = mappedDocs.filter((doc) => doc.status === "Soumis");
-          const transmittable = mappedDocs.filter((doc) => doc.status === "Manquant");
+          const downloadable = mappedDocs.filter((doc) => doc.status === "Soumis" && !doc.isAdminOnly);
+          const transmittable = mappedDocs.filter((doc) => doc.status === "Manquant" && !doc.isAdminOnly);
           setDownloadableDocs(downloadable);
           setTransmittableDocs(transmittable);
+          
+          // If user is admin, fetch admin docs
+          if (isAdmin) {
+            fetch(`/api/admin-documents?contactId=${contactId}`)
+              .then((res) => res.json())
+              .then((adminData: DocumentApiResponse[]) => {
+                const mappedAdminDocs: DocumentData[] = adminData.map((doc) => ({
+                  id: doc._id,
+                  type: doc.type,
+                  date: doc.date,
+                  status: doc.statut,
+                  filePath: doc.filePath,
+                  isAdminOnly: true,
+                }));
+                setAdminDocs(mappedAdminDocs);
+              })
+              .catch((err) => {
+                console.error("Error fetching admin documents:", err);
+              });
+          }
+          
           setLoading(false);
         })
         .catch((err) => {
@@ -651,7 +683,7 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
         });
     }
     */
-  }, [contactId]);
+  }, [contactId, isAdmin]);
 
   const filteredDownloadableDocs = downloadableDocs.filter((doc) => {
     const matchesSearch = doc.type.toLowerCase().includes(searchDownload.toLowerCase());
@@ -664,6 +696,12 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
     if (activeTransmitTab === "all") return matchesSearch;
     return matchesSearch && doc.type === activeTransmitTab;
   });
+  
+  const filteredAdminDocs = adminDocs.filter((doc) => {
+    const matchesSearch = doc.type.toLowerCase().includes(searchAdmin.toLowerCase());
+    if (activeAdminTab === "all") return matchesSearch;
+    return matchesSearch && doc.type === activeAdminTab;
+  });
 
   const handleVisualiser = (doc: DocumentData): void => {
     setPreviewDoc(doc);
@@ -673,28 +711,11 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
     setDocToEdit(doc);
     setIsModalOpen(true);
   };
-
-  // const handleDocumentSaved = (savedDoc: DocumentData) => {
-  //   if (docToEdit) {
-  //     // Update an existing document.
-  //     setTransmittableDocs((prev) =>
-  //       prev.map((d) => (d.id === savedDoc.id ? savedDoc : d))
-  //     );
-  //     if (savedDoc.status === "Soumis") {
-  //       setTransmittableDocs((prev) => prev.filter((d) => d.id !== savedDoc.id));
-  //       setDownloadableDocs((prev) => [...prev, savedDoc]);
-  //     }
-  //   } else {
-  //     // Add a new document.
-  //     if (savedDoc.status === "Manquant") {
-  //       setTransmittableDocs((prev) => [...prev, savedDoc]);
-  //     } else if (savedDoc.status === "Soumis") {
-  //       setDownloadableDocs((prev) => [...prev, savedDoc]);
-  //     }
-  //   }
-  //   setDocToEdit(null);
-  //   setIsModalOpen(false);
-  // };
+  
+  const handleAjouterDocAdmin = (): void => {
+    setDocToEdit(null);
+    setIsAdminModalOpen(true);
+  };
 
   // Function to get an icon based on document type
   const getDocumentIcon = (type: string) => {
@@ -709,6 +730,10 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
         return <DocumentIcon className="h-8 w-8 text-purple-500" />;
       case "Avis d'éligibilité MaPrimeRénov'":
         return <DocumentArrowUpIcon className="h-8 w-8 text-red-500" />;
+      case "Note interne":
+        return <DocumentChartBarIcon className="h-8 w-8 text-indigo-500" />;
+      case "Fiche technique":
+        return <ClipboardDocumentListIcon className="h-8 w-8 text-cyan-500" />;
       default:
         return <DocumentIcon className="h-8 w-8 text-gray-500" />;
     }
@@ -1036,6 +1061,167 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
             </div>
           </motion.div>
         </div>
+        
+        {/* Admin-only Internal Documents Section */}
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-10 bg-white rounded-2xl shadow-lg overflow-hidden border border-indigo-100"
+          >
+            <div className="relative bg-gradient-to-r from-indigo-600 to-indigo-400 px-6 py-4">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full -mr-10 -mt-10 opacity-20" />
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                    <LockClosedIcon className="h-8 w-8 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white">Documents internes (admin uniquement)</h2>
+                </div>
+                <button
+                  onClick={handleAjouterDocAdmin}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-indigo-700 rounded-lg shadow-md hover:bg-indigo-50 transition-colors"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  Ajouter document interne
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Enhanced Search and Filter */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                <div className="relative flex-1 w-full">
+                  <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchAdmin}
+                    onChange={(e) => setSearchAdmin(e.target.value)}
+                    placeholder="Rechercher un document interne..."
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
+                
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setActiveAdminTab("all")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      activeAdminTab === "all"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Tous
+                  </button>
+                  <button
+                    onClick={() => setActiveAdminTab("Note interne")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      activeAdminTab === "Note interne"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Notes
+                  </button>
+                  <button
+                    onClick={() => setActiveAdminTab("Fiche technique")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      activeAdminTab === "Fiche technique"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Fiches
+                  </button>
+                </div>
+              </div>
+              
+              {/* Admin Document List */}
+              {loading ? (
+                <div className="flex justify-center items-center py-16">
+                  <div className="relative">
+                    <div className="h-16 w-16 border-4 border-indigo-200 border-dashed rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <ArrowPathIcon className="h-6 w-6 text-indigo-500 animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              ) : filteredAdminDocs.length === 0 ? (
+                <div className="bg-gray-50 rounded-xl p-8 text-center">
+                  <LockClosedIcon className="h-12 w-12 text-indigo-400 mx-auto mb-3" />
+                  <h3 className="text-gray-900 font-medium text-lg mb-1">Aucun document interne</h3>
+                  <p className="text-gray-500 mb-4">Aucun document interne n&apos;a été ajouté pour ce client</p>
+                  <button
+                    onClick={handleAjouterDocAdmin}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    Ajouter document interne
+                  </button>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {filteredAdminDocs.map((doc) => (
+                    <motion.div
+                      key={doc.id}
+                      whileHover={{ y: -2, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 group cursor-pointer hover:border-indigo-300"
+                      onClick={() => handleVisualiser(doc)}
+                    >
+                      <div className="p-3 bg-indigo-50 rounded-lg group-hover:bg-indigo-100 transition-colors">
+                        {getDocumentIcon(doc.type)}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center">
+                          <h3 className="text-lg font-medium text-gray-900 truncate">
+                            {doc.type}
+                          </h3>
+                          <span className="ml-2 px-2 py-0.5 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">
+                            Admin uniquement
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <CalendarIcon className="h-4 w-4 mr-1" />
+                            {doc.date}
+                          </div>
+                          <div className="flex items-center">
+                            <UserIcon className="h-4 w-4 mr-1 text-indigo-500" />
+                            {doc.author || "Admin"}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleVisualiser(doc);
+                          }}
+                          className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+                        >
+                          <EyeIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(doc.filePath);
+                          }}
+                          className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                        >
+                          <ArrowDownTrayIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+
       </motion.div>
 
       {/* Modal for Add/Edit Document - Enhanced Design */}
@@ -1167,6 +1353,129 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Admin Document Modal */}
+      <AnimatePresence>
+        {isAdminModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-2xl w-full max-w-lg relative shadow-2xl overflow-hidden"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
+            >
+              {/* Modal header */}
+              <div className="relative bg-gradient-to-r from-indigo-600 to-indigo-400 px-6 py-4">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full -mr-10 -mt-10 opacity-20" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                      <LockClosedIcon className="h-6 w-6 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-white">
+                      Ajouter un document interne
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsAdminModalOpen(false);
+                    }}
+                    className="text-white/80 hover:text-white transition-colors focus:outline-none"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Type de document interne
+                    </label>
+                    <select
+                      className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Sélectionnez un type</option>
+                      <option value="Note interne">Note interne</option>
+                      <option value="Fiche technique">Fiche technique</option>
+                      <option value="Analyse de dossier">Analyse de dossier</option>
+                      <option value="Suivi client">Suivi client</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description (visible uniquement par l&apos;administration)
+                    </label>
+                    <textarea
+                      className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      rows={3}
+                      placeholder="Ajoutez une description ou des notes pour ce document..."
+                    ></textarea>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fichier
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-gray-50">
+                      <DocumentArrowUpIcon className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">
+                        Glissez et déposez votre fichier ici, ou
+                        <span className="text-indigo-600 font-medium ml-1">parcourir vos fichiers</span>
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        PDF, JPEG, PNG, DOCX jusqu&apos;à 10MB
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <input
+                      id="admin-only-checkbox"
+                      type="checkbox"
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      checked={true}
+                      disabled
+                    />
+                    <label htmlFor="admin-only-checkbox" className="ml-2 block text-sm text-gray-700">
+                      Document visible uniquement par l&apos;administration
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="mt-8 flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      setIsAdminModalOpen(false);
+                    }}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={() => {
+                      // For demo purposes, we'll just close the modal
+                      setIsAdminModalOpen(false);
+                    }}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    Ajouter le document
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Enhanced Document Preview Modal */}
       <AnimatePresence>
@@ -1193,17 +1502,33 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
                     {getDocumentIcon(previewDoc.type)}
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">
-                      {previewDoc.type}
-                    </h2>
+                    <div className="flex items-center">
+                      <h2 className="text-xl font-bold text-white">
+                        {previewDoc.type}
+                      </h2>
+                      {previewDoc.isAdminOnly && (
+                        <span className="ml-2 px-2 py-0.5 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">
+                          Admin uniquement
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-3 text-white/70 text-sm">
                       <div className="flex items-center">
                         <CalendarIcon className="h-4 w-4 mr-1" />
                         {previewDoc.date}
                       </div>
                       <div className="flex items-center">
-                        <CheckCircleIcon className="h-4 w-4 mr-1 text-green-400" />
-                        {previewDoc.status}
+                        {previewDoc.isAdminOnly ? (
+                          <>
+                            <UserIcon className="h-4 w-4 mr-1 text-indigo-400" />
+                            {previewDoc.author || "Admin"}
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircleIcon className="h-4 w-4 mr-1 text-green-400" />
+                            {previewDoc.status}
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1286,6 +1611,70 @@ function DocumentsTab({ contactId }: DocumentsTabProps) {
     </div>
   );
 }
+
+// Sample data for demo purposes
+// const SAMPLE_DOWNLOADABLE_DOCS = [
+//   {
+//     id: "d1",
+//     type: "Devis",
+//     date: "15/03/2025",
+//     status: "Soumis",
+//     filePath: "https://example.com/devis-123.pdf",
+//   },
+//   {
+//     id: "d2",
+//     type: "Facture",
+//     date: "10/03/2025",
+//     status: "Soumis",
+//     filePath: "https://example.com/facture-456.pdf",
+//   },
+// ];
+
+// const SAMPLE_TRANSMITTABLE_DOCS = [
+//   {
+//     id: "t1",
+//     type: "Avis d'imposition",
+//     date: "25/02/2025",
+//     status: "Manquant",
+//     filePath: "",
+//   },
+//   {
+//     id: "t2",
+//     type: "Attestation de propriété",
+//     date: "25/02/2025",
+//     status: "Manquant",
+//     filePath: "",
+//   },
+// ];
+
+const SAMPLE_ADMIN_DOCS = [
+  {
+    id: "a1",
+    type: "Note interne",
+    date: "18/03/2025",
+    status: "Interne",
+    filePath: "https://example.com/note-interne.pdf",
+    isAdminOnly: true,
+    author: "Jean Dupont",
+  },
+  {
+    id: "a2",
+    type: "Fiche technique",
+    date: "12/03/2025",
+    status: "Interne",
+    filePath: "https://example.com/fiche-technique.pdf",
+    isAdminOnly: true,
+    author: "Marie Martin",
+  },
+];
+
+// const predefinedTypes = [
+//   "Devis",
+//   "Facture",
+//   "Avis d'imposition",
+//   "Attestation de propriété",
+//   "Avis d'éligibilité MaPrimeRénov'",
+// ];
 
 // ------------------------
 // Main Component: ProjectDetailPage

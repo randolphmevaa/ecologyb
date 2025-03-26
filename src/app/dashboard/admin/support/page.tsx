@@ -1597,8 +1597,8 @@ export default function SupportPage() {
   const [contact, setContact] = useState<Contact | null>(null);
   const [eventDetails, setEventDetails] = useState<SavEvent | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState<"month" | "week" | "day" | "agenda">(Views.MONTH);
-  const [activeViewTab, setActiveViewTab] = useState("Mois");
+  const [currentView, setCurrentView] = useState<"month" | "week" | "day" | "agenda">(Views.WEEK);
+  const [activeViewTab, setActiveViewTab] = useState("Semaine");
   const [dateRange ] = useState<{
     startDate: Date | null;
     endDate: Date | null;
@@ -1833,7 +1833,7 @@ export default function SupportPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-[#213f5b] mb-1">
-                  Support & S.A.V.
+                  Service Après-Vente
                 </h1>
                 <p className="text-[#5a6e87] font-medium">
                   {new Date().toLocaleDateString("fr-FR", {
@@ -2560,7 +2560,7 @@ export default function SupportPage() {
                       view={currentView}
                       onNavigate={(date) => setCurrentDate(date)}
                       onView={(view) => setCurrentView(view as "month" | "week" | "day" | "agenda")}
-                      defaultView={Views.MONTH}
+                      defaultView={Views.WEEK}
                       views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
 
                       // Add these format properties:

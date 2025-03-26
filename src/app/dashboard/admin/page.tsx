@@ -1219,14 +1219,13 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#f7fbff]">
+    <div className="flex h-screen bg-white">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
         <main
           className="flex-1 overflow-y-auto"
           style={{
-            background:
-              "linear-gradient(135deg, rgba(191,221,249,0.1) 0%, rgba(210,252,178,0.05) 100%)",
+            background: "linear-gradient(135deg, rgba(191,221,249,0.1) 0%, rgba(210,252,178,0.05) 100%)",
           }}
         >
           <div className="w-full mx-auto p-4 sm:p-6 lg:p-8">
@@ -1348,173 +1347,173 @@ export default function AdminDashboardPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* New KPI Stats Cards - Replaces the Alert Banner */}
+                {/* Improved KPI Stats Cards */}
                 <motion.div 
                   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.4 }}
                 >
-                  {/* Total Revenue KPI - Keeping this one */}
+                  {/* Total Revenue KPI */}
                   <motion.div 
-                    className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all"
-                    whileHover={{ y: -5 }}
+                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-blue-50/50 to-blue-100/20 border border-blue-100"
+                    whileHover={{ scale: 1.02, y: -2 }}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-sm font-medium text-[#213f5b]/80">Chiffre d&apos;affaires total</p>
+                        <p className="text-sm font-medium text-[#213f5b]/90">Chiffre d&apos;affaires total</p>
                         <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{formatCurrency(1250000)}</h3>
                         <div className="flex items-center gap-1 mt-2">
-                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-[#d2fcb2] text-[#213f5b]">
+                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-green-100 text-[#213f5b]">
                             <ArrowTrendingUpIcon className="h-3 w-3" />
                             42%
                           </span>
-                          <span className="text-xs text-[#213f5b]/60">vs année précédente</span>
+                          <span className="text-xs text-[#213f5b]/70">vs année précédente</span>
                         </div>
                       </div>
-                      <div className="p-3 rounded-full bg-[#213f5b]/10">
-                        <BanknotesIcon className="h-6 w-6 text-[#213f5b]" />
+                      <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                        <BanknotesIcon className="h-5 w-5 text-blue-500" />
                       </div>
                     </div>
-                    <div className="mt-4 relative h-1.5 bg-[#bfddf9]/30 rounded-full overflow-hidden">
-                      <div className="absolute top-0 left-0 h-full bg-[#213f5b] rounded-full" style={{ width: '65%' }}></div>
+                    <div className="mt-4 relative h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                      <div className="absolute top-0 left-0 h-full bg-blue-500 rounded-full" style={{ width: '65%' }}></div>
                     </div>
-                    <div className="flex justify-between items-center mt-1 text-xs text-[#213f5b]/60">
+                    <div className="flex justify-between items-center mt-1 text-xs text-[#213f5b]/70">
                       <span>Objectif annuel</span>
                       <span className="font-medium">65%</span>
                     </div>
                   </motion.div>
 
-                  {/* Modified: Projets actifs -> Status of clients KPI */}
+                  {/* Clients KPI */}
                   <motion.div 
-                    className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all"
-                    whileHover={{ y: -5 }}
+                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-purple-50/50 to-purple-100/20 border border-purple-100"
+                    whileHover={{ scale: 1.02, y: -2 }}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-sm font-medium text-[#213f5b]/80">Clients</p>
+                        <p className="text-sm font-medium text-[#213f5b]/90">Clients</p>
                         <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{projects.filter(p => p.status === "En cours").length + 42}</h3>
                         <div className="flex items-center gap-1 mt-2">
-                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-[#bfddf9] text-[#213f5b]">
+                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-purple-100 text-[#213f5b]">
                             <ArrowTrendingUpIcon className="h-3 w-3" />
                             12%
                           </span>
-                          <span className="text-xs text-[#213f5b]/60">vs mois précédent</span>
+                          <span className="text-xs text-[#213f5b]/70">vs mois précédent</span>
                         </div>
                       </div>
-                      <div className="p-3 rounded-full bg-[#bfddf9]/30">
-                        <UsersIcon className="h-6 w-6 text-[#213f5b]" />
+                      <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                        <UsersIcon className="h-5 w-5 text-purple-500" />
                       </div>
                     </div>
                     <div className="mt-4 flex justify-between items-center text-sm">
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-[#d2fcb2]"></span>
-                          <span className="text-xs text-[#213f5b]/70">En cours: 24</span>
+                          <span className="h-3 w-3 rounded-full bg-green-400"></span>
+                          <span className="text-xs text-[#213f5b]/80">En cours: 24</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-[#bfddf9]"></span>
-                          <span className="text-xs text-[#213f5b]/70">En instruction: 18</span>
+                          <span className="h-3 w-3 rounded-full bg-purple-400"></span>
+                          <span className="text-xs text-[#213f5b]/80">En instruction: 18</span>
                         </div>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-[#88c9f7]"></span>
-                          <span className="text-xs text-[#213f5b]/70">En installation: 12</span>
+                          <span className="h-3 w-3 rounded-full bg-blue-400"></span>
+                          <span className="text-xs text-[#213f5b]/80">En installation: 12</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span className="h-3 w-3 rounded-full bg-[#213f5b]"></span>
-                          <span className="text-xs text-[#213f5b]/70">Installé cloturé: 35</span>
+                          <span className="text-xs text-[#213f5b]/80">Installé cloturé: 35</span>
                         </div>
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* Replaced: Satisfaction client -> Paiement en attente KPI */}
+                  {/* Paiement en attente KPI */}
                   <motion.div 
-                    className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all"
-                    whileHover={{ y: -5 }}
+                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-amber-50/50 to-amber-100/20 border border-amber-100"
+                    whileHover={{ scale: 1.02, y: -2 }}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-sm font-medium text-[#213f5b]/80">Paiement en attente</p>
+                        <p className="text-sm font-medium text-[#213f5b]/90">Paiement en attente</p>
                         <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{formatCurrency(185000)}</h3>
                         <div className="flex items-center gap-1 mt-2">
-                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-[#f9e5bf] text-[#213f5b]">
+                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-amber-100 text-[#213f5b]">
                             <ArrowTrendingUpIcon className="h-3 w-3" />
                             8%
                           </span>
-                          <span className="text-xs text-[#213f5b]/60">vs trimestre précédent</span>
+                          <span className="text-xs text-[#213f5b]/70">vs trimestre précédent</span>
                         </div>
                       </div>
-                      <div className="p-3 rounded-full bg-[#f9e5bf]/40">
-                        <BanknotesIcon className="h-6 w-6 text-[#213f5b]" />
+                      <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                        <BanknotesIcon className="h-5 w-5 text-amber-500" />
                       </div>
                     </div>
                     <div className="mt-4">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-[#213f5b]/70">Délai moyen de paiement</span>
+                        <span className="text-xs text-[#213f5b]/80">Délai moyen de paiement</span>
                         <span className="text-xs font-medium text-[#213f5b]">28 jours</span>
                       </div>
-                      <div className="h-1.5 w-full bg-[#bfddf9]/30 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#f9e5bf]" style={{ width: '65%' }}></div>
+                      <div className="h-1.5 w-full bg-amber-100/50 rounded-full overflow-hidden">
+                        <div className="h-full bg-amber-500" style={{ width: '65%' }}></div>
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* Replaced: Efficacité des équipes -> Facture à payer KPI */}
+                  {/* Factures à payer KPI */}
                   <motion.div 
-                    className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all"
-                    whileHover={{ y: -5 }}
+                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-indigo-50/50 to-indigo-100/20 border border-indigo-100"
+                    whileHover={{ scale: 1.02, y: -2 }}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-sm font-medium text-[#213f5b]/80">Factures à payer</p>
+                        <p className="text-sm font-medium text-[#213f5b]/90">Factures à payer</p>
                         <h3 className="text-2xl font-bold text-[#213f5b] mt-1">16</h3>
                         <div className="flex items-center gap-1 mt-2">
-                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-[#bfddf9] text-[#213f5b]">
+                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-indigo-100 text-[#213f5b]">
                             <ArrowTrendingDownIcon className="h-3 w-3" />
                             5%
                           </span>
-                          <span className="text-xs text-[#213f5b]/60">vs mois précédent</span>
+                          <span className="text-xs text-[#213f5b]/70">vs mois précédent</span>
                         </div>
                       </div>
-                      <div className="p-3 rounded-full bg-[#bfddf9]/30">
-                        <DocumentTextIcon className="h-6 w-6 text-[#213f5b]" />
+                      <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                        <DocumentTextIcon className="h-5 w-5 text-indigo-500" />
                       </div>
                     </div>
                     <div className="mt-4 flex justify-between text-xs">
                       <div className="flex flex-col items-center">
-                        <span className="text-[#213f5b]/70">Récentes</span>
+                        <span className="text-[#213f5b]/80">Récentes</span>
                         <span className="font-medium text-[#213f5b]">8</span>
-                        <div className="h-1 w-8 bg-[#d2fcb2] rounded-full mt-1"></div>
+                        <div className="h-1.5 w-8 bg-green-400 rounded-full mt-1"></div>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[#213f5b]/70">En attente</span>
+                        <span className="text-[#213f5b]/80">En attente</span>
                         <span className="font-medium text-[#213f5b]">5</span>
-                        <div className="h-1 w-8 bg-[#bfddf9] rounded-full mt-1"></div>
+                        <div className="h-1.5 w-8 bg-blue-400 rounded-full mt-1"></div>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[#213f5b]/70">Tardives</span>
+                        <span className="text-[#213f5b]/80">Tardives</span>
                         <span className="font-medium text-[#213f5b]">3</span>
-                        <div className="h-1 w-8 bg-[#f9e5bf] rounded-full mt-1"></div>
+                        <div className="h-1.5 w-8 bg-amber-400 rounded-full mt-1"></div>
                       </div>
                     </div>
                   </motion.div>
 
                   {/* SAV Support KPI */}
                   <motion.div 
-                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#d2fcb2]/20 to-[#bfddf9]/30 border border-[#bfddf9]/30"
-                    whileHover={{ scale: 1.02 }}
+                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-green-50/50 to-green-100/20 border border-green-100"
+                    whileHover={{ scale: 1.02, y: -2 }}
                   >
                     <Link href="/dashboard/admin/support">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-sm font-medium text-[#213f5b]/80">SAV</p>
+                          <p className="text-sm font-medium text-[#213f5b]/90">SAV</p>
                           <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{savStats.openTickets}</h3>
                           <div className="flex items-center gap-1 mt-2">
                             <span className={`text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium ${
-                              savStats.ticketsTrend < 0 ? 'bg-[#d2fcb2] text-[#213f5b]' : 'bg-[#f9e5bf] text-[#213f5b]'
+                              savStats.ticketsTrend < 0 ? 'bg-green-100 text-[#213f5b]' : 'bg-amber-100 text-[#213f5b]'
                             }`}>
                               {savStats.ticketsTrend < 0 ? (
                                 <ArrowTrendingDownIcon className="h-3 w-3" />
@@ -1523,32 +1522,32 @@ export default function AdminDashboardPage() {
                               )}
                               {Math.abs(savStats.ticketsTrend)}%
                             </span>
-                            <span className="text-xs text-[#213f5b]/60">vs mois précédent</span>
+                            <span className="text-xs text-[#213f5b]/70">vs mois précédent</span>
                           </div>
                         </div>
-                        <div className="p-3 rounded-full bg-[#d2fcb2]/40">
-                          <WrenchScrewdriverIcon className="h-6 w-6 text-[#213f5b]" />
+                        <div className="p-2 rounded-full bg-white/60 shadow-sm">
+                          <WrenchScrewdriverIcon className="h-5 w-5 text-green-500" />
                         </div>
                       </div>
                       <div className="mt-4 flex justify-between items-center text-sm">
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
-                            <span className="h-3 w-3 rounded-full bg-[#bfddf9]"></span>
-                            <span className="text-xs text-[#213f5b]/70">Tickets Ouverts: {savStats.openTickets}</span>
+                            <span className="h-3 w-3 rounded-full bg-blue-400"></span>
+                            <span className="text-xs text-[#213f5b]/80">Tickets Ouverts: {savStats.openTickets}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <span className="h-3 w-3 rounded-full bg-[#f9e5bf]"></span>
-                            <span className="text-xs text-[#213f5b]/70">Tickets en attente: {savStats.pendingTickets}</span>
+                            <span className="h-3 w-3 rounded-full bg-amber-400"></span>
+                            <span className="text-xs text-[#213f5b]/80">Tickets en attente: {savStats.pendingTickets}</span>
                           </div>
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
-                            <span className="h-3 w-3 rounded-full bg-[#d2fcb2]"></span>
-                            <span className="text-xs text-[#213f5b]/70">Tickets Clôturés: {savStats.solvedTickets}</span>
+                            <span className="h-3 w-3 rounded-full bg-green-400"></span>
+                            <span className="text-xs text-[#213f5b]/80">Tickets Clôturés: {savStats.solvedTickets}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="h-3 w-3 rounded-full bg-[#213f5b]"></span>
-                            <span className="text-xs text-[#213f5b]/70">Taux de Résolution: {((savStats.solvedTickets / savStats.totalTickets) * 100).toFixed(1)}%</span>
+                            <span className="text-xs text-[#213f5b]/80">Taux de Résolution: {((savStats.solvedTickets / savStats.totalTickets) * 100).toFixed(1)}%</span>
                           </div>
                         </div>
                       </div>
