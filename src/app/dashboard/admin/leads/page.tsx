@@ -23,8 +23,19 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChevronLeftIcon, SearchIcon } from "lucide-react";
 
+// Define status option type
+type StatusOption = {
+  id: string;
+  value: string;
+  color: string;
+  bgColor: string;
+  textColor: string;
+  borderColor: string;
+  icon: React.ReactNode;
+};
+
 // Sample status options with detailed information
-const statusOptions = [
+const statusOptions: StatusOption[] = [
   { 
     id: "pending", 
     value: "En attente de paiement", 
@@ -72,14 +83,21 @@ const statusOptions = [
   }
 ];
 
+// Define status info return type
+type StatusInfo = {
+  color: string;
+  textColor: string;
+  icon: React.ReactNode | null;
+};
+
 // Get status details for a given status value
-const getStatusDetails = (statusValue: string) => {
+const getStatusDetails = (statusValue: string): StatusOption => {
   const status = statusOptions.find(s => s.value === statusValue);
   return status || statusOptions[0]; // Default to "pending" if not found
 };
 
 // Example getStatusInfo function that maps a project's etape to status details.
-const getStatusInfo = (etape?: string) => {
+const getStatusInfo = (etape?: string): StatusInfo => {
   if (!etape) {
     return { color: "#ccc", textColor: "#000", icon: null };
   }
@@ -136,25 +154,59 @@ const getStatusInfo = (etape?: string) => {
 };
 
 
-// ------------------------
 // Types
 // ------------------------
-type Dossier = {
-  codePostal: string | undefined;
+// Adding TypeScript types for the API response data
+type Contact = {
   _id: string;
+  imageUrl: string;
+  lastName: string;
+  firstName: string;
+  dateOfBirth: string;
+  mailingAddress: string;
+  phone: string;
+  email: string;
+  role: string;
+  numeroDossier: string;
+  department: string;
+  gestionnaireSuivi: string;
+  comments: string;
+  maprNumero: string;
+  mpremail: string;
+  mprpassword: string;
+  climateZone: string;
+  rfr: string;
+  eligible: string;
+  contactId: string;
+  id: string;
+  password: string;
+  plainPassword: string;
+  createdAt: string;
+};
+
+type Dossier = {
+  _id: string;
+  contactId?: string; // Made optional to accommodate sample data
   numero: string;
-  client: string;
-  projet: string;
-  // numero: string;
-  typeDeLogement: string;
-  // solution: string;
-  surfaceChauffee: number;
-  solution: string;
-  etape: string;
-  valeur: string;
   assignedTeam?: string;
-  notes?: string;
-  createdAt?: string;
+  projet?: string[] | string;
+  surfaceChauffee?: string | number;
+  typeCompteurElectrique?: string;
+  solution?: string;
+  anneeConstruction?: string;
+  typeDeLogement?: string;
+  profil?: string;
+  nombrePersonne?: string;
+  codePostal?: string;
+  mprColor?: string;
+  etape?: string;
+  typeTravaux?: string;
+  assignedRegie?: string;
+  prix?: string;
+  statut?: string;
+  description?: string;
+  client?: string; // Added for display purposes
+  valeur?: string; // Added for display purposes
   informationLogement?: {
     typeDeLogement?: string;
     surfaceHabitable?: string;
@@ -167,19 +219,7 @@ type Dossier = {
     surfaceChauffee?: string;
     circuitChauffageFonctionnel?: string;
   };
-  contactId?: string;
-  typeTravaux?: string; // Added typeTravaux to match the API response
   status?: string; // Added field for status display
-};
-
-type Contact = {
-  _id: string;
-  createdAt: string;
-  firstName: string;
-  lastName: string;
-  mailingAddress: string;
-  email?: string;
-  phone?: string;
 };
 
 // Define your timeline steps
@@ -193,6 +233,30 @@ const steps = [
   "Dossier clôturé",
 ];
 
+// Define API response type to avoid using 'any'
+type RawDossierData = {
+  _id: string;
+  contactId?: string;
+  numero: string;
+  assignedTeam?: string;
+  projet?: string[] | string;
+  surfaceChauffee?: string | number;
+  typeCompteurElectrique?: string;
+  solution?: string;
+  anneeConstruction?: string;
+  typeDeLogement?: string;
+  profil?: string;
+  nombrePersonne?: string;
+  codePostal?: string;
+  mprColor?: string;
+  etape?: string;
+  typeTravaux?: string;
+  assignedRegie?: string;
+  prix?: string;
+  statut?: string;
+  description?: string;
+};
+
 export default function ProjectsPage() {
   // Data and loading
   const [projects, setProjects] = useState<Dossier[]>([]);
@@ -202,7 +266,7 @@ export default function ProjectsPage() {
   const [contacts, setContacts] = useState<{ [id: string]: Contact }>({});
   const [selectedProject, setSelectedProject] = useState<Dossier | null>(null);
   // Extract the current step number from the etape string.
-  const currentStep = selectedProject ? parseInt(selectedProject.etape.split(" ")[0], 10) : 0;
+  const currentStep = selectedProject ? parseInt(selectedProject.etape?.split(" ")[0] || "0", 10) : 0;
 
   // Filtering state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -213,180 +277,173 @@ export default function ProjectsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
 
-// Enhanced helper functions with improved color schemes
-const getStepColor = (step: number): string => {
-  const colors: { [key: number]: string } = {
-    1: "#4facfe",   // Bright blue for initial contact
-    2: "#43e97b",   // Vibrant green for documents
-    3: "#f7b91b",   // Amber for processing
-    4: "#38c2de",   // Teal for accepted 
-    5: "#32a7c1",   // Mid blue for installation
-    6: "#2d98c5",   // Ocean blue for control
-    7: "#1d6fa5",   // Deep blue for closure
+  // Enhanced helper functions with improved color schemes
+  const getStepColor = (step: number): string => {
+    const colors: { [key: number]: string } = {
+      1: "#4facfe",   // Bright blue for initial contact
+      2: "#43e97b",   // Vibrant green for documents
+      3: "#f7b91b",   // Amber for processing
+      4: "#38c2de",   // Teal for accepted 
+      5: "#32a7c1",   // Mid blue for installation
+      6: "#2d98c5",   // Ocean blue for control
+      7: "#1d6fa5",   // Deep blue for closure
+    };
+    return colors[step] || "#4facfe";
   };
-  return colors[step] || "#4facfe";
-};
 
-const lightenColor = (color: string, percent: number): string => {
-  const num = parseInt(color.slice(1), 16);
-  const amt = Math.round(2.55 * percent);
-  let R = (num >> 16) + amt;
-  let G = ((num >> 8) & 0x00ff) + amt;
-  let B = (num & 0x0000ff) + amt;
-  R = R < 255 ? (R < 0 ? 0 : R) : 255;
-  G = G < 255 ? (G < 0 ? 0 : G) : 255;
-  B = B < 255 ? (B < 0 ? 0 : B) : 255;
-  return (
-    "#" +
-    ((1 << 24) + (R << 16) + (G << 8) + B)
-      .toString(16)
-      .slice(1)
-  );
-};
+  const lightenColor = (color: string, percent: number): string => {
+    const num = parseInt(color.slice(1), 16);
+    const amt = Math.round(2.55 * percent);
+    let R = (num >> 16) + amt;
+    let G = ((num >> 8) & 0x00ff) + amt;
+    let B = (num & 0x0000ff) + amt;
+    R = R < 255 ? (R < 0 ? 0 : R) : 255;
+    G = G < 255 ? (G < 0 ? 0 : G) : 255;
+    B = B < 255 ? (B < 0 ? 0 : B) : 255;
+    return (
+      "#" +
+      ((1 << 24) + (R << 16) + (G << 8) + B)
+        .toString(16)
+        .slice(1)
+    );
+  };
 
-const getGradientColorForStep = (step: number): string => {
-  const baseColor = getStepColor(step);
-  // Create a more interesting gradient with a shift in hue
-  const lighterColor = lightenColor(baseColor, 30);
-  return `linear-gradient(90deg, ${baseColor}, ${lighterColor})`;
-};
+  const getGradientColorForStep = (step: number): string => {
+    const baseColor = getStepColor(step);
+    // Create a more interesting gradient with a shift in hue
+    const lighterColor = lightenColor(baseColor, 30);
+    return `linear-gradient(90deg, ${baseColor}, ${lighterColor})`;
+  };
 
-
-  // Fetch projects (dossiers) - Updated to include contactId in the API call
-  const fetchProjects = () => {
+  // Fetch projects (dossiers) - Updated to fetch from API
+  const fetchProjects = async () => {
     setLoading(true);
     
-    // Create sample projects with statuses for demonstration
-    const sampleProjects: Dossier[] = [
-      {
-        _id: "1",
-        numero: "D2023-001",
-        client: "Martin Dupont",
-        projet: "Installation chauffage",
-        typeDeLogement: "Maison individuelle",
-        surfaceChauffee: 120,
-        solution: "Pompes a chaleur",
-        etape: "1 Prise de contact",
-        valeur: "15000",
-        typeTravaux: "Mono-geste",
-        codePostal: "75001",
-        status: "En cours"
-      },
-      {
-        _id: "2",
-        numero: "D2023-002",
-        client: "Sophie Martin",
-        projet: "Rénovation énergétique",
-        typeDeLogement: "Appartement",
-        surfaceChauffee: 85,
-        solution: "Panneaux photovoltaique",
-        etape: "2 En attente des documents",
-        valeur: "8500",
-        typeTravaux: "Rénovation d'ampleur",
-        codePostal: "69002",
-        status: "En attente de paiement"
-      },
-      {
-        _id: "3",
-        numero: "D2023-003",
-        client: "Jean Leclerc",
-        projet: "Installation chauffe-eau",
-        typeDeLogement: "Maison individuelle",
-        surfaceChauffee: 150,
-        solution: "Chauffe-eau thermodynamique",
-        etape: "3 Instruction du dossier",
-        valeur: "3200",
-        typeTravaux: "Mono-geste",
-        codePostal: "33000",
-        status: "Payé"
-      },
-      {
-        _id: "4",
-        numero: "D2023-004",
-        client: "Marie Rousseau",
-        projet: "Système solaire",
-        typeDeLogement: "Maison individuelle",
-        surfaceChauffee: 180,
-        solution: "Système Solaire Combiné",
-        etape: "4 Dossier Accepter",
-        valeur: "12000",
-        typeTravaux: "Financement",
-        codePostal: "59000",
-        status: "Terminé"
-      },
-      {
-        _id: "5",
-        numero: "D2023-005",
-        client: "Pierre Lefebvre",
-        projet: "Amélioration énergétique",
-        typeDeLogement: "Appartement",
-        surfaceChauffee: 65,
-        solution: "Pompes a chaleur",
-        etape: "2 En attente des documents",
-        valeur: "7500",
-        typeTravaux: "Rénovation d'ampleur",
-        codePostal: "31000",
-        status: "Annulé"
-      },
-      {
-        _id: "6",
-        numero: "D2023-006",
-        client: "Catherine Dubois",
-        projet: "Installation PAC",
-        typeDeLogement: "Maison individuelle",
-        surfaceChauffee: 140,
-        solution: "Pompes a chaleur",
-        etape: "3 Instruction du dossier",
-        valeur: "16000",
-        typeTravaux: "Mono-geste",
-        codePostal: "44000",
-        status: "En cours"
+    try {
+      // Fetch dossiers data from API
+      const dossiersResponse = await fetch('/api/dossiers');
+      if (!dossiersResponse.ok) {
+        throw new Error('Failed to fetch dossiers');
       }
-    ];
-    
-    setProjects(sampleProjects);
-    setLoading(false);
+      
+      const dossiersData = await dossiersResponse.json();
+      
+      // Fetch contacts data from API
+      const contactsResponse = await fetch('/api/contacts');
+      if (!contactsResponse.ok) {
+        throw new Error('Failed to fetch contacts');
+      }
+      
+      const contactsData = await contactsResponse.json();
+      
+      // Convert contacts array to object with contactId as key for quick lookup
+      const contactsMap = contactsData.reduce((acc: { [key: string]: Contact }, contact: Contact) => {
+        acc[contact.contactId] = contact;
+        return acc;
+      }, {});
+      
+      // Set contacts in state
+      setContacts(contactsMap);
+      
+      // Process dossiers to include client name and other necessary display fields
+      const processedDossiers = dossiersData.map((dossier: RawDossierData): Dossier => {
+        const contact = dossier.contactId ? contactsMap[dossier.contactId] : null;
+        
+        // Generate fallback status based on etape
+        let status = "En attente de paiement";
+        const step = Number(dossier.etape?.charAt(0) || 0);
+        if (step >= 3) status = "En cours";
+        else if (step >= 2) status = "En attente des documents";
+        
+        return {
+          ...dossier,
+          // Create client field by combining firstName and lastName from the contact
+          client: contact ? `${contact.firstName} ${contact.lastName}` : `Dossier #${dossier.numero}`,
+          // Use solution string as projet display if projet is an array
+          projet: Array.isArray(dossier.projet) ? dossier.projet.join(', ') : dossier.solution,
+          // Set valeur to prix if available, or default value
+          valeur: dossier.prix || "15000",
+          // Set status based on step
+          status
+        };
+      });
+      
+      setProjects(processedDossiers);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Fallback to sample data in case of error
+      const sampleProjects: Dossier[] = [
+        {
+          _id: "1",
+          numero: "D2023-001",
+          client: "Martin Dupont",
+          projet: "Installation chauffage",
+          typeDeLogement: "Maison individuelle",
+          surfaceChauffee: 120,
+          solution: "Pompes a chaleur",
+          etape: "1 Prise de contact",
+          valeur: "15000",
+          typeTravaux: "Mono-geste",
+          codePostal: "75001",
+          status: "En cours",
+          contactId: "sample-contact-1" // Add contactId to satisfy type
+        },
+        {
+          _id: "2",
+          numero: "D2023-002",
+          client: "Sophie Martin",
+          projet: "Rénovation énergétique",
+          typeDeLogement: "Appartement",
+          surfaceChauffee: 85,
+          solution: "Panneaux photovoltaique",
+          etape: "2 En attente des documents",
+          valeur: "8500",
+          typeTravaux: "Rénovation d'ampleur",
+          codePostal: "69002",
+          status: "En attente de paiement",
+          contactId: "sample-contact-2"
+        },
+        {
+          _id: "3",
+          numero: "D2023-003",
+          client: "Jean Leclerc",
+          projet: "Installation chauffe-eau",
+          typeDeLogement: "Maison individuelle",
+          surfaceChauffee: 150,
+          solution: "Chauffe-eau thermodynamique",
+          etape: "3 Instruction du dossier",
+          valeur: "3200",
+          typeTravaux: "Mono-geste",
+          codePostal: "33000",
+          status: "Payé",
+          contactId: "sample-contact-3"
+        },
+        {
+          _id: "4",
+          numero: "D2023-004",
+          client: "Marie Rousseau",
+          projet: "Système solaire",
+          typeDeLogement: "Maison individuelle",
+          surfaceChauffee: 180,
+          solution: "Système Solaire Combiné",
+          etape: "4 Dossier Accepter",
+          valeur: "12000",
+          typeTravaux: "Financement",
+          codePostal: "59000",
+          status: "Terminé",
+          contactId: "sample-contact-4"
+        }
+      ];
+      
+      setProjects(sampleProjects);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchProjects();
   }, []);
-
-  // When projects change, fetch their contact data if available.
-  useEffect(() => {
-    // Create sample contacts for demonstration
-    const sampleContacts = {
-      'contact1': {
-        _id: 'contact1',
-        createdAt: '2023-01-01',
-        firstName: 'Martin',
-        lastName: 'Dupont',
-        mailingAddress: '15 Rue de Paris, 75001 Paris',
-        email: 'martin.dupont@example.com',
-        phone: '01 23 45 67 89'
-      },
-      'contact2': {
-        _id: 'contact2',
-        createdAt: '2023-01-02',
-        firstName: 'Sophie',
-        lastName: 'Martin',
-        mailingAddress: '28 Avenue de Lyon, 69002 Lyon',
-        email: 'sophie.martin@example.com',
-        phone: '04 56 78 90 12'
-      },
-      'contact3': {
-        _id: 'contact3',
-        createdAt: '2023-01-03',
-        firstName: 'Jean',
-        lastName: 'Leclerc',
-        mailingAddress: '7 Place Gambetta, 33000 Bordeaux',
-        email: 'jean.leclerc@example.com',
-        phone: '05 67 89 01 23'
-      }
-    };
-    
-    setContacts(sampleContacts);
-  }, [projects]);
 
   // Helper: Format the etape string to "Etape X - description"
   const formatEtape = (etape?: string) => {
@@ -399,31 +456,31 @@ const getGradientColorForStep = (step: number): string => {
   };
 
   // Filtering logic updated to filter by typeTravaux instead of solution
-const filteredProjects = projects.filter((project) => {
-  // 1) Identify whether the project step is in the "excluded" set
-  //    (5 = Installation, 6 = Contrôle, 7 = Dossier clôturé)
-  const excludedSteps = [5, 6, 7];
-  const stepNumber = parseInt(project.etape?.charAt(0) ?? "0", 10);
+  const filteredProjects = projects.filter((project) => {
+    // 1) Identify whether the project step is in the "excluded" set
+    //    (5 = Installation, 6 = Contrôle, 7 = Dossier clôturé)
+    const excludedSteps = [5, 6, 7];
+    const stepNumber = parseInt(project.etape?.charAt(0) ?? "0", 10);
 
-  // If the step is among the excluded ones, return false immediately
-  if (excludedSteps.includes(stepNumber)) {
-    return false;
-  }
+    // If the step is among the excluded ones, return false immediately
+    if (excludedSteps.includes(stepNumber)) {
+      return false;
+    }
 
-  // 2) Proceed with search & filter logic:
-  const query = searchQuery.toLowerCase();
-  const matchesSearch =
-    String(project.client || "").toLowerCase().includes(query) ||
-    String(project.projet || "").toLowerCase().includes(query) ||
-    String(project.numero || "").toLowerCase().includes(query);
+    // 2) Proceed with search & filter logic:
+    const query = searchQuery.toLowerCase();
+    const matchesSearch =
+      String(project.client || "").toLowerCase().includes(query) ||
+      String(project.projet || "").toLowerCase().includes(query) ||
+      String(project.numero || "").toLowerCase().includes(query);
 
-  // Filter by typeTravaux instead of solution
-  const matchesTypeTravaux =
-    filter === "Tous" ||
-    (project.typeTravaux?.toLowerCase() === filter.toLowerCase());
+    // Filter by typeTravaux instead of solution
+    const matchesTypeTravaux =
+      filter === "Tous" ||
+      (project.typeTravaux?.toLowerCase() === filter.toLowerCase());
 
-  return matchesSearch && matchesTypeTravaux;
-});
+    return matchesSearch && matchesTypeTravaux;
+  });
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredProjects.length / pageSize);
@@ -439,21 +496,14 @@ const filteredProjects = projects.filter((project) => {
   };
 
   // 2) Compute stats from the *filtered* projects
-const totalClientsCount = filteredProjects.length;
+  const totalClientsCount = filteredProjects.length;
 
-// For stageStats, reduce over the *filtered* array
-const stageStats = filteredProjects.reduce((acc, project) => {
-  const stageNumber = project.etape?.charAt(0) || "N/A";
-  acc[stageNumber] = (acc[stageNumber] || 0) + 1;
-  return acc;
-}, {} as { [key: string]: number });
-
-// For status stats
-// const statusStats = filteredProjects.reduce((acc, project) => {
-//   const status = project.status || "En attente de paiement";
-//   acc[status] = (acc[status] || 0) + 1;
-//   return acc;
-// }, {} as { [key: string]: number });
+  // For stageStats, reduce over the *filtered* array
+  const stageStats = filteredProjects.reduce((acc: { [key: string]: number }, project) => {
+    const stageNumber = project.etape?.charAt(0) || "N/A";
+    acc[stageNumber] = (acc[stageNumber] || 0) + 1;
+    return acc;
+  }, {} as { [key: string]: number });
 
   // Define typeTravaux filter options - Updated from solution to typeTravaux
   const typeTravauxOptions = [
@@ -766,10 +816,10 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                   const locationStr = contact && contact.mailingAddress
                     ? contact.mailingAddress
                     : project.informationLogement?.typeDeLogement || project.codePostal || "Adresse non disponible";
-                  const solution = project.solution;
+                  const solution = project.solution || "Non spécifié";
                   const stepNumber = Number(project.etape?.charAt(0)) || 1;
                   // Add typeTravaux to be displayed in the card
-                  const typeTravaux = project.typeTravaux || "N/A";
+                  const typeTravaux = project.typeTravaux || "Non spécifié";
                   
                   // Get status details for this project
                   const statusDetail = getStatusDetails(project.status || "En attente de paiement");
@@ -892,7 +942,7 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                                 {[...Array(7)].map((_, idx) => {
                                   const stepNumber = idx + 1;
                                   // Consider the step complete if the current etape is greater or equal to the step number.
-                                  const completed = Number(project.etape?.charAt(0)) >= stepNumber;
+                                  const completed = Number(project.etape?.charAt(0) || "0") >= stepNumber;
                                   const stepColor = getStepColor(stepNumber);
                                   return (
                                     <div
@@ -908,7 +958,7 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                                         } transition-all duration-300`}
                                         style={completed ? { background: stepColor } : {}}
                                       >
-                                        {stepNumber === Number(project.etape?.charAt(0)) && (
+                                        {stepNumber === Number(project.etape?.charAt(0) || "0") && (
                                           <div className="absolute w-5 h-5 rounded-full border-2 border-white shadow-sm animate-pulse" style={{ borderColor: stepColor }}></div>
                                         )}
                                       </div>
@@ -1108,7 +1158,7 @@ const stageStats = filteredProjects.reduce((acc, project) => {
                   {/* Add Type de Travaux to detail view */}
                   <div>
                     <h4 className="text-sm font-medium text-gray-500 mb-2">Type de Travaux</h4>
-                    <p className="text-[#213f5b]">{selectedProject.typeTravaux || "N/A"}</p>
+                    <p className="text-[#213f5b]">{selectedProject.typeTravaux || "Non spécifié"}</p>
                   </div>
                   
                   <div>
