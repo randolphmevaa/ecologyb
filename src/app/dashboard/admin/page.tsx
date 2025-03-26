@@ -1504,8 +1504,8 @@ export default function AdminDashboardPage() {
 
                   {/* SAV Support KPI */}
                   <motion.div 
-                    className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all"
-                    whileHover={{ y: -5 }}
+                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#d2fcb2]/20 to-[#bfddf9]/30 border border-[#bfddf9]/30"
+                    whileHover={{ scale: 1.02 }}
                   >
                     <Link href="/dashboard/admin/support">
                       <div className="flex justify-between items-start">
@@ -1533,22 +1533,22 @@ export default function AdminDashboardPage() {
                       <div className="mt-4 flex justify-between items-center text-sm">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="h-3 w-3 rounded-full bg-[#f9e5bf]"></span>
-                            <span className="text-xs text-[#213f5b]/70">En attente: {savStats.pendingTickets}</span>
+                            <span className="h-3 w-3 rounded-full bg-[#bfddf9]"></span>
+                            <span className="text-xs text-[#213f5b]/70">Tickets Ouverts: {savStats.openTickets}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <span className="h-3 w-3 rounded-full bg-[#bfddf9]"></span>
-                            <span className="text-xs text-[#213f5b]/70">En cours: {savStats.openTickets - savStats.pendingTickets}</span>
+                            <span className="h-3 w-3 rounded-full bg-[#f9e5bf]"></span>
+                            <span className="text-xs text-[#213f5b]/70">Tickets en attente: {savStats.pendingTickets}</span>
                           </div>
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
                             <span className="h-3 w-3 rounded-full bg-[#d2fcb2]"></span>
-                            <span className="text-xs text-[#213f5b]/70">Résolus: {savStats.solvedTickets}</span>
+                            <span className="text-xs text-[#213f5b]/70">Tickets Clôturés: {savStats.solvedTickets}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="h-3 w-3 rounded-full bg-[#213f5b]"></span>
-                            <span className="text-xs text-[#213f5b]/70">Total: {savStats.totalTickets}</span>
+                            <span className="text-xs text-[#213f5b]/70">Taux de Résolution: {((savStats.solvedTickets / savStats.totalTickets) * 100).toFixed(1)}%</span>
                           </div>
                         </div>
                       </div>

@@ -87,6 +87,10 @@ interface Operation {
   description: string;
   categorie: string;
   active: boolean;
+  kwhCumac?: string;
+  typeCoupDePouce?: string;
+  kwhCumacCoupDePouce?: string;
+  kwhCumacHorsCoupDePouce?: string;
 }
 
 // Interface for Brand
@@ -138,8 +142,11 @@ interface OperationForm {
   description: string;
   categorie: string;
   active: boolean;
+  kwhCumac?: string;
+  typeCoupDePouce?: string;
+  kwhCumacCoupDePouce?: string;
+  kwhCumacHorsCoupDePouce?: string;
 }
-
 // Form interface for Brand
 interface BrandForm {
   id: string;
@@ -2817,7 +2824,21 @@ export default function ProduitPrestationPage() {
                                       <p className="text-sm font-medium text-[#213f5b]">{operation.categorie}</p>
                                     </div>
                                     
-                                    {/* You could add additional data here if needed */}
+                                    {/* Display kWh Cumac for all operations */}
+                                    {operation.kwhCumac && (
+                                      <div>
+                                        <p className="text-xs text-[#213f5b] opacity-75 mb-1">kWh Cumac</p>
+                                        <p className="text-sm font-medium text-[#213f5b]">{operation.kwhCumac.toLocaleString()}</p>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Display Coup de Pouce type if applicable */}
+                                    {operation.typeCoupDePouce && (
+                                      <div>
+                                        <p className="text-xs text-[#213f5b] opacity-75 mb-1">Type de valorisation</p>
+                                        <p className="text-sm font-medium text-[#213f5b]">{operation.typeCoupDePouce}</p>
+                                      </div>
+                                    )}
                                   </div>
                                   
                                   <div className="flex justify-end gap-2 mt-4">
@@ -2939,6 +2960,88 @@ export default function ProduitPrestationPage() {
                                   <span className="ml-3 text-sm font-medium text-[#213f5b]">Active</span>
                                 </label>
                               </div>
+                              
+                              {/* kWh Cumac Input - for all operations */}
+                              <div className="space-y-2 md:col-span-2 border-t pt-4 mt-4">
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="kwhCumac">kWh Cumac standard</label>
+                                <input
+                                  id="kwhCumac"
+                                  type="text"
+                                  name="kwhCumac"
+                                  value={operationForm.kwhCumac || ""}
+                                  onChange={handleOperationFormChange}
+                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  placeholder="Entrez la valeur kWh Cumac standard"
+                                />
+                              </div>
+                              
+                              {/* COUP DE POUCE fields - only for BAR-TH-171 and BAR-TH-143 */}
+                              {(operationForm.code === "BAR-TH-171" || operationForm.code === "BAR-TH-143") && (
+                                <div className="space-y-4 md:col-span-2 border-t pt-4 mt-2">
+                                  <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-[#213f5b] mb-1">Type de valorisation</label>
+                                    <div className="flex items-center space-x-4">
+                                      <label className="inline-flex items-center cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          name="typeCoupDePouce"
+                                          value="COUP DE POUCE"
+                                          checked={(operationForm.typeCoupDePouce || "") === "COUP DE POUCE"}
+                                          onChange={(e) => setOperationForm({
+                                            ...operationForm,
+                                            typeCoupDePouce: e.target.value
+                                          })}
+                                          className="mr-2 h-4 w-4 text-[#213f5b] focus:ring-[#213f5b]"
+                                        />
+                                        <span className="text-sm font-medium text-[#213f5b]">COUP DE POUCE</span>
+                                      </label>
+                                      <label className="inline-flex items-center cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          name="typeCoupDePouce"
+                                          value="HORS COUP DE POUCE"
+                                          checked={(operationForm.typeCoupDePouce || "") === "HORS COUP DE POUCE"}
+                                          onChange={(e) => setOperationForm({
+                                            ...operationForm,
+                                            typeCoupDePouce: e.target.value
+                                          })}
+                                          className="mr-2 h-4 w-4 text-[#213f5b] focus:ring-[#213f5b]"
+                                        />
+                                        <span className="text-sm font-medium text-[#213f5b]">HORS COUP DE POUCE</span>
+                                      </label>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Conditional fields based on COUP DE POUCE selection */}
+                                  {operationForm.typeCoupDePouce === "COUP DE POUCE" && (
+                                    <div className="space-y-2">
+                                      <label className="block text-sm font-medium text-[#213f5b] mb-1">kWh Cumac (Coup de Pouce)</label>
+                                      <input
+                                        type="text"
+                                        name="kwhCumacCoupDePouce"
+                                        value={operationForm.kwhCumacCoupDePouce || ""}
+                                        onChange={handleOperationFormChange}
+                                        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                        placeholder="Entrez la valeur kWh Cumac pour Coup de Pouce"
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  {operationForm.typeCoupDePouce === "HORS COUP DE POUCE" && (
+                                    <div className="space-y-2">
+                                      <label className="block text-sm font-medium text-[#213f5b] mb-1">kWh Cumac (Hors Coup de Pouce)</label>
+                                      <input
+                                        type="text"
+                                        name="kwhCumacHorsCoupDePouce"
+                                        value={operationForm.kwhCumacHorsCoupDePouce || ""}
+                                        onChange={handleOperationFormChange}
+                                        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                        placeholder="Entrez la valeur kWh Cumac hors Coup de Pouce"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
