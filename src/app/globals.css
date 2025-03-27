@@ -70,3 +70,26 @@ h1, h2, h3, h4, h5, h6 {
 .event-resize-handle:hover {
   background-color: rgba(255, 255, 255, 0.5);
 }
+
+
+:root {
+  --whatsapp-green: #128C7E;
+  --whatsapp-light-green: #25D366;
+  --whatsapp-pale-green: #DCF8C6;
+  --whatsapp-bg: #F0F2F5;
+  --whatsapp-surface: #FFFFFF;
+  --whatsapp-border: #E2E8F0;
+  --whatsapp-text: #111B21;
+  --whatsapp-text-secondary: #54656F;
+}
+
+.dark-theme {
+  --whatsapp-green: #00A884;
+  --whatsapp-light-green: #00A884;
+  --whatsapp-pale-green: #005C4B;
+  --whatsapp-bg: #111B21;
+  --whatsapp-surface: #1F2C34;
+  --whatsapp-border: #2A3942;
+  --whatsapp-text: #E9EDEF;
+  --whatsapp-text-secondary: #8696A0;
+}

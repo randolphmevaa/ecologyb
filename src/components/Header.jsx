@@ -481,7 +481,7 @@ function HeaderLayout({ createDropdownItems, navigation, searchPlaceholder, user
       profileItems = [
         {
           label: "Mon Profil",
-          route: "/dashboard/admin/profile",
+          route: "/dashboard/admin/reglages",
           icon: UserCircleIcon,
         },
         {

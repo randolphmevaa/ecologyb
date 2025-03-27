@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { FaPhone } from "react-icons/fa6";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaFacebook } from "react-icons/fa";
@@ -10,6 +11,7 @@ import { FaGoogleDrive } from "react-icons/fa";
 import { BiLogoGmail } from "react-icons/bi";
 import { FaPlus } from "react-icons/fa";
 import { IoIosApps } from "react-icons/io";
+import { BiPhone } from "react-icons/bi";
 import {
   HomeIcon,
   ClipboardDocumentCheckIcon,
@@ -153,14 +155,26 @@ export function Sidebar({ role }) {
           // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
           { name: "Prospects", href: "/dashboard/admin/leads", icon: UserCircleIcon},
           { name: "Clients", href: "/dashboard/admin/projects", icon: UserCircleIcon },
-          { name: "Gérer Statuts", href: "/dashboard/admin/status", icon: TagIcon },
+          
           // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
         ],
       },
+      { name: "Gérer Statuts", href: "/dashboard/admin/status", icon: TagIcon },
       { name: "Chat", href: "/dashboard/admin/emails", icon: EnvelopeIcon, badge: 24 },
       { name: "Agenda", href: "/dashboard/admin/calendar", icon: CalendarIcon },
-      { name: "Catalogue", href: "/dashboard/admin/products-services", icon: BookOpenIcon },
+      // { name: "Catalogue", href: "/dashboard/admin/products-services", icon: BookOpenIcon },
+      {
+        name: "Catalogue",
+        icon: BookOpenIcon,
+        children: [
+          { name: "Produit", href: "/dashboard/admin/products-services", icon: BookOpenIcon },
+          { name: "Prestation", href: "/dashboard/admin/products-services", icon: BookOpenIcon },
+          { name: "Opération", href: "/dashboard/admin/products-services", icon: BookOpenIcon },
+          { name: "Marque", href: "/dashboard/admin/products-services", icon: BookOpenIcon },
+        ],
+      },
+      
       { 
         name: "Installateur", 
         href: "/dashboard/admin/sous-traitants", 
@@ -187,19 +201,28 @@ export function Sidebar({ role }) {
       // { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
       { name: "Tout les rôles", href: "/dashboard/admin/administration", icon: UserGroupIcon },
       {
+        name: "PBX",
+        icon: BiPhone,
+        children: [
+          { name: "Mes lignes", href: "/dashboard/admin/mes-lignes", icon: BiPhone },
+          { name: "Mes numéros", href: "/dashboard/admin/mes-numeros", icon: BiPhone },
+          { name: "Poste de travail", href: "/dashboard/admin/poste-de-travail", icon: BiPhone },
+        ],
+      },
+      {
         name: "Applications",
         icon: IoIosApps,
         children: [
           { name: "Whatsapp", href: "/dashboard/admin/whatsapp", icon: FaWhatsapp },
-      { name: "Gmail", href: "/dashboard/admin/gmail", icon: BiLogoGmail },
-      { name: "Drive", href: "/dashboard/admin/drive", icon: FaGoogleDrive },
-      { name: "Facebook Ads", href: "/dashboard/admin/fb", icon: FaFacebook },
-      { name: "Dext", href: "/dashboard/admin/dext", icon: FaPlus },
-      { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", icon: FaPlus },
-      { name: "Effy Pro", href: "/dashboard/admin/effy-pro", icon: FaPlus },
-      { name: "Qualigaz", href: "/dashboard/admin/qualigaz", icon: FaPlus },
-      { name: "Fidealis", href: "/dashboard/admin/fidealis", icon: FaPlus },
-      { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", icon: FaPlus },
+          { name: "Gmail", href: "/dashboard/admin/gmail", icon: BiLogoGmail },
+          { name: "Drive", href: "/dashboard/admin/drive", icon: FaGoogleDrive },
+          { name: "Facebook Ads", href: "/dashboard/admin/fb", icon: FaFacebook },
+          { name: "Dext", href: "/dashboard/admin/dext", icon: FaPlus },
+          { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", icon: FaPlus },
+          { name: "Effy Pro", href: "/dashboard/admin/effy-pro", icon: FaPlus },
+          { name: "Qualigaz", href: "/dashboard/admin/qualigaz", icon: FaPlus },
+          { name: "Fidealis", href: "/dashboard/admin/fidealis", icon: FaPlus },
+          { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", icon: FaPlus },
         ],
       },
       
