@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { FaPhone } from "react-icons/fa6";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaFacebook } from "react-icons/fa";
@@ -217,12 +218,12 @@ export function Sidebar({ role }) {
           { name: "Gmail", href: "/dashboard/admin/gmail", icon: BiLogoGmail },
           { name: "Drive", href: "/dashboard/admin/drive", icon: FaGoogleDrive },
           { name: "Facebook Ads", href: "/dashboard/admin/fb", icon: FaFacebook },
-          { name: "Dext", href: "/dashboard/admin/dext", icon: FaPlus },
-          { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", icon: FaPlus },
-          { name: "Effy Pro", href: "/dashboard/admin/effy-pro", icon: FaPlus },
-          { name: "Qualigaz", href: "/dashboard/admin/qualigaz", icon: FaPlus },
-          { name: "Fidealis", href: "/dashboard/admin/fidealis", icon: FaPlus },
-          { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", icon: FaPlus },
+          { name: "Dext", href: "/dashboard/admin/dext", iconType: "image", iconSrc: "/dext.png"},
+          { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", iconType: "image", iconSrc: "/Group 9.svg" },
+          { name: "Effy Pro", href: "/dashboard/admin/effy-pro", iconType: "image", iconSrc: "/effy.png" },
+          { name: "Qualigaz", href: "/dashboard/admin/qualigaz", iconType: "image", iconSrc: "/qualigaz.png" },
+          { name: "Fidealis", href: "/dashboard/admin/fidealis", iconType: "image", iconSrc: "/fidealis.png" },
+          { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", iconType: "image", iconSrc: "/anah.png" },
         ],
       },
       
@@ -309,183 +310,199 @@ export function Sidebar({ role }) {
     }));
   };
 
-  // Render a navigation item (or a dropdown parent if children exist)
-  const renderNavItem = (item, isChild = false) => {
-    // For a parent with children, consider active if one of its children is active.
-    const isActive = item.href
-      ? activeItem === item.name
-      : item.children && item.children.some((child) => child.name === activeItem);
+  // Find the renderNavItem function and modify it to handle image icons
+const renderNavItem = (item, isChild = false) => {
+  // For a parent with children, consider active if one of its children is active.
+  const isActive = item.href
+    ? activeItem === item.name
+    : item.children && item.children.some((child) => child.name === activeItem);
 
-    return (
-      <div
-        key={item.name}
-        className={cn("relative", isChild && "pl-6")}
-        onMouseEnter={() => handleHover(item.name)}
-        onMouseLeave={() => {
-          clearTimeout(hoverTimeout.current);
-          setHoveredItem(null);
-        }}
-      >
-        {/* Hover background effect */}
-        <AnimatePresence>
-          {hoveredItem === item.name && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-primary/5 rounded-xl"
-              layoutId="hoverBg"
-            />
+  // This function renders the icon based on its type
+  const renderIcon = (item) => {
+    if (item.iconType === "image") {
+      return (
+        <div className="h-6 w-6 relative">
+          <Image
+            src={item.iconSrc}
+            alt={item.name}
+            fill
+            className="object-contain"
+          />
+        </div>
+      );
+    } else {
+      const IconComponent = item.icon;
+      return (
+        <IconComponent
+          className={cn(
+            "h-6 w-6 transition-colors",
+            isActive ? "text-primary" : "text-gray-600"
           )}
-        </AnimatePresence>
+        />
+      );
+    }
+  };
 
-        {item.children ? (
-          // Dropdown parent item
-          <div
-            onClick={() => toggleDropdown(item.name)}
-            className={cn(
-              "flex items-center gap-x-3 rounded-xl p-3 cursor-pointer",
-              "relative z-10 transition-colors duration-200",
-              isActive ? "bg-gray-800 shadow-inner" : "hover:bg-primary/5"
-            )}
-          >
-            <motion.div
-              animate={{
-                rotate: isActive ? [0, -10, 10, 0] : 0,
-                scale: isActive ? 1.1 : 1,
-              }}
-              transition={{ duration: 0.4 }}
-              className="relative"
-            >
-              <item.icon
-                className={cn(
-                  "h-6 w-6 transition-colors",
-                  isActive ? "text-primary" : "text-gray-600"
-                )}
-              />
-            </motion.div>
-            <AnimatePresence initial={false}>
-              {!isCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  className={cn(
-                    "font-body text-sm font-medium truncate",
-                    isActive ? "text-primary font-semibold" : "text-gray-700"
-                  )}
-                >
-                  {item.name}
-                </motion.span>
-              )}
-            </AnimatePresence>
-            {!isCollapsed && (
-              <motion.div
-                initial={{ rotate: 0 }}
-                animate={{ rotate: openDropdowns[item.name] ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-                className="ml-auto"
-              >
-                <ChevronDownIcon className="h-5 w-5 text-gray-600" />
-              </motion.div>
-            )}
-          </div>
-        ) : (
-          // Standalone link
-          <Link
-            href={item.href}
-            onClick={() => {
-              setActiveItem(item.name);
-              localStorage.setItem("activeItem", item.name);
+  return (
+    <div
+      key={item.name}
+      className={cn("relative", isChild && "pl-6")}
+      onMouseEnter={() => handleHover(item.name)}
+      onMouseLeave={() => {
+        clearTimeout(hoverTimeout.current);
+        setHoveredItem(null);
+      }}
+    >
+      {/* Hover background effect */}
+      <AnimatePresence>
+        {hoveredItem === item.name && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-primary/5 rounded-xl"
+            layoutId="hoverBg"
+          />
+        )}
+      </AnimatePresence>
+
+      {item.children ? (
+        // Dropdown parent item
+        <div
+          onClick={() => toggleDropdown(item.name)}
+          className={cn(
+            "flex items-center gap-x-3 rounded-xl p-3 cursor-pointer",
+            "relative z-10 transition-colors duration-200",
+            isActive ? "bg-gray-800 shadow-inner" : "hover:bg-primary/5"
+          )}
+        >
+          <motion.div
+            animate={{
+              rotate: isActive ? [0, -10, 10, 0] : 0,
+              scale: isActive ? 1.1 : 1,
             }}
-            className={cn(
-              "flex items-center gap-x-3 rounded-xl p-3",
-              "relative z-10 transition-colors duration-200",
-              isActive ? "bg-gray-800 shadow-inner" : "hover:bg-primary/5"
-            )}
+            transition={{ duration: 0.4 }}
+            className="relative"
           >
-            <motion.div
-              animate={{
-                rotate: isActive ? [0, -10, 10, 0] : 0,
-                scale: isActive ? 1.1 : 1,
-              }}
-              transition={{ duration: 0.4 }}
-              className="relative"
-            >
-              <item.icon
+            {renderIcon(item)}
+          </motion.div>
+          <AnimatePresence initial={false}>
+            {!isCollapsed && (
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
                 className={cn(
-                  "h-6 w-6 transition-colors",
-                  isActive ? "text-primary" : "text-gray-600"
+                  "font-body text-sm font-medium truncate",
+                  isActive ? "text-primary font-semibold" : "text-gray-700"
                 )}
-              />
-              {item.badge && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className={cn(
-                    "absolute -top-2 -right-2 flex items-center justify-center",
-                    "h-5 w-5 rounded-full text-xs font-bold shadow-sm",
-                    isActive ? "bg-primary text-white" : "bg-secondary text-white"
-                  )}
-                >
-                  {item.badge}
-                </motion.span>
-              )}
+              >
+                {item.name}
+              </motion.span>
+            )}
+          </AnimatePresence>
+          {!isCollapsed && (
+            <motion.div
+              initial={{ rotate: 0 }}
+              animate={{ rotate: openDropdowns[item.name] ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+              className="ml-auto"
+            >
+              <ChevronDownIcon className="h-5 w-5 text-gray-600" />
             </motion.div>
-            <AnimatePresence initial={false}>
-              {!isCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  className={cn(
-                    "font-body text-sm font-medium truncate",
-                    isActive ? "text-primary font-semibold" : "text-gray-700"
-                  )}
-                >
-                  {item.name}
-                </motion.span>
-              )}
-            </AnimatePresence>
-            {!isCollapsed && isActive && (
-              <motion.div
+          )}
+        </div>
+      ) : (
+        // Standalone link
+        <Link
+          href={item.href}
+          onClick={() => {
+            setActiveItem(item.name);
+            localStorage.setItem("activeItem", item.name);
+          }}
+          className={cn(
+            "flex items-center gap-x-3 rounded-xl p-3",
+            "relative z-10 transition-colors duration-200",
+            isActive ? "bg-gray-800 shadow-inner" : "hover:bg-primary/5"
+          )}
+        >
+          <motion.div
+            animate={{
+              rotate: isActive ? [0, -10, 10, 0] : 0,
+              scale: isActive ? 1.1 : 1,
+            }}
+            transition={{ duration: 0.4 }}
+            className="relative"
+          >
+            {renderIcon(item)}
+            {item.badge && (
+              <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="ml-auto w-2 h-2 bg-primary rounded-full"
-              />
+                className={cn(
+                  "absolute -top-2 -right-2 flex items-center justify-center",
+                  "h-5 w-5 rounded-full text-xs font-bold shadow-sm",
+                  isActive ? "bg-primary text-white" : "bg-secondary text-white"
+                )}
+              >
+                {item.badge}
+              </motion.span>
             )}
-          </Link>
-        )}
-
-        {/* Render dropdown children if available */}
-        {item.children && openDropdowns[item.name] && (
-          <motion.div
-            initial="collapsed"
-            animate="open"
-            exit="collapsed"
-            variants={{
-              open: { opacity: 1, height: "auto", transition: { duration: 0.3 } },
-              collapsed: { opacity: 0, height: 0, transition: { duration: 0.2 } },
-            }}
-          >
-            {item.children.map((child) => renderNavItem(child, true))}
           </motion.div>
-        )}
-
-        {/* Hover line indicator */}
-        <AnimatePresence>
-          {hoveredItem === item.name && (
+          <AnimatePresence initial={false}>
+            {!isCollapsed && (
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className={cn(
+                  "font-body text-sm font-medium truncate",
+                  isActive ? "text-primary font-semibold" : "text-gray-700"
+                )}
+              >
+                {item.name}
+              </motion.span>
+            )}
+          </AnimatePresence>
+          {!isCollapsed && isActive && (
             <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: 4 }}
-              exit={{ width: 0 }}
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-6 bg-primary rounded-r-full"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="ml-auto w-2 h-2 bg-primary rounded-full"
             />
           )}
-        </AnimatePresence>
-      </div>
-    );
-  };
+        </Link>
+      )}
+
+      {/* Render dropdown children if available */}
+      {item.children && openDropdowns[item.name] && (
+        <motion.div
+          initial="collapsed"
+          animate="open"
+          exit="collapsed"
+          variants={{
+            open: { opacity: 1, height: "auto", transition: { duration: 0.3 } },
+            collapsed: { opacity: 0, height: 0, transition: { duration: 0.2 } },
+          }}
+        >
+          {item.children.map((child) => renderNavItem(child, true))}
+        </motion.div>
+      )}
+
+      {/* Hover line indicator */}
+      <AnimatePresence>
+        {hoveredItem === item.name && (
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: 4 }}
+            exit={{ width: 0 }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-6 bg-primary rounded-r-full"
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
   return (
     <motion.div
