@@ -2,15 +2,18 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { FaPhone } from "react-icons/fa6";
+// import { FaPhone } from "react-icons/fa6";
+import { SlEarphonesAlt } from "react-icons/sl";
+import { PiPhoneList } from "react-icons/pi";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
+import { BiPhoneCall } from "react-icons/bi";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaFacebook } from "react-icons/fa";
 import { FaWhatsapp } from "react-icons/fa";
 import { FaGoogleDrive } from "react-icons/fa";
 import { BiLogoGmail } from "react-icons/bi";
-import { FaPlus } from "react-icons/fa";
+// import { FaPlus } from "react-icons/fa";
 import { IoIosApps } from "react-icons/io";
 import { BiPhone } from "react-icons/bi";
 import {
@@ -205,9 +208,9 @@ export function Sidebar({ role }) {
         name: "PBX",
         icon: BiPhone,
         children: [
-          { name: "Mes lignes", href: "/dashboard/admin/mes-lignes", icon: BiPhone },
-          { name: "Mes numéros", href: "/dashboard/admin/mes-numeros", icon: BiPhone },
-          { name: "Poste de travail", href: "/dashboard/admin/poste-de-travail", icon: BiPhone },
+          { name: "Mes lignes", href: "/dashboard/admin/mes-lignes", icon: SlEarphonesAlt },
+          { name: "Mes numéros", href: "/dashboard/admin/mes-numeros", icon: PiPhoneList },
+          { name: "Poste de travail", href: "/dashboard/admin/poste-de-travail", icon: BiPhoneCall },
         ],
       },
       {
