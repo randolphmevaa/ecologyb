@@ -41,6 +41,7 @@ import { Header } from "@/components/Header";
 import PremiumTabs from "./TabsUI";
 import ReglementTab from "./ReglementTab";
 import DevisFactureTab from "./DevisFactureTab"
+import MultiFileUpload from "./MultiFileUpload";
 
 interface DocumentsTabProps {
   contactId: string;
@@ -1284,18 +1285,9 @@ function DocumentsTab({ contactId, isAdmin = false }: DocumentsTabProps) {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Fichier
+                      Fichiers
                     </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer bg-gray-50">
-                      <DocumentArrowUpIcon className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">
-                        Glissez et déposez votre fichier ici, ou
-                        <span className="text-blue-600 font-medium ml-1">parcourir vos fichiers</span>
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        PDF, JPEG, PNG jusqu&apos;à 10MB
-                      </p>
-                    </div>
+                    <MultiFileUpload primaryColor="indigo" accept="application/pdf,image/jpeg,image/png,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
                   </div>
                   
                   <div>
@@ -1424,18 +1416,9 @@ function DocumentsTab({ contactId, isAdmin = false }: DocumentsTabProps) {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Fichier
+                      Fichiers
                     </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-gray-50">
-                      <DocumentArrowUpIcon className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">
-                        Glissez et déposez votre fichier ici, ou
-                        <span className="text-indigo-600 font-medium ml-1">parcourir vos fichiers</span>
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        PDF, JPEG, PNG, DOCX jusqu&apos;à 10MB
-                      </p>
-                    </div>
+                    <MultiFileUpload primaryColor="blue" />
                   </div>
                   
                   <div className="flex items-center">
@@ -1612,41 +1595,6 @@ function DocumentsTab({ contactId, isAdmin = false }: DocumentsTabProps) {
   );
 }
 
-// Sample data for demo purposes
-// const SAMPLE_DOWNLOADABLE_DOCS = [
-//   {
-//     id: "d1",
-//     type: "Devis",
-//     date: "15/03/2025",
-//     status: "Soumis",
-//     filePath: "https://example.com/devis-123.pdf",
-//   },
-//   {
-//     id: "d2",
-//     type: "Facture",
-//     date: "10/03/2025",
-//     status: "Soumis",
-//     filePath: "https://example.com/facture-456.pdf",
-//   },
-// ];
-
-// const SAMPLE_TRANSMITTABLE_DOCS = [
-//   {
-//     id: "t1",
-//     type: "Avis d'imposition",
-//     date: "25/02/2025",
-//     status: "Manquant",
-//     filePath: "",
-//   },
-//   {
-//     id: "t2",
-//     type: "Attestation de propriété",
-//     date: "25/02/2025",
-//     status: "Manquant",
-//     filePath: "",
-//   },
-// ];
-
 const SAMPLE_ADMIN_DOCS = [
   {
     id: "a1",
@@ -1667,18 +1615,6 @@ const SAMPLE_ADMIN_DOCS = [
     author: "Marie Martin",
   },
 ];
-
-// const predefinedTypes = [
-//   "Devis",
-//   "Facture",
-//   "Avis d'imposition",
-//   "Attestation de propriété",
-//   "Avis d'éligibilité MaPrimeRénov'",
-// ];
-
-// ------------------------
-// Main Component: ProjectDetailPage
-// ------------------------
 
 export default function ProjectDetailPage() {
   
