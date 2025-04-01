@@ -9,10 +9,10 @@ import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { BiPhoneCall } from "react-icons/bi";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaFacebook } from "react-icons/fa";
-import { FaWhatsapp } from "react-icons/fa";
-import { FaGoogleDrive } from "react-icons/fa";
-import { BiLogoGmail } from "react-icons/bi";
+// import { FaFacebook } from "react-icons/fa";
+// import { FaWhatsapp } from "react-icons/fa";
+// import { FaGoogleDrive } from "react-icons/fa";
+// import { BiLogoGmail } from "react-icons/bi";
 // import { FaPlus } from "react-icons/fa";
 import { IoIosApps } from "react-icons/io";
 import { BiPhone } from "react-icons/bi";
@@ -33,7 +33,7 @@ import {
   BuildingStorefrontIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
-  ShoppingBagIcon,
+  // ShoppingBagIcon,
   ArchiveBoxIcon,
   TruckIcon,
   CreditCardIcon,
@@ -159,6 +159,7 @@ export function Sidebar({ role }) {
           // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
           { name: "Prospects", href: "/dashboard/admin/leads", icon: UserCircleIcon},
           { name: "Clients", href: "/dashboard/admin/projects", icon: UserCircleIcon },
+          { name: "Contrôle", href: "/dashboard/admin/controle", icon: SettingsIcon },
           
           // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
@@ -217,10 +218,10 @@ export function Sidebar({ role }) {
         name: "Applications",
         icon: IoIosApps,
         children: [
-          { name: "Whatsapp", href: "/dashboard/admin/whatsapp", icon: FaWhatsapp },
-          { name: "Gmail", href: "/dashboard/admin/gmail", icon: BiLogoGmail },
-          { name: "Drive", href: "/dashboard/admin/drive", icon: FaGoogleDrive },
-          { name: "Facebook Ads", href: "/dashboard/admin/fb", icon: FaFacebook },
+          { name: "Whatsapp", href: "/dashboard/admin/whatsapp", iconType: "image", iconSrc: "/whatsapp.png"},
+          { name: "Gmail", href: "/dashboard/admin/gmail", iconType: "image", iconSrc: "/gmail.png"},
+          { name: "Drive", href: "/dashboard/admin/drive", iconType: "image", iconSrc: "/drive.png"},
+          { name: "Facebook Ads", href: "/dashboard/admin/fb", iconType: "image", iconSrc: "/fb.png"},
           { name: "Dext", href: "/dashboard/admin/dext", iconType: "image", iconSrc: "/dext.png"},
           { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", iconType: "image", iconSrc: "/Group 9.svg" },
           { name: "Effy Pro", href: "/dashboard/admin/effy-pro", iconType: "image", iconSrc: "/effy.png" },

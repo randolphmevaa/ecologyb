@@ -600,84 +600,88 @@ export default function AdminFacturationPage() {
           ) : (
             <div className="grid grid-cols-12 gap-6">
               {/* -- Stats row -- */}
-              <motion.div
-                className="col-span-12 grid grid-cols-1 gap-5 md:grid-cols-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <motion.div
-                  className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#bfddf9]/20 to-[#d2fcb2]/30 border border-[#bfddf9]/30"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">En attente</p>
-                    <div className="p-2 rounded-full bg-white/60">
-                      <ClockIcon className="h-5 w-5 text-[#213f5b]" />
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-[#213f5b]">
-                    {formatMontant(statsData.totalEnAttenteApprobation)}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {statsData.enAttenteApprobation} factures
-                  </p>
-                </motion.div>
+<motion.div
+  className="col-span-12 grid grid-cols-1 gap-5 md:grid-cols-4"
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ delay: 0.2 }}
+>
+  {/* Pending - Blue theme */}
+  <motion.div
+    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-blue-100 to-blue-200 border border-blue-200"
+    whileHover={{ scale: 1.02 }}
+  >
+    <div className="flex justify-between items-center mb-3">
+      <p className="text-sm font-medium text-[#213f5b]">En attente</p>
+      <div className="p-2 rounded-full bg-white/60">
+        <ClockIcon className="h-5 w-5 text-blue-500" />
+      </div>
+    </div>
+    <p className="text-2xl font-bold text-[#213f5b]">
+      {formatMontant(statsData.totalEnAttenteApprobation)}
+    </p>
+    <p className="text-xs text-gray-600 mt-1">
+      {statsData.enAttenteApprobation} factures
+    </p>
+  </motion.div>
 
-                <motion.div
-                  className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#d2fcb2]/20 to-[#bfddf9]/30 border border-[#bfddf9]/30"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">A modifier</p>
-                    <div className="p-2 rounded-full bg-white/60">
-                      <MagnifyingGlassIcon className="h-5 w-5 text-[#213f5b]" />
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-[#213f5b]">
-                    {formatMontant(statsData.totalEnAttenteVerification)}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {statsData.enAttenteVerification} factures
-                  </p>
-                </motion.div>
+  {/* To modify - Purple theme */}
+  <motion.div
+    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-purple-100 to-purple-200 border border-purple-200"
+    whileHover={{ scale: 1.02 }}
+  >
+    <div className="flex justify-between items-center mb-3">
+      <p className="text-sm font-medium text-[#213f5b]">A modifier</p>
+      <div className="p-2 rounded-full bg-white/60">
+        <MagnifyingGlassIcon className="h-5 w-5 text-purple-500" />
+      </div>
+    </div>
+    <p className="text-2xl font-bold text-[#213f5b]">
+      {formatMontant(statsData.totalEnAttenteVerification)}
+    </p>
+    <p className="text-xs text-gray-600 mt-1">
+      {statsData.enAttenteVerification} factures
+    </p>
+  </motion.div>
 
-                <motion.div
-                  className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#bfddf9]/30 to-[#d2fcb2]/20 border border-[#bfddf9]/30"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">A payer</p>
-                    <div className="p-2 rounded-full bg-white/60">
-                      <BanknotesIcon className="h-5 w-5 text-[#213f5b]" />
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-[#213f5b]">
-                    {formatMontant(statsData.totalAPayer)}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {statsData.aPayer} factures
-                  </p>
-                </motion.div>
+  {/* To pay - Orange theme */}
+  <motion.div
+    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-orange-100 to-orange-200 border border-orange-200"
+    whileHover={{ scale: 1.02 }}
+  >
+    <div className="flex justify-between items-center mb-3">
+      <p className="text-sm font-medium text-[#213f5b]">A payer</p>
+      <div className="p-2 rounded-full bg-white/60">
+        <BanknotesIcon className="h-5 w-5 text-orange-500" />
+      </div>
+    </div>
+    <p className="text-2xl font-bold text-[#213f5b]">
+      {formatMontant(statsData.totalAPayer)}
+    </p>
+    <p className="text-xs text-gray-600 mt-1">
+      {statsData.aPayer} factures
+    </p>
+  </motion.div>
 
-                <motion.div
-                  className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-[#d2fcb2]/10 via-[#bfddf9]/20 to-[#d2fcb2]/10 border border-[#bfddf9]/30"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <p className="text-sm font-medium text-[#213f5b]">Payé</p>
-                    <div className="p-2 rounded-full bg-white/60">
-                      <CheckBadgeIcon className="h-5 w-5 text-[#213f5b]" />
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-[#213f5b]">
-                    {formatMontant(statsData.totalPaye)}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {statsData.facturePaye} factures
-                  </p>
-                </motion.div>
-              </motion.div>
+  {/* Paid - Green theme */}
+  <motion.div
+    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-green-100 to-green-200 border border-green-200"
+    whileHover={{ scale: 1.02 }}
+  >
+    <div className="flex justify-between items-center mb-3">
+      <p className="text-sm font-medium text-[#213f5b]">Payé</p>
+      <div className="p-2 rounded-full bg-white/60">
+        <CheckBadgeIcon className="h-5 w-5 text-green-500" />
+      </div>
+    </div>
+    <p className="text-2xl font-bold text-[#213f5b]">
+      {formatMontant(statsData.totalPaye)}
+    </p>
+    <p className="text-xs text-gray-600 mt-1">
+      {statsData.facturePaye} factures
+    </p>
+  </motion.div>
+</motion.div>
 
               {/* -- Filtres -- */}
               <div className="col-span-12">
