@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+// Add these imports at the top
+import { ChartPieIcon, StarIcon, TrophyIcon, CogIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { Header } from "@/components/Header";
 import {
   CurrencyEuroIcon,
@@ -50,7 +52,8 @@ import {
   Radar,
   PolarGrid,
   PolarAngleAxis,
-  PolarRadiusAxis
+  PolarRadiusAxis,
+  ComposedChart
 } from "recharts";
 
 interface ButtonProps {
@@ -77,6 +80,37 @@ const Button: React.FC<ButtonProps> = ({
     </button>
   );
 };
+
+// Add this client profit data near your other sample data constants
+const CLIENT_PROFIT_DATA = [
+  { name: "Martin Dupont", profit: 85400, revenue: 238000, percentage: 24, growth: "+15%", projects: 12, margin: 35.9 },
+  { name: "Sophie Laurent", profit: 62300, revenue: 175000, percentage: 18, growth: "+8%", projects: 8, margin: 35.6 },
+  { name: "Jean Lefebvre", profit: 53900, revenue: 142000, percentage: 15, growth: "+12%", projects: 10, margin: 38.0 },
+  { name: "Marie Dubois", profit: 47200, revenue: 128000, percentage: 14, growth: "+5%", projects: 6, margin: 36.9 },
+  { name: "Thomas Moreau", profit: 34600, revenue: 89000, percentage: 10, growth: "+7%", projects: 5, margin: 38.9 },
+  { name: "Autres clients", profit: 68500, revenue: 189000, percentage: 19, growth: "+10%", projects: 22, margin: 36.2 }
+];
+
+// Client profit colors - consistent with your existing theme but with distinct values
+const CLIENT_PROFIT_COLORS = [
+  "#4f46e5", // indigo
+  "#0ea5e9", // sky
+  "#8b5cf6", // violet
+  "#f97316", // orange
+  "#10b981", // emerald
+  "#64748b"  // slate
+];
+
+// Monthly profit data for the time series chart
+const MONTHLY_PROFIT_DATA = [
+  { month: "Jan", profit: 25800, costs: 18200, margin: 41.6 },
+  { month: "Fév", profit: 28600, costs: 19400, margin: 42.5 },
+  { month: "Mar", profit: 32500, costs: 21500, margin: 43.3 },
+  { month: "Avr", profit: 34600, costs: 22400, margin: 43.7 },
+  { month: "Mai", profit: 38200, costs: 24800, margin: 43.5 },
+  { month: "Jun", profit: 42100, costs: 26900, margin: 44.0 },
+  { month: "Jul", profit: 45800, costs: 29200, margin: 44.2 }
+];
 
 // Define interfaces for our data structures
 interface MonthlyInstallation {
@@ -325,6 +359,267 @@ const CATEGORIES_COLORS: Record<string, string> = {
   financement: "#38b2ac",
   renovationAmpleur: "#805ad5",
   panneauxPV: "#f6ad55"
+};
+
+// Client Profit Chart Component
+const ClientProfitChart = ({ }) => {
+  const [activeTab, setActiveTab] = useState("clients");
+  const totalProfit = CLIENT_PROFIT_DATA.reduce((sum, client) => sum + client.profit, 0);
+  const totalRevenue = CLIENT_PROFIT_DATA.reduce((sum, client) => sum + client.revenue, 0);
+  const avgMargin = (totalProfit / totalRevenue * 100).toFixed(1);
+  
+  // Define formatCurrency function inside the component with proper typing
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.5 }}
+      className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#eaeaea]"
+    >
+      <div className="relative bg-gradient-to-r from-indigo-600 to-indigo-400 px-6 py-4">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full -mr-10 -mt-10 opacity-20" />
+        <div className="flex items-center justify-between gap-3 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+              <ChartPieIcon className="h-6 w-6 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Bénéfices & Rentabilité</h2>
+          </div>
+          
+          <div className="flex bg-white/10 backdrop-blur-sm rounded-lg">
+            <button
+              onClick={() => setActiveTab("clients")}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg ${
+                activeTab === "clients" ? "bg-white text-indigo-700" : "text-white hover:bg-white/20"
+              }`}
+            >
+              Par Client
+            </button>
+            <button
+              onClick={() => setActiveTab("time")}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-lg ${
+                activeTab === "time" ? "bg-white text-indigo-700" : "text-white hover:bg-white/20"
+              }`}
+            >
+              Évolution
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-6">
+        {activeTab === "clients" ? (
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Pie Chart */}
+            <div className="lg:w-1/2">
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={CLIENT_PROFIT_DATA}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      innerRadius={60}
+                      dataKey="profit"
+                      nameKey="name"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name.split(' ')[0]} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {CLIENT_PROFIT_DATA.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={CLIENT_PROFIT_COLORS[index % CLIENT_PROFIT_COLORS.length]} 
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value) => [formatCurrency(value as number), "Bénéfice"]}
+                      contentStyle={{ 
+                        backgroundColor: 'white',
+                        borderRadius: '8px',
+                        border: '1px solid #eaeaea',
+                        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Legend 
+                      layout="horizontal" 
+                      verticalAlign="bottom" 
+                      align="center"
+                      formatter={(value) => value.length > 12 ? `${value.substring(0, 12)}...` : value}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            {/* Client List */}
+            <div className="lg:w-1/2">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-[#213f5b]">Top Clients par Bénéfice</h3>
+                  <div className="text-xs text-indigo-600 font-medium flex items-center gap-1">
+                    <span>Marge moyenne:</span>
+                    <span className="text-sm font-bold">{avgMargin}%</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                  {CLIENT_PROFIT_DATA.map((client, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100 hover:shadow-md transition-all duration-300">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm" 
+                             style={{ backgroundColor: CLIENT_PROFIT_COLORS[index] }}>
+                          <span className="text-xs font-medium text-white">{index + 1}</span>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-[#213f5b]">{client.name}</h4>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <div className="flex items-center text-xs text-green-600">
+                              <ArrowTrendingUpIcon className="h-3 w-3 mr-1" />
+                              <span>{client.growth}</span>
+                            </div>
+                            <div className="text-xs text-gray-500">{client.projects} projets</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-[#213f5b]">{formatCurrency(client.profit)}</div>
+                        <div className="flex items-center justify-end gap-2 mt-0.5">
+                          <div className="text-xs text-gray-500">Marge</div>
+                          <div className="text-xs font-medium text-indigo-600">{client.margin}%</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Monthly Profit Chart */}
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={MONTHLY_PROFIT_DATA}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="left" axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tickFormatter={(value) => `${value}%`} />
+                  <Tooltip 
+                    formatter={(value, name) => {
+                      if (name === "profit") return [formatCurrency(value as number), "Bénéfice"];
+                      if (name === "costs") return [formatCurrency(value as number), "Coûts"];
+                      if (name === "margin") return [`${value}%`, "Marge"];
+                      return [value, name];
+                    }}
+                    contentStyle={{ 
+                      backgroundColor: 'white',
+                      borderRadius: '8px',
+                      border: '1px solid #eaeaea',
+                      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                  <Legend />
+                  <Bar yAxisId="left" name="Bénéfice" dataKey="profit" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                  <Bar yAxisId="left" name="Coûts" dataKey="costs" fill="#e5e7eb" radius={[4, 4, 0, 0]} />
+                  <Line yAxisId="right" name="Marge %" type="monotone" dataKey="margin" stroke="#10b981" strokeWidth={2} dot={{ stroke: '#10b981', strokeWidth: 2, r: 4 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+            
+            {/* Monthly Profit Stats */}
+            <div className="grid grid-cols-4 gap-4">
+              <div className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-100">
+                <div className="flex justify-between mb-2">
+                  <h4 className="text-xs font-medium text-indigo-800">Bénéfice Total</h4>
+                  <SparklesIcon className="h-4 w-4 text-indigo-600" />
+                </div>
+                <p className="text-lg font-bold text-indigo-800">{formatCurrency(MONTHLY_PROFIT_DATA.reduce((sum, m) => sum + m.profit, 0))}</p>
+                <p className="text-xs text-indigo-600 mt-1 flex items-center">
+                  <ArrowTrendingUpIcon className="h-3 w-3 mr-1" />
+                  <span>+18.3% vs trimestre précédent</span>
+                </p>
+              </div>
+              
+              <div className="p-4 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-100">
+                <div className="flex justify-between mb-2">
+                  <h4 className="text-xs font-medium text-green-800">Marge Moyenne</h4>
+                  <CogIcon className="h-4 w-4 text-green-600" />
+                </div>
+                <p className="text-lg font-bold text-green-800">
+                  {(MONTHLY_PROFIT_DATA.reduce((sum, m) => sum + m.margin, 0) / MONTHLY_PROFIT_DATA.length).toFixed(1)}%
+                </p>
+                <p className="text-xs text-green-600 mt-1 flex items-center">
+                  <ArrowTrendingUpIcon className="h-3 w-3 mr-1" />
+                  <span>+2.4pts vs trimestre précédent</span>
+                </p>
+              </div>
+              
+              <div className="p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl border border-amber-100">
+                <div className="flex justify-between mb-2">
+                  <h4 className="text-xs font-medium text-amber-800">Meilleur Mois</h4>
+                  <TrophyIcon className="h-4 w-4 text-amber-600" />
+                </div>
+                <p className="text-lg font-bold text-amber-800">Juillet</p>
+                <p className="text-xs text-amber-600 mt-1">{formatCurrency(MONTHLY_PROFIT_DATA[6].profit)} (Marge: {MONTHLY_PROFIT_DATA[6].margin}%)</p>
+              </div>
+              
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-100">
+                <div className="flex justify-between mb-2">
+                  <h4 className="text-xs font-medium text-blue-800">Prévision Annuelle</h4>
+                  <ChartPieIcon className="h-4 w-4 text-blue-600" />
+                </div>
+                <p className="text-lg font-bold text-blue-800">{formatCurrency(45800 * 12)}</p>
+                <p className="text-xs text-blue-600 mt-1">Basé sur la performance actuelle</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-5 border-t border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <CurrencyEuroIcon className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Bénéfice Total</p>
+              <p className="text-lg font-bold text-[#213f5b]">{formatCurrency(totalProfit)}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <TrophyIcon className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Client le Plus Rentable</p>
+              <p className="text-base font-bold text-[#213f5b] truncate">{CLIENT_PROFIT_DATA[0].name}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <StarIcon className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Croissance Bénéfice Annuel</p>
+              <p className="text-lg font-bold text-green-600">+12.4%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
 export default function StatsPage() {
@@ -1028,6 +1323,10 @@ export default function StatsPage() {
             </div>
           </motion.div>
         </div>
+
+        <div className="mt-6">
+          <ClientProfitChart />
+        </div>
       </div>
     );
   };
@@ -1567,7 +1866,7 @@ export default function StatsPage() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="space-y-4"
+        className="mt-6 space-y-4"
       >
         <div className="bg-white rounded-xl shadow-sm border border-[#eaeaea] overflow-hidden">
           <div className="p-5 border-b border-[#eaeaea] flex justify-between items-center">
