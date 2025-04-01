@@ -1219,1241 +1219,1401 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-white">
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div className="flex h-screen bg-white relative overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
+        
         <Header />
-        <main
-          className="flex-1 overflow-y-auto"
-          style={{
-            background: "linear-gradient(135deg, rgba(191,221,249,0.1) 0%, rgba(210,252,178,0.05) 100%)",
-          }}
-        >
-          <div className="w-full mx-auto p-4 sm:p-6 lg:p-8">
-            {/* Welcome Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <h1 className="text-3xl font-bold text-[#213f5b]">
-                  {welcomeMessage}, {adminInfo?.email.split('@')[0] || "Admin"}
-                </h1>
-                <p className="text-[#213f5b]/70">
-                  Tableau de bord d&apos;administration des projets d&apos;énergies renouvelables
-                </p>
-              </motion.div>
+        <main className="w-full py-8 space-y-8 bg-white">
 
-              <div className="flex items-center gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  className="px-4 py-2 bg-white border border-[#bfddf9] rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-all relative"
-                  onClick={() => setShowNotifications(!showNotifications)}
+        <div className="relative" style={{ zIndex: 0 }}>
+          {/* Shape 1 - Top Left (4s animation) */}
+          <svg
+            className="absolute left-0 top-0 w-72 h-72 opacity-50 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            style={{ zIndex: -1 }}
+          >
+            <path fill="#bfddf9">
+              <animate
+                attributeName="d"
+                dur="4s"
+                repeatCount="indefinite"
+                values="
+                  M430,280Q370,310,340,360Q310,410,260,430Q210,450,170,410Q130,370,110,320Q90,270,120,230Q150,190,200,180Q250,170,310,180Q370,190,410,230Q450,270,430,280Z;
+                  M420,290Q360,320,330,370Q300,420,260,410Q220,400,190,360Q160,320,150,270Q140,220,170,190Q200,160,250,150Q300,140,350,160Q400,180,420,210Q440,240,420,290Z;
+                  M430,280Q370,310,340,360Q310,410,260,430Q210,450,170,410Q130,370,110,320Q90,270,120,230Q150,190,200,180Q250,170,310,180Q370,190,410,230Q450,270,430,280Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* Shape 4 - Bottom Right (4s animation) */}
+          <svg
+            className="absolute right-0 bottom-0 w-80 h-80 opacity-40 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            style={{ zIndex: -1 }}
+          >
+            <path fill="#d2fcb2">
+              <animate
+                attributeName="d"
+                dur="4s"
+                repeatCount="indefinite"
+                values="
+                  M420,280Q380,320,340,360Q300,400,260,360Q220,320,180,280Q220,240,260,200Q300,160,340,200Q380,240,420,280Z;
+                  M430,290Q390,330,350,370Q310,410,270,370Q230,330,190,290Q230,250,270,210Q310,170,350,210Q390,250,430,290Z;
+                  M420,280Q380,320,340,360Q300,400,260,360Q220,320,180,280Q220,240,260,200Q300,160,340,200Q380,240,420,280Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* Shape 5 - Center Top (6s animation) */}
+          <svg
+            className="absolute top-0 left-1/2 transform -translate-x-1/2 w-48 h-48 opacity-30 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            style={{ zIndex: -1 }}
+          >
+            <path fill="#add8e6">
+              <animate
+                attributeName="d"
+                dur="6s"
+                repeatCount="indefinite"
+                values="
+                  M240,40 Q300,110,240,180 Q180,250,120,180 Q60,110,120,40 Q180,-30,240,40Z;
+                  M250,50 Q310,120,250,190 Q190,260,130,190 Q70,120,130,50 Q190,-20,250,50Z;
+                  M240,40 Q300,110,240,180 Q180,250,120,180 Q60,110,120,40 Q180,-30,240,40Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* New Shape 7 - Left Center (5s animation) */}
+          <svg
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 w-56 h-56 opacity-40 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            style={{ zIndex: -1 }}
+          >
+            <path fill="#ffe4b5">
+              <animate
+                attributeName="d"
+                dur="5s"
+                repeatCount="indefinite"
+                values="
+                  M100,250 Q150,200,200,250 Q150,300,100,250 Z;
+                  M110,260 Q160,210,210,260 Q160,310,110,260 Z;
+                  M100,250 Q150,200,200,250 Q150,300,100,250 Z
+                "
+              />
+            </path>
+          </svg>
+
+          {/* New Shape 8 - Right Center (5s animation) */}
+          <svg
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 w-56 h-56 opacity-40 z-0"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            style={{ zIndex: -1 }}
+          >
+            <path fill="#98fb98">
+              <animate
+                attributeName="d"
+                dur="5s"
+                repeatCount="indefinite"
+                values="
+                  M400,250 Q350,200,300,250 Q350,300,400,250 Z;
+                  M410,260 Q360,210,310,260 Q360,310,410,260 Z;
+                  M400,250 Q350,200,300,250 Q350,300,400,250 Z
+                "
+              />
+            </path>
+          </svg>
+
+        </div>
+
+        <div className="relative" style={{ zIndex: 0 }}>
+          {/* Animated Background Shapes */}
+          <div className="absolute inset-0" style={{ zIndex: -1 }}>
+
+            {/* Shape 4 - Bottom Right (4s animation) */}
+            <svg
+              className="absolute right-0 bottom-0 w-80 h-80 opacity-40"
+              viewBox="0 0 500 500"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="none"
+            >
+              <path fill="#d2fcb2">
+                <animate
+                  attributeName="d"
+                  dur="4s"
+                  repeatCount="indefinite"
+                  values="
+                    M420,280Q380,320,340,360Q300,400,260,360Q220,320,180,280Q220,240,260,200Q300,160,340,200Q380,240,420,280Z;
+                    M430,290Q390,330,350,370Q310,410,270,370Q230,330,190,290Q230,250,270,210Q310,170,350,210Q390,250,430,290Z;
+                    M420,280Q380,320,340,360Q300,400,260,360Q220,320,180,280Q220,240,260,200Q300,160,340,200Q380,240,420,280Z
+                  "
+                />
+              </path>
+            </svg>
+
+            {/* New Shape - Top Right (4s animation) */}
+            <svg
+              className="absolute right-0 top-0 w-64 h-64 opacity-40"
+              viewBox="0 0 500 500"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="none"
+            >
+              <path fill="#ffcccb">
+                <animate
+                  attributeName="d"
+                  dur="4s"
+                  repeatCount="indefinite"
+                  values="
+                    M400,80 Q440,140,380,220 Q320,300,280,220 Q240,140,280,80 Q320,20,380,60 Q440,100,400,80Z;
+                    M410,90 Q450,150,390,230 Q330,310,290,230 Q250,150,290,90 Q330,30,390,70 Q450,110,410,90Z;
+                    M400,80 Q440,140,380,220 Q320,300,280,220 Q240,140,280,80 Q320,20,380,60 Q440,100,400,80Z
+                  "
+                />
+              </path>
+            </svg>
+
+          </div>
+
+
+        </div>
+        <div className="w-full sm:p-6 lg:p-8 relative" style={{ zIndex: 10 }}>
+              {/* Welcome Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6 }}
                 >
-                  <BellAlertIcon className="h-5 w-5 text-[#213f5b]" />
-                  <span className="hidden sm:inline text-[#213f5b]">Notifications</span>
-                  {notifications.filter(n => !n.read).length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-[#213f5b] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {notifications.filter(n => !n.read).length}
-                    </span>
-                  )}
-                </motion.button>
+                  <h1 className="text-3xl font-bold text-[#213f5b]">
+                    {welcomeMessage}, {adminInfo?.email.split('@')[0] || "Admin"}
+                  </h1>
+                  <p className="text-[#213f5b]/70">
+                    Tableau de bord d&apos;administration des projets d&apos;énergies renouvelables
+                  </p>
+                </motion.div>
 
-                <AnimatePresence>
-                  {showNotifications && (
-                    <motion.div
-                      className="absolute top-24 right-8 bg-white rounded-xl shadow-xl z-50 w-full max-w-md border border-[#bfddf9]"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <div className="p-4 border-b border-[#bfddf9]/30">
-                        <div className="flex justify-between items-center">
-                          <h3 className="font-semibold text-[#213f5b]">Notifications</h3>
-                          <button 
-                            className="text-[#213f5b]/70 hover:text-[#213f5b]"
-                            onClick={() => setShowNotifications(false)}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                      <div className="max-h-80 overflow-y-auto p-2">
-                        {notifications.length === 0 ? (
-                          <div className="text-center py-6 text-[#213f5b]/50">
-                            Aucune notification
+                <div className="flex items-center gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    className="px-4 py-2 bg-white border border-[#bfddf9] rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-all relative"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                  >
+                    <BellAlertIcon className="h-5 w-5 text-[#213f5b]" />
+                    <span className="hidden sm:inline text-[#213f5b]">Notifications</span>
+                    {notifications.filter(n => !n.read).length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-[#213f5b] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                        {notifications.filter(n => !n.read).length}
+                      </span>
+                    )}
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {showNotifications && (
+                      <motion.div
+                        className="absolute top-24 right-8 bg-white rounded-xl shadow-xl z-50 w-full max-w-md border border-[#bfddf9]"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                      >
+                        <div className="p-4 border-b border-[#bfddf9]/30">
+                          <div className="flex justify-between items-center">
+                            <h3 className="font-semibold text-[#213f5b]">Notifications</h3>
+                            <button 
+                              className="text-[#213f5b]/70 hover:text-[#213f5b]"
+                              onClick={() => setShowNotifications(false)}
+                            >
+                              ×
+                            </button>
                           </div>
-                        ) : (
-                          <div className="space-y-2">
-                            {notifications.map(notification => {
-                              const { icon } = getNotificationInfo(notification.type);
-                              return (
-                                <div 
-                                  key={notification.id}
-                                  className={`p-3 rounded-lg border border-[#bfddf9]/30 ${notification.read ? 'bg-white' : 'bg-[#bfddf9]/10'} hover:bg-[#bfddf9]/5 transition-colors`}
-                                >
-                                  <div className="flex gap-3">
-                                    <div className={`p-2 rounded-full bg-[#bfddf9]/40 flex-shrink-0`}>
-                                      {icon}
-                                    </div>
-                                    <div className="flex-grow">
-                                      <h4 className="font-medium text-[#213f5b]">{notification.title}</h4>
-                                      <p className="text-sm text-[#213f5b]/70 mt-1">{notification.description}</p>
-                                      <div className="flex justify-between items-center mt-2">
-                                        <span className="text-xs text-[#213f5b]/50">{formatDate(notification.date)} - {formatTime(notification.date)}</span>
-                                        {notification.link && (
-                                          <Link 
-                                            href={notification.link}
-                                            className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1"
-                                          >
-                                            <span>Voir</span>
-                                            <ArrowRightIcon className="h-3 w-3" />
-                                          </Link>
-                                        )}
+                        </div>
+                        <div className="max-h-80 overflow-y-auto p-2">
+                          {notifications.length === 0 ? (
+                            <div className="text-center py-6 text-[#213f5b]/50">
+                              Aucune notification
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {notifications.map(notification => {
+                                const { icon } = getNotificationInfo(notification.type);
+                                return (
+                                  <div 
+                                    key={notification.id}
+                                    className={`p-3 rounded-lg border border-[#bfddf9]/30 ${notification.read ? 'bg-white' : 'bg-[#bfddf9]/10'} hover:bg-[#bfddf9]/5 transition-colors`}
+                                  >
+                                    <div className="flex gap-3">
+                                      <div className={`p-2 rounded-full bg-[#bfddf9]/40 flex-shrink-0`}>
+                                        {icon}
+                                      </div>
+                                      <div className="flex-grow">
+                                        <h4 className="font-medium text-[#213f5b]">{notification.title}</h4>
+                                        <p className="text-sm text-[#213f5b]/70 mt-1">{notification.description}</p>
+                                        <div className="flex justify-between items-center mt-2">
+                                          <span className="text-xs text-[#213f5b]/50">{formatDate(notification.date)} - {formatTime(notification.date)}</span>
+                                          {notification.link && (
+                                            <Link 
+                                              href={notification.link}
+                                              className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1"
+                                            >
+                                              <span>Voir</span>
+                                              <ArrowRightIcon className="h-3 w-3" />
+                                            </Link>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-3 border-t border-[#bfddf9]/30 text-center">
-                        <button className="text-sm text-[#213f5b] hover:text-[#213f5b]/80">
-                          Marquer tout comme lu
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3 border-t border-[#bfddf9]/30 text-center">
+                          <button className="text-sm text-[#213f5b] hover:text-[#213f5b]/80">
+                            Marquer tout comme lu
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  className="px-4 py-2 bg-[#213f5b] text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-all"
-                >
-                  <CogIcon className="h-5 w-5" />
-                  <span className="hidden sm:inline">Paramètres</span>
-                </motion.button>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="text-center">
-                  <ArrowPathIcon className="h-10 w-10 text-[#213f5b] animate-spin mx-auto mb-4" />
-                  <p className="text-[#213f5b]/70">Chargement du tableau de bord d&apos;administration...</p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    className="px-4 py-2 bg-[#213f5b] text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-all"
+                  >
+                    <CogIcon className="h-5 w-5" />
+                    <span className="hidden sm:inline">Paramètres</span>
+                  </motion.button>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Improved KPI Stats Cards */}
-                <motion.div 
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  {/* Total Revenue KPI */}
-                  <motion.div 
-                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-blue-50/50 to-blue-100/20 border border-blue-100"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm font-medium text-[#213f5b]/90">Chiffre d&apos;affaires total</p>
-                        <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{formatCurrency(1250000)}</h3>
-                        <div className="flex items-center gap-1 mt-2">
-                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-green-100 text-[#213f5b]">
-                            <ArrowTrendingUpIcon className="h-3 w-3" />
-                            42%
-                          </span>
-                          <span className="text-xs text-[#213f5b]/70">vs année précédente</span>
-                        </div>
-                      </div>
-                      <div className="p-2 rounded-full bg-white/60 shadow-sm">
-                        <BanknotesIcon className="h-5 w-5 text-blue-500" />
-                      </div>
-                    </div>
-                    <div className="mt-4 relative h-1.5 bg-blue-100 rounded-full overflow-hidden">
-                      <div className="absolute top-0 left-0 h-full bg-blue-500 rounded-full" style={{ width: '65%' }}></div>
-                    </div>
-                    <div className="flex justify-between items-center mt-1 text-xs text-[#213f5b]/70">
-                      <span>Objectif annuel</span>
-                      <span className="font-medium">65%</span>
-                    </div>
-                  </motion.div>
 
-                  {/* Clients KPI */}
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="text-center">
+                    <ArrowPathIcon className="h-10 w-10 text-[#213f5b] animate-spin mx-auto mb-4" />
+                    <p className="text-[#213f5b]/70">Chargement du tableau de bord d&apos;administration...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Improved KPI Stats Cards with Blur Effect */}
                   <motion.div 
-                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-purple-50/50 to-purple-100/20 border border-purple-100"
-                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm font-medium text-[#213f5b]/90">Clients</p>
-                        <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{projects.filter(p => p.status === "En cours").length + 42}</h3>
-                        <div className="flex items-center gap-1 mt-2">
-                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-purple-100 text-[#213f5b]">
-                            <ArrowTrendingUpIcon className="h-3 w-3" />
-                            12%
-                          </span>
-                          <span className="text-xs text-[#213f5b]/70">vs mois précédent</span>
-                        </div>
-                      </div>
-                      <div className="p-2 rounded-full bg-white/60 shadow-sm">
-                        <UsersIcon className="h-5 w-5 text-purple-500" />
-                      </div>
-                    </div>
-                    <div className="mt-4 flex justify-between items-center text-sm">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-green-400"></span>
-                          <span className="text-xs text-[#213f5b]/80">En cours: 24</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-purple-400"></span>
-                          <span className="text-xs text-[#213f5b]/80">En instruction: 18</span>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-blue-400"></span>
-                          <span className="text-xs text-[#213f5b]/80">En installation: 12</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-[#213f5b]"></span>
-                          <span className="text-xs text-[#213f5b]/80">Installé cloturé: 35</span>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* Paiement en attente KPI */}
-                  <motion.div 
-                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-amber-50/50 to-amber-100/20 border border-amber-100"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm font-medium text-[#213f5b]/90">Paiement en attente</p>
-                        <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{formatCurrency(185000)}</h3>
-                        <div className="flex items-center gap-1 mt-2">
-                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-amber-100 text-[#213f5b]">
-                            <ArrowTrendingUpIcon className="h-3 w-3" />
-                            8%
-                          </span>
-                          <span className="text-xs text-[#213f5b]/70">vs trimestre précédent</span>
-                        </div>
-                      </div>
-                      <div className="p-2 rounded-full bg-white/60 shadow-sm">
-                        <BanknotesIcon className="h-5 w-5 text-amber-500" />
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-[#213f5b]/80">Délai moyen de paiement</span>
-                        <span className="text-xs font-medium text-[#213f5b]">28 jours</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-amber-100/50 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500" style={{ width: '65%' }}></div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* Factures à payer KPI */}
-                  <motion.div 
-                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-indigo-50/50 to-indigo-100/20 border border-indigo-100"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm font-medium text-[#213f5b]/90">Factures à payer</p>
-                        <h3 className="text-2xl font-bold text-[#213f5b] mt-1">16</h3>
-                        <div className="flex items-center gap-1 mt-2">
-                          <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-indigo-100 text-[#213f5b]">
-                            <ArrowTrendingDownIcon className="h-3 w-3" />
-                            5%
-                          </span>
-                          <span className="text-xs text-[#213f5b]/70">vs mois précédent</span>
-                        </div>
-                      </div>
-                      <div className="p-2 rounded-full bg-white/60 shadow-sm">
-                        <DocumentTextIcon className="h-5 w-5 text-indigo-500" />
-                      </div>
-                    </div>
-                    <div className="mt-4 flex justify-between text-xs">
-                      <div className="flex flex-col items-center">
-                        <span className="text-[#213f5b]/80">Récentes</span>
-                        <span className="font-medium text-[#213f5b]">8</span>
-                        <div className="h-1.5 w-8 bg-green-400 rounded-full mt-1"></div>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className="text-[#213f5b]/80">En attente</span>
-                        <span className="font-medium text-[#213f5b]">5</span>
-                        <div className="h-1.5 w-8 bg-blue-400 rounded-full mt-1"></div>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className="text-[#213f5b]/80">Tardives</span>
-                        <span className="font-medium text-[#213f5b]">3</span>
-                        <div className="h-1.5 w-8 bg-amber-400 rounded-full mt-1"></div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* SAV Support KPI */}
-                  <motion.div 
-                    className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-green-50/50 to-green-100/20 border border-green-100"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                  >
-                    <Link href="/dashboard/admin/support">
+                    {/* Total Revenue KPI */}
+                    <motion.div 
+                      className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-blue-100/10 backdrop-blur-md border border-blue-100/60"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-sm font-medium text-[#213f5b]/90">SAV</p>
-                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{savStats.openTickets}</h3>
+                          <p className="text-sm font-medium text-[#213f5b]/90">Chiffre d&apos;affaires total</p>
+                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{formatCurrency(1250000)}</h3>
                           <div className="flex items-center gap-1 mt-2">
-                            <span className={`text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium ${
-                              savStats.ticketsTrend < 0 ? 'bg-green-100 text-[#213f5b]' : 'bg-amber-100 text-[#213f5b]'
-                            }`}>
-                              {savStats.ticketsTrend < 0 ? (
-                                <ArrowTrendingDownIcon className="h-3 w-3" />
-                              ) : (
-                                <ArrowTrendingUpIcon className="h-3 w-3" />
-                              )}
-                              {Math.abs(savStats.ticketsTrend)}%
+                            <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-green-100/70 backdrop-blur-sm text-[#213f5b]">
+                              <ArrowTrendingUpIcon className="h-3 w-3" />
+                              42%
+                            </span>
+                            <span className="text-xs text-[#213f5b]/70">vs année précédente</span>
+                          </div>
+                        </div>
+                        <div className="p-2 rounded-full bg-white/40 backdrop-blur-md shadow-sm">
+                          <BanknotesIcon className="h-5 w-5 text-blue-500" />
+                        </div>
+                      </div>
+                      <div className="mt-4 relative h-1.5 bg-blue-100/50 rounded-full overflow-hidden">
+                        <div className="absolute top-0 left-0 h-full bg-blue-500/80 rounded-full" style={{ width: '65%' }}></div>
+                      </div>
+                      <div className="flex justify-between items-center mt-1 text-xs text-[#213f5b]/70">
+                        <span>Objectif annuel</span>
+                        <span className="font-medium">65%</span>
+                      </div>
+                    </motion.div>
+
+                    {/* Clients KPI */}
+                    <motion.div 
+                      className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-purple-50/30 to-purple-100/10 backdrop-blur-md border border-purple-100/60"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm font-medium text-[#213f5b]/90">Clients</p>
+                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{projects.filter(p => p.status === "En cours").length + 42}</h3>
+                          <div className="flex items-center gap-1 mt-2">
+                            <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-purple-100/70 backdrop-blur-sm text-[#213f5b]">
+                              <ArrowTrendingUpIcon className="h-3 w-3" />
+                              12%
                             </span>
                             <span className="text-xs text-[#213f5b]/70">vs mois précédent</span>
                           </div>
                         </div>
-                        <div className="p-2 rounded-full bg-white/60 shadow-sm">
-                          <WrenchScrewdriverIcon className="h-5 w-5 text-green-500" />
+                        <div className="p-2 rounded-full bg-white/40 backdrop-blur-md shadow-sm">
+                          <UsersIcon className="h-5 w-5 text-purple-500" />
                         </div>
                       </div>
                       <div className="mt-4 flex justify-between items-center text-sm">
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
-                            <span className="h-3 w-3 rounded-full bg-blue-400"></span>
-                            <span className="text-xs text-[#213f5b]/80">Tickets Ouverts: {savStats.openTickets}</span>
+                            <span className="h-3 w-3 rounded-full bg-green-400/80"></span>
+                            <span className="text-xs text-[#213f5b]/80">En cours: 24</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <span className="h-3 w-3 rounded-full bg-amber-400"></span>
-                            <span className="text-xs text-[#213f5b]/80">Tickets en attente: {savStats.pendingTickets}</span>
+                            <span className="h-3 w-3 rounded-full bg-purple-400/80"></span>
+                            <span className="text-xs text-[#213f5b]/80">En instruction: 18</span>
                           </div>
                         </div>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
-                            <span className="h-3 w-3 rounded-full bg-green-400"></span>
-                            <span className="text-xs text-[#213f5b]/80">Tickets Clôturés: {savStats.solvedTickets}</span>
+                            <span className="h-3 w-3 rounded-full bg-blue-400/80"></span>
+                            <span className="text-xs text-[#213f5b]/80">En installation: 12</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-full bg-[#213f5b]/80"></span>
+                            <span className="text-xs text-[#213f5b]/80">Installé cloturé: 35</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Paiement en attente KPI */}
+                    <motion.div 
+                      className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-amber-50/30 to-amber-100/10 backdrop-blur-md border border-amber-100/60"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm font-medium text-[#213f5b]/90">Paiement en attente</p>
+                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{formatCurrency(185000)}</h3>
+                          <div className="flex items-center gap-1 mt-2">
+                            <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-amber-100/70 backdrop-blur-sm text-[#213f5b]">
+                              <ArrowTrendingUpIcon className="h-3 w-3" />
+                              8%
+                            </span>
+                            <span className="text-xs text-[#213f5b]/70">vs trimestre précédent</span>
+                          </div>
+                        </div>
+                        <div className="p-2 rounded-full bg-white/40 backdrop-blur-md shadow-sm">
+                          <BanknotesIcon className="h-5 w-5 text-amber-500" />
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-[#213f5b]/80">Délai moyen de paiement</span>
+                          <span className="text-xs font-medium text-[#213f5b]">28 jours</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-amber-100/40 rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-500/80" style={{ width: '65%' }}></div>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Factures à payer KPI */}
+                    <motion.div 
+                      className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-indigo-50/30 to-indigo-100/10 backdrop-blur-md border border-indigo-100/60"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm font-medium text-[#213f5b]/90">Factures à payer</p>
+                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">16</h3>
+                          <div className="flex items-center gap-1 mt-2">
+                            <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-indigo-100/70 backdrop-blur-sm text-[#213f5b]">
+                              <ArrowTrendingDownIcon className="h-3 w-3" />
+                              5%
+                            </span>
+                            <span className="text-xs text-[#213f5b]/70">vs mois précédent</span>
+                          </div>
+                        </div>
+                        <div className="p-2 rounded-full bg-white/40 backdrop-blur-md shadow-sm">
+                          <DocumentTextIcon className="h-5 w-5 text-indigo-500" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex justify-between text-xs">
+                        <div className="flex flex-col items-center">
+                          <span className="text-[#213f5b]/80">Récentes</span>
+                          <span className="font-medium text-[#213f5b]">8</span>
+                          <div className="h-1.5 w-8 bg-green-400/80 rounded-full mt-1"></div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-[#213f5b]/80">En attente</span>
+                          <span className="font-medium text-[#213f5b]">5</span>
+                          <div className="h-1.5 w-8 bg-blue-400/80 rounded-full mt-1"></div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-[#213f5b]/80">Tardives</span>
+                          <span className="font-medium text-[#213f5b]">3</span>
+                          <div className="h-1.5 w-8 bg-amber-400/80 rounded-full mt-1"></div>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* SAV Support KPI */}
+                    <motion.div 
+                      className="p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-green-50/30 to-green-100/10 backdrop-blur-md border border-green-100/60"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <Link href="/dashboard/admin/support">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-medium text-[#213f5b]/90">SAV</p>
+                            <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{savStats.openTickets}</h3>
+                            <div className="flex items-center gap-1 mt-2">
+                              <span className={`text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium backdrop-blur-sm ${
+                                savStats.ticketsTrend < 0 ? 'bg-green-100/70 text-[#213f5b]' : 'bg-amber-100/70 text-[#213f5b]'
+                              }`}>
+                                {savStats.ticketsTrend < 0 ? (
+                                  <ArrowTrendingDownIcon className="h-3 w-3" />
+                                ) : (
+                                  <ArrowTrendingUpIcon className="h-3 w-3" />
+                                )}
+                                {Math.abs(savStats.ticketsTrend)}%
+                              </span>
+                              <span className="text-xs text-[#213f5b]/70">vs mois précédent</span>
+                            </div>
+                          </div>
+                          <div className="p-2 rounded-full bg-white/40 backdrop-blur-md shadow-sm">
+                            <WrenchScrewdriverIcon className="h-5 w-5 text-green-500" />
+                          </div>
+                        </div>
+                        <div className="mt-4 flex justify-between items-center text-sm">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="h-3 w-3 rounded-full bg-blue-400/80"></span>
+                              <span className="text-xs text-[#213f5b]/80">Tickets Ouverts: {savStats.openTickets}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="h-3 w-3 rounded-full bg-amber-400/80"></span>
+                              <span className="text-xs text-[#213f5b]/80">Tickets en attente: {savStats.pendingTickets}</span>
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="h-3 w-3 rounded-full bg-green-400/80"></span>
+                              <span className="text-xs text-[#213f5b]/80">Tickets Clôturés: {savStats.solvedTickets}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="h-3 w-3 rounded-full bg-[#213f5b]/80"></span>
+                              <span className="text-xs text-[#213f5b]/80">Taux de Résolution: {((savStats.solvedTickets / savStats.totalTickets) * 100).toFixed(1)}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  </motion.div>
+
+                  {/* Top Revenue Chart - Streamlined Premium Version */}
+                  <motion.div 
+                    className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#bfddf9]"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    whileHover={{ boxShadow: "0 15px 25px -5px rgba(33, 63, 91, 0.08)" }}
+                  >
+                    {/* Header with business color gradient */}
+                    <div className="p-5 bg-gradient-to-r from-[#213f5b] to-[#213f5b]/90 flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-white/15 backdrop-blur-sm rounded-lg">
+                          <BanknotesIcon className="h-5 w-5 text-white" />
+                        </div>
+                        <h2 className="text-lg font-bold text-white">Analyse Financière</h2>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5">
+                          <span className="text-[#d2fcb2] font-medium text-sm">+35.8%</span>
+                          <span className="text-[#bfddf9] text-xs">vs 2024</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Main content area */}
+                    <div className="p-5">
+                      {/* Main KPI cards */}
+                      <div className="grid grid-cols-3 gap-4 mb-6">
+                        {/* Total Revenue */}
+                        <motion.div 
+                          className="rounded-lg bg-gradient-to-br from-white via-[#bfddf9]/20 to-[#bfddf9]/10 p-4 border border-[#bfddf9]"
+                          whileHover={{ y: -3 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-xs text-[#213f5b]/70 font-medium mb-1">Total des revenus</span>
+                            <span className="text-2xl font-bold text-[#213f5b]">{formatCurrency(1250000)}</span>
+                            <div className="mt-2 flex items-center gap-1">
+                              <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#d2fcb2] text-[#213f5b] font-medium">+42%</span>
+                              <span className="text-xs text-[#213f5b]/70">vs 2024</span>
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Monthly Average */}
+                        <motion.div 
+                          className="rounded-lg bg-gradient-to-br from-white via-[#d2fcb2]/20 to-[#d2fcb2]/10 p-4 border border-[#d2fcb2]"
+                          whileHover={{ y: -3 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-xs text-[#213f5b]/70 font-medium mb-1">Moyenne mensuelle</span>
+                            <span className="text-2xl font-bold text-[#213f5b]">{formatCurrency(104000)}</span>
+                            <div className="mt-2 flex items-center gap-1">
+                              <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#213f5b]/10 text-[#213f5b] font-medium">Mars: {formatCurrency(125000)}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Annual Forecast */}
+                        <motion.div 
+                          className="rounded-lg bg-gradient-to-br from-white via-[#213f5b]/5 to-[#213f5b]/10 p-4 border border-[#213f5b]/20"
+                          whileHover={{ y: -3 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-xs text-[#213f5b]/70 font-medium mb-1">Prévision annuelle</span>
+                            <span className="text-2xl font-bold text-[#213f5b]">{formatCurrency(2800000)}</span>
+                            <div className="mt-2 flex items-center gap-1">
+                              <div className="w-full bg-[#bfddf9]/30 rounded-full h-1.5">
+                                <div className="h-full bg-[#213f5b] rounded-full" style={{width: '45%'}}></div>
+                              </div>
+                              <span className="text-xs text-[#213f5b]/70 font-medium">45%</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      {/* Revenue Chart - Simplified */}
+                      <div className="bg-white rounded-lg border border-[#bfddf9]/70 p-4 mb-2">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-[#213f5b] text-sm font-medium">Évolution des revenus 2025</h3>
+                          <div className="flex items-center space-x-2">
+                            <div className="flex rounded-lg overflow-hidden border border-[#bfddf9]/70 text-xs">
+                              <button className="px-2 py-1 font-medium bg-[#213f5b] text-white">Mensuel</button>
+                              <button className="px-2 py-1 font-medium bg-white text-[#213f5b]">Annuel</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart
+                              data={[
+                                { month: "Jan", value: 92000, target: 85000 },
+                                { month: "Fév", value: 98000, target: 90000 },
+                                { month: "Mar", value: 125000, target: 95000 },
+                                { month: "Avr", value: 138000, target: 100000 },
+                                { month: "Mai", value: 145000, target: 110000 },
+                                { month: "Juin", value: 175000, target: 120000 },
+                                { month: "Juil", value: 195000, target: 130000 },
+                                { month: "Aoû", value: 210000, target: 140000 },
+                                { month: "Sep", value: 240000, target: 150000 },
+                                { month: "Oct", value: 235000, target: 160000 },
+                                { month: "Nov", value: 220000, target: 170000 },
+                                { month: "Déc", value: 180000, target: 175000 }
+                              ]}
+                              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                            >
+                              <defs>
+                                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#213f5b" stopOpacity={0.7}/>
+                                  <stop offset="95%" stopColor="#213f5b" stopOpacity={0.1}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                              <XAxis 
+                                dataKey="month" 
+                                axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }} 
+                                tickLine={false}
+                                tick={{ fill: '#213f5b', fontSize: 10 }}
+                              />
+                              <YAxis 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fill: '#213f5b', fontSize: 10 }}
+                                tickFormatter={(value) => `${value/1000}k`}
+                                width={30}
+                              />
+                              <Tooltip 
+                                formatter={(value) => [`${formatCurrency(Number(value))}`, "Revenu"]}
+                                contentStyle={{ 
+                                  borderRadius: "0.5rem", 
+                                  border: "1px solid #bfddf9",
+                                  boxShadow: "0 4px 6px -1px rgba(33, 63, 91, 0.1)",
+                                  padding: "8px 10px",
+                                }}
+                              />
+                              <Area 
+                                type="monotone" 
+                                dataKey="value" 
+                                stroke="#213f5b" 
+                                strokeWidth={2}
+                                fillOpacity={1} 
+                                fill="url(#colorRevenue)" 
+                                animationDuration={1500}
+                                activeDot={{ 
+                                  r: 5, 
+                                  fill: "#213f5b", 
+                                  stroke: "#FFFFFF", 
+                                  strokeWidth: 2,
+                                }}
+                              />
+                              <Area 
+                                type="monotone" 
+                                dataKey="target" 
+                                stroke="#bfddf9" 
+                                strokeWidth={1.5}
+                                strokeDasharray="3 3"
+                                fillOpacity={0} 
+                                animationDuration={1500}
+                                dot={false}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        <div className="flex justify-center gap-6 mt-2">
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2.5 w-2.5 rounded-sm bg-[#213f5b]"></div>
+                            <span className="text-xs text-[#213f5b]/70">Revenu actuel</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2.5 w-2.5 rounded-sm border border-[#bfddf9]"></div>
+                            <span className="text-xs text-[#213f5b]/70">Objectif</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Simple footer */}
+                    <div className="px-5 py-3 border-t border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-white to-[#bfddf9]/10">
+                      <div className="flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4 text-[#213f5b]/70" />
+                        <span className="text-xs text-[#213f5b]/70">Mise à jour: <span className="font-medium">20 Mars 2025</span></span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button className="px-3 py-1.5 bg-white border border-[#bfddf9] rounded text-xs text-[#213f5b] hover:bg-[#bfddf9]/10 flex items-center gap-1.5">
+                          <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+                          Exporter
+                        </button>
+                        <Link 
+                          href="/admin/finance/details" 
+                          className="px-3 py-1.5 bg-[#213f5b] rounded text-xs text-white hover:bg-[#213f5b]/90 flex items-center gap-1.5"
+                        >
+                          Plus de détails
+                          <ChevronRightIcon className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Stats Cards with consistent sizing */}
+                  <motion.div 
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                  >
+                    {/* Utilisateurs Card - with navigation to /dashboard/admin/administration */}
+                    <Link href="/dashboard/admin/administration">
+                      <motion.div 
+                        className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all cursor-pointer h-full"
+                        whileHover={{ y: -5 }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-medium text-[#213f5b]/80">Utilisateurs</p>
+                            <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{stats.totalUsers}</h3>
+                            <div className="flex items-center gap-1 mt-2">
+                              <span className={`text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium ${stats.usersGrowth >= 0 ? 'bg-[#d2fcb2] text-[#213f5b]' : 'bg-red-100 text-red-800'}`}>
+                                {stats.usersGrowth >= 0 ? <ArrowTrendingUpIcon className="h-3 w-3" /> : <ArrowTrendingDownIcon className="h-3 w-3" />}
+                                {Math.abs(stats.usersGrowth)}%
+                              </span>
+                              <span className="text-xs text-[#213f5b]/60">vs mois précédent</span>
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-full bg-[#bfddf9]/30">
+                            <UserGroupIcon className="h-6 w-6 text-[#213f5b]" />
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center mt-4 text-sm">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-full bg-[#d2fcb2]"></span>
+                            <span className="text-[#213f5b]/70">Actifs: {stats.activeUsers}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-full bg-[#bfddf9]"></span>
+                            <span className="text-[#213f5b]/70">En attente: {stats.pendingUsers}</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Link>
+
+                    {/* Prospects Card - Converted to percentage completion */}
+                    <Link href="/dashboard/admin/leads">
+                      <motion.div 
+                        className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all cursor-pointer h-full"
+                        whileHover={{ y: -5 }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-medium text-[#213f5b]/80">Prospects</p>
+                            <h3 className="text-2xl font-bold text-[#213f5b] mt-1">42</h3>
+                            <div className="flex items-center gap-1 mt-2">
+                              <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-[#d2fcb2] text-[#213f5b]">
+                                <ArrowTrendingUpIcon className="h-3 w-3" />
+                                15%
+                              </span>
+                              <span className="text-xs text-[#213f5b]/60">vs mois précédent</span>
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-full bg-[#bfddf9]/30">
+                            <UsersIcon className="h-6 w-6 text-[#213f5b]" />
+                          </div>
+                        </div>
+                        
+                        {/* Percentage visualization of client progress */}
+                        <div className="mt-3 mb-1">
+                          <div className="flex">
+                            <div className="h-2 flex-1 rounded-l-full bg-[#dde8f3]" title="0-15%"></div>
+                            <div className="h-2 flex-1 bg-[#bfddf9]" title="15-30%"></div>
+                            <div className="h-2 flex-1 bg-[#88c9f7]" title="30-45%"></div>
+                            <div className="h-2 flex-1 bg-[#b8f996]" title="45-60%"></div>
+                            <div className="h-2 flex-1 bg-[#d2fcb2]" title="60-75%"></div>
+                            <div className="h-2 flex-1 bg-[#8fc97c]" title="75-90%"></div>
+                            <div className="h-2 flex-1 rounded-r-full bg-[#213f5b]" title="90-100%"></div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 mt-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#dde8f3]"></div>
+                              <span className="ml-1 text-[#213f5b]/70">6 clients à 14%</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#bfddf9]"></div>
+                              <span className="ml-1 text-[#213f5b]/70">4 clients à 28%</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#88c9f7]"></div>
+                              <span className="ml-1 text-[#213f5b]/70">8 clients à 43%</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#b8f996]"></div>
+                              <span className="ml-1 text-[#213f5b]/70">5 clients à 57%</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#d2fcb2]"></div>
+                              <span className="ml-1 text-[#213f5b]/70">9 clients à 71%</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#8fc97c]"></div>
+                              <span className="ml-1 text-[#213f5b]/70">3 clients à 86%</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between col-span-2 mt-0.5">
+                            <div className="flex items-center">
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#213f5b]"></div>
+                              <span className="ml-1 text-[#213f5b]/70">7 clients à 100%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Link>
+
+                    {/* Tasks Card - with navigation to /dashboard/admin/tasks */}
+                    <Link href="/dashboard/admin/tasks">
+                      <motion.div 
+                        className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all cursor-pointer h-full"
+                        whileHover={{ y: -5 }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-medium text-[#213f5b]/80">Tâches aujourd&apos;hui</p>
+                            <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{todaysTasks.length}</h3>
+                            <div className="flex items-center gap-1 mt-2">
+                              <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-[#bfddf9] text-[#213f5b]">
+                                <ClockIcon className="h-3 w-3" />
+                                {new Date().toLocaleDateString('fr-FR', { weekday: 'long' })}
+                              </span>
+                              <span className="text-xs text-[#213f5b]/60">20 Mars 2025</span>
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-full bg-[#d2fcb2]/40">
+                            <CalendarIcon className="h-6 w-6 text-[#213f5b]" />
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-3 w-3 rounded-full bg-[#bfddf9]"></span>
+                            <span className="text-sm text-[#213f5b]/70">En attente: {todaysTasks.filter(t => t.status === "not_started").length}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="h-3 w-3 rounded-full bg-[#213f5b]"></span>
-                            <span className="text-xs text-[#213f5b]/80">Taux de Résolution: {((savStats.solvedTickets / savStats.totalTickets) * 100).toFixed(1)}%</span>
+                            <span className="text-sm text-[#213f5b]/70">En cours: {todaysTasks.filter(t => t.status === "in_progress").length}</span>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
+                    </Link>
+
+                    {/* Messages Card - with navigation to /dashboard/admin/emails */}
+                    <Link href="/dashboard/admin/emails">
+                      <motion.div 
+                        className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all cursor-pointer h-full"
+                        whileHover={{ y: -5 }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-medium text-[#213f5b]/80">Messages</p>
+                            <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{chats.reduce((sum, chat) => sum + chat.unread_count, 0)}</h3>
+                            <div className="flex items-center gap-1 mt-2">
+                              <span className="text-xs rounded-full px-1.5 py-0.5 font-medium bg-[#d2fcb2] text-[#213f5b]">
+                                Non lus
+                              </span>
+                              <span className="text-xs text-[#213f5b]/60">sur {chats.length} conversations</span>
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-full bg-[#d2fcb2]/40">
+                            <ChatBubbleOvalLeftIcon className="h-6 w-6 text-[#213f5b]" />
+                          </div>
+                        </div>
+                        <div className="mt-4 flex justify-center">
+                          <div className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1">
+                            Voir tous les messages
+                            <ArrowRightIcon className="h-4 w-4" />
+                          </div>
+                        </div>
+                      </motion.div>
                     </Link>
                   </motion.div>
-                </motion.div>
 
-                {/* Top Revenue Chart - Streamlined Premium Version */}
-                <motion.div 
-                  className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#bfddf9]"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  whileHover={{ boxShadow: "0 15px 25px -5px rgba(33, 63, 91, 0.08)" }}
-                >
-                  {/* Header with business color gradient */}
-                  <div className="p-5 bg-gradient-to-r from-[#213f5b] to-[#213f5b]/90 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-white/15 backdrop-blur-sm rounded-lg">
-                        <BanknotesIcon className="h-5 w-5 text-white" />
-                      </div>
-                      <h2 className="text-lg font-bold text-white">Analyse Financière</h2>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5">
-                        <span className="text-[#d2fcb2] font-medium text-sm">+35.8%</span>
-                        <span className="text-[#bfddf9] text-xs">vs 2024</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Main content area */}
-                  <div className="p-5">
-                    {/* Main KPI cards */}
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                      {/* Total Revenue */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    {/* First Row - Full Width Components in 2-column arrangement */}
+                    <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Enhanced Calendar with Week View */}
                       <motion.div 
-                        className="rounded-lg bg-gradient-to-br from-white via-[#bfddf9]/20 to-[#bfddf9]/10 p-4 border border-[#bfddf9]"
-                        whileHover={{ y: -3 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#bfddf9] h-full flex flex-col"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
                       >
-                        <div className="flex flex-col">
-                          <span className="text-xs text-[#213f5b]/70 font-medium mb-1">Total des revenus</span>
-                          <span className="text-2xl font-bold text-[#213f5b]">{formatCurrency(1250000)}</span>
-                          <div className="mt-2 flex items-center gap-1">
-                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#d2fcb2] text-[#213f5b] font-medium">+42%</span>
-                            <span className="text-xs text-[#213f5b]/70">vs 2024</span>
-                          </div>
-                        </div>
-                      </motion.div>
-
-                      {/* Monthly Average */}
-                      <motion.div 
-                        className="rounded-lg bg-gradient-to-br from-white via-[#d2fcb2]/20 to-[#d2fcb2]/10 p-4 border border-[#d2fcb2]"
-                        whileHover={{ y: -3 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                      >
-                        <div className="flex flex-col">
-                          <span className="text-xs text-[#213f5b]/70 font-medium mb-1">Moyenne mensuelle</span>
-                          <span className="text-2xl font-bold text-[#213f5b]">{formatCurrency(104000)}</span>
-                          <div className="mt-2 flex items-center gap-1">
-                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#213f5b]/10 text-[#213f5b] font-medium">Mars: {formatCurrency(125000)}</span>
-                          </div>
-                        </div>
-                      </motion.div>
-
-                      {/* Annual Forecast */}
-                      <motion.div 
-                        className="rounded-lg bg-gradient-to-br from-white via-[#213f5b]/5 to-[#213f5b]/10 p-4 border border-[#213f5b]/20"
-                        whileHover={{ y: -3 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                      >
-                        <div className="flex flex-col">
-                          <span className="text-xs text-[#213f5b]/70 font-medium mb-1">Prévision annuelle</span>
-                          <span className="text-2xl font-bold text-[#213f5b]">{formatCurrency(2800000)}</span>
-                          <div className="mt-2 flex items-center gap-1">
-                            <div className="w-full bg-[#bfddf9]/30 rounded-full h-1.5">
-                              <div className="h-full bg-[#213f5b] rounded-full" style={{width: '45%'}}></div>
+                        <div className="p-4 border-b border-[#bfddf9]/30 bg-gradient-to-r from-[#bfddf9]/30 to-[#bfddf9]/10">
+                          <div className="flex justify-between items-center">
+                            <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
+                              <CalendarDaysIcon className="h-5 w-5 text-[#213f5b]" />
+                              <span>Agenda de la semaine</span>
+                            </h2>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                className="p-1.5 rounded-lg text-[#213f5b]/70 hover:text-[#213f5b] hover:bg-[#bfddf9]/20 transition-colors"
+                                onClick={() => changeMonth(-1)}
+                              >
+                                <ChevronLeftIcon className="h-5 w-5" />
+                              </button>
+                              <span className="text-sm font-medium text-[#213f5b] min-w-[150px] text-center">
+                                20 - 26 Mars 2025
+                              </span>
+                              <button 
+                                className="p-1.5 rounded-lg text-[#213f5b]/70 hover:text-[#213f5b] hover:bg-[#bfddf9]/20 transition-colors"
+                                onClick={() => changeMonth(1)}
+                              >
+                                <ChevronRightIcon className="h-5 w-5" />
+                              </button>
                             </div>
-                            <span className="text-xs text-[#213f5b]/70 font-medium">45%</span>
                           </div>
-                        </div>
-                      </motion.div>
-                    </div>
-
-                    {/* Revenue Chart - Simplified */}
-                    <div className="bg-white rounded-lg border border-[#bfddf9]/70 p-4 mb-2">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-[#213f5b] text-sm font-medium">Évolution des revenus 2025</h3>
-                        <div className="flex items-center space-x-2">
-                          <div className="flex rounded-lg overflow-hidden border border-[#bfddf9]/70 text-xs">
-                            <button className="px-2 py-1 font-medium bg-[#213f5b] text-white">Mensuel</button>
-                            <button className="px-2 py-1 font-medium bg-white text-[#213f5b]">Annuel</button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart
-                            data={[
-                              { month: "Jan", value: 92000, target: 85000 },
-                              { month: "Fév", value: 98000, target: 90000 },
-                              { month: "Mar", value: 125000, target: 95000 },
-                              { month: "Avr", value: 138000, target: 100000 },
-                              { month: "Mai", value: 145000, target: 110000 },
-                              { month: "Juin", value: 175000, target: 120000 },
-                              { month: "Juil", value: 195000, target: 130000 },
-                              { month: "Aoû", value: 210000, target: 140000 },
-                              { month: "Sep", value: 240000, target: 150000 },
-                              { month: "Oct", value: 235000, target: 160000 },
-                              { month: "Nov", value: 220000, target: 170000 },
-                              { month: "Déc", value: 180000, target: 175000 }
-                            ]}
-                            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                          >
-                            <defs>
-                              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#213f5b" stopOpacity={0.7}/>
-                                <stop offset="95%" stopColor="#213f5b" stopOpacity={0.1}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                            <XAxis 
-                              dataKey="month" 
-                              axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }} 
-                              tickLine={false}
-                              tick={{ fill: '#213f5b', fontSize: 10 }}
-                            />
-                            <YAxis 
-                              axisLine={false} 
-                              tickLine={false} 
-                              tick={{ fill: '#213f5b', fontSize: 10 }}
-                              tickFormatter={(value) => `${value/1000}k`}
-                              width={30}
-                            />
-                            <Tooltip 
-                              formatter={(value) => [`${formatCurrency(Number(value))}`, "Revenu"]}
-                              contentStyle={{ 
-                                borderRadius: "0.5rem", 
-                                border: "1px solid #bfddf9",
-                                boxShadow: "0 4px 6px -1px rgba(33, 63, 91, 0.1)",
-                                padding: "8px 10px",
-                              }}
-                            />
-                            <Area 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke="#213f5b" 
-                              strokeWidth={2}
-                              fillOpacity={1} 
-                              fill="url(#colorRevenue)" 
-                              animationDuration={1500}
-                              activeDot={{ 
-                                r: 5, 
-                                fill: "#213f5b", 
-                                stroke: "#FFFFFF", 
-                                strokeWidth: 2,
-                              }}
-                            />
-                            <Area 
-                              type="monotone" 
-                              dataKey="target" 
-                              stroke="#bfddf9" 
-                              strokeWidth={1.5}
-                              strokeDasharray="3 3"
-                              fillOpacity={0} 
-                              animationDuration={1500}
-                              dot={false}
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      <div className="flex justify-center gap-6 mt-2">
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-2.5 w-2.5 rounded-sm bg-[#213f5b]"></div>
-                          <span className="text-xs text-[#213f5b]/70">Revenu actuel</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-2.5 w-2.5 rounded-sm border border-[#bfddf9]"></div>
-                          <span className="text-xs text-[#213f5b]/70">Objectif</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Simple footer */}
-                  <div className="px-5 py-3 border-t border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-white to-[#bfddf9]/10">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4 text-[#213f5b]/70" />
-                      <span className="text-xs text-[#213f5b]/70">Mise à jour: <span className="font-medium">20 Mars 2025</span></span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <button className="px-3 py-1.5 bg-white border border-[#bfddf9] rounded text-xs text-[#213f5b] hover:bg-[#bfddf9]/10 flex items-center gap-1.5">
-                        <ArrowDownTrayIcon className="h-3.5 w-3.5" />
-                        Exporter
-                      </button>
-                      <Link 
-                        href="/admin/finance/details" 
-                        className="px-3 py-1.5 bg-[#213f5b] rounded text-xs text-white hover:bg-[#213f5b]/90 flex items-center gap-1.5"
-                      >
-                        Plus de détails
-                        <ChevronRightIcon className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Stats Cards with consistent sizing */}
-                <motion.div 
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                >
-                  {/* Utilisateurs Card - with navigation to /dashboard/admin/administration */}
-                  <Link href="/dashboard/admin/administration">
-                    <motion.div 
-                      className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all cursor-pointer h-full"
-                      whileHover={{ y: -5 }}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-sm font-medium text-[#213f5b]/80">Utilisateurs</p>
-                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{stats.totalUsers}</h3>
-                          <div className="flex items-center gap-1 mt-2">
-                            <span className={`text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium ${stats.usersGrowth >= 0 ? 'bg-[#d2fcb2] text-[#213f5b]' : 'bg-red-100 text-red-800'}`}>
-                              {stats.usersGrowth >= 0 ? <ArrowTrendingUpIcon className="h-3 w-3" /> : <ArrowTrendingDownIcon className="h-3 w-3" />}
-                              {Math.abs(stats.usersGrowth)}%
-                            </span>
-                            <span className="text-xs text-[#213f5b]/60">vs mois précédent</span>
-                          </div>
-                        </div>
-                        <div className="p-3 rounded-full bg-[#bfddf9]/30">
-                          <UserGroupIcon className="h-6 w-6 text-[#213f5b]" />
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center mt-4 text-sm">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-[#d2fcb2]"></span>
-                          <span className="text-[#213f5b]/70">Actifs: {stats.activeUsers}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-[#bfddf9]"></span>
-                          <span className="text-[#213f5b]/70">En attente: {stats.pendingUsers}</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </Link>
-
-                  {/* Prospects Card - Converted to percentage completion */}
-                  <Link href="/dashboard/admin/leads">
-                    <motion.div 
-                      className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all cursor-pointer h-full"
-                      whileHover={{ y: -5 }}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-sm font-medium text-[#213f5b]/80">Prospects</p>
-                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">42</h3>
-                          <div className="flex items-center gap-1 mt-2">
-                            <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-[#d2fcb2] text-[#213f5b]">
-                              <ArrowTrendingUpIcon className="h-3 w-3" />
-                              15%
-                            </span>
-                            <span className="text-xs text-[#213f5b]/60">vs mois précédent</span>
-                          </div>
-                        </div>
-                        <div className="p-3 rounded-full bg-[#bfddf9]/30">
-                          <UsersIcon className="h-6 w-6 text-[#213f5b]" />
-                        </div>
-                      </div>
-                      
-                      {/* Percentage visualization of client progress */}
-                      <div className="mt-3 mb-1">
-                        <div className="flex">
-                          <div className="h-2 flex-1 rounded-l-full bg-[#dde8f3]" title="0-15%"></div>
-                          <div className="h-2 flex-1 bg-[#bfddf9]" title="15-30%"></div>
-                          <div className="h-2 flex-1 bg-[#88c9f7]" title="30-45%"></div>
-                          <div className="h-2 flex-1 bg-[#b8f996]" title="45-60%"></div>
-                          <div className="h-2 flex-1 bg-[#d2fcb2]" title="60-75%"></div>
-                          <div className="h-2 flex-1 bg-[#8fc97c]" title="75-90%"></div>
-                          <div className="h-2 flex-1 rounded-r-full bg-[#213f5b]" title="90-100%"></div>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 mt-2 text-xs">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="h-2.5 w-2.5 rounded-full bg-[#dde8f3]"></div>
-                            <span className="ml-1 text-[#213f5b]/70">6 clients à 14%</span>
+                          <div className="mt-2 flex items-center justify-between">
+                            <div className="text-[#213f5b]/70 text-xs">
+                              <span className="font-medium">{todaysEvents.length}</span> événements cette semaine
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center gap-1 bg-[#d2fcb2]/50 text-[#213f5b] text-xs py-1 px-2 rounded-full">
+                                <ClockIcon className="h-3 w-3" />
+                                <span className="font-medium">Aujourd&apos;hui</span>
+                              </span>
+                            </div>
                           </div>
                         </div>
                         
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="h-2.5 w-2.5 rounded-full bg-[#bfddf9]"></div>
-                            <span className="ml-1 text-[#213f5b]/70">4 clients à 28%</span>
+                        {/* Week View Calendar */}
+                        <div className="flex-grow overflow-y-auto p-1">
+                          <div className="grid grid-cols-7 border-b border-[#bfddf9]/20 sticky top-0 bg-white z-10">
+                            {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day, index) => {
+                              const currentDay = new Date();
+                              currentDay.setDate(currentDay.getDate() - currentDay.getDay() + 1 + index);
+                              const isToday = currentDay.getDate() === new Date().getDate() && 
+                                              currentDay.getMonth() === new Date().getMonth() && 
+                                              currentDay.getFullYear() === new Date().getFullYear();
+                              
+                              return (
+                                <div key={day} className="px-1 py-3">
+                                  <div className={`flex flex-col items-center ${isToday ? 'text-[#213f5b]' : 'text-[#213f5b]/70'}`}>
+                                    <span className="text-xs font-medium">{day}</span>
+                                    <span className={`text-sm font-bold mt-1 h-7 w-7 flex items-center justify-center rounded-full ${
+                                      isToday ? 'bg-[#bfddf9] text-[#213f5b]' : ''
+                                    }`}>
+                                      {currentDay.getDate()}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="h-2.5 w-2.5 rounded-full bg-[#88c9f7]"></div>
-                            <span className="ml-1 text-[#213f5b]/70">8 clients à 43%</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="h-2.5 w-2.5 rounded-full bg-[#b8f996]"></div>
-                            <span className="ml-1 text-[#213f5b]/70">5 clients à 57%</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="h-2.5 w-2.5 rounded-full bg-[#d2fcb2]"></div>
-                            <span className="ml-1 text-[#213f5b]/70">9 clients à 71%</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="h-2.5 w-2.5 rounded-full bg-[#8fc97c]"></div>
-                            <span className="ml-1 text-[#213f5b]/70">3 clients à 86%</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between col-span-2 mt-0.5">
-                          <div className="flex items-center">
-                            <div className="h-2.5 w-2.5 rounded-full bg-[#213f5b]"></div>
-                            <span className="ml-1 text-[#213f5b]/70">7 clients à 100%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </Link>
-
-                  {/* Tasks Card - with navigation to /dashboard/admin/tasks */}
-                  <Link href="/dashboard/admin/tasks">
-                    <motion.div 
-                      className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all cursor-pointer h-full"
-                      whileHover={{ y: -5 }}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-sm font-medium text-[#213f5b]/80">Tâches aujourd&apos;hui</p>
-                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{todaysTasks.length}</h3>
-                          <div className="flex items-center gap-1 mt-2">
-                            <span className="text-xs flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium bg-[#bfddf9] text-[#213f5b]">
-                              <ClockIcon className="h-3 w-3" />
-                              {new Date().toLocaleDateString('fr-FR', { weekday: 'long' })}
-                            </span>
-                            <span className="text-xs text-[#213f5b]/60">20 Mars 2025</span>
-                          </div>
-                        </div>
-                        <div className="p-3 rounded-full bg-[#d2fcb2]/40">
-                          <CalendarIcon className="h-6 w-6 text-[#213f5b]" />
-                        </div>
-                      </div>
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-[#bfddf9]"></span>
-                          <span className="text-sm text-[#213f5b]/70">En attente: {todaysTasks.filter(t => t.status === "not_started").length}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded-full bg-[#213f5b]"></span>
-                          <span className="text-sm text-[#213f5b]/70">En cours: {todaysTasks.filter(t => t.status === "in_progress").length}</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </Link>
-
-                  {/* Messages Card - with navigation to /dashboard/admin/emails */}
-                  <Link href="/dashboard/admin/emails">
-                    <motion.div 
-                      className="bg-white rounded-xl shadow-sm p-5 border border-[#bfddf9] hover:shadow-md transition-all cursor-pointer h-full"
-                      whileHover={{ y: -5 }}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-sm font-medium text-[#213f5b]/80">Messages</p>
-                          <h3 className="text-2xl font-bold text-[#213f5b] mt-1">{chats.reduce((sum, chat) => sum + chat.unread_count, 0)}</h3>
-                          <div className="flex items-center gap-1 mt-2">
-                            <span className="text-xs rounded-full px-1.5 py-0.5 font-medium bg-[#d2fcb2] text-[#213f5b]">
-                              Non lus
-                            </span>
-                            <span className="text-xs text-[#213f5b]/60">sur {chats.length} conversations</span>
-                          </div>
-                        </div>
-                        <div className="p-3 rounded-full bg-[#d2fcb2]/40">
-                          <ChatBubbleOvalLeftIcon className="h-6 w-6 text-[#213f5b]" />
-                        </div>
-                      </div>
-                      <div className="mt-4 flex justify-center">
-                        <div className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1">
-                          Voir tous les messages
-                          <ArrowRightIcon className="h-4 w-4" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  </Link>
-                </motion.div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                  {/* First Row - Full Width Components in 2-column arrangement */}
-                  <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Enhanced Calendar with Week View */}
-                    <motion.div 
-                      className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#bfddf9] h-full flex flex-col"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                      whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
-                    >
-                      <div className="p-4 border-b border-[#bfddf9]/30 bg-gradient-to-r from-[#bfddf9]/30 to-[#bfddf9]/10">
-                        <div className="flex justify-between items-center">
-                          <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
-                            <CalendarDaysIcon className="h-5 w-5 text-[#213f5b]" />
-                            <span>Agenda de la semaine</span>
-                          </h2>
-                          <div className="flex items-center gap-2">
-                            <button 
-                              className="p-1.5 rounded-lg text-[#213f5b]/70 hover:text-[#213f5b] hover:bg-[#bfddf9]/20 transition-colors"
-                              onClick={() => changeMonth(-1)}
-                            >
-                              <ChevronLeftIcon className="h-5 w-5" />
-                            </button>
-                            <span className="text-sm font-medium text-[#213f5b] min-w-[150px] text-center">
-                              20 - 26 Mars 2025
-                            </span>
-                            <button 
-                              className="p-1.5 rounded-lg text-[#213f5b]/70 hover:text-[#213f5b] hover:bg-[#bfddf9]/20 transition-colors"
-                              onClick={() => changeMonth(1)}
-                            >
-                              <ChevronRightIcon className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between">
-                          <div className="text-[#213f5b]/70 text-xs">
-                            <span className="font-medium">{todaysEvents.length}</span> événements cette semaine
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="flex items-center gap-1 bg-[#d2fcb2]/50 text-[#213f5b] text-xs py-1 px-2 rounded-full">
-                              <ClockIcon className="h-3 w-3" />
-                              <span className="font-medium">Aujourd&apos;hui</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Week View Calendar */}
-                      <div className="flex-grow overflow-y-auto p-1">
-                        <div className="grid grid-cols-7 border-b border-[#bfddf9]/20 sticky top-0 bg-white z-10">
-                          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day, index) => {
-                            const currentDay = new Date();
-                            currentDay.setDate(currentDay.getDate() - currentDay.getDay() + 1 + index);
-                            const isToday = currentDay.getDate() === new Date().getDate() && 
-                                            currentDay.getMonth() === new Date().getMonth() && 
-                                            currentDay.getFullYear() === new Date().getFullYear();
+                          
+                          {/* Time slots */}
+                          <div className="mt-2 space-y-3 px-1">
+                            {/* Morning Time Slots */}
+                            <div className="flex items-center mb-2">
+                              <div className="w-20 flex-shrink-0">
+                                <div className="text-xs font-medium text-[#213f5b]/70 ml-2">Matin</div>
+                              </div>
+                              <div className="h-px flex-grow bg-[#bfddf9]/20"></div>
+                            </div>
                             
-                            return (
-                              <div key={day} className="px-1 py-3">
-                                <div className={`flex flex-col items-center ${isToday ? 'text-[#213f5b]' : 'text-[#213f5b]/70'}`}>
-                                  <span className="text-xs font-medium">{day}</span>
-                                  <span className={`text-sm font-bold mt-1 h-7 w-7 flex items-center justify-center rounded-full ${
-                                    isToday ? 'bg-[#bfddf9] text-[#213f5b]' : ''
-                                  }`}>
-                                    {currentDay.getDate()}
-                                  </span>
+                            {['08:00', '09:00', '10:00', '11:00'].map((time) => (
+                              <div key={time} className="flex group">
+                                <div className="w-16 flex-shrink-0">
+                                  <div className="text-xs text-[#213f5b]/60 text-right pr-2">{time}</div>
+                                </div>
+                                <div className="flex-grow grid grid-cols-7 gap-1 relative">
+                                  {Array(7).fill(0).map((_, idx) => (
+                                    <div 
+                                      key={idx} 
+                                      className="h-12 rounded border border-dashed border-[#bfddf9]/20 hover:bg-[#bfddf9]/5 group-hover:border-[#bfddf9]/40 transition-all cursor-pointer"
+                                    ></div>
+                                  ))}
+                                  
+                                  {/* Example Events */}
+                                  {time === '10:00' && (
+                                    <div className="absolute left-[calc(0/7*100%)] top-0 w-[calc(100%/7)] h-full">
+                                      <div className="mx-0.5 h-full">
+                                        <div className="bg-[#d2fcb2]/70 border border-[#d2fcb2] rounded p-1 h-full flex flex-col shadow-sm hover:shadow transition-shadow">
+                                          <div className="flex items-center gap-1">
+                                            <UsersIcon className="h-3 w-3 text-[#213f5b]/70" />
+                                            <span className="text-xs font-medium text-[#213f5b] truncate">Réunion Mairie</span>
+                                          </div>
+                                          <span className="text-[10px] text-[#213f5b]/70">10:00 - 11:30</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {time === '08:00' && (
+                                    <div className="absolute left-[calc(2/7*100%)] top-0 w-[calc(100%/7)] h-[calc(100%*2)]">
+                                      <div className="mx-0.5 h-full">
+                                        <div className="bg-[#bfddf9]/70 border border-[#bfddf9] rounded p-1 h-full flex flex-col shadow-sm hover:shadow transition-shadow">
+                                          <div className="flex items-center gap-1">
+                                            <BriefcaseIcon className="h-3 w-3 text-[#213f5b]/70" />
+                                            <span className="text-xs font-medium text-[#213f5b] truncate">Préparation dossier</span>
+                                          </div>
+                                          <span className="text-[10px] text-[#213f5b]/70">08:00 - 10:00</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                            );
-                          })}
+                            ))}
+                            
+                            {/* Afternoon Time Slots */}
+                            <div className="flex items-center mb-2 mt-4">
+                              <div className="w-20 flex-shrink-0">
+                                <div className="text-xs font-medium text-[#213f5b]/70 ml-2">Après-midi</div>
+                              </div>
+                              <div className="h-px flex-grow bg-[#bfddf9]/20"></div>
+                            </div>
+                            
+                            {['14:00', '15:00', '16:00', '17:00'].map((time) => (
+                              <div key={time} className="flex group">
+                                <div className="w-16 flex-shrink-0">
+                                  <div className="text-xs text-[#213f5b]/60 text-right pr-2">{time}</div>
+                                </div>
+                                <div className="flex-grow grid grid-cols-7 gap-1 relative">
+                                  {Array(7).fill(0).map((_, idx) => (
+                                    <div 
+                                      key={idx} 
+                                      className="h-12 rounded border border-dashed border-[#bfddf9]/20 hover:bg-[#bfddf9]/5 group-hover:border-[#bfddf9]/40 transition-all cursor-pointer"
+                                    ></div>
+                                  ))}
+                                  
+                                  {/* Example Event */}
+                                  {time === '14:00' && (
+                                    <div className="absolute left-[calc(3/7*100%)] top-0 w-[calc(100%/7)] h-[calc(100%*2)]">
+                                      <div className="mx-0.5 h-full">
+                                        <div className="bg-[#f9e5bf]/70 border border-[#f9e5bf] rounded p-1 h-full flex flex-col shadow-sm hover:shadow transition-shadow">
+                                          <div className="flex items-center gap-1">
+                                            <BriefcaseIcon className="h-3 w-3 text-[#213f5b]/70" />
+                                            <span className="text-xs font-medium text-[#213f5b] truncate">Visite technique</span>
+                                          </div>
+                                          <span className="text-[10px] text-[#213f5b]/70">14:00 - 16:00</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                         
-                        {/* Time slots */}
-                        <div className="mt-2 space-y-3 px-1">
-                          {/* Morning Time Slots */}
-                          <div className="flex items-center mb-2">
-                            <div className="w-20 flex-shrink-0">
-                              <div className="text-xs font-medium text-[#213f5b]/70 ml-2">Matin</div>
-                            </div>
-                            <div className="h-px flex-grow bg-[#bfddf9]/20"></div>
-                          </div>
-                          
-                          {['08:00', '09:00', '10:00', '11:00'].map((time) => (
-                            <div key={time} className="flex group">
-                              <div className="w-16 flex-shrink-0">
-                                <div className="text-xs text-[#213f5b]/60 text-right pr-2">{time}</div>
-                              </div>
-                              <div className="flex-grow grid grid-cols-7 gap-1 relative">
-                                {Array(7).fill(0).map((_, idx) => (
-                                  <div 
-                                    key={idx} 
-                                    className="h-12 rounded border border-dashed border-[#bfddf9]/20 hover:bg-[#bfddf9]/5 group-hover:border-[#bfddf9]/40 transition-all cursor-pointer"
-                                  ></div>
-                                ))}
-                                
-                                {/* Example Events */}
-                                {time === '10:00' && (
-                                  <div className="absolute left-[calc(0/7*100%)] top-0 w-[calc(100%/7)] h-full">
-                                    <div className="mx-0.5 h-full">
-                                      <div className="bg-[#d2fcb2]/70 border border-[#d2fcb2] rounded p-1 h-full flex flex-col shadow-sm hover:shadow transition-shadow">
-                                        <div className="flex items-center gap-1">
-                                          <UsersIcon className="h-3 w-3 text-[#213f5b]/70" />
-                                          <span className="text-xs font-medium text-[#213f5b] truncate">Réunion Mairie</span>
-                                        </div>
-                                        <span className="text-[10px] text-[#213f5b]/70">10:00 - 11:30</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                                
-                                {time === '08:00' && (
-                                  <div className="absolute left-[calc(2/7*100%)] top-0 w-[calc(100%/7)] h-[calc(100%*2)]">
-                                    <div className="mx-0.5 h-full">
-                                      <div className="bg-[#bfddf9]/70 border border-[#bfddf9] rounded p-1 h-full flex flex-col shadow-sm hover:shadow transition-shadow">
-                                        <div className="flex items-center gap-1">
-                                          <BriefcaseIcon className="h-3 w-3 text-[#213f5b]/70" />
-                                          <span className="text-xs font-medium text-[#213f5b] truncate">Préparation dossier</span>
-                                        </div>
-                                        <span className="text-[10px] text-[#213f5b]/70">08:00 - 10:00</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                          
-                          {/* Afternoon Time Slots */}
-                          <div className="flex items-center mb-2 mt-4">
-                            <div className="w-20 flex-shrink-0">
-                              <div className="text-xs font-medium text-[#213f5b]/70 ml-2">Après-midi</div>
-                            </div>
-                            <div className="h-px flex-grow bg-[#bfddf9]/20"></div>
-                          </div>
-                          
-                          {['14:00', '15:00', '16:00', '17:00'].map((time) => (
-                            <div key={time} className="flex group">
-                              <div className="w-16 flex-shrink-0">
-                                <div className="text-xs text-[#213f5b]/60 text-right pr-2">{time}</div>
-                              </div>
-                              <div className="flex-grow grid grid-cols-7 gap-1 relative">
-                                {Array(7).fill(0).map((_, idx) => (
-                                  <div 
-                                    key={idx} 
-                                    className="h-12 rounded border border-dashed border-[#bfddf9]/20 hover:bg-[#bfddf9]/5 group-hover:border-[#bfddf9]/40 transition-all cursor-pointer"
-                                  ></div>
-                                ))}
-                                
-                                {/* Example Event */}
-                                {time === '14:00' && (
-                                  <div className="absolute left-[calc(3/7*100%)] top-0 w-[calc(100%/7)] h-[calc(100%*2)]">
-                                    <div className="mx-0.5 h-full">
-                                      <div className="bg-[#f9e5bf]/70 border border-[#f9e5bf] rounded p-1 h-full flex flex-col shadow-sm hover:shadow transition-shadow">
-                                        <div className="flex items-center gap-1">
-                                          <BriefcaseIcon className="h-3 w-3 text-[#213f5b]/70" />
-                                          <span className="text-xs font-medium text-[#213f5b] truncate">Visite technique</span>
-                                        </div>
-                                        <span className="text-[10px] text-[#213f5b]/70">14:00 - 16:00</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                        <div className="p-3 border-t border-[#bfddf9]/30 bg-[#bfddf9]/5 flex justify-between items-center">
+                          <Link 
+                            href="/dashboard/admin/calendar" 
+                            className="text-xs text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1"
+                          >
+                            Voir tout le calendrier
+                            <ArrowRightIcon className="h-3 w-3" />
+                          </Link>
+                          <button
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#213f5b] bg-white hover:bg-[#bfddf9]/20 px-2.5 py-1 rounded-md border border-[#bfddf9]/30 transition-colors"
+                          >
+                            <PlusCircleIcon className="h-3.5 w-3.5" />
+                            Ajouter un événement
+                          </button>
                         </div>
-                      </div>
-                      
-                      <div className="p-3 border-t border-[#bfddf9]/30 bg-[#bfddf9]/5 flex justify-between items-center">
-                        <Link 
-                          href="/dashboard/admin/calendar" 
-                          className="text-xs text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1"
-                        >
-                          Voir tout le calendrier
-                          <ArrowRightIcon className="h-3 w-3" />
-                        </Link>
-                        <button
-                          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#213f5b] bg-white hover:bg-[#bfddf9]/20 px-2.5 py-1 rounded-md border border-[#bfddf9]/30 transition-colors"
-                        >
-                          <PlusCircleIcon className="h-3.5 w-3.5" />
-                          Ajouter un événement
-                        </button>
-                      </div>
-                    </motion.div>
+                      </motion.div>
 
-                    {/* Right - Today's Tasks */}
-                    <motion.div 
-                      className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#bfddf9] h-full flex flex-col"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
-                    >
-                      <div className="p-4 border-b border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-[#d2fcb2]/30 to-[#d2fcb2]/10">
-                        <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
-                          <ClockIcon className="h-5 w-5 text-[#213f5b]" />
-                          <span>Tâches d&apos;aujourd&apos;hui</span>
-                        </h2>
-                        <span className="bg-[#d2fcb2] text-[#213f5b] text-xs font-medium px-2 py-1 rounded-full">
-                          {todaysTasks.length} tâches
-                        </span>
-                      </div>
-                      
-                      <div className="divide-y divide-[#bfddf9]/30 flex-grow overflow-y-auto max-h-[500px] p-1">
-                        {todaysTasks.length === 0 ? (
-                          <div className="p-4 text-center text-sm text-[#213f5b]/50">
-                            Aucune tâche aujourd&apos;hui
-                          </div>
-                        ) : (
-                          todaysTasks.map((task) => (
-                            <div key={task.id} className="p-3 hover:bg-[#bfddf9]/5 transition-colors rounded-lg">
-                              <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 mt-0.5">
-                                  {task.status === "completed" ? (
-                                    <div className="w-5 h-5 rounded-full bg-[#d2fcb2] flex items-center justify-center">
-                                      <CheckIcon className="h-3 w-3 text-[#213f5b]" />
-                                    </div>
-                                  ) : (
-                                    <div className={`w-5 h-5 rounded-full border-2 ${
-                                      task.priority === 'urgent' 
-                                        ? 'border-red-400' 
-                                        : task.priority === 'high'
-                                          ? 'border-[#d2fcb2]'
-                                          : 'border-[#bfddf9]'
-                                    }`}></div>
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex justify-between items-start">
-                                    <p className={`text-sm font-medium ${
-                                      task.status === "completed" 
-                                        ? 'text-[#213f5b]/50 line-through' 
-                                        : 'text-[#213f5b]'
-                                    }`}>{task.title}</p>
-                                    <span className={`ml-2 px-1.5 py-0.5 text-xs rounded-full ${getPriorityColor(task.priority)}`}>
-                                      {task.priority}
-                                    </span>
+                      {/* Right - Today's Tasks */}
+                      <motion.div 
+                        className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#bfddf9] h-full flex flex-col"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
+                      >
+                        <div className="p-4 border-b border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-[#d2fcb2]/30 to-[#d2fcb2]/10">
+                          <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
+                            <ClockIcon className="h-5 w-5 text-[#213f5b]" />
+                            <span>Tâches d&apos;aujourd&apos;hui</span>
+                          </h2>
+                          <span className="bg-[#d2fcb2] text-[#213f5b] text-xs font-medium px-2 py-1 rounded-full">
+                            {todaysTasks.length} tâches
+                          </span>
+                        </div>
+                        
+                        <div className="divide-y divide-[#bfddf9]/30 flex-grow overflow-y-auto max-h-[500px] p-1">
+                          {todaysTasks.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-[#213f5b]/50">
+                              Aucune tâche aujourd&apos;hui
+                            </div>
+                          ) : (
+                            todaysTasks.map((task) => (
+                              <div key={task.id} className="p-3 hover:bg-[#bfddf9]/5 transition-colors rounded-lg">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0 mt-0.5">
+                                    {task.status === "completed" ? (
+                                      <div className="w-5 h-5 rounded-full bg-[#d2fcb2] flex items-center justify-center">
+                                        <CheckIcon className="h-3 w-3 text-[#213f5b]" />
+                                      </div>
+                                    ) : (
+                                      <div className={`w-5 h-5 rounded-full border-2 ${
+                                        task.priority === 'urgent' 
+                                          ? 'border-red-400' 
+                                          : task.priority === 'high'
+                                            ? 'border-[#d2fcb2]'
+                                            : 'border-[#bfddf9]'
+                                      }`}></div>
+                                    )}
                                   </div>
-                                  {task.description && (
-                                    <p className="mt-1 text-xs text-[#213f5b]/70">{truncateText(task.description, 60)}</p>
-                                  )}
-                                  <div className="mt-2 flex justify-between items-center">
-                                    <div className="flex items-center gap-2">
-                                      {task.assignee_avatar ? (
-                                        <img 
-                                          src={task.assignee_avatar} 
-                                          alt={task.assignee_name} 
-                                          className="h-5 w-5 rounded-full"
-                                        />
-                                      ) : (
-                                        <div className="h-5 w-5 rounded-full bg-[#bfddf9]/30 flex items-center justify-center text-xs text-[#213f5b]">
-                                          {task.assignee_name?.charAt(0) || '?'}
-                                        </div>
-                                      )}
-                                      <span className="text-xs text-[#213f5b]/70">{task.assignee_name}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-start">
+                                      <p className={`text-sm font-medium ${
+                                        task.status === "completed" 
+                                          ? 'text-[#213f5b]/50 line-through' 
+                                          : 'text-[#213f5b]'
+                                      }`}>{task.title}</p>
+                                      <span className={`ml-2 px-1.5 py-0.5 text-xs rounded-full ${getPriorityColor(task.priority)}`}>
+                                        {task.priority}
+                                      </span>
                                     </div>
-                                    <span className="text-xs font-medium text-[#213f5b]/70">
-                                      {formatTime(task.due_date)}
-                                    </span>
+                                    {task.description && (
+                                      <p className="mt-1 text-xs text-[#213f5b]/70">{truncateText(task.description, 60)}</p>
+                                    )}
+                                    <div className="mt-2 flex justify-between items-center">
+                                      <div className="flex items-center gap-2">
+                                        {task.assignee_avatar ? (
+                                          <img 
+                                            src={task.assignee_avatar} 
+                                            alt={task.assignee_name} 
+                                            className="h-5 w-5 rounded-full"
+                                          />
+                                        ) : (
+                                          <div className="h-5 w-5 rounded-full bg-[#bfddf9]/30 flex items-center justify-center text-xs text-[#213f5b]">
+                                            {task.assignee_name?.charAt(0) || '?'}
+                                          </div>
+                                        )}
+                                        <span className="text-xs text-[#213f5b]/70">{task.assignee_name}</span>
+                                      </div>
+                                      <span className="text-xs font-medium text-[#213f5b]/70">
+                                        {formatTime(task.due_date)}
+                                      </span>
+                                    </div>
+                                    {task.tags && task.tags.length > 0 && (
+                                      <div className="mt-2 flex flex-wrap gap-1.5">
+                                        {task.tags.map((tag, tagIdx) => (
+                                          <span 
+                                            key={tagIdx}
+                                            className="px-1.5 py-0.5 text-xs font-medium rounded bg-[#bfddf9]/30 text-[#213f5b]"
+                                          >
+                                            {tag}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
-                                  {task.tags && task.tags.length > 0 && (
-                                    <div className="mt-2 flex flex-wrap gap-1.5">
-                                      {task.tags.map((tag, tagIdx) => (
-                                        <span 
-                                          key={tagIdx}
-                                          className="px-1.5 py-0.5 text-xs font-medium rounded bg-[#bfddf9]/30 text-[#213f5b]"
-                                        >
-                                          {tag}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
                                 </div>
                               </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      
-                      <div className="p-3 border-t border-[#bfddf9]/30 bg-[#bfddf9]/5 flex justify-between items-center mt-auto">
-                        <Link 
-                          href="/admin/tasks" 
-                          className="text-xs text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1"
-                        >
-                          Voir toutes les tâches
-                          <ArrowRightIcon className="h-3 w-3" />
-                        </Link>
-                        <button
-                          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#213f5b] hover:text-[#213f5b]/80"
-                        >
-                          <PlusCircleIcon className="h-3.5 w-3.5" />
-                          Ajouter
-                        </button>
-                      </div>
-                    </motion.div>
-                  </div>
+                            ))
+                          )}
+                        </div>
+                        
+                        <div className="p-3 border-t border-[#bfddf9]/30 bg-[#bfddf9]/5 flex justify-between items-center mt-auto">
+                          <Link 
+                            href="/admin/tasks" 
+                            className="text-xs text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1"
+                          >
+                            Voir toutes les tâches
+                            <ArrowRightIcon className="h-3 w-3" />
+                          </Link>
+                          <button
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#213f5b] hover:text-[#213f5b]/80"
+                          >
+                            <PlusCircleIcon className="h-3.5 w-3.5" />
+                            Ajouter
+                          </button>
+                        </div>
+                      </motion.div>
+                    </div>
 
-                  {/* Second Row - 3-column layout for remaining components */}
-                  <div className="lg:col-span-8 space-y-4">
+                    {/* Second Row - 3-column layout for remaining components */}
+                    <div className="lg:col-span-8 space-y-4">
 
-                    {/* Updated Performance Component */}
-                    <motion.div 
-                      className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#bfddf9]"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
-                      whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
-                    >
-                      <div className="p-4 border-b border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-[#bfddf9]/30 to-[#bfddf9]/10">
-                        <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
-                          <UserGroupIcon className="h-5 w-5 text-[#213f5b]" />
-                          <span>Performance de l&apos;équipe commercial</span>
-                        </h2>
-                        <Link href="/admin/regies" className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1">
-                          Gérer l&apos;équipe
-                          <ArrowRightIcon className="h-4 w-4" />
-                        </Link>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="bg-[#bfddf9]/10">
-                              <th className="text-left py-3 px-4 text-sm font-medium text-[#213f5b]">Partenaires</th>
-                              <th className="text-center py-3 px-4 text-sm font-medium text-[#213f5b]">Taches a realiser</th>
-                              <th className="text-center py-3 px-4 text-sm font-medium text-[#213f5b]">Taches a cloturer</th>
-                              <th className="text-center py-3 px-4 text-sm font-medium text-[#213f5b]">Projet en cours</th>
-                              <th className="text-center py-3 px-4 text-sm font-medium text-[#213f5b]">Projet cloturé</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[#bfddf9]/30">
-                            {stats.teamPerformance.map((regie, idx) => (
-                              <tr key={idx} className="hover:bg-[#bfddf9]/5 transition-colors">
-                                <td className="py-3 px-4 text-sm font-medium text-[#213f5b]">
-                                  <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-full bg-[#bfddf9]/30 text-[#213f5b] flex items-center justify-center font-medium">
-                                      {regie.team.split(' ').map(n => n[0]).join('')}
-                                    </div>
-                                    <span>{regie.team}</span>
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#bfddf9]/30 text-[#213f5b]">
-                                    {regie.tasks_to_do}
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#d2fcb2]/40 text-[#213f5b]">
-                                    {regie.tasks_to_close}
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#bfddf9]/50 text-[#213f5b]">
-                                    {regie.projects_in_progress}
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#d2fcb2]/50 text-[#213f5b]">
-                                    {regie.projects_closed}
-                                  </div>
-                                </td>
+                      {/* Updated Performance Component */}
+                      <motion.div 
+                        className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#bfddf9]"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                        whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
+                      >
+                        <div className="p-4 border-b border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-[#bfddf9]/30 to-[#bfddf9]/10">
+                          <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
+                            <UserGroupIcon className="h-5 w-5 text-[#213f5b]" />
+                            <span>Performance de l&apos;équipe commercial</span>
+                          </h2>
+                          <Link href="/admin/regies" className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1">
+                            Gérer l&apos;équipe
+                            <ArrowRightIcon className="h-4 w-4" />
+                          </Link>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="bg-[#bfddf9]/10">
+                                <th className="text-left py-3 px-4 text-sm font-medium text-[#213f5b]">Partenaires</th>
+                                <th className="text-center py-3 px-4 text-sm font-medium text-[#213f5b]">Taches a realiser</th>
+                                <th className="text-center py-3 px-4 text-sm font-medium text-[#213f5b]">Taches a cloturer</th>
+                                <th className="text-center py-3 px-4 text-sm font-medium text-[#213f5b]">Projet en cours</th>
+                                <th className="text-center py-3 px-4 text-sm font-medium text-[#213f5b]">Projet cloturé</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </motion.div>
-                    
-                    {/* Quick Actions in a compact redesigned card */}
-                    <motion.div 
-                      className="bg-white rounded-xl shadow-sm border border-[#bfddf9]"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
-                      whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
-                    >
-                      <div className="p-4 border-b border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-[#d2fcb2]/30 to-[#d2fcb2]/10">
-                        <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
-                          <BoltIcon className="h-5 w-5 text-[#213f5b]" />
-                          <span>Actions rapides</span>
-                        </h2>
-                      </div>
-                      <div className="p-4">
-                        <div className="grid grid-cols-4 gap-3">
-                          <Link
-                            href="/admin/users/new"
-                            className="flex flex-col items-center justify-center bg-[#bfddf9]/10 hover:bg-[#bfddf9]/20 transition-all p-3 rounded-lg"
-                          >
-                            <UserCircleIcon className="h-6 w-6 text-[#213f5b] mb-2" />
-                            <span className="text-xs font-medium text-[#213f5b] text-center">Nouvel utilisateur</span>
-                          </Link>
-                          <Link
-                            href="/admin/projects/new"
-                            className="flex flex-col items-center justify-center bg-[#bfddf9]/10 hover:bg-[#bfddf9]/20 transition-all p-3 rounded-lg"
-                          >
-                            <BriefcaseIcon className="h-6 w-6 text-[#213f5b] mb-2" />
-                            <span className="text-xs font-medium text-[#213f5b] text-center">Nouveau projet</span>
-                          </Link>
-                          <Link
-                            href="/admin/invoices/new"
-                            className="flex flex-col items-center justify-center bg-[#d2fcb2]/20 hover:bg-[#d2fcb2]/30 transition-all p-3 rounded-lg"
-                          >
-                            <DocumentTextIcon className="h-6 w-6 text-[#213f5b] mb-2" />
-                            <span className="text-xs font-medium text-[#213f5b] text-center">Créer facture</span>
-                          </Link>
-                          <Link
-                            href="/admin/tasks/new"
-                            className="flex flex-col items-center justify-center bg-[#d2fcb2]/20 hover:bg-[#d2fcb2]/30 transition-all p-3 rounded-lg"
-                          >
-                            <ClockIcon className="h-6 w-6 text-[#213f5b] mb-2" />
-                            <span className="text-xs font-medium text-[#213f5b] text-center">Nouvelle tâche</span>
+                            </thead>
+                            <tbody className="divide-y divide-[#bfddf9]/30">
+                              {stats.teamPerformance.map((regie, idx) => (
+                                <tr key={idx} className="hover:bg-[#bfddf9]/5 transition-colors">
+                                  <td className="py-3 px-4 text-sm font-medium text-[#213f5b]">
+                                    <div className="flex items-center gap-3">
+                                      <div className="h-8 w-8 rounded-full bg-[#bfddf9]/30 text-[#213f5b] flex items-center justify-center font-medium">
+                                        {regie.team.split(' ').map(n => n[0]).join('')}
+                                      </div>
+                                      <span>{regie.team}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#bfddf9]/30 text-[#213f5b]">
+                                      {regie.tasks_to_do}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#d2fcb2]/40 text-[#213f5b]">
+                                      {regie.tasks_to_close}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#bfddf9]/50 text-[#213f5b]">
+                                      {regie.projects_in_progress}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#d2fcb2]/50 text-[#213f5b]">
+                                      {regie.projects_closed}
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </motion.div>
+                      
+                      {/* Quick Actions in a compact redesigned card */}
+                      <motion.div 
+                        className="bg-white rounded-xl shadow-sm border border-[#bfddf9]"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                        whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
+                      >
+                        <div className="p-4 border-b border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-[#d2fcb2]/30 to-[#d2fcb2]/10">
+                          <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
+                            <BoltIcon className="h-5 w-5 text-[#213f5b]" />
+                            <span>Actions rapides</span>
+                          </h2>
+                        </div>
+                        <div className="p-4">
+                          <div className="grid grid-cols-4 gap-3">
+                            <Link
+                              href="/admin/users/new"
+                              className="flex flex-col items-center justify-center bg-[#bfddf9]/10 hover:bg-[#bfddf9]/20 transition-all p-3 rounded-lg"
+                            >
+                              <UserCircleIcon className="h-6 w-6 text-[#213f5b] mb-2" />
+                              <span className="text-xs font-medium text-[#213f5b] text-center">Nouvel utilisateur</span>
+                            </Link>
+                            <Link
+                              href="/admin/projects/new"
+                              className="flex flex-col items-center justify-center bg-[#bfddf9]/10 hover:bg-[#bfddf9]/20 transition-all p-3 rounded-lg"
+                            >
+                              <BriefcaseIcon className="h-6 w-6 text-[#213f5b] mb-2" />
+                              <span className="text-xs font-medium text-[#213f5b] text-center">Nouveau projet</span>
+                            </Link>
+                            <Link
+                              href="/admin/invoices/new"
+                              className="flex flex-col items-center justify-center bg-[#d2fcb2]/20 hover:bg-[#d2fcb2]/30 transition-all p-3 rounded-lg"
+                            >
+                              <DocumentTextIcon className="h-6 w-6 text-[#213f5b] mb-2" />
+                              <span className="text-xs font-medium text-[#213f5b] text-center">Créer facture</span>
+                            </Link>
+                            <Link
+                              href="/admin/tasks/new"
+                              className="flex flex-col items-center justify-center bg-[#d2fcb2]/20 hover:bg-[#d2fcb2]/30 transition-all p-3 rounded-lg"
+                            >
+                              <ClockIcon className="h-6 w-6 text-[#213f5b] mb-2" />
+                              <span className="text-xs font-medium text-[#213f5b] text-center">Nouvelle tâche</span>
+                            </Link>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+
+                    {/* Third Column - Chat Previews */}
+                    <div className="lg:col-span-4">
+                      <motion.div 
+                        className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#bfddf9] h-full flex flex-col"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.5 }}
+                        whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
+                      >
+                        <div className="p-4 border-b border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-[#d2fcb2]/30 to-[#d2fcb2]/10">
+                          <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
+                            <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#213f5b]" />
+                            <span>Nouveaux messages</span>
+                          </h2>
+                          <Link href="/admin/messages" className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1">
+                            Voir tous
+                            <ArrowRightIcon className="h-4 w-4" />
                           </Link>
                         </div>
-                      </div>
-                    </motion.div>
-                  </div>
-
-                  {/* Third Column - Chat Previews */}
-                  <div className="lg:col-span-4">
-                    <motion.div 
-                      className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#bfddf9] h-full flex flex-col"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.5 }}
-                      whileHover={{ boxShadow: "0 10px 25px -5px rgba(33, 63, 91, 0.1)" }}
-                    >
-                      <div className="p-4 border-b border-[#bfddf9]/30 flex justify-between items-center bg-gradient-to-r from-[#d2fcb2]/30 to-[#d2fcb2]/10">
-                        <h2 className="font-semibold text-[#213f5b] flex items-center gap-2">
-                          <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#213f5b]" />
-                          <span>Nouveaux messages</span>
-                        </h2>
-                        <Link href="/admin/messages" className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1">
-                          Voir tous
-                          <ArrowRightIcon className="h-4 w-4" />
-                        </Link>
-                      </div>
-                      <div className="divide-y divide-[#bfddf9]/30 overflow-y-auto flex-grow">
-                        {chats.length === 0 ? (
-                          <div className="p-4 text-center text-sm text-[#213f5b]/50">
-                            Aucun message
-                          </div>
-                        ) : (
-                          chats.map((chat) => (
-                            <div key={chat.id} className="p-3 hover:bg-[#bfddf9]/5 transition-colors">
-                              <div className="flex items-start gap-3">
-                                <div className="relative flex-shrink-0">
-                                {chat.participants.filter(p => p.id !== adminInfo?._id).length === 1 ? (
-                                    <img 
-                                      src={chat.participants.find(p => p.id !== adminInfo?._id)?.avatar_url || `https://ui-avatars.com/api/?name=${chat.participants.find(p => p.id !== adminInfo?._id)?.name || "User"}&background=random`}
-                                      alt={chat.participants.find(p => p.id !== adminInfo?._id)?.name || "User"}
-                                      className="h-10 w-10 rounded-full"
-                                    />
-                                  ) : (
-                                    <div className="h-10 w-10 rounded-full bg-[#bfddf9]/30 flex items-center justify-center text-xs text-[#213f5b]">
-                                      <UserGroupIcon className="h-6 w-6" />
-                                    </div>
-                                  )}
-                                  {chat.unread_count > 0 && (
-                                    <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#213f5b] text-white text-xs flex items-center justify-center font-medium">
-                                      {chat.unread_count}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex justify-between items-start">
-                                    <h4 className="text-sm font-medium text-[#213f5b]">
-                                      {chat.participants.length === 2 
-                                        ? chat.participants.find(p => p.id !== adminInfo?._id)?.name 
-                                        : `${chat.participants.filter(p => p.id !== adminInfo?._id).length + 1} personnes`}
-                                    </h4>
-                                    <span className="text-xs text-[#213f5b]/50">
-                                      {formatTime(chat.last_message.timestamp)}
-                                    </span>
+                        <div className="divide-y divide-[#bfddf9]/30 overflow-y-auto flex-grow">
+                          {chats.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-[#213f5b]/50">
+                              Aucun message
+                            </div>
+                          ) : (
+                            chats.map((chat) => (
+                              <div key={chat.id} className="p-3 hover:bg-[#bfddf9]/5 transition-colors">
+                                <div className="flex items-start gap-3">
+                                  <div className="relative flex-shrink-0">
+                                  {chat.participants.filter(p => p.id !== adminInfo?._id).length === 1 ? (
+                                      <img 
+                                        src={chat.participants.find(p => p.id !== adminInfo?._id)?.avatar_url || `https://ui-avatars.com/api/?name=${chat.participants.find(p => p.id !== adminInfo?._id)?.name || "User"}&background=random`}
+                                        alt={chat.participants.find(p => p.id !== adminInfo?._id)?.name || "User"}
+                                        className="h-10 w-10 rounded-full"
+                                      />
+                                    ) : (
+                                      <div className="h-10 w-10 rounded-full bg-[#bfddf9]/30 flex items-center justify-center text-xs text-[#213f5b]">
+                                        <UserGroupIcon className="h-6 w-6" />
+                                      </div>
+                                    )}
+                                    {chat.unread_count > 0 && (
+                                      <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#213f5b] text-white text-xs flex items-center justify-center font-medium">
+                                        {chat.unread_count}
+                                      </div>
+                                    )}
                                   </div>
-                                  <p className="mt-1 text-xs text-[#213f5b]/70 line-clamp-1">
-                                    {chat.last_message.sender_id === adminInfo?._id ? "Vous: " : ""}
-                                    {truncateText(chat.last_message.content, 40)}
-                                  </p>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-start">
+                                      <h4 className="text-sm font-medium text-[#213f5b]">
+                                        {chat.participants.length === 2 
+                                          ? chat.participants.find(p => p.id !== adminInfo?._id)?.name 
+                                          : `${chat.participants.filter(p => p.id !== adminInfo?._id).length + 1} personnes`}
+                                      </h4>
+                                      <span className="text-xs text-[#213f5b]/50">
+                                        {formatTime(chat.last_message.timestamp)}
+                                      </span>
+                                    </div>
+                                    <p className="mt-1 text-xs text-[#213f5b]/70 line-clamp-1">
+                                      {chat.last_message.sender_id === adminInfo?._id ? "Vous: " : ""}
+                                      {truncateText(chat.last_message.content, 40)}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <div className="p-3 border-t border-[#bfddf9]/30 bg-[#bfddf9]/5 flex justify-center mt-auto">
-                        <Link 
-                          href="/admin/messages/new" 
-                          className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1"
-                        >
-                          <PlusCircleIcon className="h-4 w-4" />
-                          Nouvelle conversation
-                        </Link>
-                      </div>
-                    </motion.div>
+                            ))
+                          )}
+                        </div>
+                        <div className="p-3 border-t border-[#bfddf9]/30 bg-[#bfddf9]/5 flex justify-center mt-auto">
+                          <Link 
+                            href="/admin/messages/new" 
+                            className="text-sm text-[#213f5b] hover:text-[#213f5b]/80 flex items-center gap-1"
+                          >
+                            <PlusCircleIcon className="h-4 w-4" />
+                            Nouvelle conversation
+                          </Link>
+                        </div>
+                      </motion.div>
+                    </div>
                   </div>
-                </div>
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
       </main>
     </div>
   </div>

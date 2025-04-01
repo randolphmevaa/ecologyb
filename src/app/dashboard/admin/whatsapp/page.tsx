@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, createContext, useContext  } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/Button";
-// import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 
 import {
   ChatBubbleLeftRightIcon,
@@ -24,6 +23,8 @@ import {
   CheckBadgeIcon,
   FunnelIcon,
   CheckIcon,
+  // CameraIcon,
+  VideoCameraIcon,
 } from "@heroicons/react/24/outline";
 
 // Import modals for WhatsApp account management and template creation
@@ -62,6 +63,7 @@ export interface IConversation {
   tags?: string[];
   status: "active" | "archived" | "pending";
   assignedTo?: string;
+  isTyping?: boolean;
 }
 
 // Contact type
@@ -74,6 +76,8 @@ export interface IContact {
   company?: string;
   isBusinessAccount?: boolean;
   lastActivity?: string;
+  onlineStatus?: "online" | "offline" | "typing";
+  lastSeen?: string;
 }
 
 // WhatsApp account type
@@ -139,7 +143,7 @@ const templateCategories = {
   },
 };
 
-// // WhatsApp color schemes
+// WhatsApp color schemes (uncommented for easier reference)
 // const colors = {
 //   light: {
 //     primary: "#128C7E",     // WhatsApp primary green
@@ -212,8 +216,10 @@ export default function WhatsAppPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [tagFilter, setTagFilter] = useState<string>("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, toggleTheme } = useTheme();
   // const theme = isDarkMode ? colors.dark : colors.light;
 
   // Modal states
@@ -228,6 +234,23 @@ export default function WhatsAppPage() {
     responseRate: 0,
     avgResponseTime: 0
   });
+
+  // Recording timer interval
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingTime(0);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording]);
 
   // Fetch WhatsApp accounts and conversations
   useEffect(() => {
@@ -271,7 +294,6 @@ export default function WhatsAppPage() {
         ];
         
         // Mock fetching conversations
-        // Mock fetching conversations
         const mockConversations: IConversation[] = Array.from({ length: 25 }, (_, i) => {
           const tags = ["lead", "client", "urgent", "follow-up", "support"];
           // Remove unused variable
@@ -290,6 +312,14 @@ export default function WhatsAppPage() {
           // Define valid conversation statuses
           const conversationStatuses: ("active" | "archived" | "pending")[] = ["active", "archived", "pending"];
           
+          // Determine online status randomly
+          const onlineStatuses: ("online" | "offline" | "typing")[] = ["online", "offline"];
+          const randomOnlineStatus = onlineStatuses[Math.floor(Math.random() * onlineStatuses.length)];
+          
+          // Generate a random last seen time within the last 24 hours for offline contacts
+          const lastSeenTime = new Date();
+          lastSeenTime.setHours(lastSeenTime.getHours() - Math.floor(Math.random() * 24));
+          
           return {
             _id: `conv_${i}`,
             contact: {
@@ -298,7 +328,9 @@ export default function WhatsAppPage() {
               phoneNumber: `+336789012${i.toString().padStart(2, '0')}`,
               profilePicture: `https://i.pravatar.cc/150?img=${i + 10}`,
               isBusinessAccount: Math.random() > 0.7,
-              lastActivity: new Date(Date.now() - Math.random() * 10000000000).toISOString()
+              lastActivity: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
+              onlineStatus: randomOnlineStatus,
+              lastSeen: randomOnlineStatus === "offline" ? lastSeenTime.toISOString() : undefined
             },
             lastMessage: {
               _id: `msg_last_${i}`,
@@ -312,7 +344,8 @@ export default function WhatsAppPage() {
             whatsappNumber: account.phoneNumber,
             tags: randomTags,
             // Fix: Use appropriate conversation status instead of message status
-            status: conversationStatuses[Math.floor(Math.random() * conversationStatuses.length)]
+            status: conversationStatuses[Math.floor(Math.random() * conversationStatuses.length)],
+            isTyping: Math.random() > 0.9,  // Some contacts might be typing
           };
         });
         
@@ -384,46 +417,114 @@ export default function WhatsAppPage() {
   }, []);
 
   // Generate mock messages when a conversation is selected
-useEffect(() => {
-  if (selectedConversation) {
-    // In a real implementation, this would be an API call to get messages
-    const mockMessages: IMessage[] = Array.from({ length: 15 }, (_, i) => {
-      const isIncoming = Math.random() > 0.4;
-      const date = new Date();
-      date.setHours(date.getHours() - Math.floor(Math.random() * 24));
-      date.setMinutes(date.getMinutes() - Math.floor(Math.random() * 60));
+  useEffect(() => {
+    if (selectedConversation) {
+      // In a real implementation, this would be an API call to get messages
+      const mockMessages: IMessage[] = Array.from({ length: 15 }, (_, i) => {
+        const isIncoming = Math.random() > 0.4;
+        const date = new Date();
+        date.setHours(date.getHours() - Math.floor(Math.random() * 24));
+        date.setMinutes(date.getMinutes() - Math.floor(Math.random() * 60));
+        
+        // Define a type for message status
+        type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed";
+        const possibleStatuses: MessageStatus[] = ["sent", "delivered", "read"];
+        
+        // More realistic conversation flow
+        return {
+          _id: `msg_${i}`,
+          content: getMessageContent(i, isIncoming),
+          timestamp: date.toISOString(),
+          status: isIncoming ? "read" : possibleStatuses[Math.floor(Math.random() * 3)],
+          sender: isIncoming ? selectedConversation.contact._id : "me",
+          isIncoming: isIncoming,
+          attachments: Math.random() > 0.8 ? getRandomAttachments() : undefined
+        };
+      });
       
-      // Define a type for message status
-      type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed";
-      const possibleStatuses: MessageStatus[] = ["sent", "delivered", "read"];
+      // Sort messages by timestamp
+      mockMessages.sort((a, b) => 
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
       
-      // More realistic conversation flow
-      return {
-        _id: `msg_${i}`,
-        content: getMessageContent(i, isIncoming),
-        timestamp: date.toISOString(),
-        status: isIncoming ? "read" : possibleStatuses[Math.floor(Math.random() * 3)],
-        sender: isIncoming ? selectedConversation.contact._id : "me",
-        isIncoming: isIncoming,
-        attachments: Math.random() > 0.8 ? getRandomAttachments() : undefined
-      };
-    });
+      setMessages(mockMessages);
+      
+      // Mark conversation as read when selected
+      setConversations(prev => 
+        prev.map(c => 
+          c._id === selectedConversation._id ? {...c, unreadCount: 0} : c
+        )
+      );
+      
+      // Simulate typing indicator for the selected conversation
+      if (Math.random() > 0.7) {
+        setTimeout(() => {
+          setConversations(prev => 
+            prev.map(c => 
+              c._id === selectedConversation._id ? {...c, isTyping: true} : c
+            )
+          );
+          
+          // Stop typing after 2-5 seconds
+          setTimeout(() => {
+            setConversations(prev => 
+              prev.map(c => 
+                c._id === selectedConversation._id ? {...c, isTyping: false} : c
+              )
+            );
+            
+            // If it was typing, add a new incoming message
+            if (Math.random() > 0.3) {
+              const newIncomingMessage: IMessage = {
+                _id: `msg_new_incoming_${Date.now()}`,
+                content: getRandomReply(),
+                timestamp: new Date().toISOString(),
+                status: "read",
+                sender: selectedConversation.contact._id,
+                isIncoming: true
+              };
+              
+              setMessages(prev => [...prev, newIncomingMessage]);
+              
+              // Update last message in conversation
+              setConversations(prev => 
+                prev.map(c => 
+                  c._id === selectedConversation._id 
+                    ? {
+                        ...c, 
+                        lastMessage: newIncomingMessage,
+                        isTyping: false,
+                        contact: {
+                          ...c.contact,
+                          onlineStatus: "online"
+                        }
+                      } 
+                    : c
+                )
+              );
+            }
+          }, 2000 + Math.random() * 3000);
+        }, 1000 + Math.random() * 2000);
+      }
+    }
+  }, [selectedConversation]);
+
+  // Random replies to simulate conversation
+  function getRandomReply() {
+    const replies = [
+      "D'accord, je comprends. Merci pour ces précisions.",
+      "Super ! Ça me convient parfaitement.",
+      "Pouvez-vous m'en dire plus sur les délais ?",
+      "J'ai bien reçu votre message, je vais étudier votre proposition.",
+      "Quand pouvons-nous prévoir une réunion pour en discuter ?",
+      "Excellent ! Je vous remercie pour votre aide.",
+      "Je vais vérifier cela et je reviens vers vous rapidement.",
+      "C'est noté, merci beaucoup pour ces informations.",
+      "Parfait, c'est exactement ce que je cherchais."
+    ];
     
-    // Sort messages by timestamp
-    mockMessages.sort((a, b) => 
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-    
-    setMessages(mockMessages);
-    
-    // Mark conversation as read when selected
-    setConversations(prev => 
-      prev.map(c => 
-        c._id === selectedConversation._id ? {...c, unreadCount: 0} : c
-      )
-    );
+    return replies[Math.floor(Math.random() * replies.length)];
   }
-}, [selectedConversation]);
 
   // Auto scroll to bottom of message list when messages change
   useEffect(() => {
@@ -532,7 +633,7 @@ useEffect(() => {
         )
       );
       
-      // Simulate delivered status after 2 seconds
+      // Simulate delivered status after 1 second
       setTimeout(() => {
         setMessages(prev => 
           prev.map(m => 
@@ -551,7 +652,7 @@ useEffect(() => {
           )
         );
         
-        // Simulate read status after 4 seconds
+        // Simulate read status after 2 seconds
         setTimeout(() => {
           setMessages(prev => 
             prev.map(m => 
@@ -569,9 +670,130 @@ useEffect(() => {
                 : c
             )
           );
-        }, 2000);
-      }, 2000);
-    }, 1000);
+          
+          // Simulate contact typing after a message is read (50% chance)
+          if (Math.random() > 0.5) {
+            setTimeout(() => {
+              setConversations(prev => 
+                prev.map(c => 
+                  c._id === selectedConversation._id 
+                    ? {
+                        ...c, 
+                        isTyping: true,
+                        contact: {
+                          ...c.contact,
+                          onlineStatus: "typing"
+                        }
+                      } 
+                    : c
+                )
+              );
+              
+              // Stop typing after 2-4 seconds and send a reply
+              setTimeout(() => {
+                const replyMsg: IMessage = {
+                  _id: `msg_reply_${Date.now()}`,
+                  content: getRandomReply(),
+                  timestamp: new Date().toISOString(),
+                  status: "read",
+                  sender: selectedConversation.contact._id,
+                  isIncoming: true
+                };
+                
+                setMessages(prev => [...prev, replyMsg]);
+                
+                setConversations(prev => 
+                  prev.map(c => 
+                    c._id === selectedConversation._id 
+                      ? {
+                          ...c, 
+                          lastMessage: replyMsg,
+                          isTyping: false,
+                          contact: {
+                            ...c.contact,
+                            onlineStatus: "online"
+                          }
+                        } 
+                      : c
+                  )
+                );
+              }, 2000 + Math.random() * 2000);
+            }, 1000 + Math.random() * 2000);
+          }
+        }, 1000);
+      }, 1000);
+    }, 800);
+  };
+
+  // Handle voice recording
+  const startRecording = () => {
+    setIsRecording(true);
+    // In a real app, would start audio recording here
+  };
+  
+  const stopRecording = () => {
+    if (recordingTime < 1) {
+      // Cancel recording if too short
+      setIsRecording(false);
+      return;
+    }
+    
+    // Simulate sending voice message
+    if (selectedConversation) {
+      const audioMsg: IMessage = {
+        _id: `msg_audio_${Date.now()}`,
+        content: "Audio message",
+        timestamp: new Date().toISOString(),
+        status: "sending",
+        sender: "me",
+        isIncoming: false,
+        attachments: [{
+          type: "audio",
+          url: "#",
+          size: recordingTime * 10000,
+        }]
+      };
+      
+      setMessages(prev => [...prev, audioMsg]);
+      
+      setConversations(prev => 
+        prev.map(c => 
+          c._id === selectedConversation._id 
+            ? {
+                ...c, 
+                lastMessage: audioMsg
+              } 
+            : c
+        )
+      );
+      
+      // Simulate message status changes
+      setTimeout(() => {
+        setMessages(prev => 
+          prev.map(m => 
+            m._id === audioMsg._id ? {...m, status: "sent"} : m
+          )
+        );
+        
+        setTimeout(() => {
+          setMessages(prev => 
+            prev.map(m => 
+              m._id === audioMsg._id ? {...m, status: "delivered"} : m
+            )
+          );
+          
+          setTimeout(() => {
+            setMessages(prev => 
+              prev.map(m => 
+                m._id === audioMsg._id ? {...m, status: "read"} : m
+              )
+            );
+          }, 1000);
+        }, 1000);
+      }, 800);
+    }
+    
+    setIsRecording(false);
   };
 
   // Filter conversations based on search, account, and filter selections
@@ -615,6 +837,28 @@ useEffect(() => {
     }
   };
 
+  // Helper function to format last seen time
+  const formatLastSeen = (dateString?: string) => {
+    if (!dateString) return "";
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutesDiff = Math.floor(diff / (1000 * 60));
+    const hoursDiff = Math.floor(minutesDiff / 60);
+    const dayDiff = Math.floor(hoursDiff / 24);
+    
+    if (minutesDiff < 60) {
+      return `vu il y a ${minutesDiff} min`;
+    } else if (hoursDiff < 24) {
+      return `vu il y a ${hoursDiff} h`;
+    } else if (dayDiff === 1) {
+      return `vu hier à ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } else {
+      return `vu le ${date.toLocaleDateString([], { day: 'numeric', month: 'numeric' })} à ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+  };
+
   // Helper function to get status icon
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -633,15 +877,39 @@ useEffect(() => {
     }
   };
 
+  // Format recording time
+  const formatRecordingTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <ThemeProvider>
       <div className={`flex h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#111B21] to-[#1F2C34]' : 'bg-gradient-to-b from-[#F0F2F5] to-[#E4F2E7]'}`}>
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-            <Header />
+          <Header />
 
           <main className="flex-1 overflow-hidden flex flex-col">
             <div className="max-w-full h-full flex flex-col">
+              {/* Dark Mode Toggle Button */}
+              <div className="absolute top-4 right-4 z-10">
+                <button 
+                  onClick={toggleTheme}
+                  className={`p-2 rounded-full ${isDarkMode ? 'bg-[#2A3942] text-[#E9EDEF]' : 'bg-white text-[#128C7E]'} shadow-lg`}
+                >
+                  {isDarkMode ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              
               {/* Dashboard Header with Stats */}
               <div className={`${isDarkMode ? 'bg-[#1F2C34] border-[#2A3942]' : 'bg-white border-[#E2E8F0]'} border-b px-4 sm:px-6 lg:px-8 py-4`}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-4">
@@ -1005,7 +1273,7 @@ useEffect(() => {
                             onClick={() => setSelectedConversation(conversation)}
                           >
                             <div className="flex items-start gap-3">
-                              {/* Avatar */}
+                              {/* Avatar with Online Status Indicator */}
                               <div className="relative">
                                 <div className={`h-12 w-12 rounded-full flex items-center justify-center overflow-hidden border-2 ${conversation.unreadCount > 0 ? isDarkMode ? 'border-[#00A884]' : 'border-[#25D366]' : 'border-transparent'}`}>
                                   {conversation.contact.profilePicture ? (
@@ -1020,6 +1288,21 @@ useEffect(() => {
                                     </div>
                                   )}
                                 </div>
+                                
+                                {/* Online Status Indicator */}
+                                {conversation.contact.onlineStatus === "online" && (
+                                  <div className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white dark:border-[#1F2C34]"></div>
+                                )}
+                                {conversation.isTyping && (
+                                  <div className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-blue-500 rounded-full border-2 border-white dark:border-[#1F2C34] flex items-center justify-center">
+                                    <div className="typing-indicator">
+                                      <span className="dot"></span>
+                                      <span className="dot"></span>
+                                      <span className="dot"></span>
+                                    </div>
+                                  </div>
+                                )}
+                                
                                 {conversation.contact.isBusinessAccount && (
                                   <div className={`absolute -right-1 -bottom-1 ${isDarkMode ? 'bg-[#00A884]' : 'bg-[#128C7E]'} text-white rounded-full p-1`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1040,7 +1323,7 @@ useEffect(() => {
                                 
                                 <div className="flex items-center gap-1 mt-0.5">
                                   {!conversation.lastMessage.isIncoming && getStatusIcon(conversation.lastMessage.status)}
-                                  <p className={`text-sm ${isDarkMode ? 'text-[#8696A0]' : 'text-[#54656F]'} truncate`}>
+                                  <p className={`text-sm ${conversation.unreadCount > 0 ? (isDarkMode ? 'text-[#E9EDEF] font-medium' : 'text-[#111B21] font-medium') : isDarkMode ? 'text-[#8696A0]' : 'text-[#54656F]'} truncate`}>
                                     {!conversation.lastMessage.isIncoming && "Vous: "}
                                     {conversation.lastMessage.content}
                                   </p>
@@ -1048,6 +1331,15 @@ useEffect(() => {
                                 
                                 <div className="flex items-center justify-between mt-1.5">
                                   <div className="flex gap-1 flex-wrap max-w-[170px]">
+                                    {/* Online Status or Last Seen Text */}
+                                    <span className={`text-[10px] italic ${
+                                      isDarkMode ? 'text-[#8696A0]' : 'text-[#128C7E] opacity-75'
+                                    }`}>
+                                      {conversation.isTyping ? "en train d'écrire..." : 
+                                       conversation.contact.onlineStatus === "online" ? "en ligne" : 
+                                       conversation.contact.lastSeen ? formatLastSeen(conversation.contact.lastSeen) : ""}
+                                    </span>
+                                    
                                     {conversation.tags && conversation.tags.map(tag => (
                                       <span 
                                         key={tag} 
@@ -1090,16 +1382,32 @@ useEffect(() => {
                       {/* Chat Header */}
                       <div className={`p-4 border-b ${isDarkMode ? 'border-[#2A3942] bg-[#1F2C34]' : 'border-[#E2E8F0] bg-white'} flex items-center justify-between`}>
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full overflow-hidden">
-                            {selectedConversation.contact.profilePicture ? (
-                              <img 
-                                src={selectedConversation.contact.profilePicture} 
-                                alt={selectedConversation.contact.name} 
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className={`h-full w-full ${isDarkMode ? 'bg-[#00A884]' : 'bg-[#128C7E]'} flex items-center justify-center text-white font-bold`}>
-                                {selectedConversation.contact.name.charAt(0).toUpperCase()}
+                          <div className="relative h-10 w-10">
+                            <div className="h-10 w-10 rounded-full overflow-hidden">
+                              {selectedConversation.contact.profilePicture ? (
+                                <img 
+                                  src={selectedConversation.contact.profilePicture} 
+                                  alt={selectedConversation.contact.name} 
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className={`h-full w-full ${isDarkMode ? 'bg-[#00A884]' : 'bg-[#128C7E]'} flex items-center justify-center text-white font-bold`}>
+                                  {selectedConversation.contact.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Online Status for Header */}
+                            {selectedConversation.contact.onlineStatus === "online" && (
+                              <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-[#1F2C34]"></div>
+                            )}
+                            {selectedConversation.isTyping && (
+                              <div className="absolute bottom-0 right-0 h-3 w-3 bg-blue-500 rounded-full border-2 border-white dark:border-[#1F2C34] flex items-center justify-center">
+                                <div className="typing-indicator-small">
+                                  <span className="dot-small"></span>
+                                  <span className="dot-small"></span>
+                                  <span className="dot-small"></span>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1113,12 +1421,20 @@ useEffect(() => {
                               )}
                             </div>
                             <p className={`text-xs ${isDarkMode ? 'text-[#8696A0]' : 'text-[#128C7E] opacity-75'}`}>
-                              {selectedConversation.contact.phoneNumber}
+                              {selectedConversation.isTyping ? "en train d'écrire..." : 
+                               selectedConversation.contact.onlineStatus === "online" ? "en ligne" : 
+                               selectedConversation.contact.lastSeen ? formatLastSeen(selectedConversation.contact.lastSeen) : ""}
                             </p>
                           </div>
                         </div>
                         
                         <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            className={`h-8 w-8 rounded-full flex items-center justify-center ${isDarkMode ? 'text-[#E9EDEF] hover:bg-[#2A3942]' : 'text-[#128C7E] hover:bg-[#F0F2F5]'}`}
+                          >
+                            <VideoCameraIcon className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             className={`h-8 w-8 rounded-full flex items-center justify-center ${isDarkMode ? 'text-[#E9EDEF] hover:bg-[#2A3942]' : 'text-[#128C7E] hover:bg-[#F0F2F5]'}`}
@@ -1149,7 +1465,16 @@ useEffect(() => {
                             : 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z\' fill=\'%23128C7E\' fill-opacity=\'0.03\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")'
                         }}
                       >
-                        {messages.map((message) => (
+                        {/* Date Divider */}
+                        <div className="flex justify-center mb-6">
+                          <span className={`px-3 py-1 text-xs rounded-lg ${
+                            isDarkMode ? 'bg-[#1F2C34] text-[#8696A0]' : 'bg-[#E1F3E8] text-[#128C7E]'
+                          }`}>
+                            {new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
+                          </span>
+                        </div>
+                        
+                        {messages.map((message ) => (
                           <div 
                             key={message._id}
                             className={`mb-3 flex ${message.isIncoming ? 'justify-start' : 'justify-end'}`}
@@ -1210,6 +1535,26 @@ useEffect(() => {
                                       </div>
                                     </div>
                                   )}
+                                  
+                                  {attachment.type === 'video' && (
+                                    <div className={`rounded-lg overflow-hidden relative ${isDarkMode ? 'border-[#2A3942]' : 'border border-[#E2E8F0]'}`}>
+                                      <img 
+                                        src={attachment.thumbnail || "https://picsum.photos/id/87/200/300"} 
+                                        alt="video thumbnail" 
+                                        className="w-full object-cover max-h-48"
+                                      />
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                                        <div className={`h-10 w-10 rounded-full ${isDarkMode ? 'bg-[#00A884]' : 'bg-[#25D366]'} flex items-center justify-center`}>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                          </svg>
+                                        </div>
+                                      </div>
+                                      <div className="absolute bottom-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
+                                        0:24
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                               
@@ -1222,6 +1567,20 @@ useEffect(() => {
                             </div>
                           </div>
                         ))}
+                        
+                        {/* Typing Indicator */}
+                        {selectedConversation.isTyping && (
+                          <div className="mb-3 flex justify-start">
+                            <div className={`py-3 px-4 rounded-2xl rounded-tl-none ${isDarkMode ? 'bg-[#2A3942]' : 'bg-white border border-[#E2E8F0]'}`}>
+                              <div className="flex space-x-1">
+                                <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-[#8696A0]' : 'bg-[#128C7E]'} animate-bounce`} style={{ animationDelay: '0ms' }}></div>
+                                <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-[#8696A0]' : 'bg-[#128C7E]'} animate-bounce`} style={{ animationDelay: '150ms' }}></div>
+                                <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-[#8696A0]' : 'bg-[#128C7E]'} animate-bounce`} style={{ animationDelay: '300ms' }}></div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
                         <div ref={messagesEndRef} />
                       </div>
                       
@@ -1296,62 +1655,92 @@ useEffect(() => {
                       
                       {/* Input Area */}
                       <div className={`border-t ${isDarkMode ? 'border-[#2A3942] bg-[#1F2C34]' : 'border-[#E2E8F0] bg-white'} p-3`}>
-                        <div className="flex items-end gap-2">
-                          <div className="flex gap-2">
+                        {isRecording ? (
+                          <div className="flex items-center gap-2">
+                            <div className={`h-10 w-10 rounded-full ${isDarkMode ? 'bg-[#00A884]' : 'bg-[#25D366]'} flex items-center justify-center animated-pulse`}>
+                              <MicrophoneIcon className="h-6 w-6 text-white" />
+                            </div>
+                            
+                            <div className="flex-1">
+                              <div className={`h-2 ${isDarkMode ? 'bg-[#2A3942]' : 'bg-[#E2E8F0]'} rounded-full overflow-hidden`}>
+                                <div 
+                                  className={`h-full ${isDarkMode ? 'bg-[#00A884]' : 'bg-[#25D366]'} rounded-full`} 
+                                  style={{ width: `${Math.min(recordingTime / 60 * 100, 100)}%` }}
+                                ></div>
+                              </div>
+                              <p className={`text-sm mt-1 ${isDarkMode ? 'text-[#E9EDEF]' : 'text-[#128C7E]'}`}>
+                                {formatRecordingTime(recordingTime)}
+                              </p>
+                            </div>
+                            
                             <Button
-                              variant="ghost"
-                              className={`h-9 w-9 rounded-full flex items-center justify-center ${isDarkMode ? 'text-[#8696A0] hover:bg-[#2A3942]' : 'text-[#128C7E] hover:bg-[#F0F2F5]'}`}
-                              onClick={() => setIsTemplateVisible(!isTemplateVisible)}
+                              onClick={() => stopRecording()}
+                              className={`h-10 w-10 rounded-full flex items-center justify-center bg-red-500 text-white`}
                             >
-                              <SquaresPlusIcon className="h-5 w-5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              className={`h-9 w-9 rounded-full flex items-center justify-center ${isDarkMode ? 'text-[#8696A0] hover:bg-[#2A3942]' : 'text-[#128C7E] hover:bg-[#F0F2F5]'}`}
-                            >
-                              <PhotoIcon className="h-5 w-5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              className={`h-9 w-9 rounded-full flex items-center justify-center ${isDarkMode ? 'text-[#8696A0] hover:bg-[#2A3942]' : 'text-[#128C7E] hover:bg-[#F0F2F5]'}`}
-                              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            >
-                              <FaceSmileIcon className="h-5 w-5" />
+                              <XMarkIcon className="h-6 w-6" />
                             </Button>
                           </div>
-                          
-                          <div className="flex-1 relative">
-                            <textarea
-                              value={newMessage}
-                              onChange={(e) => setNewMessage(e.target.value)}
-                              placeholder="Tapez un message..."
-                              className={`w-full rounded-2xl ${
-                                isDarkMode 
-                                  ? 'border-[#2A3942] bg-[#2A3942] text-[#E9EDEF] focus:border-[#00A884] focus:ring-1 focus:ring-[#00A884]' 
-                                  : 'border-[#E2E8F0] bg-[#F0F2F5] text-[#111B21] focus:border-[#25D366] focus:ring-1 focus:ring-[#25D366]'
-                              } min-h-[44px] max-h-[120px] py-2.5 px-4 resize-none text-sm`}
-                              rows={1}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault();
-                                  sendMessage();
-                                }
-                              }}
-                            />
+                        ) : (
+                          <div className="flex items-end gap-2">
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                className={`h-9 w-9 rounded-full flex items-center justify-center ${isDarkMode ? 'text-[#8696A0] hover:bg-[#2A3942]' : 'text-[#128C7E] hover:bg-[#F0F2F5]'}`}
+                                onClick={() => setIsTemplateVisible(!isTemplateVisible)}
+                              >
+                                <SquaresPlusIcon className="h-5 w-5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className={`h-9 w-9 rounded-full flex items-center justify-center ${isDarkMode ? 'text-[#8696A0] hover:bg-[#2A3942]' : 'text-[#128C7E] hover:bg-[#F0F2F5]'}`}
+                              >
+                                <PhotoIcon className="h-5 w-5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className={`h-9 w-9 rounded-full flex items-center justify-center ${isDarkMode ? 'text-[#8696A0] hover:bg-[#2A3942]' : 'text-[#128C7E] hover:bg-[#F0F2F5]'}`}
+                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                              >
+                                <FaceSmileIcon className="h-5 w-5" />
+                              </Button>
+                            </div>
+                            
+                            <div className="flex-1 relative">
+                              <textarea
+                                value={newMessage}
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                placeholder="Tapez un message..."
+                                className={`w-full rounded-2xl ${
+                                  isDarkMode 
+                                    ? 'border-[#2A3942] bg-[#2A3942] text-[#E9EDEF] focus:border-[#00A884] focus:ring-1 focus:ring-[#00A884]' 
+                                    : 'border-[#E2E8F0] bg-[#F0F2F5] text-[#111B21] focus:border-[#25D366] focus:ring-1 focus:ring-[#25D366]'
+                                } min-h-[44px] max-h-[120px] py-2.5 px-4 resize-none text-sm`}
+                                rows={1}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    sendMessage();
+                                  }
+                                }}
+                              />
+                            </div>
+                            
+                            <Button
+                              onClick={newMessage.trim() ? sendMessage : () => startRecording()}
+                              className={`h-9 w-9 rounded-full flex items-center justify-center text-white ${
+                                newMessage.trim() 
+                                  ? 'bg-[#00A884] hover:bg-[#128C7E]' 
+                                  : 'bg-[#00A884] hover:bg-[#128C7E]'
+                              }`}
+                            >
+                              {newMessage.trim() ? (
+                                <PaperAirplaneIcon className="h-5 w-5" />
+                              ) : (
+                                <MicrophoneIcon className="h-5 w-5" />
+                              )}
+                            </Button>
                           </div>
-                          
-                          <Button
-                            onClick={sendMessage}
-                            disabled={!newMessage.trim()}
-                            className={`h-9 w-9 rounded-full flex items-center justify-center text-white ${
-                              newMessage.trim() 
-                                ? 'bg-[#00A884] hover:bg-[#128C7E]' 
-                                : isDarkMode ? 'bg-[#2A3942] cursor-not-allowed' : 'bg-[#E2E8F0] cursor-not-allowed'
-                            }`}
-                          >
-                            <PaperAirplaneIcon className="h-5 w-5" />
-                          </Button>
-                        </div>
+                        )}
                         
                         {/* Emoji Picker (simplified) */}
                         <AnimatePresence>
@@ -1473,3 +1862,75 @@ useEffect(() => {
     </ThemeProvider>
   );
 }
+
+/* CSS for typing indicators */
+// const styles = `
+//   @keyframes bounce {
+//     0%, 100% { transform: translateY(0); }
+//     50% { transform: translateY(-5px); }
+//   }
+  
+//   .animated-pulse {
+//     animation: pulse 1.5s infinite;
+//   }
+  
+//   @keyframes pulse {
+//     0% { opacity: 1; }
+//     50% { opacity: 0.5; }
+//     100% { opacity: 1; }
+//   }
+  
+//   .typing-indicator {
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//     gap: 2px;
+//   }
+  
+//   .typing-indicator-small {
+//     transform: scale(0.6);
+//   }
+  
+//   .dot {
+//     width: 4px;
+//     height: 4px;
+//     background-color: white;
+//     border-radius: 50%;
+//     animation: bounce 1.4s infinite;
+//   }
+  
+//   .dot:nth-child(2) {
+//     animation-delay: 0.2s;
+//   }
+  
+//   .dot:nth-child(3) {
+//     animation-delay: 0.4s;
+//   }
+  
+//   .dot-small {
+//     width: 3px;
+//     height: 3px;
+//     background-color: white;
+//     border-radius: 50%;
+//     animation: bounce 1.4s infinite;
+//   }
+  
+//   .dot-small:nth-child(2) {
+//     animation-delay: 0.2s;
+//   }
+  
+//   .dot-small:nth-child(3) {
+//     animation-delay: 0.4s;
+//   }
+  
+//   /* Hide scrollbar for Chrome, Safari and Opera */
+//   .scrollbar-hide::-webkit-scrollbar {
+//     display: none;
+//   }
+  
+//   /* Hide scrollbar for IE, Edge and Firefox */
+//   .scrollbar-hide {
+//     -ms-overflow-style: none;  /* IE and Edge */
+//     scrollbar-width: none;  /* Firefox */
+//   }
+// `;

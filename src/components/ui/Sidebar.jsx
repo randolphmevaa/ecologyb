@@ -9,10 +9,7 @@ import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { BiPhoneCall } from "react-icons/bi";
 import { motion, AnimatePresence } from "framer-motion";
-// import { FaFacebook } from "react-icons/fa";
-// import { FaWhatsapp } from "react-icons/fa";
-// import { FaGoogleDrive } from "react-icons/fa";
-// import { BiLogoGmail } from "react-icons/bi";
+import { GoTools } from "react-icons/go";
 // import { FaPlus } from "react-icons/fa";
 import { IoIosApps } from "react-icons/io";
 import { BiPhone } from "react-icons/bi";
@@ -159,7 +156,7 @@ export function Sidebar({ role }) {
           // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
           { name: "Prospects", href: "/dashboard/admin/leads", icon: UserCircleIcon},
           { name: "Clients", href: "/dashboard/admin/projects", icon: UserCircleIcon },
-          { name: "Contrôle", href: "/dashboard/admin/controle", icon: SettingsIcon },
+          { name: "Contrôle", href: "/dashboard/admin/controle", icon: GoTools },
           
           // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
