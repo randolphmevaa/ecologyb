@@ -21,8 +21,23 @@ import {
   BellIcon,
   ChevronRightIcon,
   ChevronDownIcon,
-  PrinterIcon
+  PrinterIcon,
+  EllipsisHorizontalIcon,
+  DocumentDuplicateIcon,
+  UserGroupIcon,
+  UserIcon,
+  InformationCircleIcon,
+  ShoppingCartIcon,
+  WrenchScrewdriverIcon,
+  BanknotesIcon,
+  BuildingLibraryIcon,
+  LinkIcon,
+  UsersIcon,
+  FolderPlusIcon,
+  CurrencyDollarIcon,
+  TrashIcon
 } from "@heroicons/react/24/outline";
+import PDFGenerator from "./PDFGenerator";
 
 interface DevisFactureTabProps {
   contactId: string;
@@ -48,6 +63,209 @@ interface Document {
   signatureDate?: string;
   fileUrl: string;
 }
+
+// Product and Service types
+interface Product {
+  id: string;
+  reference: string;
+  position: number;
+  name: string;
+  quantity: number;
+  unitPriceHT: number;
+  unitPriceTTC: number;
+  tva: number;
+  totalHT: number;
+  totalTTC: number;
+  description?: string;
+  subcontractor?: string;
+}
+
+interface Service {
+  id: string;
+  reference: string;
+  position: number;
+  name: string;
+  quantity: number;
+  unitPriceHT: number;
+  unitPriceTTC: number;
+  tva: number;
+  totalHT: number;
+  totalTTC: number;
+  description?: string;
+}
+
+interface Operation {
+  id: string;
+  reference: string;
+  position: number;
+  name: string;
+  productId?: string;
+  subcontractor?: string;
+  quantity: number;
+  unitPriceHT: number;
+  unitPriceTTC: number;
+  tva: number;
+  totalHT: number;
+  totalTTC: number;
+  dpeBeforeWork?: string;
+  dpeAfterWork?: string;
+  livingArea?: number;
+  heatedArea?: number;
+  oldBoilerType?: string;
+  oldBoilerBrand?: string;
+  oldBoilerModel?: string;
+  hasReceiveDimensionPaper?: boolean;
+  housingType?: string;
+  pumpUsage?: string;
+  regulatorBrand?: string;
+  regulatorReference?: string;
+  coupDePouceOperation?: boolean;
+}
+
+// TypeScript interfaces for component props
+interface AddProductModalProps {
+  onClose: () => void;
+  onSave: (product: Partial<Product>) => void;
+}
+
+interface AddServiceModalProps {
+  onClose: () => void;
+  onSave: (service: Partial<Service>) => void;
+}
+
+// Extended interfaces for state management
+interface ProductState {
+  reference: string;
+  position: number;
+  name: string;
+  quantity: number;
+  unitPriceHT: number;
+  unitPriceTTC: number;
+  tva: number;
+  totalHT: number;
+  totalTTC: number;
+  description: string;
+  showDescription: boolean;
+  subcontractor: string;
+  brand?: string;
+  serviceData?: {
+    reference: string;
+    description: string;
+    price: number;
+    tva: number;
+  };
+}
+
+interface ServiceState {
+  reference: string;
+  position: number;
+  name: string;
+  quantity: number;
+  unitPriceHT: number;
+  unitPriceTTC: number;
+  tva: number;
+  totalHT: number;
+  totalTTC: number;
+  description: string;
+  showDescription: boolean;
+}
+
+// Define the Service interface if it's not already defined
+interface Service {
+  id: string;
+  reference: string;
+  position: number;
+  name: string;
+  quantity: number;
+  unitPriceHT: number;
+  unitPriceTTC: number;
+  tva: number;
+  totalHT: number;
+  totalTTC: number;
+  description?: string;
+}
+
+// Define the ServiceState interface
+interface ServiceState {
+  reference: string;
+  position: number;
+  name: string;
+  quantity: number;
+  unitPriceHT: number;
+  unitPriceTTC: number;
+  tva: number;
+  totalHT: number;
+  totalTTC: number;
+  description: string;
+  showDescription: boolean;
+}
+
+// Define the props interface for the component
+interface AddServiceModalProps {
+  onClose: () => void;
+  onSave: (service: Partial<Service>) => void;
+}
+
+// Define sample services data - this should be imported or passed as props in a real app
+const serviceOptions: {
+  id: string;
+  name: string;
+  reference: string;
+  price: number;
+  tva: number;
+  description: string;
+}[] = [
+  { 
+    id: 'S1', 
+    name: 'Installation PAC', 
+    reference: 'FORFAIT POSE PAC', 
+    price: 2500, 
+    tva: 10, 
+    description: '- Pose et installation complète d\'une pompe à chaleur air/eau\n- Forfait déplacement et mise en service comprise\n- Installation d\'un ballon tampon 25L: Bouteilles de mélange et de décantation, pour installations de chauffage corps acier, jaquette skaï, Isolation 35 mm réversibles droite ou gauche de la chaudière pose murale livrée avec 4 bouchons pour circuits inutilisés\n- Raccordement aux réseaux hydrauliques et électriques\n- Mise en service et réglages optimaux du système'
+  },
+  { 
+    id: 'S2', 
+    name: 'Mise en service', 
+    reference: 'MES-PAC', 
+    price: 500, 
+    tva: 10, 
+    description: '- Mise en service du système avec tests et réglages optimaux\n- Vérification de la pression et des températures\n- Paramétrage de la régulation selon les besoins du client\n- Formation à l\'utilisation et aux réglages\n- Démonstration des fonctions principales et des programmes\n- Remise du carnet d\'utilisation et d\'entretien'
+  },
+  { 
+    id: 'S3', 
+    name: 'Dépose ancienne chaudière', 
+    reference: 'DEP-CHAUD', 
+    price: 800, 
+    tva: 10, 
+    description: '- Retrait et évacuation de l\'ancienne chaudière selon normes environnementales\n- Débranchement de tous les raccords (électriques, hydrauliques, évacuation)\n- Vidange du circuit de chauffage\n- Nettoyage de l\'emplacement de l\'ancienne chaudière\n- Transport et traitement des déchets dans un centre agréé\n- Certificat de recyclage remis au client'
+  },
+  { 
+    id: 'S4', 
+    name: 'Pose Chauffe-Eau Thermodynamique', 
+    reference: 'FORFAIT POSE CHAUFFE-EAU THERMODYNAMIQUE', 
+    price: 850, 
+    tva: 10, 
+    description: '- Pose et installation complète d\'un chauffe-eau thermodynamique\n- Forfait déplacement et mise en service comprise\n- Raccordement aux réseaux hydrauliques et électriques\n- Évacuation de l\'ancien équipement selon les normes en vigueur\n- Test et mise en service\n- Formation à l\'utilisation et explication des différents modes\n- Vérification du bon fonctionnement et réglages optimaux'
+  },
+  { 
+    id: 'S5', 
+    name: 'Adaptation Électrique', 
+    reference: 'ADAPT-ELEC', 
+    price: 350, 
+    tva: 10, 
+    description: '- Adaptation du tableau électrique pour nouvel équipement\n- Pose et raccordement d\'un disjoncteur différentiel dédié 30mA\n- Tirage d\'une ligne électrique adaptée à la puissance de l\'équipement\n- Mise à la terre conforme aux normes NF C 15-100\n- Test de sécurité électrique\n- Vérification des connexions et de la résistance des circuits'
+  },
+  { 
+    id: 'S6', 
+    name: 'Adaptation Réseau Hydraulique', 
+    reference: 'ADAPT-HYDR', 
+    price: 650, 
+    tva: 10, 
+    description: '- Modification du réseau hydraulique pour installation optimale\n- Pose de vannes d\'isolement et de purge\n- Installation d\'un groupe de sécurité\n- Raccordement à l\'évacuation des condensats\n- Pose de flexibles anti-vibrations\n- Test d\'étanchéité du circuit\n- Équilibrage du réseau et réglage des débits'
+  }
+];
+
+type TableItem = Product | Service | Operation;
 
 // Document status badge component
 const DocumentStatusBadge: React.FC<{ status: DocumentStatus }> = ({ status }) => {
@@ -164,6 +382,2031 @@ const SignatureStatusBadge: React.FC<{ status: SignatureStatus }> = ({ status })
       {icon}
       {label}
     </span>
+  );
+};
+
+// Deal Selection Modal
+const DealSelectionModal: React.FC<{
+  onClose: () => void;
+  onSelect: (dealId: string) => void;
+}> = ({ onClose, onSelect }) => {
+  // Sample deals for the demo
+  const deals = [
+    { id: 'EFFY', name: 'EFFY', ratio: 0.0065 },
+    { id: 'ENGIE', name: 'ENGIE', ratio: 0.0058 },
+    { id: 'TOTAL', name: 'TOTAL', ratio: 0.0060 }
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="bg-white rounded-xl w-full max-w-md m-4 overflow-hidden shadow-2xl"
+      >
+        {/* Modal header */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <LinkIcon className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                Sélectionner un deal
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Modal body */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-3 mb-6">
+            {deals.map(deal => (
+              <button
+                key={deal.id}
+                onClick={() => onSelect(deal.id)}
+                className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+              >
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <LinkIcon className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="flex-grow">
+                  <h3 className="font-medium text-gray-900">{deal.name}</h3>
+                  <p className="text-sm text-gray-500">Ratio: {deal.ratio}€/kWh cumac</p>
+                </div>
+                <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+              </button>
+            ))}
+          </div>
+          
+          <div className="flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// First, let's modify the ActionMenu component to add the Deal selection functionality
+const ActionMenu: React.FC<{ 
+  onAction: (action: string) => void,
+  onShowDealModal: () => void
+}> = ({ onAction, onShowDealModal }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const actions = [
+    { id: "addSubcontractor", label: "Ajouter un sous-traitant", icon: <UserGroupIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "addAgent", label: "Ajouter un mandataire", icon: <UserIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "addInfo", label: "Ajouter une information", icon: <InformationCircleIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "addProduct", label: "Ajouter un produit", icon: <ShoppingCartIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "addService", label: "Ajouter une prestation", icon: <WrenchScrewdriverIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "addFunding", label: "Ajouter un financement", icon: <BanknotesIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "addMairie", label: "Ajouter une DP Mairie", icon: <BuildingLibraryIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "assignToDeal", label: "Affecter à un deal", icon: <LinkIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "addDivision", label: "Ajouter une indivision", icon: <UsersIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "addDocument", label: "Ajouter un document au devis", icon: <FolderPlusIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "modifyPrime", label: "Modifier une prime", icon: <CurrencyDollarIcon className="h-5 w-5 text-gray-500" /> },
+    { id: "deleteQuote", label: "Supprimer le devis", icon: <TrashIcon className="h-5 w-5 text-red-500" /> }
+  ];
+
+  const handleActionClick = (actionId: string) => {
+    if (actionId === "assignToDeal") {
+      setIsOpen(false);
+      onShowDealModal();
+    } else {
+      onAction(actionId);
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+      >
+        <span>Actions</span>
+        <EllipsisHorizontalIcon className="h-5 w-5" />
+      </button>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg overflow-hidden z-50 border border-gray-200"
+            >
+              <div className="py-1">
+                {actions.map((action) => (
+                  <button
+                    key={action.id}
+                    onClick={() => handleActionClick(action.id)}
+                    className={`w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors ${
+                      action.id === "deleteQuote" 
+                        ? "text-red-600 hover:bg-red-50" 
+                        : "text-gray-700 hover:bg-blue-50"
+                    }`}
+                  >
+                    {action.icon}
+                    <span>{action.label}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Enhanced subcontractor data
+const subcontractors = [
+  { 
+    id: 'SC1', 
+    name: 'EcoChauffage SARL',
+    address: '15 RUE DES ARTISANS 75011 PARIS',
+    director: 'MARTIN DUBOIS',
+    siret: '78945612300014',
+    insurance: 'D78945X',
+    qualifications: ['RGE QualiPac: QPAC/12345 (Valide du 15/02/2023 au 15/02/2024)', 'RGE QualiSol: QS/12345 (Valide du 10/03/2023 au 10/03/2024)']
+  },
+  { 
+    id: 'SC2', 
+    name: 'ThermiPro',
+    address: '8 AVENUE DU GÉNÉRAL LECLERC 92100 BOULOGNE-BILLANCOURT',
+    director: 'SOPHIE LAURENT',
+    siret: '65478932100025',
+    insurance: 'T65478Y',
+    qualifications: ['RGE QualiPac: QPAC/78945 (Valide du 05/01/2023 au 05/01/2024)', 'RGE QualiPV: QPV/78945 (Valide du 20/06/2023 au 20/06/2024)'] 
+  },
+  { 
+    id: 'SC3', 
+    name: 'EnergySolution',
+    address: '25 RUE DE LA RÉPUBLIQUE 69001 LYON',
+    director: 'PIERRE DUPONT',
+    siret: '12345678900036',
+    insurance: 'E12345Z',
+    qualifications: ['RGE QualiPac: QPAC/45678 (Valide du 12/04/2023 au 12/04/2024)', 'RGE QualiBois: QB/45678 (Valide du 03/05/2023 au 03/05/2024)', 'RGE QualiSol: QS/45678 (Valide du 15/07/2023 au 15/07/2024)'] 
+  },
+  { 
+    id: 'SC4', 
+    name: 'SASHAYNO',
+    address: '2 RUE DU NOUVEAU BERCY 94220 CHARENTON LE PONT',
+    director: 'DAHAN BARUK',
+    siret: '82255743500051',
+    insurance: 'SA82255Z',
+    qualifications: ['RGE QualiSol: QS/65582 (Valide du 07/01/2023 au 07/01/2024)', 'RGE QualiPac: QPAC/65582 (Valide du 07/01/2023 au 07/01/2024)'] 
+  }
+];
+
+// Enhanced product data
+const products = [
+  { 
+    id: 'P1', 
+    name: 'Daikin 14KW MONO Altherma 3 HMT - BI BLOC', 
+    brand: 'Daikin',
+    reference: 'ALTHERMA-3-HMT-14KW',
+    price: 8500, 
+    tva: 5.5, 
+    kwhCumac: 615400,
+    description: 'Marque : **DAIKIN**\nRéférence : **ALTHERMA 3 HMT-14KW**\n- Puissance calorifique: +7 °C / +35 °C: 14 KW\n- COP +7 °C / +55 °C: 2.60\n- Gaz frigorigène: R410A\n- Classe énergétique (chauffage +55°C): A++\n- RENDEMENT ENERGETIQUE Eta wh: 127%\n- Température de fonctionnement C°: -25 à 35\n- Pression acoustique intérieure (dB): 42\n- Pression acoustique extérieure (dB): 49\n- Dimensions unité intérieure (HxLxP): 840x440x390 mm\n- Dimensions unité extérieure (HxLxP): 1440x1160x380 mm\n- Poids unité intérieure: 38 kg\n- Poids unité extérieure: 102 kg',
+    serviceDescription: '- Pose et installation complète d\'une pompe à chaleur air/eau\n- Forfait déplacement et mise en service comprise\n- Installation d\'un ballon tampon 25L: Bouteilles de mélange et de décantation, pour installations de chauffage corps acier, jaquette skaï, Isolation 35 mm réversibles droite ou gauche de la chaudière pose murale livrée avec 4 bouchons pour circuits inutilisés',
+    serviceReference: 'FORFAIT POSE PAC',
+    servicePrice: 2750,
+    serviceTva: 10
+  },
+  { 
+    id: 'P2', 
+    name: 'Mitsubishi Ecodan Hydrobox 11kW', 
+    brand: 'Mitsubishi',
+    reference: 'ECODAN-HB-11KW',
+    price: 7200, 
+    tva: 5.5, 
+    kwhCumac: 555320,
+    description: 'Marque : **MITSUBISHI**\nRéférence : **ECODAN HYDROBOX 11KW**\n- Puissance calorifique: +7 °C / +35 °C: 11 KW\n- COP +7 °C / +35 °C: 4.52\n- Gaz frigorigène: R32\n- Classe énergétique (chauffage +35°C): A+++\n- RENDEMENT ENERGETIQUE Eta wh: 132%\n- Température de fonctionnement C°: -20 à 40\n- Pression acoustique intérieure (dB): 38\n- Pression acoustique extérieure (dB): 45\n- Dimensions unité intérieure (HxLxP): 800x530x360 mm\n- Dimensions unité extérieure (HxLxP): 1020x1050x330 mm\n- Poids unité intérieure: 42 kg\n- Poids unité extérieure: 94 kg',
+    serviceDescription: '- Pose et installation complète d\'une pompe à chaleur air/eau\n- Forfait déplacement et mise en service comprise\n- Installation d\'un ballon tampon 25L: Bouteilles de mélange et de décantation, pour installations de chauffage corps acier, jaquette skaï, Isolation 35 mm',
+    serviceReference: 'FORFAIT POSE PAC',
+    servicePrice: 2500,
+    serviceTva: 10
+  },
+  { 
+    id: 'P3', 
+    name: 'Atlantic Alfea Excellia 16kW', 
+    brand: 'Atlantic',
+    reference: 'ALFEA-EXC-16KW',
+    price: 9300, 
+    tva: 5.5, 
+    kwhCumac: 628730,
+    description: 'Marque : **ATLANTIC**\nRéférence : **ALFEA EXCELLIA 16KW**\n- Puissance calorifique: +7 °C / +35 °C: 16 KW\n- COP +7 °C / +35 °C: 4.55\n- Gaz frigorigène: R410A\n- Classe énergétique (chauffage +35°C): A+++\n- RENDEMENT ENERGETIQUE Eta wh: 135%\n- Température de fonctionnement C°: -20 à 35\n- Pression acoustique intérieure (dB): 39\n- Pression acoustique extérieure (dB): 48\n- Dimensions unité intérieure (HxLxP): 847x448x482 mm\n- Dimensions unité extérieure (HxLxP): 1428x1080x480 mm\n- Poids unité intérieure: 53 kg\n- Poids unité extérieure: 128 kg',
+    serviceDescription: '- Pose et installation complète d\'une pompe à chaleur air/eau\n- Forfait déplacement et mise en service comprise\n- Installation d\'un ballon tampon 25L: Bouteilles de mélange et de décantation, pour installations de chauffage corps acier, jaquette skaï, Isolation 35 mm réversibles droite ou gauche de la chaudière pose murale livrée avec 4 bouchons pour circuits inutilisés',
+    serviceReference: 'FORFAIT POSE PAC',
+    servicePrice: 2800,
+    serviceTva: 10
+  },
+  { 
+    id: 'P4', 
+    name: 'THERMOR Aeromax 5 - 200L', 
+    brand: 'THERMOR',
+    reference: 'AEROMAX-5-200L',
+    price: 3200, 
+    tva: 5.5, 
+    kwhCumac: 164800,
+    description: 'Marque : **THERMOR**\nRéférence : **AEROMAX 5 - 200L**\n- Capacité : 200L\n- Profil de soutirage : L\n- COP à 7°C : 3,38 (Selon la norme EN 16147)\n- RENDEMENT ENERGETIQUE Eta wh : 133%\n- Puissance de la résistance (W) : 2450\n- Température de fonctionnement C° : -5 à 43\n- Pression acoustique (dB) : 50\n- Hauteur : 1693 mm\n- Poids à vide : 82 kg',
+    serviceDescription: '- Pose et installation complète d\'un chauffe-eau thermodynamique\n- Forfait déplacement et mise en service comprise\n- Raccordement aux réseaux hydrauliques et électriques\n- Évacuation de l\'ancien équipement selon les normes en vigueur',
+    serviceReference: 'FORFAIT POSE CHAUFFE-EAU THERMODYNAMIQUE',
+    servicePrice: 850,
+    serviceTva: 10
+  },
+  { 
+    id: 'P5', 
+    name: 'ATLANTIC Calypso VM 200L', 
+    brand: 'ATLANTIC',
+    reference: 'CALYPSO-VM-200L',
+    price: 3450, 
+    tva: 5.5, 
+    kwhCumac: 172500,
+    description: 'Marque : **ATLANTIC**\nRéférence : **CALYPSO VM 200L**\n- Capacité : 200L\n- Profil de soutirage : L\n- COP à 7°C : 3,35 (Selon la norme EN 16147)\n- RENDEMENT ENERGETIQUE Eta wh : 135%\n- Puissance de la résistance (W) : 2400\n- Température de fonctionnement C° : -5 à 43\n- Pression acoustique (dB) : 46\n- Hauteur : 1617 mm\n- Diamètre : 620 mm\n- Poids à vide : 80 kg',
+    serviceDescription: '- Pose et installation complète d\'un chauffe-eau thermodynamique\n- Forfait déplacement et mise en service comprise\n- Raccordement aux réseaux hydrauliques et électriques\n- Évacuation de l\'ancien équipement selon les normes en vigueur',
+    serviceReference: 'FORFAIT POSE CHAUFFE-EAU THERMODYNAMIQUE',
+    servicePrice: 850,
+    serviceTva: 10
+  }
+];
+
+const AddOperationModal: React.FC<{
+  onClose: () => void;
+  onSave: (operation: Partial<Operation>) => void;
+  hasDeal: boolean;
+  dealId?: string;
+}> = ({ onClose, onSave, hasDeal }) => {
+  const [step, setStep] = useState<'selectOperation' | 'fillDetails'>('selectOperation');
+  const [selectedOperation, setSelectedOperation] = useState<string>('');
+  const [selectedSubcontractor, setSelectedSubcontractor] = useState<string>('');
+  const [operation, setOperation] = useState<Partial<Operation>>({
+    reference: '',
+    name: '',
+    quantity: 1,
+    unitPriceHT: 0,
+    unitPriceTTC: 0,
+    tva: 5.5,
+    totalHT: 0,
+    totalTTC: 0
+  });
+
+  // Sample operation codes with their specific data
+  const operationCodes = [
+    { id: 'BAR-TH-101', name: 'BAR-TH-101', kwh: 510530, price: 6800 },
+    { id: 'BAR-TH-104', name: 'BAR-TH-104', kwh: 628730, price: 8200 },
+    { id: 'BAR-TH-112-Granulés', name: 'BAR-TH-112-Granulés', kwh: 950440, price: 12000 },
+    { id: 'BAR-TH-171', name: 'BAR-TH-171', kwh: 615400, price: 9500 }
+  ];
+
+  // Boiler types
+  const boilerTypes = ["Charbon", "Fioul", "Gaz", "Bois", "Électrique", "Autre"];
+  
+  // Housing types
+  const housingTypes = ["Maison", "Appartement"];
+  
+  // Pump usage types
+  const pumpUsages = ["Chauffage", "Chauffage et eau sanitaire"];
+
+  // Handle operation selection with price prefill
+  const handleSelectOperation = (opCode: string) => {
+    setSelectedOperation(opCode);
+    
+    const selectedOp = operationCodes.find(op => op.id === opCode);
+    if (selectedOp) {
+      setOperation({
+        ...operation,
+        reference: selectedOp.id,
+        name: selectedOp.name,
+        unitPriceTTC: selectedOp.price
+      });
+    }
+    
+    setStep('fillDetails');
+  };
+
+  // Handle product selection with price update
+  const handleProductSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    if (!selectedId) return;
+    
+    const selectedProduct = products.find(p => p.id === selectedId);
+    if (selectedProduct) {
+      setOperation({
+        ...operation,
+        productId: selectedId,
+        unitPriceTTC: selectedProduct.price
+      });
+    }
+  };
+
+  // Handle subcontractor selection
+  const handleSubcontractorSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedSubcontractor(e.target.value);
+    setOperation({
+      ...operation,
+      subcontractor: e.target.value
+    });
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const newValue = type === 'checkbox' 
+      ? (e.target as HTMLInputElement).checked 
+      : type === 'number' 
+        ? parseFloat(value) 
+        : value;
+    
+    setOperation({ ...operation, [name]: newValue });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!operation.livingArea) {
+      alert('La surface habitable est obligatoire');
+      return;
+    }
+    
+    onSave({
+      ...operation,
+      subcontractor: selectedSubcontractor
+    });
+    onClose();
+  };
+
+  if (!hasDeal && step === 'selectOperation') {
+    // If there's no deal, show an error message
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ type: "spring", damping: 25 }}
+          className="bg-white rounded-xl w-full max-w-md m-4 overflow-hidden shadow-2xl"
+        >
+          <div className="relative bg-gradient-to-r from-amber-600 to-amber-400 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <LinkIcon className="h-6 w-6 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-white">
+                  Aucun deal affecté
+                </h2>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="p-6">
+            <p className="text-gray-700 mb-6">
+              Vous devez d&apos;abord affecter un deal à ce devis avant de pouvoir ajouter une opération.
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg transition hover:bg-blue-700"
+              >
+                Compris
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="bg-white rounded-xl w-full max-w-4xl m-4 overflow-hidden shadow-2xl"
+      >
+        {/* Modal header */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <LinkIcon className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                {step === 'selectOperation' ? 'Sélectionner une opération' : 'Détails de l\'opération'}
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Modal body */}
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
+          {step === 'selectOperation' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {operationCodes.map((op) => (
+                <div 
+                  key={op.id}
+                  onClick={() => handleSelectOperation(op.id)}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors"
+                >
+                  <h3 className="text-lg font-medium text-blue-600">{op.name}</h3>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Cliquez pour sélectionner cette opération
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {selectedOperation}
+                  </h3>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
+                    Produit
+                  </label>
+                  <select
+                    id="product"
+                    name="productId"
+                    onChange={handleProductSelect}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    <option value="">-- Sélectionnez un produit --</option>
+                    {products.map(product => (
+                      <option key={product.id} value={product.id}>{product.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="subcontractor" className="block text-sm font-medium text-gray-700 mb-1">
+                    Sélectionnez un sous-traitant
+                  </label>
+                  <select
+                    id="subcontractor"
+                    name="subcontractor"
+                    onChange={handleSubcontractorSelect}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    <option value="">-- Sélectionnez un sous-traitant --</option>
+                    {subcontractors.map(sc => (
+                      <option key={sc.id} value={sc.id}>{sc.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <div className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    id="showDescription" 
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                  <label htmlFor="showDescription" className="ml-2 text-sm text-gray-700">
+                    Afficher la description du produit
+                  </label>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label htmlFor="coupDePouceOperation" className="block text-sm font-medium text-gray-700 mb-1">
+                    Opération coup de pouce
+                  </label>
+                  <div className="flex space-x-4">
+                    <div className="flex items-center">
+                      <input 
+                        type="radio" 
+                        id="coupDePouceYes" 
+                        name="coupDePouceOperation" 
+                        value="true"
+                        onChange={() => setOperation({...operation, coupDePouceOperation: true})}
+                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />
+                      <label htmlFor="coupDePouceYes" className="ml-2 text-sm text-gray-700">Oui</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input 
+                        type="radio" 
+                        id="coupDePouceNo" 
+                        name="coupDePouceOperation" 
+                        value="false"
+                        onChange={() => setOperation({...operation, coupDePouceOperation: false})}
+                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />
+                      <label htmlFor="coupDePouceNo" className="ml-2 text-sm text-gray-700">Non</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+                    Prix du produit TTC
+                  </label>
+                  <input
+                    type="number"
+                    id="price"
+                    name="unitPriceTTC"
+                    value={operation.unitPriceTTC}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label htmlFor="livingArea" className="block text-sm font-medium text-gray-700 mb-1">
+                    Surface habitable*
+                  </label>
+                  <input
+                    type="number"
+                    id="livingArea"
+                    name="livingArea"
+                    onChange={handleChange}
+                    required
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="heatedArea" className="block text-sm font-medium text-gray-700 mb-1">
+                    Surface chauffée*
+                  </label>
+                  <input
+                    type="number"
+                    id="heatedArea"
+                    name="heatedArea"
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                  <label htmlFor="oldBoilerType" className="block text-sm font-medium text-gray-700 mb-1">
+                    Type énergie de la chaudière à remplacer*
+                  </label>
+                  <select
+                    id="oldBoilerType"
+                    name="oldBoilerType"
+                    onChange={handleChange}
+                    required
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    <option value="">-- Sélectionnez --</option>
+                    {boilerTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="oldBoilerBrand" className="block text-sm font-medium text-gray-700 mb-1">
+                    Marque chaudière à remplacer
+                  </label>
+                  <input
+                    type="text"
+                    id="oldBoilerBrand"
+                    name="oldBoilerBrand"
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="oldBoilerModel" className="block text-sm font-medium text-gray-700 mb-1">
+                    Modèle chaudière à remplacer
+                  </label>
+                  <input
+                    type="text"
+                    id="oldBoilerModel"
+                    name="oldBoilerModel"
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    id="dimensionPaper" 
+                    name="hasReceiveDimensionPaper"
+                    onChange={(e) => setOperation({...operation, hasReceiveDimensionPaper: e.target.checked})}
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                  <label htmlFor="dimensionPaper" className="ml-2 text-sm text-gray-700">
+                    Une note de dimensionnement a été remise au bénéficiaire
+                  </label>
+                </div>
+                
+                <div>
+                  <label htmlFor="housingType" className="block text-sm font-medium text-gray-700 mb-1">
+                    Type de logement
+                  </label>
+                  <select
+                    id="housingType"
+                    name="housingType"
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    <option value="">-- Sélectionnez --</option>
+                    {housingTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                  <label htmlFor="pumpUsage" className="block text-sm font-medium text-gray-700 mb-1">
+                    Usage couvert par la PAC
+                  </label>
+                  <select
+                    id="pumpUsage"
+                    name="pumpUsage"
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    <option value="">-- Sélectionnez --</option>
+                    {pumpUsages.map(usage => (
+                      <option key={usage} value={usage}>{usage}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="regulatorBrand" className="block text-sm font-medium text-gray-700 mb-1">
+                    Marque du régulateur
+                  </label>
+                  <input
+                    type="text"
+                    id="regulatorBrand"
+                    name="regulatorBrand"
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="regulatorReference" className="block text-sm font-medium text-gray-700 mb-1">
+                    Référence du régulateur
+                  </label>
+                  <input
+                    type="text"
+                    id="regulatorReference"
+                    name="regulatorReference"
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Fixed AddProductModal component
+const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSave }) => {
+  const [product, setProduct] = useState<ProductState>({
+    reference: '',
+    position: 1,
+    name: '',
+    quantity: 1,
+    unitPriceHT: 0,
+    unitPriceTTC: 0,
+    tva: 20,
+    totalHT: 0,
+    totalTTC: 0,
+    description: '',
+    showDescription: true,
+    subcontractor: ''
+  });
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const newValue = type === 'checkbox' 
+      ? (e.target as HTMLInputElement).checked 
+      : type === 'number' 
+        ? parseFloat(value) 
+        : value;
+    
+    setProduct({ ...product, [name]: newValue });
+  };
+
+  const handleSelectProduct = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    if (!selectedId) return;
+    
+    const selectedProduct = products.find(p => p.id === selectedId);
+    if (selectedProduct) {
+      // Filter out the Marque and Référence lines from the description
+      const filteredDescription = selectedProduct.description
+        .split('\n')
+        .filter(line => !line.startsWith('Marque :') && !line.startsWith('Référence :'))
+        .join('\n');
+
+      setProduct({
+        ...product,
+        reference: selectedProduct.reference,
+        name: selectedProduct.name,
+        unitPriceTTC: selectedProduct.price,
+        tva: selectedProduct.tva,
+        description: filteredDescription,
+        showDescription: true,
+        brand: selectedProduct.brand,
+        serviceData: {
+          reference: selectedProduct.serviceReference,
+          description: selectedProduct.serviceDescription,
+          price: selectedProduct.servicePrice,
+          tva: selectedProduct.serviceTva
+        }
+      });
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Calculate HT from TTC
+    const ht = (product.unitPriceTTC || 0) / (1 + (product.tva || 0) / 100);
+    
+    // Keep only the technical specifications in the description
+    const descriptionLines = (product.description || '').split('\n');
+    
+    // Format with only the description details without special handling for brand and reference
+    const formattedDescription = descriptionLines.map(line => {
+      // Add bold to any key value pairs with colons
+      return line.replace(/(.+)\s*:\s*(.+)/g, '$1: <span style="font-weight: bold">$2</span>');
+    }).join('<br/>');
+    
+    // Get subcontractor info for formatted display
+    let subcontractorInfo = '';
+    if (product.subcontractor) {
+      const sc = subcontractors.find(s => s.id === product.subcontractor);
+      if (sc) {
+        subcontractorInfo = `<br/><br/><span style="font-weight: bold">Travaux sous-traités auprès de : ${sc.name} ${sc.address}</span><br/>Dirigeant : <span style="font-weight: bold">${sc.director}</span><br/>SIRET : <span style="font-weight: bold">${sc.siret}</span><br/>- ${sc.qualifications.join(' - ')}`;
+      }
+    }
+    
+    // Create formatted product name with full details but excluding brand and reference lines
+    const richProductName = `<span style="font-weight: bold">${product.name}</span><br/>${formattedDescription}${subcontractorInfo}`;
+    
+    // Create the product with rich formatting
+    const newProduct: Partial<Product> = {
+      id: `prod-${Date.now()}`,
+      reference: product.reference,
+      position: product.position,
+      name: richProductName,
+      quantity: product.quantity,
+      unitPriceHT: parseFloat(ht.toFixed(2)),
+      unitPriceTTC: product.unitPriceTTC,
+      tva: product.tva,
+      totalHT: parseFloat((ht * product.quantity).toFixed(2)),
+      totalTTC: parseFloat((product.unitPriceTTC * product.quantity).toFixed(2)),
+      subcontractor: product.subcontractor
+    };
+    
+    // Create a wrapper function to handle all product and service additions
+    const addAllItems = () => {
+      // First add the product
+      onSave(newProduct);
+      
+      // If we have service data, also create and add the service
+      if (product.serviceData) {
+        const serviceHT = (product.serviceData.price || 0) / (1 + (product.serviceData.tva || 0) / 100);
+        
+        // Format service description with bold title
+        const formattedServiceDesc = `<span style="font-weight: bold">${product.serviceData.reference}</span><br/>${product.serviceData.description.split('\n').join('<br/>')}`;
+        
+        const service: Partial<Service> = {
+          id: `serv-${Date.now()}`,
+          reference: product.serviceData.reference,
+          position: product.position + 1,
+          name: formattedServiceDesc,
+          quantity: product.quantity, // Same quantity as the product
+          unitPriceHT: parseFloat(serviceHT.toFixed(2)),
+          unitPriceTTC: product.serviceData.price,
+          tva: product.serviceData.tva,
+          totalHT: parseFloat((serviceHT * product.quantity).toFixed(2)),
+          totalTTC: parseFloat((product.serviceData.price * product.quantity).toFixed(2)),
+        };
+        
+        // Add automatic waste management service
+        const wasteService: Partial<Service> = {
+          id: `waste-${Date.now()}`,
+          reference: 'MENTION DÉCHETS',
+          position: product.position + 2,
+          name: '<span style="font-weight: bold">Obligation "mention déchets" applicable</span><br/>Gestion, évacuation et traitements des déchets de chantier comprenant la main d\'œuvre liée à la dépose et au tri, le transport des déchets de chantier vers un ou plusieurs points de collecte et les coûts de traitement. NB : Les coûts et frais prévus au présent devis sont des estimations susceptibles d\'être revues en fonction de la quantité réelle et de la nature des déchets constatés en fin de chantier. Installation de collecte envisagée : SIREDOM 40 Avenue Paul Langevin, 91130 Ris-Orangis',
+          quantity: 1,
+          unitPriceHT: 0,
+          unitPriceTTC: 0,
+          tva: 0,
+          totalHT: 0,
+          totalTTC: 0
+        };
+        
+        // Add the service and waste service items
+        onSave(service);
+        onSave(wasteService);
+      }
+    };
+    
+    // Call the wrapper function to add all items
+    addAllItems();
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="bg-white rounded-xl w-full max-w-3xl m-4 overflow-hidden shadow-2xl"
+      >
+        {/* Modal header */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <ShoppingCartIcon className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                Ajouter un produit
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Modal body */}
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label htmlFor="selectProduct" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sélectionner un produit (optionnel)
+                </label>
+                <select
+                  id="selectProduct"
+                  onChange={handleSelectProduct}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="">-- Sélectionnez un produit --</option>
+                  {products.map(product => (
+                    <option key={product.id} value={product.id}>{product.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="subcontractor" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sélectionnez un sous-traitant
+                </label>
+                <select
+                  id="subcontractor"
+                  name="subcontractor"
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="">-- Sélectionnez un sous-traitant --</option>
+                  {subcontractors.map(sc => (
+                    <option key={sc.id} value={sc.id}>{sc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  id="showDescription" 
+                  name="showDescription"
+                  checked={product.showDescription}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+                <label htmlFor="showDescription" className="ml-2 text-sm text-gray-700">
+                  Afficher la description
+                </label>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label htmlFor="reference" className="block text-sm font-medium text-gray-700 mb-1">
+                  Référence du produit*
+                </label>
+                <input
+                  type="text"
+                  id="reference"
+                  name="reference"
+                  value={product.reference}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
+                  Position
+                </label>
+                <input
+                  type="number"
+                  id="position"
+                  name="position"
+                  value={product.position}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantité*
+                </label>
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  value={product.quantity}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label htmlFor="unitPriceTTC" className="block text-sm font-medium text-gray-700 mb-1">
+                  Prix Unitaire TTC*
+                </label>
+                <input
+                  type="number"
+                  id="unitPriceTTC"
+                  name="unitPriceTTC"
+                  value={product.unitPriceTTC}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sélectionner unité
+                </label>
+                <select
+                  id="unit"
+                  name="unit"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="pcs">Pièce(s)</option>
+                  <option value="m2">m²</option>
+                  <option value="m">mètre(s)</option>
+                  <option value="kg">kg</option>
+                  <option value="h">heure(s)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="tva" className="block text-sm font-medium text-gray-700 mb-1">
+                  TVA*
+                </label>
+                <select
+                  id="tva"
+                  name="tva"
+                  value={product.tva}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="5.5">5,5%</option>
+                  <option value="10">10%</option>
+                  <option value="20">20%</option>
+                </select>
+              </div>
+            </div>
+            
+            {product.showDescription && (
+              <div className="mb-6">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  Description*
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={product.description}
+                  onChange={handleChange}
+                  rows={8}
+                  required
+                  placeholder="- Puissance calorifique: 14 KW
+- COP: 4.52
+- Gaz frigorigène: R32
+- Classe énergétique: A+++
+- Dimensions unité intérieure: 800x530x360 mm
+- Dimensions unité extérieure: 1020x1050x330 mm"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition font-mono"
+                />
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Fixed AddServiceModal component
+const AddServiceModal: React.FC<AddServiceModalProps> = ({ onClose, onSave }) => {
+  const [service, setService] = useState<ServiceState>({
+    reference: '',
+    position: 1,
+    name: '',
+    quantity: 1,
+    unitPriceHT: 0,
+    unitPriceTTC: 0,
+    tva: 10,
+    totalHT: 0,
+    totalTTC: 0,
+    description: '',
+    showDescription: true
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const newValue = type === 'checkbox' 
+      ? (e.target as HTMLInputElement).checked 
+      : type === 'number' 
+        ? parseFloat(value) 
+        : value;
+    
+    setService({ ...service, [name]: newValue });
+  };
+
+  const handleSelectService = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    if (!selectedId) return;
+    
+    const selectedService = serviceOptions.find(s => s.id === selectedId);
+    if (selectedService) {
+      setService({
+        ...service,
+        reference: selectedService.reference,
+        name: selectedService.name,
+        unitPriceTTC: selectedService.price,
+        tva: selectedService.tva,
+        description: selectedService.description,
+        showDescription: true
+      });
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Calculate HT from TTC
+    const ht = (service.unitPriceTTC || 0) / (1 + (service.tva || 0) / 100);
+    
+    // Format the description to be HTML with bold title
+    const formattedName = `<span style="font-weight: bold">${service.reference}</span><br/>${service.description.split('\n').join('<br/>')}`;
+    
+    // Create the service with formatted description
+    const newService: Partial<Service> = {
+      id: `serv-${Date.now()}`,
+      reference: service.reference,
+      position: service.position,
+      name: formattedName,
+      quantity: service.quantity,
+      unitPriceHT: parseFloat(ht.toFixed(2)),
+      unitPriceTTC: service.unitPriceTTC,
+      tva: service.tva,
+      totalHT: parseFloat((ht * service.quantity).toFixed(2)),
+      totalTTC: parseFloat((service.unitPriceTTC * service.quantity).toFixed(2))
+    };
+    
+    onSave(newService);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="bg-white rounded-xl w-full max-w-3xl m-4 overflow-hidden shadow-2xl"
+      >
+        {/* Modal header */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <WrenchScrewdriverIcon className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                Créer une prestation
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Modal body */}
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label htmlFor="selectService" className="block text-sm font-medium text-gray-700 mb-1">
+                Sélectionner une prestation (optionnel)
+              </label>
+              <select
+                id="selectService"
+                onChange={handleSelectService}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              >
+                <option value="">-- Sélectionnez une prestation --</option>
+                {serviceOptions.map((serviceOption) => (
+                  <option key={serviceOption.id} value={serviceOption.id}>{serviceOption.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label htmlFor="reference" className="block text-sm font-medium text-gray-700 mb-1">
+                  Référence de la prestation*
+                </label>
+                <input
+                  type="text"
+                  id="reference"
+                  name="reference"
+                  value={service.reference}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
+                  Position
+                </label>
+                <input
+                  type="number"
+                  id="position"
+                  name="position"
+                  value={service.position}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantité
+                </label>
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  value={service.quantity}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label htmlFor="unitPriceTTC" className="block text-sm font-medium text-gray-700 mb-1">
+                  Prix Unitaire TTC
+                </label>
+                <input
+                  type="number"
+                  id="unitPriceTTC"
+                  name="unitPriceTTC"
+                  value={service.unitPriceTTC}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sélectionner unité
+                </label>
+                <select
+                  id="unit"
+                  name="unit"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="pcs">Pièce(s)</option>
+                  <option value="m2">m²</option>
+                  <option value="m">mètre(s)</option>
+                  <option value="kg">kg</option>
+                  <option value="h">heure(s)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="tva" className="block text-sm font-medium text-gray-700 mb-1">
+                  TVA
+                </label>
+                <select
+                  id="tva"
+                  name="tva"
+                  value={service.tva}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="5.5">5,5%</option>
+                  <option value="10">10%</option>
+                  <option value="20">20%</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  id="showDescription" 
+                  name="showDescription"
+                  checked={service.showDescription}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+                <label htmlFor="showDescription" className="ml-2 text-sm text-gray-700">
+                  Afficher la description
+                </label>
+              </div>
+            </div>
+            
+            {service.showDescription && (
+              <div className="mb-6">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  Désignation*
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={service.description}
+                  onChange={handleChange}
+                  rows={6}
+                  required
+                  placeholder="- Détail 1 de la prestation
+- Détail 2 de la prestation
+- Détail 3 de la prestation"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition font-mono"
+                />
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+
+// Updated DevisEditor Component with functional PDF dropdown
+const DevisEditor: React.FC<{
+  quoteId?: string;
+  onClose: () => void;
+}> = ({ quoteId, onClose }) => {
+  const [quoteNumber, setQuoteNumber] = useState<string>(quoteId ? quoteId : `DE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`);
+  const [quoteDate, setQuoteDate] = useState<string>(new Date().toISOString().substring(0, 10));
+  const [invoiceNumber, setInvoiceNumber] = useState<string>(`FA-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`);
+  const [invoiceDate, setInvoiceDate] = useState<string>('');
+  const [hasDeal, setHasDeal] = useState<boolean>(false);
+  const [dealId, setDealId] = useState<string>('');
+  const [dealRatio, setDealRatio] = useState<number>(0);
+  const [additionalInfo, setAdditionalInfo] = useState<string>('');
+  
+  const [tableItems, setTableItems] = useState<TableItem[]>([]);
+  
+  const [showAddProductModal, setShowAddProductModal] = useState<boolean>(false);
+  const [showAddServiceModal, setShowAddServiceModal] = useState<boolean>(false);
+  const [showAddOperationModal, setShowAddOperationModal] = useState<boolean>(false);
+  const [showDealModal, setShowDealModal] = useState<boolean>(false);
+
+  // Deal ratios lookup
+  const dealRatios = {
+    'EFFY': 0.0065,
+    'ENGIE': 0.0058,
+    'TOTAL': 0.0060
+  };
+
+  // Calculate totals including the deal premium if applicable
+  const totals = useMemo(() => {
+    const totalHT = tableItems.reduce((sum, item) => sum + item.totalHT, 0);
+    const totalTTC = tableItems.reduce((sum, item) => sum + item.totalTTC, 0);
+    
+    // Calculate Prime CEE if we have a deal
+    let primeCEE = 0;
+    if (hasDeal && dealId) {
+      // Find operations and calculate their kWh cumac value
+      const operations = tableItems.filter(item => item.id.startsWith('op-'));
+      operations.forEach(op => {
+        const opRef = op.reference;
+        // Find the corresponding product to get kWh cumac
+        let kwhCumac = 0;
+        if ('productId' in op && op.productId) {
+          const product = products.find(p => p.id === op.productId);
+          if (product) {
+            kwhCumac = product.kwhCumac;
+          }
+        } else {
+          // Fallback to operation code
+          if (opRef === 'BAR-TH-101') kwhCumac = 510530;
+          else if (opRef === 'BAR-TH-104') kwhCumac = 628730;
+          else if (opRef === 'BAR-TH-112-Granulés') kwhCumac = 950440;
+          else if (opRef === 'BAR-TH-171') kwhCumac = 615400;
+        }
+        
+        // Calculate prime
+        primeCEE += kwhCumac * dealRatio;
+      });
+    }
+    
+    // Assuming a fixed MaPrimeRenov value for now
+    const primeRenov = hasDeal ? 3000 : 0;
+    
+    return { 
+      totalHT, 
+      totalTTC, 
+      primeCEE: parseFloat(primeCEE.toFixed(2)),
+      primeRenov,
+      remaining: totalTTC - primeCEE - primeRenov
+    };
+  }, [tableItems, hasDeal, dealId, dealRatio]);
+  
+  // Handle deal selection
+  const handleDealSelect = (selectedDealId: string) => {
+    setDealId(selectedDealId);
+    setDealRatio(dealRatios[selectedDealId as keyof typeof dealRatios] || 0);
+    setHasDeal(true);
+    setShowDealModal(false);
+  };
+  
+  // Enhanced handleAddProduct to ensure products show correctly in the table
+  const handleAddProduct = (product: Partial<Product>) => {
+    const ht = (product.unitPriceTTC || 0) / (1 + (product.tva || 0) / 100);
+    const newProduct: Product = {
+      id: `prod-${Date.now()}`,
+      reference: product.reference || '',
+      position: tableItems.length + 1,
+      name: product.name || 'Nouveau produit',
+      quantity: product.quantity || 1,
+      unitPriceHT: parseFloat(ht.toFixed(2)),
+      unitPriceTTC: product.unitPriceTTC || 0,
+      tva: product.tva || 20,
+      totalHT: parseFloat((ht * (product.quantity || 1)).toFixed(2)),
+      totalTTC: parseFloat(((product.unitPriceTTC || 0) * (product.quantity || 1)).toFixed(2)),
+      description: product.description,
+      subcontractor: product.subcontractor
+    };
+    
+    // This ensures we add the product to the table
+    setTableItems(prevItems => [...prevItems, newProduct]);
+    
+    // Log to confirm product was added
+    console.log('Added product to tableItems:', newProduct);
+  };
+  
+  const handleAddService = (service: Partial<Service>) => {
+    const ht = (service.unitPriceTTC || 0) / (1 + (service.tva || 0) / 100);
+    const newService: Service = {
+      id: `serv-${Date.now()}`,
+      reference: service.reference || '',
+      position: tableItems.length + 1,
+      name: service.name || 'Nouvelle prestation',
+      quantity: service.quantity || 1,
+      unitPriceHT: parseFloat(ht.toFixed(2)),
+      unitPriceTTC: service.unitPriceTTC || 0,
+      tva: service.tva || 20,
+      totalHT: parseFloat((ht * (service.quantity || 1)).toFixed(2)),
+      totalTTC: parseFloat(((service.unitPriceTTC || 0) * (service.quantity || 1)).toFixed(2)),
+      description: service.description
+    };
+    
+    setTableItems(prevItems => [...prevItems, newService]);
+    console.log('Added service to tableItems:', newService);
+  };
+  
+  const handleAddOperation = (operation: Partial<Operation>) => {
+    const ht = (operation.unitPriceTTC || 0) / (1 + (operation.tva || 0) / 100);
+    const newOperation: Operation = {
+      id: `op-${Date.now()}`,
+      reference: operation.reference || '',
+      position: tableItems.length + 1,
+      name: operation.name || 'Nouvelle opération',
+      productId: operation.productId,
+      subcontractor: operation.subcontractor,
+      quantity: operation.quantity || 1,
+      unitPriceHT: parseFloat(ht.toFixed(2)),
+      unitPriceTTC: operation.unitPriceTTC || 0,
+      tva: operation.tva || 5.5,
+      totalHT: parseFloat((ht * (operation.quantity || 1)).toFixed(2)),
+      totalTTC: parseFloat(((operation.unitPriceTTC || 0) * (operation.quantity || 1)).toFixed(2)),
+      dpeBeforeWork: operation.dpeBeforeWork,
+      dpeAfterWork: operation.dpeAfterWork,
+      livingArea: operation.livingArea,
+      heatedArea: operation.heatedArea,
+      oldBoilerType: operation.oldBoilerType,
+      oldBoilerBrand: operation.oldBoilerBrand,
+      oldBoilerModel: operation.oldBoilerModel,
+      hasReceiveDimensionPaper: operation.hasReceiveDimensionPaper,
+      housingType: operation.housingType,
+      pumpUsage: operation.pumpUsage,
+      regulatorBrand: operation.regulatorBrand,
+      regulatorReference: operation.regulatorReference,
+      coupDePouceOperation: operation.coupDePouceOperation
+    };
+    
+    // Get product details if selected
+    let productBrand = '';
+    let productReference = '';
+    let productDescription = '';
+    let kwhCumac = 0;
+    
+    if (operation.productId) {
+      const product = products.find(p => p.id === operation.productId);
+      if (product) {
+        productBrand = product.brand;
+        productReference = product.reference;
+        productDescription = product.description;
+        kwhCumac = product.kwhCumac;
+      }
+    } else {
+      // Fallback values
+      productBrand = 'ATLANTIC';
+      productReference = 'ATLANTIC ALFEA EXCELLIA HP A.I. 16 KW MONOPHASE REF/526631';
+      productDescription = '- Puissance calorifique : +7 °C / +35 °C : 16 KW - COP +7 °C / +55 °C : 2.60 - Gaz frigorigène : R410A - Classe énergétique - chauffage (+55°C) : A++ MODULE INTÉRIEUR - Dimensions (H x L x P) mm : 847x448x482 - Poids à vide / en eau (kg) : 53 / 75 - Niveau Sonore à 5 m de l\'appareil dB(A) : 37 GROUPE EXTÉRIEUR FUJITSU : - Dimensions (H x L x P) mm : 1428x1080x480 - Poids en fonctionnement (kg) : 137 - Niveau Sonore à 5 m de l\'appareil dB(A) : 45';
+      
+      if (operation.reference === 'BAR-TH-101') kwhCumac = 510530;
+      else if (operation.reference === 'BAR-TH-104') kwhCumac = 628730;
+      else if (operation.reference === 'BAR-TH-112-Granulés') kwhCumac = 950440;
+      else if (operation.reference === 'BAR-TH-171') kwhCumac = 615400;
+    }
+    
+    // Get subcontractor details if selected
+    let subContractorInfo = '';
+    if (operation.subcontractor) {
+      const subcontractor = subcontractors.find(sc => sc.id === operation.subcontractor);
+      if (subcontractor) {
+        subContractorInfo = `<span style="font-weight: bold">Travaux sous-traités auprès de : ${subcontractor.name} ${subcontractor.address}</span><br/>Dirigeant : <span style="font-weight: bold">${subcontractor.director}</span><br/>SIRET : <span style="font-weight: bold">${subcontractor.siret}</span><br/>N° Décennale : <span style="font-weight: bold">${subcontractor.insurance}</span><br/>- ${subcontractor.qualifications.join(' - ')}`;
+      }
+    } else {
+      // Fallback
+      subContractorInfo = '';
+    }
+    
+    // Calculate CEE Prime
+    const primeCEE = kwhCumac * dealRatio;
+    
+    // Create a rich formatted name with HTML styling for bold text instead of markdown
+    const formattedName = `<span style="font-weight: bold">${operation.reference}</span> Mise en place d'une pompe à chaleur (PAC) de type air/eau.<br/>Marque : <span style="font-weight: bold">${productBrand}</span><br/>Référence : <span style="font-weight: bold">${productReference}</span><br/>L'efficacité énergétique saisonnière est de : <span style="font-weight: bold">127 %</span> calculée selon le règlement (EU) n°813/2013 de la commission du 2 aout 2013.<br/>La surface chauffée par la PAC est de <span style="font-weight: bold">${operation.heatedArea || 120} m2</span><br/>Surface habitable : <span style="font-weight: bold">${operation.livingArea || 120} m2</span><br/>Type de logement : <span style="font-weight: bold">${operation.housingType || "Maison individuelle"}</span><br/>Classe du régulateur :<br/>Usage couvert par la PAC : <span style="font-weight: bold">${operation.pumpUsage || "Chauffage seul"}</span><br/>Dépose et remplacement d'une chaudière au <span style="font-weight: bold">${operation.oldBoilerType || "Gaz"}</span><br/>Kwh Cumac : <span style="font-weight: bold">${kwhCumac}</span><br/>Prime CEE ${dealId} : <span style="font-weight: bold">${primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span><br/><br/>
+Description : <span style="font-weight: bold">${productDescription}</span><br/><br/>
+${subContractorInfo}`;
+    
+    const richOperation = {
+      ...newOperation,
+      name: formattedName
+    };
+    
+    // Add installation service with proper title
+    const installationService: Service = {
+      id: `serv-install-${Date.now()}`,
+      reference: 'FORFAIT POSE PAC',
+      position: tableItems.length + 2,
+      name: '<span style="font-weight: bold">FORFAIT POSE POMPE A CHALEUR ET FOURNITURE D\'UN BALLON TAMPON</span><br/>- Pose et installation complète d\'une pompe à chaleur air/eau<br/>- Forfait déplacement et mise en service comprise.<br/>- Installation d\'un ballon tampon 25L : Bouteilles de mélange et de décantation, pour installations de chauffage corps acier, jaquette skaï, Isolation 35 mm réversibles droite ou gauche de la chaudière pose murale livrée avec 4 bouchons pour circuits inutilisés.',
+      quantity: 1,
+      unitPriceHT: 2500,
+      unitPriceTTC: 2750,
+      tva: 10,
+      totalHT: 2500,
+      totalTTC: 2750
+    };
+    
+    // Add waste management service with proper title but no values
+    const wasteService: Service = {
+      id: `serv-waste-${Date.now()}`,
+      reference: 'MENTION DÉCHETS',
+      position: tableItems.length + 3,
+      name: '<span style="font-weight: bold">Obligation "mention déchets" applicable</span><br/>Gestion, évacuation et traitements des déchets de chantier comprenant la main d\'œuvre liée à la dépose et au tri, le transport des déchets de chantier vers un ou plusieurs points de collecte et les coûts de traitement. NB : Les coûts et frais prévus au présent devis sont des estimations susceptibles d\'être revues en fonction de la quantité réelle et de la nature des déchets constatés en fin de chantier. Installation de collecte envisagée : SIREDOM 40 Avenue Paul Langevin, 91130 Ris-Orangis',
+      quantity: 1,
+      unitPriceHT: 0, // Blank value
+      unitPriceTTC: 0, // Blank value
+      tva: 0, // Blank value
+      totalHT: 0, // Blank value
+      totalTTC: 0 // Blank value
+    };
+    
+    // Use a single state update to add all items at once
+    setTableItems(prevItems => [...prevItems, richOperation, installationService, wasteService]);
+    
+    // Log to confirm all items were added
+    console.log('Added operation and related items to tableItems:', { richOperation, installationService, wasteService });
+  };
+  
+  const handleRemoveItem = (id: string) => {
+    setTableItems(tableItems.filter(item => item.id !== id));
+  };
+
+  const handleDuplicateQuote = () => {
+    alert('Dupliquer le devis: Cette fonctionnalité créerait une copie du devis actuel.');
+  };
+  
+  const handleAction = (actionId: string) => {
+    switch (actionId) {
+      case 'addSubcontractor':
+        alert('Fonctionnalité "Ajouter un sous-traitant" à implémenter');
+        break;
+      case 'addAgent':
+        alert('Fonctionnalité "Ajouter un mandataire" à implémenter');
+        break;
+      case 'addInfo':
+        alert('Fonctionnalité "Ajouter une information" à implémenter');
+        break;
+      case 'addProduct':
+        setShowAddProductModal(true);
+        break;
+      case 'addService':
+        setShowAddServiceModal(true);
+        break;
+      case 'addFunding':
+        alert('Fonctionnalité "Ajouter un financement" à implémenter');
+        break;
+      case 'addMairie':
+        alert('Fonctionnalité "Ajouter une DP Mairie" à implémenter');
+        break;
+      case 'assignToDeal':
+        // Now opens modal
+        setShowDealModal(true);
+        break;
+      case 'addDivision':
+        alert('Fonctionnalité "Ajouter une indivision" à implémenter');
+        break;
+      case 'addDocument':
+        alert('Fonctionnalité "Ajouter un document au devis" à implémenter');
+        break;
+      case 'modifyPrime':
+        alert('Fonctionnalité "Modifier une prime" à implémenter');
+        break;
+      case 'deleteQuote':
+        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
+          alert('Devis supprimé');
+          onClose();
+        }
+        break;
+      default:
+        alert(`Action "${actionId}" à implémenter`);
+    }
+  };
+
+  // Custom formatter for table cells to hide zeros in MENTION DÉCHETS
+  const formatTableCell = (item: TableItem, value: number, formatter: (val: number) => string) => {
+    if (item.reference === 'MENTION DÉCHETS') {
+      return '';
+    }
+    return formatter(value);
+  };
+
+  // Debug function to show content in console if needed
+  useEffect(() => {
+    console.log('Current tableItems:', tableItems);
+  }, [tableItems]);
+
+  return (
+    <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-md">
+      {/* Action buttons */}
+      <div className="flex gap-4 mb-6">
+        <button
+          onClick={handleDuplicateQuote}
+          className="px-4 py-2.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
+        >
+          <DocumentDuplicateIcon className="h-5 w-5" />
+          <span>Dupliquer le devis</span>
+        </button>
+        
+        <ActionMenu onAction={handleAction} onShowDealModal={() => setShowDealModal(true)} />
+        
+        {dealId && (
+          <div className="px-4 py-2.5 bg-green-100 text-green-700 rounded-lg flex items-center gap-2">
+            <LinkIcon className="h-5 w-5" />
+            <span>Deal affecté: {dealId}</span>
+          </div>
+        )}
+      </div>
+      
+      {/* Quote and invoice details */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <label htmlFor="quoteNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            Numéro de devis
+          </label>
+          <input
+            type="text"
+            id="quoteNumber"
+            value={quoteNumber}
+            onChange={(e) => setQuoteNumber(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-100"
+            disabled
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="quoteDate" className="block text-sm font-medium text-gray-700 mb-1">
+            Date de devis
+          </label>
+          <input
+            type="date"
+            id="quoteDate"
+            value={quoteDate}
+            onChange={(e) => setQuoteDate(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="invoiceNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            Numéro de facture
+          </label>
+          <input
+            type="text"
+            id="invoiceNumber"
+            value={invoiceNumber}
+            onChange={(e) => setInvoiceNumber(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-100"
+            disabled
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="invoiceDate" className="block text-sm font-medium text-gray-700 mb-1">
+            Date de facture
+          </label>
+          <input
+            type="date"
+            id="invoiceDate"
+            value={invoiceDate}
+            onChange={(e) => setInvoiceDate(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+      </div>
+      
+      {/* Item Table */}
+      <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
+        <div className="bg-blue-50 border-b border-gray-200 p-4">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setShowAddServiceModal(true)}
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-1"
+            >
+              <PlusIcon className="h-4 w-4" />
+              <span>Ajouter une prestation</span>
+            </button>
+            
+            <button
+              onClick={() => setShowAddProductModal(true)}
+              className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
+            >
+              <PlusIcon className="h-4 w-4" />
+              <span>Ajouter un produit</span>
+            </button>
+            
+            <button
+              onClick={() => setShowAddOperationModal(true)}
+              className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 ${
+                hasDeal 
+                  ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              } transition-colors`}
+              disabled={!hasDeal}
+            >
+              <PlusIcon className="h-4 w-4" />
+              <span>Ajouter une opération</span>
+            </button>
+          </div>
+        </div>
+        
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit et prestation</th>
+              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
+              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unitaire HT</th>
+              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unitaire TTC</th>
+              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TVA</th>
+              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total HT</th>
+              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total TTC</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {tableItems.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-8 px-4 text-center text-gray-500">
+                  Aucun élément ajouté. Utilisez les boutons ci-dessus pour ajouter des produits, prestations ou opérations.
+                </td>
+              </tr>
+            ) : (
+              tableItems.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="py-3 px-4">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleRemoveItem(item.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <PencilIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="font-medium text-gray-900">{item.reference}</div>
+                    <div className="text-sm text-gray-500" dangerouslySetInnerHTML={{ __html: item.name }}></div>
+                  </td>
+                  <td className="py-3 px-4">{item.reference === 'MENTION DÉCHETS' ? '' : item.quantity}</td>
+                  <td className="py-3 px-4">{formatTableCell(item, item.unitPriceHT, val => val.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }))}</td>
+                  <td className="py-3 px-4">{formatTableCell(item, item.unitPriceTTC, val => val.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }))}</td>
+                  <td className="py-3 px-4">{item.reference === 'MENTION DÉCHETS' ? '' : item.tva + '%'}</td>
+                  <td className="py-3 px-4">{formatTableCell(item, item.totalHT, val => val.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }))}</td>
+                  <td className="py-3 px-4 font-medium">{formatTableCell(item, item.totalTTC, val => val.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }))}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+          <tfoot>
+            <tr className="bg-gray-50 font-semibold">
+              <td colSpan={6} className="py-3 px-4 text-right">Total:</td>
+              <td className="py-3 px-4">{totals.totalHT.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</td>
+              <td className="py-3 px-4">{totals.totalTTC.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* Additional Information Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* Left Section - Information complémentaire */}
+        <div className="col-span-2">
+          <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Information complémentaire</h3>
+            <textarea
+              rows={4}
+              value={additionalInfo}
+              onChange={(e) => setAdditionalInfo(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="Ajoutez des informations supplémentaires concernant ce devis..."
+            />
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
+            <div className="flex flex-wrap gap-3">
+              <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                <EnvelopeIcon className="h-5 w-5" />
+                <span>Envoyer un document par email</span>
+              </button>
+              
+              <button className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
+                <DocumentCheckIcon className="h-5 w-5" />
+                <span>Envoyer une signature électronique</span>
+              </button>
+              
+              {/* Replace the dropdown with our custom PDF Generator component */}
+              <PDFGenerator 
+                tableItems={tableItems}
+                quoteNumber={quoteNumber}
+                quoteDate={quoteDate}
+                clientName="Jean Dupont" // Replace with actual client name when available
+                totals={totals}
+                dealId={dealId}
+                additionalInfo={additionalInfo}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Right Section - Financial Summary */}
+        <div className="col-span-1">
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Récapitulatif financier</h3>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-gray-600">Prix Total HT</span>
+                <span className="font-semibold">{totals.totalHT.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+              </div>
+              
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-gray-600">TVA</span>
+                <span className="font-semibold">{(totals.totalTTC - totals.totalHT).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+              </div>
+              
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-gray-600 font-medium">Prix Total TTC</span>
+                <span className="font-bold text-lg">{totals.totalTTC.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+              </div>
+              
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-gray-600">Prime {dealId}</span>
+                <span className="font-semibold text-green-600">{totals.primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+              </div>
+              
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-gray-600">Estimation MaPrimeRenov&apos;</span>
+                <span className="font-semibold text-green-600">{totals.primeRenov.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+              </div>
+              
+              <div className="flex justify-between items-center py-2 mt-2 bg-blue-50 p-2 rounded-lg">
+                <span className="text-blue-800 font-medium">Reste à payer</span>
+                <span className="font-bold text-blue-800">{totals.remaining.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-3 border-t border-gray-200 text-xs text-gray-500">
+              <p>Créé par Jean Martin le 02/04/2025 à 14:30</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Action buttons */}
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+        >
+          Annuler
+        </button>
+        <button
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
+        >
+          Enregistrer
+        </button>
+      </div>
+      
+      {/* Modals */}
+      <AnimatePresence>
+        {showAddProductModal && (
+          <AddProductModal 
+            onClose={() => setShowAddProductModal(false)}
+            onSave={handleAddProduct}
+          />
+        )}
+        
+        {showAddServiceModal && (
+          <AddServiceModal 
+            onClose={() => setShowAddServiceModal(false)}
+            onSave={handleAddService}
+          />
+        )}
+        
+        {showAddOperationModal && (
+          <AddOperationModal 
+            onClose={() => setShowAddOperationModal(false)}
+            onSave={handleAddOperation}
+            hasDeal={hasDeal}
+            dealId={dealId}
+          />
+        )}
+        
+        {showDealModal && (
+          <DealSelectionModal
+            onClose={() => setShowDealModal(false)}
+            onSelect={handleDealSelect}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
@@ -294,7 +2537,8 @@ const DocumentPreview: React.FC<{
   document: Document;
   onRequestSignature: (document: Document) => void;
   onSendReminder: (document: Document) => void;
-}> = ({ document, onRequestSignature, onSendReminder }) => {
+  onEditDocument: (document: Document) => void;
+}> = ({ document, onRequestSignature, onSendReminder, onEditDocument }) => {
   return (
     <div className="h-full flex flex-col">
       {/* Document header */}
@@ -385,6 +2629,14 @@ const DocumentPreview: React.FC<{
           Imprimer
         </button>
         
+        <button
+          onClick={() => onEditDocument(document)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+        >
+          <PencilIcon className="h-5 w-5 text-gray-500" />
+          Modifier
+        </button>
+        
         {/* Signature status specific actions */}
         {document.signatureStatus === "non_demandé" && (
           <button
@@ -457,6 +2709,7 @@ const DevisFactureTab: React.FC<DevisFactureTabProps> = ({ contactId }) => {
   const [sortKey, setSortKey] = useState<keyof Document>("dateCreation");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [showSignatureModal, setShowSignatureModal] = useState<boolean>(false);
+  const [showDevisEditor, setShowDevisEditor] = useState<boolean>(false);
   
   // Fetch documents on mount and when contactId changes
   useEffect(() => {
@@ -650,6 +2903,12 @@ const DevisFactureTab: React.FC<DevisFactureTabProps> = ({ contactId }) => {
     alert(`Rappel envoyé pour le document ${doc.reference}`);
   };
   
+  // Handle edit document
+  const handleEditDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setShowDevisEditor(true);
+  };
+  
   // Handle send signature request
   const handleSendSignatureRequest = () => {
     if (!selectedDocument) return;
@@ -671,8 +2930,8 @@ const DevisFactureTab: React.FC<DevisFactureTabProps> = ({ contactId }) => {
   
   // Handle create new document
   const handleCreateNew = () => {
-    // In a real app, this would navigate to a document creation page or open a modal
-    alert("Navigation vers la création d'un nouveau document");
+    setShowDevisEditor(true);
+    setSelectedDocument(null);
   };
   
   return (
@@ -710,277 +2969,290 @@ const DevisFactureTab: React.FC<DevisFactureTabProps> = ({ contactId }) => {
         </div>
       </motion.div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 bg-blue-50 border-b border-blue-100">
-        <motion.div
-          whileHover={{ y: -5, scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-          className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
-        >
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <DocumentIcon className="h-8 w-8 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm">Devis</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.devisCount}</p>
-            <p className="text-xs text-gray-600">{stats.devisAmount}</p>
-          </div>
-        </motion.div>
-        
-        <motion.div
-          whileHover={{ y: -5, scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-          className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
-        >
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <DocumentTextIcon className="h-8 w-8 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm">Factures</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.factureCount}</p>
-            <p className="text-xs text-gray-600">{stats.factureAmount}</p>
-          </div>
-        </motion.div>
-        
-        <motion.div
-          whileHover={{ y: -5, scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-          className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
-        >
-          <div className="p-3 bg-amber-100 rounded-lg">
-            <ClockIcon className="h-8 w-8 text-amber-600" />
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm">En attente de signature</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.pendingSignatureCount}</p>
-          </div>
-        </motion.div>
-        
-        <motion.div
-          whileHover={{ y: -5, scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-          className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
-        >
-          <div className="p-3 bg-green-100 rounded-lg">
-            <CheckIcon className="h-8 w-8 text-green-600" />
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm">Documents signés</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.signedCount}</p>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Search, Filters and Sorting */}
-      <div className="p-4 bg-white border-b border-gray-200">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between gap-4">
-          <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher par référence, client ou montant..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            />
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            <div className="flex border border-gray-200 rounded-lg overflow-hidden">
-              <button
-                onClick={() => setFilterType("all")}
-                className={`px-4 py-2 text-sm font-medium transition ${
-                  filterType === "all"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                Tous
-              </button>
-              <button
-                onClick={() => setFilterType("devis")}
-                className={`px-4 py-2 text-sm font-medium transition ${
-                  filterType === "devis"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                Devis
-              </button>
-              <button
-                onClick={() => setFilterType("facture")}
-                className={`px-4 py-2 text-sm font-medium transition ${
-                  filterType === "facture"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                Factures
-              </button>
-            </div>
-            
-            <div className="relative">
-              <select
-                className="appearance-none pl-3 pr-8 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                value={filterSignature}
-                onChange={(e) => setFilterSignature(e.target.value as SignatureStatus | "all")}
-              >
-                <option value="all">Toutes signatures</option>
-                <option value="non_demandé">Non demandé</option>
-                <option value="en_attente">En attente</option>
-                <option value="signé">Signé</option>
-                <option value="refusé">Refusé</option>
-              </select>
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                <ChevronDownIcon className="h-4 w-4" />
-              </div>
-            </div>
-            
-            <div className="relative">
-              <select
-                className="appearance-none pl-3 pr-8 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                value={sortKey}
-                onChange={(e) => handleSort(e.target.value as keyof Document)}
-              >
-                <option value="dateCreation">Date de création</option>
-                <option value="reference">Référence</option>
-                <option value="montant">Montant</option>
-                {filterType !== "facture" && <option value="dateExpiration">Date d&apos;expiration</option>}
-                {filterType !== "devis" && <option value="dateDue">Date d&apos;échéance</option>}
-              </select>
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                <ArrowsUpDownIcon className="h-4 w-4" />
-              </div>
-            </div>
-          </div>
+      {/* Main Content */}
+      {showDevisEditor ? (
+        <div className="flex-grow overflow-y-auto p-6 bg-gray-50">
+          <DevisEditor 
+            quoteId={selectedDocument?.id}
+            onClose={() => setShowDevisEditor(false)}
+          />
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 bg-blue-50 border-b border-blue-100">
+            <motion.div
+              whileHover={{ y: -5, scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
+            >
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <DocumentIcon className="h-8 w-8 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">Devis</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.devisCount}</p>
+                <p className="text-xs text-gray-600">{stats.devisAmount}</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              whileHover={{ y: -5, scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
+            >
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <DocumentTextIcon className="h-8 w-8 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">Factures</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.factureCount}</p>
+                <p className="text-xs text-gray-600">{stats.factureAmount}</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              whileHover={{ y: -5, scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
+            >
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <ClockIcon className="h-8 w-8 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">En attente de signature</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingSignatureCount}</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              whileHover={{ y: -5, scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4"
+            >
+              <div className="p-3 bg-green-100 rounded-lg">
+                <CheckIcon className="h-8 w-8 text-green-600" />
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">Documents signés</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.signedCount}</p>
+              </div>
+            </motion.div>
+          </div>
 
-      {/* Main Content Area - Split View */}
-      <div className="flex-grow flex overflow-hidden">
-        {/* Left Panel - Document List */}
-        <div className="w-1/3 border-r border-gray-200 overflow-y-auto bg-gray-50">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                <p className="text-blue-500">Chargement des documents...</p>
+          {/* Search, Filters and Sorting */}
+          <div className="p-4 bg-white border-b border-gray-200">
+            <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between gap-4">
+              <div className="flex-1 relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher par référence, client ou montant..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
               </div>
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center h-64 p-6">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <ExclamationCircleIcon className="h-8 w-8 text-red-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur</h3>
-              <p className="text-gray-600 mb-6 text-center">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-                Réessayer
-              </button>
-            </div>
-          ) : filteredDocuments.length === 0 ? (
-            <EmptyState 
-              type={filterType}
-              onCreateNew={handleCreateNew}
-            />
-          ) : (
-            <ul className="divide-y divide-gray-200">
-              {filteredDocuments.map((doc) => (
-                <li
-                  key={doc.id}
-                  onClick={() => setSelectedDocument(doc)}
-                  className={`border-l-4 ${
-                    selectedDocument?.id === doc.id
-                      ? "border-l-blue-500 bg-blue-50"
-                      : "border-l-transparent hover:bg-gray-50"
-                  } transition-all cursor-pointer`}
-                >
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        {doc.type === "devis" ? (
-                          <DocumentIcon className="h-5 w-5 text-blue-600 mr-2" />
-                        ) : (
-                          <DocumentTextIcon className="h-5 w-5 text-blue-600 mr-2" />
-                        )}
-                        <span className="font-medium text-gray-900">{doc.reference}</span>
-                      </div>
-                      <DocumentStatusBadge status={doc.status} />
-                    </div>
-                    
-                    <div className="mb-2">
-                      <span className="text-sm text-gray-600">{doc.clientName}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-500">
-                        <CalendarIcon className="h-4 w-4 inline mr-1" />
-                        {doc.dateCreation}
-                      </div>
-                      <div className="font-semibold">{doc.montant}</div>
-                    </div>
-                    
-                    <div className="mt-2 flex items-center justify-between">
-                      <SignatureStatusBadge status={doc.signatureStatus} />
-                      <button className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-0.5">
-                        <span>Détails</span>
-                        <ChevronRightIcon className="h-4 w-4" />
-                      </button>
-                    </div>
+              
+              <div className="flex flex-wrap gap-2">
+                <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setFilterType("all")}
+                    className={`px-4 py-2 text-sm font-medium transition ${
+                      filterType === "all"
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    Tous
+                  </button>
+                  <button
+                    onClick={() => setFilterType("devis")}
+                    className={`px-4 py-2 text-sm font-medium transition ${
+                      filterType === "devis"
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    Devis
+                  </button>
+                  <button
+                    onClick={() => setFilterType("facture")}
+                    className={`px-4 py-2 text-sm font-medium transition ${
+                      filterType === "facture"
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    Factures
+                  </button>
+                </div>
+                
+                <div className="relative">
+                  <select
+                    className="appearance-none pl-3 pr-8 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={filterSignature}
+                    onChange={(e) => setFilterSignature(e.target.value as SignatureStatus | "all")}
+                  >
+                    <option value="all">Toutes signatures</option>
+                    <option value="non_demandé">Non demandé</option>
+                    <option value="en_attente">En attente</option>
+                    <option value="signé">Signé</option>
+                    <option value="refusé">Refusé</option>
+                  </select>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                    <ChevronDownIcon className="h-4 w-4" />
                   </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        
-        {/* Right Panel - Document Preview */}
-        <div className="flex-grow overflow-y-auto bg-white p-6">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-full">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                <p className="text-blue-500">Chargement des documents...</p>
+                </div>
+                
+                <div className="relative">
+                  <select
+                    className="appearance-none pl-3 pr-8 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={sortKey}
+                    onChange={(e) => handleSort(e.target.value as keyof Document)}
+                  >
+                    <option value="dateCreation">Date de création</option>
+                    <option value="reference">Référence</option>
+                    <option value="montant">Montant</option>
+                    {filterType !== "facture" && <option value="dateExpiration">Date d&apos;expiration</option>}
+                    {filterType !== "devis" && <option value="dateDue">Date d&apos;échéance</option>}
+                  </select>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                    <ArrowsUpDownIcon className="h-4 w-4" />
+                  </div>
+                </div>
               </div>
             </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center h-full p-6">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <ExclamationCircleIcon className="h-8 w-8 text-red-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur</h3>
-              <p className="text-gray-600 mb-6 text-center">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-                Réessayer
-              </button>
+          </div>
+
+          {/* Main Content Area - Split View */}
+          <div className="flex-grow flex overflow-hidden">
+            {/* Left Panel - Document List */}
+            <div className="w-1/3 border-r border-gray-200 overflow-y-auto bg-gray-50">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                    <p className="text-blue-500">Chargement des documents...</p>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center h-64 p-6">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                    <ExclamationCircleIcon className="h-8 w-8 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur</h3>
+                  <p className="text-gray-600 mb-6 text-center">{error}</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    <ArrowPathIcon className="h-5 w-5" />
+                    Réessayer
+                  </button>
+                </div>
+              ) : filteredDocuments.length === 0 ? (
+                <EmptyState 
+                  type={filterType}
+                  onCreateNew={handleCreateNew}
+                />
+              ) : (
+                <ul className="divide-y divide-gray-200">
+                  {filteredDocuments.map((doc) => (
+                    <li
+                      key={doc.id}
+                      onClick={() => setSelectedDocument(doc)}
+                      className={`border-l-4 ${
+                        selectedDocument?.id === doc.id
+                          ? "border-l-blue-500 bg-blue-50"
+                          : "border-l-transparent hover:bg-gray-50"
+                      } transition-all cursor-pointer`}
+                    >
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center">
+                            {doc.type === "devis" ? (
+                              <DocumentIcon className="h-5 w-5 text-blue-600 mr-2" />
+                            ) : (
+                              <DocumentTextIcon className="h-5 w-5 text-blue-600 mr-2" />
+                            )}
+                            <span className="font-medium text-gray-900">{doc.reference}</span>
+                          </div>
+                          <DocumentStatusBadge status={doc.status} />
+                        </div>
+                        
+                        <div className="mb-2">
+                          <span className="text-sm text-gray-600">{doc.clientName}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-500">
+                            <CalendarIcon className="h-4 w-4 inline mr-1" />
+                            {doc.dateCreation}
+                          </div>
+                          <div className="font-semibold">{doc.montant}</div>
+                        </div>
+                        
+                        <div className="mt-2 flex items-center justify-between">
+                          <SignatureStatusBadge status={doc.signatureStatus} />
+                          <button className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-0.5">
+                            <span>Détails</span>
+                            <ChevronRightIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          ) : !selectedDocument ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-                <DocumentCheckIcon className="h-10 w-10 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun document sélectionné</h3>
-              <p className="text-gray-500 mb-6 max-w-md text-center">
-                Sélectionnez un document dans la liste pour voir les détails.
-              </p>
+            
+            {/* Right Panel - Document Preview */}
+            <div className="flex-grow overflow-y-auto bg-white p-6">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-full">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                    <p className="text-blue-500">Chargement des documents...</p>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center h-full p-6">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                    <ExclamationCircleIcon className="h-8 w-8 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur</h3>
+                  <p className="text-gray-600 mb-6 text-center">{error}</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    <ArrowPathIcon className="h-5 w-5" />
+                    Réessayer
+                  </button>
+                </div>
+              ) : !selectedDocument ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                    <DocumentCheckIcon className="h-10 w-10 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun document sélectionné</h3>
+                  <p className="text-gray-500 mb-6 max-w-md text-center">
+                    Sélectionnez un document dans la liste pour voir les détails.
+                  </p>
+                </div>
+              ) : (
+                <DocumentPreview 
+                  document={selectedDocument}
+                  onRequestSignature={handleRequestSignature}
+                  onSendReminder={handleSendReminder}
+                  onEditDocument={handleEditDocument}
+                />
+              )}
             </div>
-          ) : (
-            <DocumentPreview 
-              document={selectedDocument}
-              onRequestSignature={handleRequestSignature}
-              onSendReminder={handleSendReminder}
-            />
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
       
       {/* Signature Request Modal */}
       <AnimatePresence>

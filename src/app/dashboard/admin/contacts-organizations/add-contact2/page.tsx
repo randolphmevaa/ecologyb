@@ -1,11 +1,21 @@
 "use client";
 
+import { useRef } from "react";
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { Map as LeafletMap } from "leaflet";
 import Select, { MultiValue } from "react-select";
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/Header";
+import dynamic from 'next/dynamic';
+import type { LeafletMouseEvent } from 'leaflet';
+
+// Dynamically import the map component with no SSR
+const CadastreMapWithNoSSR = dynamic(
+  () => import('@/components/CadastreMap'),
+  { ssr: false }
+);
 
 // ----------------------
 // Updated Interfaces
@@ -47,6 +57,13 @@ interface Dossier {
     anneeConstruction: string;
     typeLogement: string;
     profileLogement: string;
+    // New fields
+    typeToiture: string;
+    numeroParcelleCadastrale: string;
+    surfaceParcelleCadastrale: string;
+    anneeChaudiere: string;
+    surfaceMursExterieurs: string;
+    surfaceToiture: string;
   };
   informationAides: {
     numeroDossierMPR: string;
@@ -154,6 +171,19 @@ const phaseProjetOptions = [
   { value: "7 Dossier clôturé", label: "Étape 7 - Dossier clôturé" },
 ];
 
+interface ParcelInfo {
+  parcelle: string;
+  numero: string;
+  section: string;
+  insee: string;
+  surface: string;
+  adresse: string;
+}
+
+interface CadastreMapRef {
+  searchAddress(address: string): Promise<void>;
+}
+
 // ----------------------
 // Component
 // ----------------------
@@ -171,6 +201,16 @@ export default function AddContactDossierPage() {
     { key: "aides", label: "Information des aides" },
     { key: "projet", label: "Commentaires" },
   ];
+  // Add these new state variables in the component
+  const [showCadastreModal, setShowCadastreModal] = useState(false);
+  // const [selectedParcel, setSelectedParcel] = useState<{
+  //   parcelle: string;
+  //   numero: string;
+  //   section: string;
+  //   insee: string;
+  //   surface: string;
+  //   adresse: string;
+  // } | null>(null);
 
   // ----------------------
   // State definitions
@@ -207,6 +247,13 @@ export default function AddContactDossierPage() {
       anneeConstruction: "",
       typeLogement: "",
       profileLogement: "",
+      // Add new fields with default values
+      typeToiture: "",
+      numeroParcelleCadastrale: "",
+      surfaceParcelleCadastrale: "",
+      anneeChaudiere: "",
+      surfaceMursExterieurs: "",
+      surfaceToiture: "",
     },
     informationAides: {
       numeroDossierMPR: "",
@@ -265,17 +312,183 @@ export default function AddContactDossierPage() {
     nombreParts: "",
     nombrePersonnesFoyer: ""
   });
+  const mapRef = useRef<HTMLDivElement>(null);
+  const leafletMapRef = useRef<LeafletMap | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [searchAddress, setSearchAddress] = useState("");
+  const [selectedParcel, setSelectedParcel] = useState<ParcelInfo | null>(null);
+  const cadastreMapRef = useRef<CadastreMapRef | null>(null);
+
+  // Add this useEffect hook for the map initialization
+  useEffect(() => {
+    if (showCadastreModal && !mapLoaded && typeof window !== "undefined" && mapRef.current) {
+      // Load Leaflet CSS
+      const leafletCss = document.createElement("link");
+      leafletCss.rel = "stylesheet";
+      leafletCss.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+      document.head.appendChild(leafletCss);
+
+      // Load Leaflet JS
+      const loadLeaflet = async () => {
+        try {
+          // Dynamic import of Leaflet
+          const leafletModule = await import("leaflet");
+          const L = leafletModule.default;
+          
+          // Initialize map if the ref exists and we haven't already created a map
+          if (mapRef.current && !leafletMapRef.current) {
+            // Create the map
+            const map = L.map(mapRef.current, {
+              center: [48.856614, 2.3522219], // Paris coordinates
+              zoom: 13,
+              attributionControl: true,
+            });
+            
+            // Add attribution
+            map.attributionControl.setPrefix("Powered by Leaflet | Cadastre data: IGN France");
+            
+            // Add base layer (OpenStreetMap)
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              maxZoom: 19,
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            }).addTo(map);
+            
+            // Add cadastral layer (from French Cadastre WMS)
+            // const cadastreLayer = L.tileLayer.wms(
+            //   "https://wxs.ign.fr/parcellaire/geoportail/r/wms", 
+            //   {
+            //     layers: "CADASTRALPARCELS.PARCELS",
+            //     format: "image/png",
+            //     transparent: true,
+            //     attribution: "© IGN - Cadastre",
+            //     opacity: 0.7,
+            //   }
+            // ).addTo(map);
+            
+            // Add event for clicking on the map
+            map.on("click", (e: LeafletMouseEvent) => {
+              // In a real app, you would make an API call here to get parcel info at the clicked location
+              // For this demo, we'll simulate finding a parcel
+              const lat = e.latlng.lat.toFixed(6);
+              const lng = e.latlng.lng.toFixed(6);
+              
+              // Simulate parcel selection
+              // Here we'd typically make an API call to get the actual parcel data
+              // For demo purposes, we'll generate some data based on the coordinates
+              const sectionCode = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+                                String.fromCharCode(65 + Math.floor(Math.random() * 26));
+              const parcelNumber = Math.floor(Math.random() * 9000) + 1000;
+              const formattedParcel = `${Math.floor(Math.random() * 999).toString().padStart(3, '0')} / ${sectionCode} / ${parcelNumber.toString().padStart(4, '0')}`;
+              const surfaceArea = Math.floor(Math.random() * 5000) + 500;
+              
+              // Add a marker at the clicked location
+              L.marker(e.latlng).addTo(map)
+                .bindPopup(`Parcelle: ${formattedParcel}<br>Coordonnées: ${lat}, ${lng}`)
+                .openPopup();
+                
+              // Update the selected parcel state
+              setSelectedParcel({
+                parcelle: formattedParcel,
+                numero: parcelNumber.toString().padStart(4, '0'),
+                section: sectionCode,
+                insee: Math.floor(Math.random() * 90000) + 10000 + '',
+                surface: `${surfaceArea} m²`,
+                adresse: `${Math.floor(Math.random() * 1500) + 1} Rue de ${['Paris', 'Lyon', 'Marseille', 'Nantes', 'Bordeaux'][Math.floor(Math.random() * 5)]} ${Math.floor(Math.random() * 90000) + 10000}`
+              });
+            });
+            
+            // Store the map reference
+            leafletMapRef.current = map;
+            
+            // Set map as loaded
+            setMapLoaded(true);
+          }
+        } catch (error) {
+          console.error("Error loading Leaflet:", error);
+        }
+      };
+      
+      loadLeaflet();
+      
+      // Cleanup function to destroy map when component unmounts
+      return () => {
+        if (leafletMapRef.current) {
+          leafletMapRef.current.remove();
+          leafletMapRef.current = null;
+          setMapLoaded(false);
+        }
+      };
+      setSearchAddress(getFormattedAddress());
+    }
+  }, [showCadastreModal, mapLoaded]);
+
+  // Add a function to handle address search
+  // const handleAddressSearch = (e: React.FormEvent) => {
+  //   e.preventDefault();
+    
+  //   if (searchAddress && leafletMapRef.current) {
+  //     // In a real application, you would use a geocoding service like Nominatim or Google Maps
+  //     // For this demo, we'll simulate finding the address
+  //     fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}, France`)
+  //       .then(response => response.json())
+  //       .then(data => {
+  //         if (data && data.length > 0) {
+  //           const { lat, lon } = data[0];
+  //           leafletMapRef.current.setView([parseFloat(lat), parseFloat(lon)], 16);
+            
+  //           // Simulate finding a parcel at this location
+  //           const sectionCode = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+  //                             String.fromCharCode(65 + Math.floor(Math.random() * 26));
+  //           const parcelNumber = Math.floor(Math.random() * 9000) + 1000;
+  //           const formattedParcel = `${Math.floor(Math.random() * 999).toString().padStart(3, '0')} / ${sectionCode} / ${parcelNumber.toString().padStart(4, '0')}`;
+  //           const surfaceArea = Math.floor(Math.random() * 5000) + 500;
+            
+  //           // Get Leaflet module from the current map
+  //           const L = leafletMapRef.current.L || window.L;
+            
+  //           // Update the selected parcel state
+  //           setSelectedParcel({
+  //             parcelle: formattedParcel,
+  //             numero: parcelNumber.toString().padStart(4, '0'),
+  //             section: sectionCode,
+  //             insee: Math.floor(Math.random() * 90000) + 10000 + '',
+  //             surface: `${surfaceArea} m²`,
+  //             adresse: data[0].display_name
+  //           });
+            
+  //           // Add a marker
+  //           L.marker([parseFloat(lat), parseFloat(lon)]).addTo(leafletMapRef.current)
+  //             .bindPopup(`Parcelle: ${formattedParcel}<br>Adresse: ${data[0].display_name}`)
+  //             .openPopup();
+  //         }
+  //       })
+  //       .catch(error => {
+  //         console.error("Error searching address:", error);
+  //       });
+  //   }
+  // };
+
+  // Function to handle parcel selection
+  const handleSelectParcel = () => {
+    if (selectedParcel) {
+      setDossier({
+        ...dossier,
+        informationLogement: {
+          ...dossier.informationLogement,
+          numeroParcelleCadastrale: selectedParcel.parcelle,
+          surfaceParcelleCadastrale: selectedParcel.surface.replace(' m²', ''),
+        }
+      });
+      setShowCadastreModal(false);
+    }
+  };
 
   const openAvisModal = () => {
     setShowAvisModal(true);
     setAvisModalStep(1);
     setUploadedAvisFile(null);
   };
-  
-  // const closeAvisModal = () => {
-  //   setShowAvisModal(false);
-  // };
-  
+
   const handleAvisFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       // Clean up previous object URL if any
@@ -332,6 +545,40 @@ export default function AddContactDossierPage() {
       setFilePreviewUrl(null);
     }
   };
+
+  // Add these options for roof types
+  const toitureOptions = [
+    { value: "tuiles", label: "Tuiles" },
+    { value: "ardoises", label: "Ardoises" },
+    { value: "tole", label: "Tôle" },
+    { value: "zinc", label: "Zinc" },
+    { value: "terrasse", label: "Terrasse" },
+    { value: "fibrociment", label: "Fibrociment" },
+    { value: "chaume", label: "Chaume" },
+    { value: "autre", label: "Autre" },
+  ];
+
+  // Function to prepare the address from available sources
+const getFormattedAddress = () => {
+  // First try to use extractedAvisInfo.adresse if available
+  if (extractedAvisInfo.adresse) {
+    return `${extractedAvisInfo.adresse}, ${extractedAvisInfo.codePostal} ${extractedAvisInfo.ville}`;
+  }
+  // Fall back to mailingAddress if available
+  else if (contact.mailingAddress) {
+    return contact.mailingAddress;
+  }
+  // If neither is available, return empty string
+  return "";
+};
+
+// Function to handle address search
+const handleAddressSearch = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (cadastreMapRef.current && searchAddress) {
+    cadastreMapRef.current.searchAddress(searchAddress);
+  }
+};
   
   const goToVerifyStep = () => {
     if (uploadedAvisFile) {
@@ -1694,6 +1941,152 @@ useEffect(() => {
                       </p>
                     )}
                   </div>
+                  {/* Type de toiture (optional) */}
+                  <div>
+                    <label htmlFor="typeToiture" className="block text-sm font-medium text-gray-700">
+                      Type de toiture <span className="text-xs text-gray-500">(optionnel)</span>
+                    </label>
+                    <select
+                      id="typeToiture"
+                      value={dossier.informationLogement.typeToiture}
+                      onChange={(e) =>
+                        setDossier({
+                          ...dossier,
+                          informationLogement: {
+                            ...dossier.informationLogement,
+                            typeToiture: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="">Sélectionnez</option>
+                      {toitureOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Numero de la parcelle cadastrale */}
+                  <div>
+                    <label htmlFor="numeroParcelleCadastrale" className="block text-sm font-medium text-gray-700">
+                      Numéro de la parcelle cadastrale
+                    </label>
+                    <div className="flex mt-1">
+                      <input
+                        type="text"
+                        id="numeroParcelleCadastrale"
+                        value={dossier.informationLogement.numeroParcelleCadastrale}
+                        readOnly
+                        className="block w-full rounded-l-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Ex: 000 / ZA / 0061"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCadastreModal(true)}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        Choisir
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Surface de la parcelle cadastrale en m2 (prefilled) */}
+                  <div>
+                    <label htmlFor="surfaceParcelleCadastrale" className="block text-sm font-medium text-gray-700">
+                      Surface de la parcelle cadastrale en m²
+                    </label>
+                    <input
+                      type="text"
+                      id="surfaceParcelleCadastrale"
+                      value={dossier.informationLogement.surfaceParcelleCadastrale}
+                      onChange={(e) =>
+                        setDossier({
+                          ...dossier,
+                          informationLogement: {
+                            ...dossier.informationLogement,
+                            surfaceParcelleCadastrale: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Ex: 1881"
+                    />
+                  </div>
+
+                  {/* Année de la chaudiére */}
+                  <div>
+                    <label htmlFor="anneeChaudiere" className="block text-sm font-medium text-gray-700">
+                      Année de la chaudière
+                    </label>
+                    <input
+                      type="number"
+                      id="anneeChaudiere"
+                      value={dossier.informationLogement.anneeChaudiere}
+                      onChange={(e) =>
+                        setDossier({
+                          ...dossier,
+                          informationLogement: {
+                            ...dossier.informationLogement,
+                            anneeChaudiere: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Ex: 2010"
+                    />
+                  </div>
+
+                  {/* Surface des murs exterieurs en m2 */}
+                  <div>
+                    <label htmlFor="surfaceMursExterieurs" className="block text-sm font-medium text-gray-700">
+                      Surface des murs extérieurs en m²
+                    </label>
+                    <input
+                      type="number"
+                      id="surfaceMursExterieurs"
+                      value={dossier.informationLogement.surfaceMursExterieurs}
+                      onChange={(e) =>
+                        setDossier({
+                          ...dossier,
+                          informationLogement: {
+                            ...dossier.informationLogement,
+                            surfaceMursExterieurs: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Ex: 120"
+                    />
+                  </div>
+
+                  {/* Surface de la toiture en m² */}
+                  <div>
+                    <label htmlFor="surfaceToiture" className="block text-sm font-medium text-gray-700">
+                      Surface de la toiture en m²
+                    </label>
+                    <input
+                      type="number"
+                      id="surfaceToiture"
+                      value={dossier.informationLogement.surfaceToiture}
+                      onChange={(e) =>
+                        setDossier({
+                          ...dossier,
+                          informationLogement: {
+                            ...dossier.informationLogement,
+                            surfaceToiture: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Ex: 80"
+                    />
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -2249,6 +2642,110 @@ useEffect(() => {
                       >
                         Annuler
                       </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Geocadastre Modal with Improved UI */}
+            {showCadastreModal && (
+              <div className="fixed inset-0 z-50 overflow-y-auto">
+                <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                  <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                    <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+                  </div>
+
+                  <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full">
+                    <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                      <div className="sm:flex sm:items-start">
+                        <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            Geocadastre - Sélection de Parcelle
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Recherchez une adresse ou cliquez directement sur la carte pour sélectionner une parcelle cadastrale.
+                          </p>
+                          
+                          {/* Address search input */}
+                          <form onSubmit={handleAddressSearch} className="mb-4 flex">
+                            <input
+                              type="text"
+                              value={searchAddress}
+                              onChange={(e) => setSearchAddress(e.target.value)}
+                              placeholder="Rechercher une adresse..."
+                              className="flex-1 rounded-l-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                            <button
+                              type="submit"
+                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                              </svg>
+                              Rechercher
+                            </button>
+                          </form>
+                          
+                          {/* Real interactive map */}
+                          <div className="border border-gray-300 rounded-lg overflow-hidden h-96 mb-4 relative">
+                            <CadastreMapWithNoSSR 
+                              ref={cadastreMapRef} 
+                              onParcelSelect={setSelectedParcel} 
+                              initialAddress={getFormattedAddress()}
+                            />
+                          </div>
+                          
+                          {/* Selected parcel information */}
+                          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                            <h4 className="font-medium text-gray-900 mb-2">Informations de la parcelle sélectionnée</h4>
+                            {selectedParcel ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                <div className="bg-white p-3 rounded shadow-sm">
+                                  <p><span className="font-medium text-gray-700">Parcelle:</span> <span className="font-bold text-indigo-700">{selectedParcel.parcelle}</span></p>
+                                  <p><span className="font-medium text-gray-700">N° parcelle:</span> {selectedParcel.numero}</p>
+                                  <p><span className="font-medium text-gray-700">Section:</span> {selectedParcel.section}</p>
+                                </div>
+                                <div className="bg-white p-3 rounded shadow-sm">
+                                  <p><span className="font-medium text-gray-700">N° INSEE:</span> {selectedParcel.insee}</p>
+                                  <p><span className="font-medium text-gray-700">Surface parcelle:</span> <span className="font-bold text-indigo-700">{selectedParcel.surface}</span></p>
+                                  <p><span className="font-medium text-gray-700">Adresse:</span> {selectedParcel.adresse}</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-yellow-800">
+                                <div className="flex items-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <p>Aucune parcelle sélectionnée. Veuillez rechercher une adresse ou cliquer sur la carte pour sélectionner une parcelle.</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                      <button
+                        type="button"
+                        className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm ${!selectedParcel ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={handleSelectParcel}
+                        disabled={!selectedParcel}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Choisir cette parcelle cadastrale
+                      </button>
+                      <button
+                        type="button"
+                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                        onClick={() => setShowCadastreModal(false)}
+                      >
+                        Annuler
+                      </button>
                     </div>
                   </div>
                 </div>
