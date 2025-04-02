@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+// import { PhoneIcon } from "@heroicons/react/24/outline";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -33,13 +34,15 @@ import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
 import "moment/locale/fr";
-import DatePicker from "react-datepicker";
+// import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale, setDefaultLocale } from "react-datepicker";
 import { fr } from 'date-fns/locale/fr';
 import { format, isToday, addDays, subDays } from "date-fns";
 import { fr as dateFnsFr } from "date-fns/locale";
 import { User, Clock, MapPin, Send, Mail, Phone, ChevronDownIcon } from "lucide-react";
+import NewTaskModal from "./NewTaskModal";
+import ConversationsPanel from "./ConversationsPanel";
 
 // Register the French locale for DatePicker
 registerLocale('fr', fr);
@@ -63,7 +66,7 @@ interface Organization {
   id: string;
   name: string;
   type: "CEE" | "MPR";
-  logo?: string;
+  logo: string;
 }
 
 // First, define an interface for the calendar event
@@ -154,10 +157,10 @@ const controllers: Controller[] = [
   }
 ];
 
-// Sample data for organizations
+// Update the organizations data to include logos
 const organizations: Organization[] = [
-  { id: "cee", name: "Certificats d'Économies d'Énergie", type: "CEE" },
-  { id: "mpr", name: "MaPrimeRénov'", type: "MPR" }
+  { id: "cee", name: "Certificats d'Économies d'Énergie", type: "CEE", logo: "/cee.png" },
+  { id: "mpr", name: "MaPrimeRénov'", type: "MPR", logo: "/mpr.svg" }
 ];
 
 // Email templates
@@ -336,6 +339,11 @@ const sampleControlTasks: ControlTask[] = [
 export default function ControleSurSitePage() {
   // State variables
   const [loading, setLoading] = useState(true);
+  // const [sendDocs, setSendDocs] = useState(false);
+  // const [showClientList, setShowClientList] = useState(false);
+  // const [selectedClient, setSelectedClient] = useState(null);
+  // const [newTaskController, setNewTaskController] = useState("");
+  // const [newTaskOrg, setNewTaskOrg] = useState("");
   const [controlTasks, setControlTasks] = useState<ControlTask[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<ControlTask[]>([]);
   const [selectedTask, setSelectedTask] = useState<ControlTask | null>(null);
@@ -354,6 +362,17 @@ export default function ControleSurSitePage() {
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [showChatPanel, setShowChatPanel] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
+  // const [newTaskOrg, setNewTaskOrg] = useState("");
+  // const [newTaskController, setNewTaskController] = useState("");
+  // const [showClientDropdown, setShowClientDropdown] = useState(false);
+  // const [clientSearch, setClientSearch] = useState("");
+  // const [selectedClient, setSelectedClient] = useState(null);
+  // const [clientName, setClientName] = useState("");
+  // const [clientEmail, setClientEmail] = useState("");
+  // const [clientPhone, setClientPhone] = useState("");
+  // const [clientAddress, setClientAddress] = useState("");
+  // const [sendDocs, setSendDocs] = useState(false);
+  // const [controlDate, setControlDate] = useState(new Date());
 
   // Custom styles for the React Big Calendar
   // const calendarCustomStyles = {
@@ -898,41 +917,63 @@ export default function ControleSurSitePage() {
                 </motion.div>
 
                 <div className="ml-auto flex gap-3 mt-3 sm:mt-0">
-                  <div className="relative">
-                    <select
-                      value={selectedOrganization ? selectedOrganization.id : ""}
-                      onChange={(e) => {
-                        const orgId = e.target.value;
-                        const org = organizations.find(o => o.id === orgId);
-                        setSelectedOrganization(org || null);
-                      }}
-                      className="appearance-none pl-3 pr-10 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                    >
-                      <option value="">Toutes les organisations</option>
-                      {organizations.map(org => (
-                        <option key={org.id} value={org.id}>{org.name}</option>
-                      ))}
-                    </select>
-                    <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                <div className="relative">
+                  <select
+                    value={selectedOrganization ? selectedOrganization.id : ""}
+                    onChange={(e) => {
+                      const orgId = e.target.value;
+                      const org = organizations.find(o => o.id === orgId);
+                      setSelectedOrganization(org || null);
+                    }}
+                    className="appearance-none pl-10 pr-10 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
+                  >
+                    <option value="">Toutes les organismes</option>
+                    {organizations.map(org => (
+                      <option key={org.id} value={org.id}>{org.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    {selectedOrganization ? (
+                      <img 
+                        src={selectedOrganization.logo} 
+                        alt={selectedOrganization.name} 
+                        className="h-4 w-4 object-contain" 
+                      />
+                    ) : (
+                      <BuildingOfficeIcon className="h-4 w-4 text-gray-500" />
+                    )}
                   </div>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                </div>
 
-                  <div className="relative">
-                    <select
-                      value={selectedController ? selectedController.id : ""}
-                      onChange={(e) => {
-                        const controllerId = e.target.value;
-                        const controller = controllers.find(c => c.id === controllerId);
-                        setSelectedController(controller || null);
-                      }}
-                      className="appearance-none pl-3 pr-10 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                    >
-                      <option value="">Tous les contrôleurs</option>
-                      {controllers.map(controller => (
-                        <option key={controller.id} value={controller.id}>{controller.name}</option>
-                      ))}
-                    </select>
-                    <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                <div className="relative">
+                  <select
+                    value={selectedController ? selectedController.id : ""}
+                    onChange={(e) => {
+                      const controllerId = e.target.value;
+                      const controller = controllers.find(c => c.id === controllerId);
+                      setSelectedController(controller || null);
+                    }}
+                    className="appearance-none pl-10 pr-10 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
+                  >
+                    <option value="">Bureau de contrôle</option>
+                    {controllers.map(controller => (
+                      <option key={controller.id} value={controller.id}>{controller.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    {selectedController ? (
+                      <img 
+                        src={selectedController.logo} 
+                        alt={selectedController.name} 
+                        className="h-4 w-4 object-contain" 
+                      />
+                    ) : (
+                      <UserGroupIcon className="h-4 w-4 text-gray-500" />
+                    )}
                   </div>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                </div>
                 </div>
               </div>
             </div>
@@ -1270,7 +1311,7 @@ export default function ControleSurSitePage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
-                  <h3 className="text-lg font-bold text-[#213f5b] mb-4">Organismes contrôleurs</h3>
+                  <h3 className="text-lg font-bold text-[#213f5b] mb-4">Bureau de contrôle</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {controllers.map(controller => (
                       <motion.div 
@@ -1316,7 +1357,7 @@ export default function ControleSurSitePage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
                 >
-                  <h3 className="text-lg font-bold text-[#213f5b] mb-4">Type d&apos;organisation</h3>
+                  <h3 className="text-lg font-bold text-[#213f5b] mb-4">Type d&apos;organisme</h3>
                   <div className="space-y-3">
                     {organizations.map(org => (
                       <motion.div 
@@ -1334,23 +1375,17 @@ export default function ControleSurSitePage() {
                         )}
                       >
                         <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-[#213f5b]">{org.name}</p>
-                            <div className="mt-1 px-2 py-1 bg-[#4facfe]/10 text-[#4facfe] text-xs font-medium rounded-full inline-flex items-center">
-                              <BuildingOfficeIcon className="h-3 w-3 mr-1" />
-                              {org.type}
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-white border border-gray-100 p-1 flex items-center justify-center">
+                              <img src={org.logo} alt={org.name} className="h-7 w-7 object-contain" />
                             </div>
-                          </div>
-                          <div className="h-10 w-10 rounded-full bg-[#4facfe]/10 flex items-center justify-center">
-                            {org.type === "CEE" ? (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#4facfe]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                              </svg>
-                            ) : (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#4facfe]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                              </svg>
-                            )}
+                            <div>
+                              <p className="font-medium text-[#213f5b]">{org.name}</p>
+                              <div className="mt-1 px-2 py-1 bg-[#4facfe]/10 text-[#4facfe] text-xs font-medium rounded-full inline-flex items-center">
+                                <BuildingOfficeIcon className="h-3 w-3 mr-1" />
+                                {org.type}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </motion.div>
@@ -1411,6 +1446,7 @@ export default function ControleSurSitePage() {
                 </motion.div>
               </div>
             </div>
+            <ConversationsPanel />
           </div>
         </main>
       </div>
@@ -1418,170 +1454,13 @@ export default function ControleSurSitePage() {
       {/* Modals and Panels */}
 
       {/* New Task Modal */}
-      <AnimatePresence>
-        {showNewTaskModal && (
-          <motion.div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div 
-              className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden"
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-            >
-              <div className="p-6 bg-gradient-to-r from-[#213f5b] to-[#1d3349] flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">Nouveau contrôle sur site</h2>
-                <button 
-                  onClick={() => setShowNewTaskModal(false)}
-                  className="text-white/80 hover:text-white transition-colors"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="p-6 max-h-[70vh] overflow-y-auto">
-                <form className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Titre du contrôle</label>
-                      <input 
-                        type="text" 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                        placeholder="Ex: Contrôle installation PAC air-eau"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Type d&apos;installation</label>
-                      <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition">
-                        <option value="">Sélectionner un type</option>
-                        <option value="pac">Pompe à chaleur</option>
-                        <option value="isolation">Isolation</option>
-                        <option value="solaire">Panneaux solaires</option>
-                        <option value="chaudiere">Chaudière</option>
-                        <option value="vmc">VMC</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Organisation</label>
-                      <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition">
-                        <option value="">Sélectionner une organisation</option>
-                        {organizations.map(org => (
-                          <option key={org.id} value={org.id}>{org.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Contrôleur</label>
-                      <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition">
-                        <option value="">Sélectionner un contrôleur</option>
-                        {controllers.map(controller => (
-                          <option key={controller.id} value={controller.id}>{controller.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date de début</label>
-                      <DatePicker
-                        selected={new Date()}
-                        onChange={(date) => console.log(date)}
-                        showTimeSelect
-                        timeFormat="HH:mm"
-                        timeIntervals={15}
-                        timeCaption="Heure"
-                        dateFormat="dd/MM/yyyy HH:mm"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                        locale="fr"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date de fin</label>
-                      <DatePicker
-                        selected={new Date()}
-                        onChange={(date) => console.log(date)}
-                        showTimeSelect
-                        timeFormat="HH:mm"
-                        timeIntervals={15}
-                        timeCaption="Heure"
-                        dateFormat="dd/MM/yyyy HH:mm"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                        locale="fr"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
-                      <input 
-                        type="text" 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                        placeholder="Adresse complète"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nom du client</label>
-                      <input 
-                        type="text" 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                        placeholder="Ex: Martin Dupont"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email du client</label>
-                      <input 
-                        type="email" 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                        placeholder="client@exemple.com"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone du client</label>
-                      <input 
-                        type="tel" 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                        placeholder="Ex: 0612345678"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
-                      <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition">
-                        <option value="medium">Normale</option>
-                        <option value="high">Haute</option>
-                        <option value="low">Basse</option>
-                      </select>
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                      <textarea 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4facfe] focus:border-transparent transition"
-                        placeholder="Détails supplémentaires sur l'installation ou le contrôle..."
-                        rows={4}
-                      ></textarea>
-                    </div>
-                  </div>
-                </form>
-              </div>
-              <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
-                <button 
-                  onClick={() => setShowNewTaskModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
-                >
-                  Annuler
-                </button>
-                <button 
-                  onClick={() => {
-                    alert("Contrôle créé avec succès!");
-                    setShowNewTaskModal(false);
-                  }}
-                  className="px-4 py-2 bg-[#213f5b] text-white rounded-lg hover:bg-[#1a324a] transition"
-                >
-                  Créer le contrôle
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      <NewTaskModal
+        showNewTaskModal={showNewTaskModal}
+        setShowNewTaskModal={setShowNewTaskModal}
+        organizations={organizations}
+        controllers={controllers}
+      />
+      
       {/* Email Modal */}
       <AnimatePresence>
         {showEmailModal && (
@@ -1977,7 +1856,7 @@ export default function ControleSurSitePage() {
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-start gap-2">
-                        <p className="text-sm font-medium text-gray-500 w-24">Organisation :</p>
+                        <p className="text-sm font-medium text-gray-500 w-24">Organismes :</p>
                         <p className="text-sm text-gray-900">
                           {selectedTask.organizationId === "cee" ? "Certificats d'Économies d'Énergie (CEE)" : "MaPrimeRénov' (MPR)"}
                         </p>
