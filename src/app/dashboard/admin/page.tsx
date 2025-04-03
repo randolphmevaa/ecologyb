@@ -1535,6 +1535,27 @@ export default function AdminDashboardPage() {
                           <BanknotesIcon className="h-5 w-5 text-blue-500" />
                         </div>
                       </div>
+                      
+                      {/* Additional Financial Metrics - Responsive */}
+                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        <div className="flex flex-col items-center p-1">
+                          <span className="text-[#213f5b]/70 mb-0.5">Dépenses</span>
+                          <span className="font-semibold text-[#213f5b]">{formatCurrency(750000)}</span>
+                        </div>
+                        <div className="flex flex-col items-center p-1">
+                          <span className="text-[#213f5b]/70 mb-0.5">Encaissé</span>
+                          <span className="font-semibold text-[#213f5b]">{formatCurrency(980000)}</span>
+                        </div>
+                        <div className="flex flex-col items-center p-1">
+                          <span className="text-[#213f5b]/70 mb-0.5">Marge</span>
+                          <span className="font-semibold text-[#213f5b]">40%</span>
+                        </div>
+                        <div className="flex flex-col items-center p-1">
+                          <span className="text-[#213f5b]/70 mb-0.5">Bénéfice</span>
+                          <span className="font-semibold text-green-600">{formatCurrency(500000)}</span>
+                        </div>
+                      </div>
+                      
                       <div className="mt-4 relative h-1.5 bg-blue-100/50 rounded-full overflow-hidden">
                         <div className="absolute top-0 left-0 h-full bg-blue-500/80 rounded-full" style={{ width: '65%' }}></div>
                       </div>

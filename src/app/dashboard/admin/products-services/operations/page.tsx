@@ -25,9 +25,17 @@ interface Operation {
   categorie: string;
   active: boolean;
   kwhCumac?: string;
-  typeCoupDePouce?: string;
+  coupDePouce?: boolean;
   kwhCumacCoupDePouce?: string;
+  horsCoupDePouce?: boolean;
   kwhCumacHorsCoupDePouce?: string;
+  h1h2h3Selection?: string;
+  h1h2h3HorsSelection?: string;
+  maprimeRenovColor?: string;
+  maprimeRenovBleu?: string;
+  maprimeRenovJaune?: string;
+  maprimeRenovRose?: string;
+  maprimeRenovViolet?: string;
 }
 
 // Form interface for Operation
@@ -39,9 +47,17 @@ interface OperationForm {
   categorie: string;
   active: boolean;
   kwhCumac?: string;
-  typeCoupDePouce?: string;
+  coupDePouce?: boolean;
   kwhCumacCoupDePouce?: string;
+  horsCoupDePouce?: boolean;
   kwhCumacHorsCoupDePouce?: string;
+  h1h2h3Selection?: string;
+  h1h2h3HorsSelection?: string;
+  maprimeRenovColor?: string;
+  maprimeRenovBleu?: string;
+  maprimeRenovJaune?: string;
+  maprimeRenovRose?: string;
+  maprimeRenovViolet?: string;
 }
 
 // Sample data for operations
@@ -53,10 +69,10 @@ const SAMPLE_OPERATIONS: Operation[] = [
     description: "Installation d'une pompe à chaleur air/eau pour le chauffage de locaux à usage d'habitation.",
     categorie: "CHAUFFAGE",
     active: true,
-    // kwhCumac: "85000"
     kwhCumac: "60000",
-    typeCoupDePouce: "COUP DE POUCE",
-    kwhCumacCoupDePouce: "120000"
+    coupDePouce: true,
+    kwhCumacCoupDePouce: "120000",
+    h1h2h3Selection: "H1"
   },
   {
     id: "O002",
@@ -93,8 +109,9 @@ const SAMPLE_OPERATIONS: Operation[] = [
     categorie: "CHAUFFAGE",
     active: true,
     kwhCumac: "95000",
-    typeCoupDePouce: "COUP DE POUCE",
-    kwhCumacCoupDePouce: "120000"
+    coupDePouce: true,
+    kwhCumacCoupDePouce: "120000",
+    h1h2h3Selection: "H2"
   },
   {
     id: "O006",
@@ -113,8 +130,9 @@ const SAMPLE_OPERATIONS: Operation[] = [
     categorie: "CHAUFFAGE",
     active: true,
     kwhCumac: "60000",
-    typeCoupDePouce: "COUP DE POUCE",
-    kwhCumacCoupDePouce: "120000"
+    coupDePouce: true,
+    kwhCumacCoupDePouce: "120000",
+    h1h2h3Selection: "H3"
   }
 ];
 
@@ -134,7 +152,18 @@ export default function OperationsPage() {
     description: "",
     categorie: "",
     active: true,
-    kwhCumac: ""
+    kwhCumac: "",
+    coupDePouce: false,
+    kwhCumacCoupDePouce: "",
+    horsCoupDePouce: false,
+    kwhCumacHorsCoupDePouce: "",
+    h1h2h3Selection: "",
+    h1h2h3HorsSelection: "",
+    maprimeRenovColor: "",
+    maprimeRenovBleu: "",
+    maprimeRenovJaune: "",
+    maprimeRenovRose: "",
+    maprimeRenovViolet: ""
   });
 
   // Edit handler
@@ -148,9 +177,17 @@ export default function OperationsPage() {
       categorie: operation.categorie,
       active: operation.active,
       kwhCumac: operation.kwhCumac || "",
-      typeCoupDePouce: operation.typeCoupDePouce || "",
+      coupDePouce: operation.coupDePouce || false,
       kwhCumacCoupDePouce: operation.kwhCumacCoupDePouce || "",
-      kwhCumacHorsCoupDePouce: operation.kwhCumacHorsCoupDePouce || ""
+      horsCoupDePouce: operation.horsCoupDePouce || false,
+      kwhCumacHorsCoupDePouce: operation.kwhCumacHorsCoupDePouce || "",
+      h1h2h3Selection: operation.h1h2h3Selection || "",
+      h1h2h3HorsSelection: operation.h1h2h3HorsSelection || "",
+      maprimeRenovColor: operation.maprimeRenovColor || "",
+      maprimeRenovBleu: operation.maprimeRenovBleu || "",
+      maprimeRenovJaune: operation.maprimeRenovJaune || "",
+      maprimeRenovRose: operation.maprimeRenovRose || "",
+      maprimeRenovViolet: operation.maprimeRenovViolet || ""
     });
     setViewMode("form");
   };
@@ -170,7 +207,18 @@ export default function OperationsPage() {
       description: "",
       categorie: "",
       active: true,
-      kwhCumac: ""
+      kwhCumac: "",
+      coupDePouce: false,
+      kwhCumacCoupDePouce: "",
+      horsCoupDePouce: false,
+      kwhCumacHorsCoupDePouce: "",
+      h1h2h3Selection: "",
+      h1h2h3HorsSelection: "",
+      maprimeRenovColor: "",
+      maprimeRenovBleu: "",
+      maprimeRenovJaune: "",
+      maprimeRenovRose: "",
+      maprimeRenovViolet: ""
     });
     setViewMode("form");
   };
@@ -185,9 +233,17 @@ export default function OperationsPage() {
       categorie: operationForm.categorie,
       active: operationForm.active,
       kwhCumac: operationForm.kwhCumac,
-      typeCoupDePouce: operationForm.typeCoupDePouce,
+      coupDePouce: operationForm.coupDePouce,
       kwhCumacCoupDePouce: operationForm.kwhCumacCoupDePouce,
-      kwhCumacHorsCoupDePouce: operationForm.kwhCumacHorsCoupDePouce
+      horsCoupDePouce: operationForm.horsCoupDePouce,
+      kwhCumacHorsCoupDePouce: operationForm.kwhCumacHorsCoupDePouce,
+      h1h2h3Selection: operationForm.h1h2h3Selection,
+      h1h2h3HorsSelection: operationForm.h1h2h3HorsSelection,
+      maprimeRenovColor: operationForm.maprimeRenovColor,
+      maprimeRenovBleu: operationForm.maprimeRenovBleu,
+      maprimeRenovJaune: operationForm.maprimeRenovJaune,
+      maprimeRenovRose: operationForm.maprimeRenovRose,
+      maprimeRenovViolet: operationForm.maprimeRenovViolet
     };
 
     if (selectedOperation) {
@@ -206,6 +262,15 @@ export default function OperationsPage() {
     setOperationForm({
       ...operationForm,
       [name]: value
+    });
+  };
+
+  // Checkbox change handler
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setOperationForm({
+      ...operationForm,
+      [name]: checked
     });
   };
 
@@ -391,11 +456,38 @@ export default function OperationsPage() {
                                 </div>
                               )}
                               
-                              {/* Display Coup de Pouce type if applicable */}
-                              {operation.typeCoupDePouce && (
+                              {/* Display Coup de Pouce if applicable */}
+                              {operation.coupDePouce && (
                                 <div>
-                                  <p className="text-xs text-[#213f5b] opacity-75 mb-1">Type de valorisation</p>
-                                  <p className="text-sm font-medium text-[#213f5b]">{operation.typeCoupDePouce}</p>
+                                  <p className="text-xs text-[#213f5b] opacity-75 mb-1">Coup de Pouce</p>
+                                  <p className="text-sm font-medium text-[#213f5b]">
+                                    {operation.kwhCumacCoupDePouce && parseInt(operation.kwhCumacCoupDePouce).toLocaleString()} kWh 
+                                    {operation.h1h2h3Selection && ` (${operation.h1h2h3Selection})`}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Display Hors Coup de Pouce if applicable */}
+                              {operation.horsCoupDePouce && (
+                                <div>
+                                  <p className="text-xs text-[#213f5b] opacity-75 mb-1">Hors Coup de Pouce</p>
+                                  <p className="text-sm font-medium text-[#213f5b]">
+                                    {operation.kwhCumacHorsCoupDePouce && parseInt(operation.kwhCumacHorsCoupDePouce).toLocaleString()} kWh 
+                                    {operation.h1h2h3HorsSelection && ` (${operation.h1h2h3HorsSelection})`}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Display MaPrimeRenov if applicable */}
+                              {operation.maprimeRenovColor && (
+                                <div>
+                                  <p className="text-xs text-[#213f5b] opacity-75 mb-1">MaPrimeRenov</p>
+                                  <p className="text-sm font-medium text-[#213f5b]">
+                                    {operation.maprimeRenovColor === "bleu" && operation.maprimeRenovBleu && `Bleu: ${operation.maprimeRenovBleu}€`}
+                                    {operation.maprimeRenovColor === "jaune" && operation.maprimeRenovJaune && `Jaune: ${operation.maprimeRenovJaune}€`}
+                                    {operation.maprimeRenovColor === "rose" && operation.maprimeRenovRose && `Rose: ${operation.maprimeRenovRose}€`}
+                                    {operation.maprimeRenovColor === "violet" && operation.maprimeRenovViolet && `Violet: ${operation.maprimeRenovViolet}€`}
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -522,90 +614,237 @@ export default function OperationsPage() {
                           </label>
                         </div>
                         
-                        {/* kWh Cumac Input - only for operations that don't have Coup de Pouce or when no type is selected */}
-                        {(!["BAR-TH-171", "BAR-TH-143", "BAR-TH-113"].includes(operationForm.code) || 
-                         (["BAR-TH-171", "BAR-TH-143", "BAR-TH-113"].includes(operationForm.code) && !operationForm.typeCoupDePouce)) && (
-                          <div className="space-y-2 md:col-span-2 border-t pt-4 mt-4">
-                            <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="kwhCumac">kWh Cumac standard</label>
-                            <input
-                              id="kwhCumac"
-                              type="text"
-                              name="kwhCumac"
-                              value={operationForm.kwhCumac || ""}
-                              onChange={handleOperationFormChange}
-                              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                              placeholder="Entrez la valeur kWh Cumac standard"
-                            />
-                          </div>
-                        )}
+                        {/* kWh Cumac Input - shown when not using any special valorization */}
+                        <div className="space-y-2 md:col-span-2 border-t pt-4 mt-4">
+                          <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="kwhCumac">kWh Cumac standard</label>
+                          <input
+                            id="kwhCumac"
+                            type="text"
+                            name="kwhCumac"
+                            value={operationForm.kwhCumac || ""}
+                            onChange={handleOperationFormChange}
+                            className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                            placeholder="Entrez la valeur kWh Cumac standard"
+                          />
+                        </div>
                         
-                        {/* COUP DE POUCE fields - only for BAR-TH-171 and BAR-TH-143 and BAR-TH-113 */}
-                        {(operationForm.code === "BAR-TH-171" || operationForm.code === "BAR-TH-143" || operationForm.code === "BAR-TH-113") && (
-                          <div className="space-y-4 md:col-span-2 border-t pt-4 mt-2">
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-[#213f5b] mb-1">Type de valorisation</label>
-                              <div className="flex items-center space-x-4">
-                                <label className="inline-flex items-center cursor-pointer">
-                                  <input
-                                    type="radio"
-                                    name="typeCoupDePouce"
-                                    value="COUP DE POUCE"
-                                    checked={(operationForm.typeCoupDePouce || "") === "COUP DE POUCE"}
-                                    onChange={(e) => setOperationForm({
-                                      ...operationForm,
-                                      typeCoupDePouce: e.target.value
-                                    })}
-                                    className="mr-2 h-4 w-4 text-[#213f5b] focus:ring-[#213f5b]"
-                                  />
-                                  <span className="text-sm font-medium text-[#213f5b]">COUP DE POUCE</span>
-                                </label>
-                                <label className="inline-flex items-center cursor-pointer">
-                                  <input
-                                    type="radio"
-                                    name="typeCoupDePouce"
-                                    value="HORS COUP DE POUCE"
-                                    checked={(operationForm.typeCoupDePouce || "") === "HORS COUP DE POUCE"}
-                                    onChange={(e) => setOperationForm({
-                                      ...operationForm,
-                                      typeCoupDePouce: e.target.value
-                                    })}
-                                    className="mr-2 h-4 w-4 text-[#213f5b] focus:ring-[#213f5b]"
-                                  />
-                                  <span className="text-sm font-medium text-[#213f5b]">HORS COUP DE POUCE</span>
-                                </label>
-                              </div>
+                        {/* Type de valorisation */}
+                        <div className="space-y-4 md:col-span-2 border-t pt-4 mt-2">
+                          <h3 className="text-lg font-medium text-[#213f5b]">Type de valorisation</h3>
+                          
+                          {/* Coup de Pouce checkbox and input */}
+                          <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                id="coup-de-pouce"
+                                type="checkbox"
+                                name="coupDePouce"
+                                checked={operationForm.coupDePouce || false}
+                                onChange={handleCheckboxChange}
+                                className="h-4 w-4 text-[#213f5b] focus:ring-[#213f5b] rounded"
+                              />
+                              <label htmlFor="coup-de-pouce" className="text-sm font-medium text-[#213f5b]">
+                                Coup de pouce
+                              </label>
                             </div>
                             
-                            {/* Conditional fields based on COUP DE POUCE selection */}
-                            {operationForm.typeCoupDePouce === "COUP DE POUCE" && (
-                              <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1">kWh Cumac (Coup de Pouce)</label>
-                                <input
-                                  type="text"
-                                  name="kwhCumacCoupDePouce"
-                                  value={operationForm.kwhCumacCoupDePouce || ""}
-                                  onChange={handleOperationFormChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                  placeholder="Entrez la valeur kWh Cumac pour Coup de Pouce"
-                                />
-                              </div>
-                            )}
-                            
-                            {operationForm.typeCoupDePouce === "HORS COUP DE POUCE" && (
-                              <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1">kWh Cumac (Hors Coup de Pouce)</label>
-                                <input
-                                  type="text"
-                                  name="kwhCumacHorsCoupDePouce"
-                                  value={operationForm.kwhCumacHorsCoupDePouce || ""}
-                                  onChange={handleOperationFormChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                                  placeholder="Entrez la valeur kWh Cumac hors Coup de Pouce"
-                                />
+                            {operationForm.coupDePouce && (
+                              <div className="ml-6 space-y-3">
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1">
+                                    kWh Cumac (Coup de pouce)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    name="kwhCumacCoupDePouce"
+                                    value={operationForm.kwhCumacCoupDePouce || ""}
+                                    onChange={handleOperationFormChange}
+                                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                    placeholder="Entrez la valeur kWh Cumac pour Coup de pouce"
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1">Zone climatique</label>
+                                  <div className="flex flex-wrap gap-3">
+                                    {["H1", "H2", "H3"].map((zone) => (
+                                      <label key={zone} className="inline-flex items-center gap-2">
+                                        <input
+                                          type="radio"
+                                          name="h1h2h3Selection"
+                                          value={zone}
+                                          checked={operationForm.h1h2h3Selection === zone}
+                                          onChange={handleOperationFormChange}
+                                          className="h-4 w-4 text-[#213f5b] focus:ring-[#213f5b]"
+                                        />
+                                        <span className="text-sm font-medium text-[#213f5b]">{zone}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
-                        )}
+                          
+                          {/* Hors Coup de Pouce checkbox and input */}
+                          <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                id="hors-coup-de-pouce"
+                                type="checkbox"
+                                name="horsCoupDePouce"
+                                checked={operationForm.horsCoupDePouce || false}
+                                onChange={handleCheckboxChange}
+                                className="h-4 w-4 text-[#213f5b] focus:ring-[#213f5b] rounded"
+                              />
+                              <label htmlFor="hors-coup-de-pouce" className="text-sm font-medium text-[#213f5b]">
+                                Hors coup de pouce
+                              </label>
+                            </div>
+                            
+                            {operationForm.horsCoupDePouce && (
+                              <div className="ml-6 space-y-3">
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1">
+                                    kWh Cumac (Hors coup de pouce)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    name="kwhCumacHorsCoupDePouce"
+                                    value={operationForm.kwhCumacHorsCoupDePouce || ""}
+                                    onChange={handleOperationFormChange}
+                                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                    placeholder="Entrez la valeur kWh Cumac hors Coup de pouce"
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-[#213f5b] mb-1">Zone climatique</label>
+                                  <div className="flex flex-wrap gap-3">
+                                    {["H1", "H2", "H3"].map((zone) => (
+                                      <label key={`hors-${zone}`} className="inline-flex items-center gap-2">
+                                        <input
+                                          type="radio"
+                                          name="h1h2h3HorsSelection"
+                                          value={zone}
+                                          checked={operationForm.h1h2h3HorsSelection === zone}
+                                          onChange={handleOperationFormChange}
+                                          className="h-4 w-4 text-[#213f5b] focus:ring-[#213f5b]"
+                                        />
+                                        <span className="text-sm font-medium text-[#213f5b]">{zone}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* MaPrimeRenov section */}
+                          <div className="mt-4 pt-4 border-t">
+                            <h3 className="text-lg font-medium text-[#213f5b] mb-3">MaPrimeRenov</h3>
+                            
+                            <div className="space-y-3">
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-[#213f5b] mb-1">Couleur MaPrimeRenov</label>
+                                <div className="flex flex-wrap gap-3">
+                                  {[
+                                    { id: "bleu", label: "Bleu", color: "#1E40AF" },
+                                    { id: "jaune", label: "Jaune", color: "#EAB308" },
+                                    { id: "rose", label: "Rose", color: "#EC4899" },
+                                    { id: "violet", label: "Violet", color: "#8B5CF6" }
+                                  ].map((color) => (
+                                    <label 
+                                      key={color.id} 
+                                      className="inline-flex items-center gap-2 cursor-pointer"
+                                    >
+                                      <input
+                                        type="radio"
+                                        name="maprimeRenovColor"
+                                        value={color.id}
+                                        checked={operationForm.maprimeRenovColor === color.id}
+                                        onChange={handleOperationFormChange}
+                                        className="h-4 w-4 focus:ring-1 focus:ring-[#213f5b]"
+                                      />
+                                      <span className="text-sm font-medium" style={{ color: color.color }}>
+                                        {color.label}
+                                      </span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {/* Show inputs based on selected color */}
+                              {operationForm.maprimeRenovColor && (
+                                <div className="mt-3 space-y-3">
+                                  {operationForm.maprimeRenovColor === "bleu" && (
+                                    <div className="space-y-2">
+                                      <label className="block text-sm font-medium text-[#1E40AF] mb-1">
+                                        Montant MaPrimeRenov Bleu (€)
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="maprimeRenovBleu"
+                                        value={operationForm.maprimeRenovBleu || ""}
+                                        onChange={handleOperationFormChange}
+                                        className="w-full px-3 py-2 border border-[#1E40AF] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1E40AF]"
+                                        placeholder="Entrez le montant en euros"
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  {operationForm.maprimeRenovColor === "jaune" && (
+                                    <div className="space-y-2">
+                                      <label className="block text-sm font-medium text-[#EAB308] mb-1">
+                                        Montant MaPrimeRenov Jaune (€)
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="maprimeRenovJaune"
+                                        value={operationForm.maprimeRenovJaune || ""}
+                                        onChange={handleOperationFormChange}
+                                        className="w-full px-3 py-2 border border-[#EAB308] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#EAB308]"
+                                        placeholder="Entrez le montant en euros"
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  {operationForm.maprimeRenovColor === "rose" && (
+                                    <div className="space-y-2">
+                                      <label className="block text-sm font-medium text-[#EC4899] mb-1">
+                                        Montant MaPrimeRenov Rose (€)
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="maprimeRenovRose"
+                                        value={operationForm.maprimeRenovRose || ""}
+                                        onChange={handleOperationFormChange}
+                                        className="w-full px-3 py-2 border border-[#EC4899] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#EC4899]"
+                                        placeholder="Entrez le montant en euros"
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  {operationForm.maprimeRenovColor === "violet" && (
+                                    <div className="space-y-2">
+                                      <label className="block text-sm font-medium text-[#8B5CF6] mb-1">
+                                        Montant MaPrimeRenov Violet (€)
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="maprimeRenovViolet"
+                                        value={operationForm.maprimeRenovViolet || ""}
+                                        onChange={handleOperationFormChange}
+                                        className="w-full px-3 py-2 border border-[#8B5CF6] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#8B5CF6]"
+                                        placeholder="Entrez le montant en euros"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

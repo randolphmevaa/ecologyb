@@ -21,6 +21,7 @@ interface ProductDetails {
   classe?: string;
   efficaciteEnergetique?: string;
   temperaturePAC?: string;
+  temperaturePACType?: string;
   classeRegulateur?: string;
   cop?: string;
   scop?: string;
@@ -604,104 +605,121 @@ export default function ProduitsPage() {
           </>
         );
         
-      case OPERATIONS.BAR_TH_171:
-        return (
-          <>
-            {renderCoupDePouceToggle()}
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">Classe</label>
-                <input 
-                  type="text"
-                  name="classe" 
-                  value={produitForm.details.classe || ""} 
+        case OPERATIONS.BAR_TH_171:
+          return (
+            <>
+              {renderCoupDePouceToggle()}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[#213f5b] mb-1">Classe</label>
+                  <input 
+                    type="text"
+                    name="classe" 
+                    value={produitForm.details.classe || ""} 
+                    onChange={handleProduitDetailsChange}
+                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[#213f5b] mb-1">% Efficacité énerg. saisonnière</label>
+                  <input 
+                    type="text"
+                    name="efficaciteEnergetique" 
+                    value={produitForm.details.efficaciteEnergetique || ""} 
+                    onChange={handleProduitDetailsChange}
+                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[#213f5b] mb-1">T° PAC</label>
+                  <input 
+                    type="text"
+                    name="temperaturePAC" 
+                    value={produitForm.details.temperaturePAC || ""} 
+                    onChange={handleProduitDetailsChange}
+                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[#213f5b] mb-1">Classe du régulateur</label>
+                  <input 
+                    type="text"
+                    name="classeRegulateur" 
+                    value={produitForm.details.classeRegulateur || ""} 
+                    onChange={handleProduitDetailsChange}
+                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                  />
+                </div>
+              </div>
+              
+              {/* Add new dropdown for PAC temperature type */}
+              <div className="space-y-2 mt-4">
+                <label className="block text-sm font-medium text-[#213f5b] mb-1">Type de T° PAC</label>
+                <select
+                  name="temperaturePACType"
+                  value={produitForm.details.temperaturePACType || ""}
                   onChange={handleProduitDetailsChange}
                   className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
+                >
+                  <option value="">Sélectionner</option>
+                  <option value="Basse Température">Basse Température</option>
+                  <option value="Moyenne Température">Moyenne Température</option>
+                  <option value="Haute Température">Haute Température</option>
+                </select>
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">% Efficacité énerg. saisonnière</label>
-                <input 
-                  type="text"
-                  name="efficaciteEnergetique" 
-                  value={produitForm.details.efficaciteEnergetique || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
+              
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[#213f5b] mb-1">COP</label>
+                  <input 
+                    type="text"
+                    name="cop" 
+                    value={produitForm.details.cop || ""} 
+                    onChange={handleProduitDetailsChange}
+                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[#213f5b] mb-1">SCOP</label>
+                  <input 
+                    type="text"
+                    name="scop" 
+                    value={produitForm.details.scop || ""} 
+                    onChange={handleProduitDetailsChange}
+                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">T° PAC</label>
-                <input 
-                  type="text"
-                  name="temperaturePAC" 
-                  value={produitForm.details.temperaturePAC || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[#213f5b] mb-1">La temperature d&apos;eau</label>
+                  <input 
+                    type="text"
+                    name="temperatureEau" 
+                    value={produitForm.details.temperatureEau || ""} 
+                    onChange={handleProduitDetailsChange}
+                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[#213f5b] mb-1">La temperature d&apos;arrêt</label>
+                  <input 
+                    type="text"
+                    name="temperatureArret" 
+                    value={produitForm.details.temperatureArret || ""} 
+                    onChange={handleProduitDetailsChange}
+                    className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">Classe du régulateur</label>
-                <input 
-                  type="text"
-                  name="classeRegulateur" 
-                  value={produitForm.details.classeRegulateur || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">COP</label>
-                <input 
-                  type="text"
-                  name="cop" 
-                  value={produitForm.details.cop || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">SCOP</label>
-                <input 
-                  type="text"
-                  name="scop" 
-                  value={produitForm.details.scop || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">La temperature d&apos;eau</label>
-                <input 
-                  type="text"
-                  name="temperatureEau" 
-                  value={produitForm.details.temperatureEau || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#213f5b] mb-1">La temperature d&apos;arrêt</label>
-                <input 
-                  type="text"
-                  name="temperatureArret" 
-                  value={produitForm.details.temperatureArret || ""} 
-                  onChange={handleProduitDetailsChange}
-                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                />
-              </div>
-            </div>
-            
-            {/* Add kWh Cumac input */}
-            {renderKwhCumacInput()}
-          </>
-        );
+              
+              {/* Add kWh Cumac input */}
+              {renderKwhCumacInput()}
+            </>
+          );
         
       case OPERATIONS.BAR_TH_129:
         return (
