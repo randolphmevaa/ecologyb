@@ -53,7 +53,10 @@ const SAMPLE_OPERATIONS: Operation[] = [
     description: "Installation d'une pompe à chaleur air/eau pour le chauffage de locaux à usage d'habitation.",
     categorie: "CHAUFFAGE",
     active: true,
-    kwhCumac: "85000"
+    // kwhCumac: "85000"
+    kwhCumac: "60000",
+    typeCoupDePouce: "COUP DE POUCE",
+    kwhCumacCoupDePouce: "120000"
   },
   {
     id: "O002",
@@ -519,21 +522,24 @@ export default function OperationsPage() {
                           </label>
                         </div>
                         
-                        {/* kWh Cumac Input - for all operations */}
-                        <div className="space-y-2 md:col-span-2 border-t pt-4 mt-4">
-                          <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="kwhCumac">kWh Cumac standard</label>
-                          <input
-                            id="kwhCumac"
-                            type="text"
-                            name="kwhCumac"
-                            value={operationForm.kwhCumac || ""}
-                            onChange={handleOperationFormChange}
-                            className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
-                            placeholder="Entrez la valeur kWh Cumac standard"
-                          />
-                        </div>
+                        {/* kWh Cumac Input - only for operations that don't have Coup de Pouce or when no type is selected */}
+                        {(!["BAR-TH-171", "BAR-TH-143", "BAR-TH-113"].includes(operationForm.code) || 
+                         (["BAR-TH-171", "BAR-TH-143", "BAR-TH-113"].includes(operationForm.code) && !operationForm.typeCoupDePouce)) && (
+                          <div className="space-y-2 md:col-span-2 border-t pt-4 mt-4">
+                            <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="kwhCumac">kWh Cumac standard</label>
+                            <input
+                              id="kwhCumac"
+                              type="text"
+                              name="kwhCumac"
+                              value={operationForm.kwhCumac || ""}
+                              onChange={handleOperationFormChange}
+                              className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                              placeholder="Entrez la valeur kWh Cumac standard"
+                            />
+                          </div>
+                        )}
                         
-                        {/* COUP DE POUCE fields - only for BAR-TH-171 and BAR-TH-143 */}
+                        {/* COUP DE POUCE fields - only for BAR-TH-171 and BAR-TH-143 and BAR-TH-113 */}
                         {(operationForm.code === "BAR-TH-171" || operationForm.code === "BAR-TH-143" || operationForm.code === "BAR-TH-113") && (
                           <div className="space-y-4 md:col-span-2 border-t pt-4 mt-2">
                             <div className="space-y-2">

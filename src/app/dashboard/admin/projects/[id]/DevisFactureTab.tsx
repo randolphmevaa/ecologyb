@@ -206,6 +206,39 @@ interface AddServiceModalProps {
   onSave: (service: Partial<Service>) => void;
 }
 
+// Define types for SizingNoteModal props
+interface SizingNoteModalProps {
+  onClose: () => void;
+  onSave: (sizingNote: SizingNote) => void;
+  productCode: string;
+  productDetails?: {
+    name?: string;
+    brand?: string;
+    reference?: string;
+  };
+}
+
+// Define type for sizing note data
+interface SizingNote {
+  id?: string;
+  productType: string;
+  productBrand: string;
+  productReference: string;
+  volume: string;
+  heatLoss: string;
+  dimensioning: string;
+  coverage: number;
+  constructionCoef?: number;
+  buildingType: string;
+  radiatorType: string;
+  waterTemperature: string;
+  heatedArea: string;
+  ceilingHeight: string;
+  baseTemperature: number;
+  desiredTemperature: number;
+  altitude: number;
+}
+
 // Define sample services data - this should be imported or passed as props in a real app
 const serviceOptions: {
   id: string;
@@ -266,6 +299,299 @@ const serviceOptions: {
 ];
 
 type TableItem = Product | Service | Operation;
+
+// SizingNoteModal component with proper types
+const SizingNoteModal: React.FC<SizingNoteModalProps> = ({ onClose, onSave, productCode, productDetails }) => {
+  // Initialize state for all form fields
+  const [formData, setFormData] = useState({
+    buildingType: "RT 2012",
+    radiatorType: "Plancher chauffant",
+    waterTemperature: "Basse Température",
+    heatedArea: "",
+    ceilingHeight: "",
+    baseTemperature: -7,
+    desiredTemperature: 19,
+    altitude: 152
+  });
+
+  // Calculate sizing values based on form data
+  const calculateSizingValues = () => {
+    // Parse input values
+    const heatedArea = parseFloat(formData.heatedArea) || 0;
+    const ceilingHeight = parseFloat(formData.ceilingHeight) || 0;
+    const desiredTemperature = parseFloat(formData.desiredTemperature.toString()) || 19;
+    const baseTemperature = parseFloat(formData.baseTemperature.toString()) || -7;
+    
+    // Construction coefficient (based on building type)
+    let constructionCoef = 1;
+    switch (formData.buildingType) {
+      case "RT 2020": constructionCoef = 0.6; break;
+      case "RT 2012": constructionCoef = 0.8; break;
+      case "RT 2005": constructionCoef = 1; break;
+      case "RT 2000": constructionCoef = 1.2; break;
+      default: constructionCoef = 1;
+    }
+    
+    // Volume calculation
+    const volume = heatedArea * ceilingHeight;
+    
+    // Heat loss calculation
+    const heatLoss = (desiredTemperature - baseTemperature) * constructionCoef * volume;
+    
+    // If there's no product details or the values aren't valid, return empty object
+    if (!heatedArea || !ceilingHeight) {
+      return null;
+    }
+    
+    // Return calculated values
+    return {
+      volume: volume.toFixed(2),
+      heatLoss: heatLoss.toFixed(2),
+      dimensioning: (heatLoss / 1000).toFixed(2), // Convert to kW
+      coverage: 100, // Assuming 100% coverage
+      constructionCoef
+    };
+  };
+
+  // Type for form field changes
+  type ChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLSelectElement>;
+
+  const handleChange = (e: ChangeEvent) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const calculatedValues = calculateSizingValues();
+    if (!calculatedValues) {
+      alert("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+    
+    // Prepare sizing note data
+    const sizingNote: SizingNote = {
+      productType: productDetails?.name || "Pompe à chaleur",
+      productBrand: productDetails?.brand || "Non spécifié",
+      productReference: productDetails?.reference || productCode,
+      ...calculatedValues,
+      ...formData
+    };
+    
+    onSave(sizingNote);
+    onClose();
+  };
+
+  // Determine product type based on productCode
+  const getProductType = () => {
+    if (productCode === "BAR-TH-171") return "Pompe à chaleur";
+    if (productCode === "BAR-TH-113") return "Chaudière biomasse";
+    if (productCode === "BAR-TH-143") return "Système solaire combiné";
+    return "Équipement";
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="bg-white rounded-xl w-full max-w-4xl m-4 overflow-hidden shadow-2xl"
+      >
+        {/* Modal header */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <DocumentCheckIcon className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                Ajouter une note de dimensionnement
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Modal body */}
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
+          <form onSubmit={handleSubmit}>
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Note de dimensionnement pour {getProductType()} ({productCode})
+                </h3>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label htmlFor="buildingType" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sélectionner un type de logement
+                </label>
+                <select
+                  id="buildingType"
+                  name="buildingType"
+                  value={formData.buildingType}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="RT 2020">RT 2020 (Construit après le 1er Janvier 2022)</option>
+                  <option value="RT 2012">RT 2012 (Construit après le 1er Janvier 2013)</option>
+                  <option value="RT 2005">RT 2005 (Construit après le 1er Janvier 2006)</option>
+                  <option value="RT 2000">RT 2000 (Construit après le 1er Janvier 2001)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="radiatorType" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sélectionner un type de radiateur
+                </label>
+                <select
+                  id="radiatorType"
+                  name="radiatorType"
+                  value={formData.radiatorType}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="Fonte">Fonte</option>
+                  <option value="Acier">Acier</option>
+                  <option value="Plancher chauffant">Plancher chauffant</option>
+                  <option value="Alu">Alu</option>
+                  <option value="Electrique">Electrique</option>
+                  <option value="Aucun">Aucun</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="waterTemperature" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sélectionner la température de l&apos;eau
+                </label>
+                <select
+                  id="waterTemperature"
+                  name="waterTemperature"
+                  value={formData.waterTemperature}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="Haute Température">Haute Température</option>
+                  <option value="Moyenne Température">Moyenne Température</option>
+                  <option value="Basse Température">Basse Température</option>
+                  <option value="Ne pas renseigner">Ne pas renseigner</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="heatedArea" className="block text-sm font-medium text-gray-700 mb-1">
+                  Surface chauffée (m²)*
+                </label>
+                <input
+                  type="number"
+                  id="heatedArea"
+                  name="heatedArea"
+                  value={formData.heatedArea}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="ceilingHeight" className="block text-sm font-medium text-gray-700 mb-1">
+                  Hauteur sous plafond (m)*
+                </label>
+                <input
+                  type="number"
+                  id="ceilingHeight"
+                  name="ceilingHeight"
+                  value={formData.ceilingHeight}
+                  onChange={handleChange}
+                  required
+                  step="0.01"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="baseTemperature" className="block text-sm font-medium text-gray-700 mb-1">
+                  Température de base (°C)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    id="baseTemperature"
+                    name="baseTemperature"
+                    value={formData.baseTemperature}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                  <div className="mt-1 text-xs text-gray-500">
+                    Vérifier et modifier, si nécessaire la température en vous référant à la carte
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label htmlFor="desiredTemperature" className="block text-sm font-medium text-gray-700 mb-1">
+                  Température ambiante souhaitée (°C)
+                </label>
+                <input
+                  type="number"
+                  id="desiredTemperature"
+                  name="desiredTemperature"
+                  value={formData.desiredTemperature}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="altitude" className="block text-sm font-medium text-gray-700 mb-1">
+                  Altitude (m)
+                </label>
+                <input
+                  type="number"
+                  id="altitude"
+                  name="altitude"
+                  value={formData.altitude}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 // Document status badge component
 const DocumentStatusBadge: React.FC<{ status: DocumentStatus }> = ({ status }) => {
@@ -464,12 +790,22 @@ const DealSelectionModal: React.FC<{
 
 // First, let's modify the ActionMenu component to add the Deal selection functionality
 const ActionMenu: React.FC<{ 
-  onAction: (action: string) => void,
-  onShowDealModal: () => void
-}> = ({ onAction, onShowDealModal }) => {
+  onAction: (action: string, productCode?: string) => void;
+  onShowDealModal: () => void;
+  tableItems?: TableItem[];
+}> = ({ onAction, onShowDealModal, tableItems = [] }) => {
   const [isOpen, setIsOpen] = useState(false);
   
-  const actions = [
+  // Check if there are any BAR-TH-171, BAR-TH-113 or BAR-TH-143 in the table
+  const specificProductCodes = useMemo(() => {
+    const specificCodes = ["BAR-TH-171", "BAR-TH-113", "BAR-TH-143"];
+    return tableItems
+      .filter(item => item.reference && specificCodes.includes(item.reference))
+      .map(item => item.reference)
+      .filter((value, index, self) => self.indexOf(value) === index); // Get unique values
+  }, [tableItems]);
+  
+  const baseActions = [
     { id: "addSubcontractor", label: "Ajouter un sous-traitant", icon: <UserGroupIcon className="h-5 w-5 text-gray-500" /> },
     { id: "addAgent", label: "Ajouter un mandataire", icon: <UserIcon className="h-5 w-5 text-gray-500" /> },
     { id: "addInfo", label: "Ajouter une information", icon: <InformationCircleIcon className="h-5 w-5 text-gray-500" /> },
@@ -483,11 +819,42 @@ const ActionMenu: React.FC<{
     { id: "modifyPrime", label: "Modifier une prime", icon: <CurrencyDollarIcon className="h-5 w-5 text-gray-500" /> },
     { id: "deleteQuote", label: "Supprimer le devis", icon: <TrashIcon className="h-5 w-5 text-red-500" /> }
   ];
+  
+  // Add sizing note options when there are specific products
+  const actions = useMemo(() => {
+    let allActions = [...baseActions];
+    
+    // Insert sizing note actions before deleteQuote
+    if (specificProductCodes.length > 0) {
+      const deleteQuoteIndex = allActions.findIndex(action => action.id === "deleteQuote");
+      
+      // Create sizing note actions for each specific product code
+      const sizingNoteActions = specificProductCodes.map(code => ({
+        id: `sizingNote_${code}`,
+        label: `Note de dimensionnement ${code}`,
+        icon: <DocumentCheckIcon className="h-5 w-5 text-gray-500" />
+      }));
+      
+      // Insert sizing note actions before deleteQuote
+      allActions = [
+        ...allActions.slice(0, deleteQuoteIndex),
+        ...sizingNoteActions,
+        ...allActions.slice(deleteQuoteIndex)
+      ];
+    }
+    
+    return allActions;
+  }, [baseActions, specificProductCodes]);
 
   const handleActionClick = (actionId: string) => {
     if (actionId === "assignToDeal") {
       setIsOpen(false);
       onShowDealModal();
+    } else if (actionId.startsWith("sizingNote_")) {
+      // Extract product code from action ID
+      const productCode = actionId.replace("sizingNote_", "");
+      onAction(actionId, productCode);
+      setIsOpen(false);
     } else {
       onAction(actionId);
       setIsOpen(false);
@@ -1809,6 +2176,15 @@ const DevisEditor: React.FC<{
   const [showAddServiceModal, setShowAddServiceModal] = useState<boolean>(false);
   const [showAddOperationModal, setShowAddOperationModal] = useState<boolean>(false);
   const [showDealModal, setShowDealModal] = useState<boolean>(false);
+  const [showSizingNoteModal, setShowSizingNoteModal] = useState<boolean>(false);
+  const [selectedProductCode, setSelectedProductCode] = useState<string>("");
+  const [sizingNotes, setSizingNotes] = useState<SizingNote[]>([]);
+
+  // New function to handle adding a sizing note
+  const handleAddSizingNote = (sizingNote: SizingNote) => {
+    // Add the sizing note to the state
+    setSizingNotes(prev => [...prev, { ...sizingNote, id: `sizing-note-${Date.now()}` }]);
+  };
 
   // Deal ratios lookup
   const dealRatios = {
@@ -2037,8 +2413,41 @@ ${subContractorInfo}`;
   const handleDuplicateQuote = () => {
     alert('Dupliquer le devis: Cette fonctionnalité créerait une copie du devis actuel.');
   };
+
+  // Get product details for the selected product code
+  const getProductDetails = (productCode: string) => {
+    // Find the operation item with the matching reference
+    const operation = tableItems.find(item => item.reference === productCode);
+    if (!operation) return undefined;
+    
+    // If the operation has a productId, find that product's details
+    if ('productId' in operation && operation.productId) {
+      const product = products.find(p => p.id === operation.productId);
+      if (product) {
+        return {
+          name: product.name,
+          brand: product.brand,
+          reference: product.reference
+        };
+      }
+    }
+    
+    // Return basic details from the operation if product not found
+    return {
+      name: "Pompe à chaleur",
+      brand: "",
+      reference: productCode
+    };
+  };
   
-  const handleAction = (actionId: string) => {
+  // Modified handleAction function to handle sizing note actions
+  const handleAction = (actionId: string, productCode?: string) => {
+    if (actionId.startsWith("sizingNote_") && productCode) {
+      setSelectedProductCode(productCode);
+      setShowSizingNoteModal(true);
+      return;
+    }
+    
     switch (actionId) {
       case 'addSubcontractor':
         alert('Fonctionnalité "Ajouter un sous-traitant" à implémenter');
@@ -2110,7 +2519,7 @@ ${subContractorInfo}`;
           <span>Dupliquer le devis</span>
         </button>
         
-        <ActionMenu onAction={handleAction} onShowDealModal={() => setShowDealModal(true)} />
+        <ActionMenu onAction={handleAction} onShowDealModal={() => setShowDealModal(true)} tableItems={tableItems} />
         
         {dealId && (
           <div className="px-4 py-2.5 bg-green-100 text-green-700 rounded-lg flex items-center gap-2">
@@ -2278,41 +2687,106 @@ ${subContractorInfo}`;
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {/* Left Section - Information complémentaire */}
         <div className="col-span-2">
-          <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Information complémentaire</h3>
-            <textarea
-              rows={4}
-              value={additionalInfo}
-              onChange={(e) => setAdditionalInfo(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              placeholder="Ajoutez des informations supplémentaires concernant ce devis..."
-            />
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
-            <div className="flex flex-wrap gap-3">
-              <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
-                <EnvelopeIcon className="h-5 w-5" />
-                <span>Envoyer un document par email</span>
-              </button>
-              
-              <button className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
-                <DocumentCheckIcon className="h-5 w-5" />
-                <span>Envoyer une signature électronique</span>
-              </button>
-              
-              {/* Replace the dropdown with our custom PDF Generator component */}
-              <PDFGenerator 
-                tableItems={tableItems}
-                quoteNumber={quoteNumber}
-                quoteDate={quoteDate}
-                clientName="Jean Dupont" // Replace with actual client name when available
-                totals={totals}
-                dealId={dealId}
-                additionalInfo={additionalInfo}
+          <div className="col-span-2">
+            <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Information complémentaire</h3>
+              <textarea
+                rows={4}
+                value={additionalInfo}
+                onChange={(e) => setAdditionalInfo(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                placeholder="Ajoutez des informations supplémentaires concernant ce devis..."
               />
             </div>
+            
+            <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
+              <div className="flex flex-wrap gap-3">
+                <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                  <EnvelopeIcon className="h-5 w-5" />
+                  <span>Envoyer un document par email</span>
+                </button>
+                
+                <button className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
+                  <DocumentCheckIcon className="h-5 w-5" />
+                  <span>Envoyer une signature électronique</span>
+                </button>
+                
+                {/* Replace the dropdown with our custom PDF Generator component */}
+                <PDFGenerator 
+                  tableItems={tableItems}
+                  quoteNumber={quoteNumber}
+                  quoteDate={quoteDate}
+                  clientName="Jean Dupont" // Replace with actual client name when available
+                  totals={totals}
+                  dealId={dealId}
+                  additionalInfo={additionalInfo}
+                  sizingNotes={sizingNotes}
+                />
+              </div>
+            </div>
           </div>
+          {/* Sizing Notes Section */}
+          {sizingNotes.length > 0 && (
+            <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
+              {sizingNotes.map((note) => (
+                <div key={note.id} className="border-b border-gray-200 pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                    Note de dimensionnement {note.productType}
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Type de produit :</span>
+                        <span className="text-sm ml-1">{note.productType}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Marque du produit :</span>
+                        <span className="text-sm ml-1">{note.productBrand}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Référence du produit :</span>
+                        <span className="text-sm ml-1">{note.productReference}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Volume :</span>
+                        <span className="text-sm ml-1">{note.volume} m³</span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Déperdition :</span>
+                        <span className="text-sm ml-1">{parseFloat(note.heatLoss).toLocaleString('fr-FR')} watts soit {(parseFloat(note.heatLoss)/1000).toLocaleString('fr-FR')} KWs</span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Dimensionnement :</span>
+                        <span className="text-sm ml-1">{note.dimensioning} KWs</span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Couverture :</span>
+                        <span className="text-sm ml-1">{note.coverage}%</span>
+                      </div>
+                    </div>
+                    
+                    {/* Additional details if needed */}
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                          <span className="text-xs font-medium text-gray-500">Type de logement :</span>
+                          <span className="text-xs ml-1">{note.buildingType}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs font-medium text-gray-500">Type de radiateur :</span>
+                          <span className="text-xs ml-1">{note.radiatorType}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs font-medium text-gray-500">Température de l&apos;eau :</span>
+                          <span className="text-xs ml-1">{note.waterTemperature}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Right Section - Financial Summary */}
@@ -2403,6 +2877,15 @@ ${subContractorInfo}`;
           <DealSelectionModal
             onClose={() => setShowDealModal(false)}
             onSelect={handleDealSelect}
+          />
+        )}
+
+        {showSizingNoteModal && (
+          <SizingNoteModal
+            onClose={() => setShowSizingNoteModal(false)}
+            onSave={handleAddSizingNote}
+            productCode={selectedProductCode}
+            productDetails={getProductDetails(selectedProductCode)}
           />
         )}
       </AnimatePresence>

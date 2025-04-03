@@ -60,7 +60,7 @@ type PaymentInCategory =
   | "Certificat d'économie d'énergie" 
   | "Maprimerenov'" 
   | "Financement" 
-  | "Chèque";
+  | "Client";
 
 interface PaymentChequeDetails {
   count?: number;
@@ -113,7 +113,7 @@ const PAYMENT_IN_CATEGORIES: PaymentInCategory[] = [
   "Certificat d'économie d'énergie", 
   "Maprimerenov'", 
   "Financement", 
-  "Chèque"
+  "Client"
 ];
 
 // Category colors
@@ -129,7 +129,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Certificat d'économie d'énergie": "#3B82F6", 
   "Maprimerenov'": "#10B981", 
   "Financement": "#F59E0B", 
-  "Chèque": "#8B5CF6"
+  "Client": "#8B5CF6"
 };
 
 /**
@@ -156,11 +156,11 @@ const SAMPLE_PAYMENT_DATA: Payment[] = [
   { id: "p5", client: "Sophie Laurent", clientId: "client2", amount: "950", status: "à payer", type: "à payer", dueDate: "2025-04-30", category: "Commercial" },
   { id: "p6", client: "Sophie Laurent", clientId: "client2", amount: "2200", status: "payé", type: "payé", paymentDate: "2025-03-15", category: "Telepros" },
   { id: "p7", client: "Jean Lefebvre", clientId: "client3", amount: "1800", status: "en attente", type: "à recevoir", dueDate: "2025-05-10", category: "Financement" },
-  { id: "p8", client: "Marie Dubois", clientId: "client4", amount: "780", status: "reçu", type: "reçu", paymentDate: "2025-02-28", category: "Chèque", chequeDetails: { count: 2, encashmentDate: "2025-03-15" } },
+  { id: "p8", client: "Marie Dubois", clientId: "client4", amount: "780", status: "reçu", type: "reçu", paymentDate: "2025-02-28", category: "Client", chequeDetails: { count: 2, encashmentDate: "2025-03-15" } },
   { id: "p16", client: "Reglement", clientId: "client1", amount: "750", status: "à payer", type: "à payer", dueDate: "2025-06-01", category: "Poseur" },
   { id: "p17", client: "Reglement", clientId: "client1", amount: "1100", status: "payé", type: "payé", paymentDate: "2025-02-20", category: "Dédommagement client" },
   { id: "p18", client: "Reglement", clientId: "client1", amount: "980", status: "en attente", type: "à recevoir", dueDate: "2025-05-05", category: "Financement" },
-  { id: "p19", client: "Reglement", clientId: "client1", amount: "2300", status: "reçu", type: "reçu", paymentDate: "2025-01-15", category: "Chèque", chequeDetails: { count: 3, encashmentDate: "2025-02-10" } }
+  { id: "p19", client: "Reglement", clientId: "client1", amount: "2300", status: "reçu", type: "reçu", paymentDate: "2025-01-15", category: "Client", chequeDetails: { count: 3, encashmentDate: "2025-02-10" } }
 ];
 
 // Sample data for client-specific analysis
@@ -349,43 +349,43 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
    * Helper to get the correct label from TimeFrameData,
    * avoiding `item[labelKey]` errors.
    */
-  function getItemLabel(item: TimeFrameData, timeframe: TimeframeType): string {
-    switch (timeframe) {
-      case "weekly":
-        return item.week ?? "Semaine inconnue";
-      case "monthly":
-        return item.month ?? "Mois inconnu";
-      case "quarterly":
-        return item.quarter ?? "Trimestre inconnu";
-      case "annual":
-        return item.year ?? "Année inconnue";
-      default:
-        return "N/A";
-    }
-  }
+  // function getItemLabel(item: TimeFrameData, timeframe: TimeframeType): string {
+  //   switch (timeframe) {
+  //     case "weekly":
+  //       return item.week ?? "Semaine inconnue";
+  //     case "monthly":
+  //       return item.month ?? "Mois inconnu";
+  //     case "quarterly":
+  //       return item.quarter ?? "Trimestre inconnu";
+  //     case "annual":
+  //       return item.year ?? "Année inconnue";
+  //     default:
+  //       return "N/A";
+  //   }
+  // }
 
   // Function to prepare profit distribution data for a pie chart
-  const getProfitDistributionByTime = () => {
-    const data = getTimeframeData();
-    const colors = [
-      "#4f46e5", // Indigo
-      "#0ea5e9", // Sky
-      "#0284c7", // Light blue
-      "#4338ca", // Indigo
-      "#7c3aed", // Violet
-      "#8b5cf6", // Purple
-      "#c084fc", // Fuchsia
-      "#e879f9"  // Pink
-    ];
+  // const getProfitDistributionByTime = () => {
+  //   const data = getTimeframeData();
+  //   const colors = [
+  //     "#4f46e5", // Indigo
+  //     "#0ea5e9", // Sky
+  //     "#0284c7", // Light blue
+  //     "#4338ca", // Indigo
+  //     "#7c3aed", // Violet
+  //     "#8b5cf6", // Purple
+  //     "#c084fc", // Fuchsia
+  //     "#e879f9"  // Pink
+  //   ];
 
-    return data.map((item, index) => {
-      return {
-        name: getItemLabel(item, activeTimeframe),
-        value: item.profit,
-        color: colors[index % colors.length]
-      };
-    });
-  };
+  //   return data.map((item, index) => {
+  //     return {
+  //       name: getItemLabel(item, activeTimeframe),
+  //       value: item.profit,
+  //       color: colors[index % colors.length]
+  //     };
+  //   });
+  // };
 
   // Function to prepare category distribution data
   const getCategoryDistribution = () => {
@@ -411,20 +411,20 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
   };
 
   // Get timeframe title
-  const getTimeframeTitle = () => {
-    switch (activeTimeframe) {
-      case "weekly":
-        return "Hebdomadaire";
-      case "monthly":
-        return "Mensuelle";
-      case "quarterly":
-        return "Trimestrielle";
-      case "annual":
-        return "Annuelle";
-      default:
-        return "Mensuelle";
-    }
-  };
+  // const getTimeframeTitle = () => {
+  //   switch (activeTimeframe) {
+  //     case "weekly":
+  //       return "Hebdomadaire";
+  //     case "monthly":
+  //       return "Mensuelle";
+  //     case "quarterly":
+  //       return "Trimestrielle";
+  //     case "annual":
+  //       return "Annuelle";
+  //     default:
+  //       return "Mensuelle";
+  //   }
+  // };
 
   // Function to format a date for display
   const formatDate = (dateString?: string): string => {
@@ -617,7 +617,7 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
         ? newPayment.paymentDate || new Date().toISOString().split("T")[0]
         : undefined,
       notes: newPayment.notes,
-      chequeDetails: newPayment.category === "Chèque" 
+      chequeDetails: newPayment.category === "Client" 
         ? {
             count: Number(newPayment.chequeDetails?.count) || 1,
             encashmentDate: newPayment.chequeDetails?.encashmentDate || new Date().toISOString().split("T")[0]
@@ -657,7 +657,7 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
         ? newPayment.paymentDate || selectedPayment.paymentDate || new Date().toISOString().split("T")[0]
         : undefined,
       notes: newPayment.notes !== undefined ? newPayment.notes : selectedPayment.notes,
-      chequeDetails: newPayment.category === "Chèque" 
+      chequeDetails: newPayment.category === "Client" 
         ? {
             count: Number(newPayment.chequeDetails?.count) || selectedPayment.chequeDetails?.count || 1,
             encashmentDate: newPayment.chequeDetails?.encashmentDate || selectedPayment.chequeDetails?.encashmentDate || new Date().toISOString().split("T")[0]
@@ -802,7 +802,7 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
       setNewPayment(prev => ({
         ...prev,
         category: PAYMENT_IN_CATEGORIES[0],
-        chequeDetails: prev.category === "Chèque" ? { count: 1 } : undefined
+        chequeDetails: prev.category === "Client" ? { count: 1 } : undefined
       }));
     }
   }, [newPayment.type, isEditMode]);
@@ -829,6 +829,43 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
     });
     
     setIsEditMode(true);
+  };
+
+  // Function to prepare payment status distribution data for pie/bar chart
+  const getPaymentTypeDistribution = () => {
+    // Use the same colors as the payment type cards
+    const colors = {
+      "à payer": "#f59e0b", // amber-500
+      "payé": "#22c55e",    // green-500
+      "à recevoir": "#a855f7", // purple-500
+      "reçu": "#3b82f6"     // blue-500
+    };
+    
+    // Use the payment totals we already calculated in the useMemo above
+    const typeData = [
+      {
+        name: PAYMENT_TYPES["à payer"],
+        value: parseFloat(toPay.replace('€', '').replace(/\s/g, '').replace(',', '.')),
+        color: colors["à payer"]
+      },
+      {
+        name: PAYMENT_TYPES["payé"],
+        value: parseFloat(paid.replace('€', '').replace(/\s/g, '').replace(',', '.')),
+        color: colors["payé"]
+      },
+      {
+        name: PAYMENT_TYPES["à recevoir"],
+        value: parseFloat(toReceive.replace('€', '').replace(/\s/g, '').replace(',', '.')),
+        color: colors["à recevoir"]
+      },
+      {
+        name: PAYMENT_TYPES["reçu"],
+        value: parseFloat(received.replace('€', '').replace(/\s/g, '').replace(',', '.')),
+        color: colors["reçu"]
+      }
+    ];
+    
+    return typeData;
   };
 
   return (
@@ -894,7 +931,7 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
       </motion.div>
 
       {/* Financial Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6 -mt-6 relative z-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6 -mt-6 relative z-1">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1326,17 +1363,17 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
 
             {/* Charts Container */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Enhanced Visualization with Chart Type Toggle */}
+              {/* Payment Type Distribution Chart */}
               <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
-                  Répartition par période ({getTimeframeTitle()})
+                  Répartition par type de paiement
                 </h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     {chartType === "pie" ? (
                       <PieChart>
                         <Pie
-                          data={getProfitDistributionByTime()}
+                          data={getPaymentTypeDistribution()}
                           cx="50%"
                           cy="50%"
                           labelLine={true}
@@ -1348,7 +1385,7 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
                           paddingAngle={3}
                           dataKey="value"
                         >
-                          {getProfitDistributionByTime().map((entry, index) => (
+                          {getPaymentTypeDistribution().map((entry, index) => (
                             <Cell 
                               key={`cell-${index}`} 
                               fill={entry.color} 
@@ -1367,7 +1404,7 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
                       </PieChart>
                     ) : (
                       <BarChart 
-                        data={getProfitDistributionByTime()}
+                        data={getPaymentTypeDistribution()}
                         margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
@@ -1388,7 +1425,7 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
                           dataKey="value" 
                           radius={[4, 4, 0, 0]}
                         >
-                          {getProfitDistributionByTime().map((entry, index) => (
+                          {getPaymentTypeDistribution().map((entry, index) => (
                             <Cell 
                               key={`cell-${index}`} 
                               fill={entry.color} 
@@ -1575,10 +1612,10 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
                     </div>
                     
                     {/* Additional fields for cheque payments */}
-                    {selectedPayment.category === "Chèque" && selectedPayment.chequeDetails && (
+                    {selectedPayment.category === "Client" && selectedPayment.chequeDetails && (
                       <>
                         <div>
-                          <p className="text-sm text-gray-500">Nombre de chèques</p>
+                          <p className="text-sm text-gray-500">Nombre de Clients</p>
                           <p className="font-semibold">{selectedPayment.chequeDetails.count}</p>
                         </div>
                         <div>
@@ -1790,11 +1827,11 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
                     )}
                     
                     {/* Cheque-specific fields */}
-                    {newPayment.category === "Chèque" && (
+                    {newPayment.category === "Client" && (
                       <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                         <h4 className="font-medium text-gray-800 flex items-center gap-1">
                           <InformationCircleIcon className="h-5 w-5 text-blue-500" />
-                          Détails du chèque
+                          Détails du Client
                         </h4>
                         
                         <div>
@@ -1802,7 +1839,7 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
                             htmlFor="edit-chequeCount"
                             className="block text-sm font-medium text-gray-700 mb-1"
                           >
-                            Nombre de chèques
+                            Nombre de Clients
                           </label>
                           <input
                             id="edit-chequeCount"
@@ -2072,11 +2109,11 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
                   )}
                   
                   {/* Cheque-specific fields */}
-                  {newPayment.category === "Chèque" && (
+                  {newPayment.category === "Client" && (
                     <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                       <h4 className="font-medium text-gray-800 flex items-center gap-1">
                         <InformationCircleIcon className="h-5 w-5 text-blue-500" />
-                        Détails du chèque
+                        Détails du Client
                       </h4>
                       
                       <div>
@@ -2084,7 +2121,7 @@ const ClientPaymentDashboard: React.FC<ClientPaymentDashboardProps> = ({
                           htmlFor="chequeCount"
                           className="block text-sm font-medium text-gray-700 mb-1"
                         >
-                          Nombre de chèques
+                          Nombre de Clients
                         </label>
                         <input
                           id="chequeCount"
