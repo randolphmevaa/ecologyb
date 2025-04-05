@@ -12,6 +12,7 @@ import {
 import { SizingNote } from './types';
 
 // Define proper interfaces to replace 'any' types
+// Update the TableItem interface to include id
 interface TableItem {
   reference: string;
   name: string;
@@ -19,6 +20,7 @@ interface TableItem {
   unitPriceHT: number;
   tva: number;
   totalHT: number;
+  id?: string; // Add optional id property
 }
 
 // Add IncentivesData interface
@@ -597,9 +599,33 @@ const getSizingNotesSection = (sizingNotes: SizingNote[]) => {
   `;
 };
 
-// Generate the financial summary HTML
+// Add this new function to generate the MaPrimeRénov conditions text
+const getMaPrimeRenovConditions = (primeRenovAmount: number): string => {
+  if (!primeRenovAmount) return '';
+  
+  const formattedAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(primeRenovAmount);
+  
+  return `
+    <!-- MaPrimeRenov Conditions -->
+    <div class="additional-section" style="margin-top: 8mm; background-color: #f0f8ff; border-left: 3px solid #1e40af;">
+      <h3 class="additional-title">Conditions particulières relatives à l'aide MaPrimeRénov'</h3>
+      <div class="additional-content">
+        <p>(**) Conditions particulières relatives à l'aide ANAH / MaPrimeRénov Cette offre est cumulable avec l'aide MaPrimeRénov', accordée uniquement après analyse du dossier, d'un montant estimatif de ${formattedAmount}. Dans le cas où l'aide notifiée au client est inférieure au montant de l'aide prévisionnelle, l'usager n'est pas lié par le devis et l'entreprise s'engage à proposer un devis rectificatif. Le client conserve alors un droit de rétractation d'une durée de quatorze jours à partir de la date de présentation du devis rectificatif. L'aide MaPrimeRénov' est conditionnelle et soumise à la conformité des pièces justificatives et informations déclarées par le bénéficiaire. En cas de fausse déclaration, de manoeuvre frauduleuse ou de changement du projet de travaux subventionné, le bénéficiaire s'expose au retrait et reversement de tout ou partie de la prime. Les services de l'Anah pourront faire procéder à tout contrôle des engagements et sanctionner le bénéficiaire et son mandataire éventuel des manquements constatés. Prime versée par l'ANAH d'un montant prévisionnel de ${formattedAmount} dans le cadre du dispositif MaPrimeRénov'</p>
+        
+        <p style="margin-top: 4mm;"><strong>Termes et conditions</strong><br/>Montant final versé par Effy en votre nom et pour votre compte dans le cadre du mandat que vous avez signé et du dispositif des Certificats d'Économies d'Énergie. Cette déduction est conditionnée à la réception, dans les délais de validité de votre demande de Prime Effy, d'un dossier conforme et validé par Effy, et des travaux contrôlés conformes en l'absence duquel vous devrez nous régler directement ce montant.</p>
+      </div>
+    </div>
+  `;
+};
+
 // Generate the financial summary HTML with incentives data
-const getFinancialSummary = (totals: FinancialTotals, dealId?: string, incentivesData?: IncentivesData | null) => {
+// Updated getFinancialSummary with hasOperations parameter
+const getFinancialSummary = (
+  totals: FinancialTotals, 
+  dealId?: string, 
+  incentivesData?: IncentivesData | null,
+  hasOperations: boolean = false
+): string => {
   // Base HTML code
   let html = `
     <!-- Financial Summary -->
@@ -621,17 +647,23 @@ const getFinancialSummary = (totals: FinancialTotals, dealId?: string, incentive
   `;
 
   // Add deal-related primes if available
-  if (dealId && totals.primeCEE && totals.primeRenov) {
+  if (dealId && totals.primeCEE) {
     html += `
         <div class="finance-row primes">
           <div class="finance-label">Prime ${dealId}</div>
           <div class="finance-value">-${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totals.primeCEE)}</div>
         </div>
+    `;
+    
+    // Only show Estimation MaPrimeRenov when operations exist
+    if (hasOperations && totals.primeRenov) {
+      html += `
         <div class="finance-row primes">
-          <div class="finance-label">MaPrimeRenov'</div>
+          <div class="finance-label">Estimation MaPrimeRenov'</div>
           <div class="finance-value">-${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totals.primeRenov)}</div>
         </div>
-    `;
+      `;
+    }
   }
 
   // Add user-defined incentives if available
@@ -1298,8 +1330,16 @@ export const generateDevisPDF = (
   additionalInfo?: string,
   sizingNotes: SizingNote[] = [],
   financingData: FinancingData | null = null,
-  incentivesData: IncentivesData | null = null // Add the new parameter
+  incentivesData: IncentivesData | null = null,
+  // dpMairieData = null,
+  // indivisionData = null
 ) => {
+  // Check if operations exist in the tableItems
+  const hasOperations = tableItems.some(item => 
+    item.id?.startsWith('op-') || // Check by ID if available
+    item.reference?.startsWith('BAR-TH-') // Check by operation reference code pattern
+  );
+
   // Open print window
   const printWindow = openPrintWindow(`Devis ${quoteNumber}`);
   if (!printWindow) return;
@@ -1335,8 +1375,9 @@ export const generateDevisPDF = (
               ${getCustomerAndQuoteInfo(clientName, quoteNumber, formattedDate, dealId)}
               ${getProductsTable(tableItems)}
               ${getSizingNotesSection(sizingNotes)}
-              ${getFinancialSummary(totals, dealId, incentivesData)}
+              ${getFinancialSummary(totals, dealId, incentivesData, hasOperations)}
               ${additionalInfo ? getAdditionalInfo(additionalInfo) : ''}
+              ${hasOperations && totals.primeRenov ? getMaPrimeRenovConditions(totals.primeRenov) : ''}
               ${financingData ? getFinancingSection(financingData) : ''}
               ${getSignatureSection(formattedDate)}
             </div>
