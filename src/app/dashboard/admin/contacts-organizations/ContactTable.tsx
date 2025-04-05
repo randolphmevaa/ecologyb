@@ -208,7 +208,7 @@ const { data: dossiers } = useSWR<Dossier[]>("/api/dossiers", fetcher, {
             <Button
               variant="primary"
               className="bg-[#213f5b] border-[#213f5b] transition-transform transform hover:scale-105"
-              onClick={() => router.push("/dashboard/admin/contacts-organizations/add-contact")}
+              onClick={() => router.push("/dashboard/admin/contacts-organizations/add-contact2")}
             >
               Ajouter un client
             </Button>
