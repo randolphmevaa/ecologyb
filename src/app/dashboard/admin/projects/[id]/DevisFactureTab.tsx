@@ -1,5 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import AddDocumentModal from './AddDocumentModal';
+import DocumentsList from './DocumentsList';
+import AddIncentivesModal from './AddIncentivesModal';
+import EditItemModal from './EditItemModal';
 import {
   DocumentIcon,
   DocumentTextIcon,
@@ -35,13 +39,64 @@ import {
   UsersIcon,
   FolderPlusIcon,
   CurrencyDollarIcon,
-  TrashIcon
+  TrashIcon,
+  ChevronUpIcon
 } from "@heroicons/react/24/outline";
 import PDFGenerator from "./PDFGenerator";
+import AddFinancingModal from "./AddFinancingModal";
+import { DPMairieData, IncentivesData } from './types';
+import AddDPMairieModal from './AddDPMairieModal';
+
+// These imports would be added to the existing imports in the DevisEditor component
+import AddIndivisionModal, { IndivisionData } from './AddIndivisionModal';
+import IndivisionInfoDisplay from './IndivisionInfoDisplay';
 
 interface DevisFactureTabProps {
   contactId: string;
 }
+
+// Define TypeScript interface for DP Mairie data
+// interface DPMairieData {
+//   mandataire: string;
+//   transmissionVoieElectronique: boolean;
+//   terrainLotissement: string; // "oui" | "non" | "je ne sais pas"
+//   certificatUrbanisme: string; // "oui" | "non" | "je ne sais pas"
+//   zoneAmenagementConcertee: string; // "oui" | "non" | "je ne sais pas"
+//   remembrementUrbain: string; // "oui" | "non" | "je ne sais pas"
+//   projetUrbainPartenarial: string; // "oui" | "non" | "je ne sais pas"
+//   operationInteretNational: string; // "oui" | "non" | "je ne sais pas"
+//   precisionsTerrainConcerne: string;
+//   immeubleClasseMonumentsHistoriques: boolean;
+//   projetConcerne: string; // "résidence principale" | "résidence secondaire"
+//   perimetresProtection: {
+//     sitePatrimonialRemarquable: boolean;
+//     abordsMonumentHistorique: boolean;
+//     siteClasse: boolean;
+//   };
+//   parcellesCadastralesSupplementaires: {
+//     parcelle1: string;
+//     parcelle2: string;
+//     parcelle3: string;
+//   };
+//   puissanceElectrique: number;
+//   puissanceCrete: number;
+//   destinationEnergie: string;
+//   modeUtilisationLogements: string;
+//   titreProjet: string;
+//   autresPrecisions: string;
+//   superficiePanneauxSol: number;
+//   surfacePlancherExistante: number;
+//   surfacePlancherSupprimee: number;
+//   surfacePlancherCreee: number;
+//   travauxConstructionExistante: string;
+//   descriptionProjet: string;
+//   // DAACT fields
+//   numeroDeclarationPrealable: string;
+//   dateAchevementChantier: string;
+//   totaliteTravaux: boolean;
+//   surfacePlancherCreeeDaact: number;
+//   dateEnvoiDaact: string;
+// }
 
 // Document types and statuses
 type DocumentType = "devis" | "facture";
@@ -62,6 +117,31 @@ interface Document {
   signatureStatus: SignatureStatus;
   signatureDate?: string;
   fileUrl: string;
+}
+
+// Define TypeScript interface for financing data
+interface FinancingData {
+  bankName: string;
+  fixedRate: string;
+  paymentAmountWithInsurance: string;
+  loanAmount: string;
+  annualPercentageRate: string;
+  paymentAmountWithoutInsurance: string;
+  frequency: string;
+  deferredMonths: string;
+  numberOfPayments: string;
+  personalContribution: string;
+  totalAmountDue: string;
+  sellerName: string;
+}
+
+// Add this interface to your existing interfaces
+interface QuoteDocument {
+  id: string;
+  name: string;
+  size: string;
+  tag: string;
+  date: string;
 }
 
 // Product and Service types
@@ -239,6 +319,372 @@ interface SizingNote {
   altitude: number;
 }
 
+// Define TypeScript interfaces first
+interface Subcontractor {
+  id: string;
+  name: string;
+  address: string;
+  director: string;
+  siret: string;
+  insurance: string;
+  qualifications: string[];
+}
+
+interface AddSubcontractorModalProps {
+  onClose: () => void;
+  onSave: (subcontractor: Subcontractor) => void;
+}
+
+interface SubcontractorFormState {
+  name: string;
+  address: string;
+  director: string;
+  siret: string;
+  insurance: string;
+  qualifications: string[];
+}
+
+// Define TypeScript interfaces first
+interface Mandataire {
+  id: string;
+  name: string;
+  company: string;
+  siret: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+interface AddMandataireModalProps {
+  onClose: () => void;
+  onSave: (mandataire: Mandataire) => void;
+}
+
+// Sample mandataires data
+const mandataires: Mandataire[] = [
+  {
+    id: "M1",
+    name: "Jean Dupont",
+    company: "EcoRenovation SAS",
+    siret: "12345678900001",
+    email: "jean.dupont@ecorenovation.fr",
+    phone: "01 23 45 67 89",
+    address: "15 rue de la République, 75001 Paris"
+  },
+  {
+    id: "M2",
+    name: "Sophie Martin",
+    company: "PrimeHabitat SARL",
+    siret: "98765432100001",
+    email: "s.martin@primehabitat.fr",
+    phone: "01 98 76 54 32",
+    address: "25 avenue des Champs-Élysées, 75008 Paris"
+  },
+  {
+    id: "M3",
+    name: "Pierre Leblanc",
+    company: "RenovPrime",
+    siret: "56789123400001",
+    email: "p.leblanc@renovprime.fr",
+    phone: "01 56 78 91 23",
+    address: "8 boulevard Haussmann, 75009 Paris"
+  },
+  {
+    id: "M4",
+    name: "Marie Dubois",
+    company: "PrimeEco Consulting",
+    siret: "45612378900001",
+    email: "m.dubois@primeecoconsulting.fr",
+    phone: "01 45 61 23 78",
+    address: "42 rue de Rivoli, 75004 Paris"
+  }
+];
+
+// Add Information Modal Component
+interface AddInformationModalProps {
+  onClose: () => void;
+  onSave: (info: string) => void;
+  currentInfo: string;
+}
+
+const AddInformationModal: React.FC<AddInformationModalProps> = ({ onClose, onSave, currentInfo }) => {
+  const [information, setInformation] = useState<string>(currentInfo);
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(information);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="bg-white rounded-xl w-full max-w-2xl m-4 overflow-hidden shadow-2xl"
+      >
+        {/* Modal header */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <InformationCircleIcon className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                Ajouter une information
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Modal body */}
+        <div className="p-6">
+          <form onSubmit={handleSubmit}>
+            <div className="mb-6">
+              <label htmlFor="information" className="block text-lg font-semibold text-gray-800 mb-3">
+                Information complémentaire
+              </label>
+              <textarea
+                id="information"
+                value={information}
+                onChange={(e) => setInformation(e.target.value)}
+                rows={8}
+                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                placeholder="Ajoutez des informations supplémentaires concernant ce devis..."
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                Ces informations seront ajoutées au devis dans la section &quot;Information complémentaire&quot;.
+              </p>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Add Mandataire Modal Component
+const AddMandataireModal: React.FC<AddMandataireModalProps> = ({ onClose, onSave }) => {
+  const [selectedMandataire, setSelectedMandataire] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filteredMandataires, setFilteredMandataires] = useState<Mandataire[]>(mandataires);
+
+  // Handle search term change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    
+    // Filter mandataires based on search term
+    if (term.trim() === "") {
+      setFilteredMandataires(mandataires);
+    } else {
+      const filtered = mandataires.filter(
+        m => m.name.toLowerCase().includes(term.toLowerCase()) || 
+             m.company.toLowerCase().includes(term.toLowerCase())
+      );
+      setFilteredMandataires(filtered);
+    }
+  };
+
+  // Handle mandataire selection
+  const handleSelectMandataire = (id: string) => {
+    setSelectedMandataire(id);
+  };
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedMandataire) {
+      alert("Veuillez sélectionner un mandataire");
+      return;
+    }
+    
+    const mandataire = mandataires.find(m => m.id === selectedMandataire);
+    if (mandataire) {
+      onSave(mandataire);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="bg-white rounded-xl w-full max-w-3xl m-4 overflow-hidden shadow-2xl"
+      >
+        {/* Modal header */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <UserIcon className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                Ajouter un mandataire
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Modal body */}
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
+          <form onSubmit={handleSubmit}>
+            <div className="mb-6">
+              {/* Warning message */}
+              <div className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-800">
+                <div className="flex items-center gap-2">
+                  <ExclamationCircleIcon className="h-6 w-6 text-amber-600" />
+                  <h3 className="font-bold">ATTENTION :</h3>
+                </div>
+                <p className="mt-1">
+                  En l&apos;absence de la civilité et du numéro de dossier MPR dans la fiche client, les documents MAPRIMERENOV ne seront pas générés.
+                </p>
+              </div>
+              
+              {/* Search and select mandataire */}
+              <div className="mb-4">
+                <label htmlFor="searchMandataire" className="block text-sm font-medium text-gray-700 mb-1">
+                  Rechercher un mandataire
+                </label>
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    id="searchMandataire"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    placeholder="Rechercher par nom ou entreprise..."
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-4 mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sélectionnez un mandataire
+                </label>
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                  {filteredMandataires.length === 0 ? (
+                    <p className="text-gray-500 text-sm italic p-2">
+                      Aucun mandataire ne correspond à votre recherche.
+                    </p>
+                  ) : (
+                    filteredMandataires.map(mandataire => (
+                      <div 
+                        key={mandataire.id}
+                        onClick={() => handleSelectMandataire(mandataire.id)}
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                          selectedMandataire === mandataire.id 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium text-gray-900">{mandataire.name}</h4>
+                            <p className="text-sm text-gray-600">{mandataire.company}</p>
+                          </div>
+                          {selectedMandataire === mandataire.id && (
+                            <CheckIcon className="h-5 w-5 text-blue-600" />
+                          )}
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          SIRET: {mandataire.siret}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+              
+              {/* Display selected mandataire details */}
+              {selectedMandataire && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="font-medium text-gray-900 mb-2">Détails du mandataire sélectionné</h4>
+                  {(() => {
+                    const mandataire = mandataires.find(m => m.id === selectedMandataire);
+                    if (!mandataire) return null;
+                    
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="text-gray-600">Email:</span>
+                          <span className="ml-1">{mandataire.email}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Téléphone:</span>
+                          <span className="ml-1">{mandataire.phone}</span>
+                        </div>
+                        <div className="md:col-span-2">
+                          <span className="text-gray-600">Adresse:</span>
+                          <span className="ml-1">{mandataire.address}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 // Define sample services data - this should be imported or passed as props in a real app
 const serviceOptions: {
   id: string;
@@ -401,7 +847,7 @@ const SizingNoteModal: React.FC<SizingNoteModalProps> = ({ onClose, onSave, prod
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="bg-white rounded-xl w-full max-w-4xl m-4 overflow-hidden shadow-2xl"
+        className="bg-white rounded-xl w-full max-w-6xl m-4 overflow-hidden shadow-2xl"
       >
         {/* Modal header */}
         <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
@@ -424,169 +870,201 @@ const SizingNoteModal: React.FC<SizingNoteModalProps> = ({ onClose, onSave, prod
           </div>
         </div>
         
-        {/* Modal body */}
-        <div className="p-6 max-h-[80vh] overflow-y-auto">
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Note de dimensionnement pour {getProductType()} ({productCode})
-                </h3>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label htmlFor="buildingType" className="block text-sm font-medium text-gray-700 mb-1">
-                  Sélectionner un type de logement
-                </label>
-                <select
-                  id="buildingType"
-                  name="buildingType"
-                  value={formData.buildingType}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                >
-                  <option value="RT 2020">RT 2020 (Construit après le 1er Janvier 2022)</option>
-                  <option value="RT 2012">RT 2012 (Construit après le 1er Janvier 2013)</option>
-                  <option value="RT 2005">RT 2005 (Construit après le 1er Janvier 2006)</option>
-                  <option value="RT 2000">RT 2000 (Construit après le 1er Janvier 2001)</option>
-                </select>
-              </div>
-              
-              <div>
-                <label htmlFor="radiatorType" className="block text-sm font-medium text-gray-700 mb-1">
-                  Sélectionner un type de radiateur
-                </label>
-                <select
-                  id="radiatorType"
-                  name="radiatorType"
-                  value={formData.radiatorType}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                >
-                  <option value="Fonte">Fonte</option>
-                  <option value="Acier">Acier</option>
-                  <option value="Plancher chauffant">Plancher chauffant</option>
-                  <option value="Alu">Alu</option>
-                  <option value="Electrique">Electrique</option>
-                  <option value="Aucun">Aucun</option>
-                </select>
-              </div>
-              
-              <div>
-                <label htmlFor="waterTemperature" className="block text-sm font-medium text-gray-700 mb-1">
-                  Sélectionner la température de l&apos;eau
-                </label>
-                <select
-                  id="waterTemperature"
-                  name="waterTemperature"
-                  value={formData.waterTemperature}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                >
-                  <option value="Haute Température">Haute Température</option>
-                  <option value="Moyenne Température">Moyenne Température</option>
-                  <option value="Basse Température">Basse Température</option>
-                  <option value="Ne pas renseigner">Ne pas renseigner</option>
-                </select>
-              </div>
-              
-              <div>
-                <label htmlFor="heatedArea" className="block text-sm font-medium text-gray-700 mb-1">
-                  Surface chauffée (m²)*
-                </label>
-                <input
-                  type="number"
-                  id="heatedArea"
-                  name="heatedArea"
-                  value={formData.heatedArea}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="ceilingHeight" className="block text-sm font-medium text-gray-700 mb-1">
-                  Hauteur sous plafond (m)*
-                </label>
-                <input
-                  type="number"
-                  id="ceilingHeight"
-                  name="ceilingHeight"
-                  value={formData.ceilingHeight}
-                  onChange={handleChange}
-                  required
-                  step="0.01"
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="baseTemperature" className="block text-sm font-medium text-gray-700 mb-1">
-                  Température de base (°C)
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    id="baseTemperature"
-                    name="baseTemperature"
-                    value={formData.baseTemperature}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                  <div className="mt-1 text-xs text-gray-500">
-                    Vérifier et modifier, si nécessaire la température en vous référant à la carte
-                  </div>
+        {/* Modal body - Changed to flex layout to add images on right */}
+        <div className="p-6 max-h-[80vh] overflow-y-auto flex flex-row">
+          {/* Left column: Form */}
+          <div className="flex-1 pr-6">
+            <form onSubmit={handleSubmit}>
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Note de dimensionnement pour {getProductType()} ({productCode})
+                  </h3>
                 </div>
               </div>
               
-              <div>
-                <label htmlFor="desiredTemperature" className="block text-sm font-medium text-gray-700 mb-1">
-                  Température ambiante souhaitée (°C)
-                </label>
-                <input
-                  type="number"
-                  id="desiredTemperature"
-                  name="desiredTemperature"
-                  value={formData.desiredTemperature}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label htmlFor="buildingType" className="block text-sm font-medium text-gray-700 mb-1">
+                    Sélectionner un type de logement
+                  </label>
+                  <select
+                    id="buildingType"
+                    name="buildingType"
+                    value={formData.buildingType}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    <option value="RT 2020">RT 2020 (Construit après le 1er Janvier 2022)</option>
+                    <option value="RT 2012">RT 2012 (Construit après le 1er Janvier 2013)</option>
+                    <option value="RT 2005">RT 2005 (Construit après le 1er Janvier 2006)</option>
+                    <option value="RT 2000">RT 2000 (Construit après le 1er Janvier 2001)</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="radiatorType" className="block text-sm font-medium text-gray-700 mb-1">
+                    Sélectionner un type de radiateur
+                  </label>
+                  <select
+                    id="radiatorType"
+                    name="radiatorType"
+                    value={formData.radiatorType}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    <option value="Fonte">Fonte</option>
+                    <option value="Acier">Acier</option>
+                    <option value="Plancher chauffant">Plancher chauffant</option>
+                    <option value="Alu">Alu</option>
+                    <option value="Electrique">Electrique</option>
+                    <option value="Aucun">Aucun</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="waterTemperature" className="block text-sm font-medium text-gray-700 mb-1">
+                    Sélectionner la température de l&apos;eau
+                  </label>
+                  <select
+                    id="waterTemperature"
+                    name="waterTemperature"
+                    value={formData.waterTemperature}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    <option value="Haute Température">Haute Température</option>
+                    <option value="Moyenne Température">Moyenne Température</option>
+                    <option value="Basse Température">Basse Température</option>
+                    <option value="Ne pas renseigner">Ne pas renseigner</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="heatedArea" className="block text-sm font-medium text-gray-700 mb-1">
+                    Surface chauffée (m²)*
+                  </label>
+                  <input
+                    type="number"
+                    id="heatedArea"
+                    name="heatedArea"
+                    value={formData.heatedArea}
+                    onChange={handleChange}
+                    required
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="ceilingHeight" className="block text-sm font-medium text-gray-700 mb-1">
+                    Hauteur sous plafond (m)*
+                  </label>
+                  <input
+                    type="number"
+                    id="ceilingHeight"
+                    name="ceilingHeight"
+                    value={formData.ceilingHeight}
+                    onChange={handleChange}
+                    required
+                    step="0.01"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="baseTemperature" className="block text-sm font-medium text-gray-700 mb-1">
+                    Température de base (°C)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      id="baseTemperature"
+                      name="baseTemperature"
+                      value={formData.baseTemperature}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    />
+                    <div className="mt-1 text-xs text-gray-500">
+                      Vérifier et modifier, si nécessaire la température en vous référant à la carte
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="desiredTemperature" className="block text-sm font-medium text-gray-700 mb-1">
+                    Température ambiante souhaitée (°C)
+                  </label>
+                  <input
+                    type="number"
+                    id="desiredTemperature"
+                    name="desiredTemperature"
+                    value={formData.desiredTemperature}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="altitude" className="block text-sm font-medium text-gray-700 mb-1">
+                    Altitude (m)
+                  </label>
+                  <input
+                    type="number"
+                    id="altitude"
+                    name="altitude"
+                    value={formData.altitude}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
               </div>
               
-              <div>
-                <label htmlFor="altitude" className="block text-sm font-medium text-gray-700 mb-1">
-                  Altitude (m)
-                </label>
-                <input
-                  type="number"
-                  id="altitude"
-                  name="altitude"
-                  value={formData.altitude}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </div>
+          
+          {/* Right column: Reference images */}
+          <div className="w-1/3 flex flex-col space-y-4">
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 p-2 border-b border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700">Carte des températures de base</h4>
+              </div>
+              <div className="p-2">
+                <img 
+                  src="/carte.png" 
+                  alt="Carte des températures de base" 
+                  className="w-full h-auto rounded" 
                 />
               </div>
             </div>
             
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
-              >
-                Enregistrer
-              </button>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 p-2 border-b border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700">Tableau de référence</h4>
+              </div>
+              <div className="p-2">
+                <img 
+                  src="/tableau.png" 
+                  alt="Tableau de référence pour le dimensionnement" 
+                  className="w-full h-auto rounded" 
+                />
+              </div>
             </div>
-          </form>
+          </div>
         </div>
       </motion.div>
     </div>
@@ -659,6 +1137,325 @@ const DocumentStatusBadge: React.FC<{ status: DocumentStatus }> = ({ status }) =
   );
 };
 
+// Add Subcontractor Modal component
+const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({ onClose, onSave }) => {
+  const [selectedSubcontractor, setSelectedSubcontractor] = useState<string>("");
+  const [subcontractorInfo, setSubcontractorInfo] = useState<SubcontractorFormState>({
+    name: "",
+    address: "",
+    director: "",
+    siret: "",
+    insurance: "",
+    qualifications: []
+  });
+  const [addNew, setAddNew] = useState<boolean>(false);
+  const [qualification, setQualification] = useState<string>("");
+
+  // Handle selecting an existing subcontractor
+  const handleSelectSubcontractor = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = e.target.value;
+    setSelectedSubcontractor(selected);
+    
+    if (selected) {
+      const subcontractor = subcontractors.find(sc => sc.id === selected);
+      if (subcontractor) {
+        setSubcontractorInfo({
+          name: subcontractor.name,
+          address: subcontractor.address,
+          director: subcontractor.director,
+          siret: subcontractor.siret,
+          insurance: subcontractor.insurance,
+          qualifications: [...subcontractor.qualifications]
+        });
+      }
+    } else {
+      // Reset form if "Select" option is chosen
+      setSubcontractorInfo({
+        name: "",
+        address: "",
+        director: "",
+        siret: "",
+        insurance: "",
+        qualifications: []
+      });
+    }
+  };
+
+  // Handle form input changes for new subcontractor
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSubcontractorInfo({
+      ...subcontractorInfo,
+      [name]: value
+    });
+  };
+
+  // Add a qualification to the list
+  const handleAddQualification = () => {
+    if (qualification.trim()) {
+      setSubcontractorInfo({
+        ...subcontractorInfo,
+        qualifications: [...subcontractorInfo.qualifications, qualification]
+      });
+      setQualification("");
+    }
+  };
+
+  // Remove a qualification from the list
+  const handleRemoveQualification = (index: number) => {
+    const newQualifications = [...subcontractorInfo.qualifications];
+    newQualifications.splice(index, 1);
+    setSubcontractorInfo({
+      ...subcontractorInfo,
+      qualifications: newQualifications
+    });
+  };
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (addNew) {
+      // For a new subcontractor, we'd typically make an API call here
+      // For now, we'll just simulate adding a new subcontractor with a generated ID
+      const newSubcontractor: Subcontractor = {
+        id: `SC${Math.floor(Math.random() * 1000)}`,
+        ...subcontractorInfo
+      };
+      onSave(newSubcontractor);
+    } else {
+      // For an existing subcontractor, pass the selected one
+      const subcontractor = subcontractors.find(sc => sc.id === selectedSubcontractor);
+      if (subcontractor) {
+        onSave(subcontractor);
+      } else {
+        alert("Veuillez sélectionner un sous-traitant");
+        return;
+      }
+    }
+    
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="bg-white rounded-xl w-full max-w-3xl m-4 overflow-hidden shadow-2xl"
+      >
+        {/* Modal header */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <UserGroupIcon className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                {addNew ? "Ajouter un nouveau sous-traitant" : "Sélectionner un sous-traitant"}
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Modal body */}
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
+          <form onSubmit={handleSubmit}>
+            <div className="mb-6">
+              <div className="flex items-center mb-4">
+                <input 
+                  type="checkbox" 
+                  id="addNew" 
+                  checked={addNew}
+                  onChange={() => setAddNew(!addNew)}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+                <label htmlFor="addNew" className="ml-2 text-sm text-gray-700">
+                  Ajouter un nouveau sous-traitant
+                </label>
+              </div>
+              
+              {!addNew && (
+                <div className="mb-4">
+                  <label htmlFor="subcontractor" className="block text-sm font-medium text-gray-700 mb-1">
+                    Sélectionnez un sous-traitant
+                  </label>
+                  <select
+                    id="subcontractor"
+                    value={selectedSubcontractor}
+                    onChange={handleSelectSubcontractor}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    <option value="">-- Sélectionnez un sous-traitant --</option>
+                    {subcontractors.map(sc => (
+                      <option key={sc.id} value={sc.id}>{sc.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom de l&apos;entreprise*
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={subcontractorInfo.name}
+                    onChange={handleChange}
+                    disabled={!addNew && !!selectedSubcontractor}
+                    required
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="director" className="block text-sm font-medium text-gray-700 mb-1">
+                    Dirigeant*
+                  </label>
+                  <input
+                    type="text"
+                    id="director"
+                    name="director"
+                    value={subcontractorInfo.director}
+                    onChange={handleChange}
+                    disabled={!addNew && !!selectedSubcontractor}
+                    required
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                  Adresse*
+                </label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={subcontractorInfo.address}
+                  onChange={handleChange}
+                  disabled={!addNew && !!selectedSubcontractor}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label htmlFor="siret" className="block text-sm font-medium text-gray-700 mb-1">
+                    Numéro SIRET*
+                  </label>
+                  <input
+                    type="text"
+                    id="siret"
+                    name="siret"
+                    value={subcontractorInfo.siret}
+                    onChange={handleChange}
+                    disabled={!addNew && !!selectedSubcontractor}
+                    required
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="insurance" className="block text-sm font-medium text-gray-700 mb-1">
+                    N° Décennale*
+                  </label>
+                  <input
+                    type="text"
+                    id="insurance"
+                    name="insurance"
+                    value={subcontractorInfo.insurance}
+                    onChange={handleChange}
+                    disabled={!addNew && !!selectedSubcontractor}
+                    required
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Qualifications RGE
+                </label>
+                
+                {addNew && (
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={qualification}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQualification(e.target.value)}
+                      placeholder="Ex: RGE QualiPac: QPAC/12345 (Valide du 15/02/2023 au 15/02/2024)"
+                      className="flex-grow border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddQualification}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                      <PlusIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                )}
+                
+                <div className="space-y-2 mt-2">
+                  {subcontractorInfo.qualifications.map((qual, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <span className="text-sm">{qual}</span>
+                      {addNew && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveQualification(index)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {subcontractorInfo.qualifications.length === 0 && (
+                    <p className="text-sm text-gray-500 italic">Aucune qualification ajoutée</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 // Signature status badge component
 const SignatureStatusBadge: React.FC<{ status: SignatureStatus }> = ({ status }) => {
   const getStatusInfo = () => {
@@ -716,12 +1513,64 @@ const DealSelectionModal: React.FC<{
   onClose: () => void;
   onSelect: (dealId: string) => void;
 }> = ({ onClose, onSelect }) => {
-  // Sample deals for the demo
+  // Deals data - only "Deal vierge" and "Effy" as requested
   const deals = [
-    { id: 'EFFY', name: 'EFFY', ratio: 0.0065 },
-    { id: 'ENGIE', name: 'ENGIE', ratio: 0.0058 },
-    { id: 'TOTAL', name: 'TOTAL', ratio: 0.0060 }
+    { id: 'VIERGE', name: 'Deal vierge', ratio: 0.0042 },
+    { id: 'EFFY', name: 'EFFY', ratio: 0.0065 }
   ];
+
+  // State for managing the dropdown
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [selectedDeal, setSelectedDeal] = useState<{id: string, name: string, ratio: number} | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter deals based on search term
+  const filteredDeals = deals.filter(deal => 
+    deal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    deal.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setIsDropdownOpen(true);
+  };
+
+  // Handle deal selection
+  const handleDealSelect = (deal: {id: string, name: string, ratio: number}) => {
+    setSelectedDeal(deal);
+    setSearchTerm(deal.name);
+    setIsDropdownOpen(false);
+  };
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedDeal) {
+      onSelect(selectedDeal.id);
+    } else if (filteredDeals.length === 1) {
+      // If there's only one match and user submits, select that match
+      onSelect(filteredDeals[0].id);
+    } else {
+      // Optional: show a validation message that they need to select a deal
+      alert("Veuillez sélectionner un deal de la liste");
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -730,7 +1579,7 @@ const DealSelectionModal: React.FC<{
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="bg-white rounded-xl w-full max-w-md m-4 overflow-hidden shadow-2xl"
+        className="bg-white rounded-xl w-full max-w-md m-4 overflow-visible shadow-2xl" // Changed overflow to visible
       >
         {/* Modal header */}
         <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
@@ -753,35 +1602,84 @@ const DealSelectionModal: React.FC<{
           </div>
         </div>
         
-        {/* Modal body */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 gap-3 mb-6">
-            {deals.map(deal => (
+        {/* Modal body with improved dropdown */}
+        <div className="p-6 relative">
+          <form onSubmit={handleSubmit}>
+            <div className="mb-6" ref={dropdownRef}>
+              <label htmlFor="dealSearch" className="block text-sm font-medium text-gray-700 mb-2">
+                Rechercher ou sélectionner un deal
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="dealSearch"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  placeholder="Rechercher un deal..."
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                />
+                <div 
+                  className="absolute right-3 top-3 cursor-pointer"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  {isDropdownOpen ? (
+                    <ChevronUpIcon className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+                  )}
+                </div>
+              </div>
+              
+              {/* Improved dropdown menu with fixed z-index and positioning */}
+              {isDropdownOpen && (
+                <div className="absolute z-[100] w-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 left-0 right-0">
+                  {filteredDeals.length > 0 ? (
+                    <ul className="max-h-60 overflow-y-auto">
+                      {filteredDeals.map(deal => (
+                        <li 
+                          key={deal.id}
+                          onClick={() => handleDealSelect(deal)}
+                          className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex items-center">
+                            <div className="p-2 mr-3 bg-blue-100 rounded-lg">
+                              <LinkIcon className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-800">{deal.name}</div>
+                              <div className="text-sm text-gray-500">Ratio: {deal.ratio}€/kWh cumac</div>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-gray-500">
+                      Aucun deal trouvé
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end gap-3">
               <button
-                key={deal.id}
-                onClick={() => onSelect(deal.id)}
-                className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
               >
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <LinkIcon className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="flex-grow">
-                  <h3 className="font-medium text-gray-900">{deal.name}</h3>
-                  <p className="text-sm text-gray-500">Ratio: {deal.ratio}€/kWh cumac</p>
-                </div>
-                <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+                Annuler
               </button>
-            ))}
-          </div>
-          
-          <div className="flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 transition hover:bg-gray-50"
-            >
-              Annuler
-            </button>
-          </div>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                disabled={!selectedDeal && filteredDeals.length !== 1}
+              >
+                Confirmer
+              </button>
+            </div>
+          </form>
         </div>
       </motion.div>
     </div>
@@ -817,7 +1715,8 @@ const ActionMenu: React.FC<{
     { id: "addDivision", label: "Ajouter une indivision", icon: <UsersIcon className="h-5 w-5 text-gray-500" /> },
     { id: "addDocument", label: "Ajouter un document au devis", icon: <FolderPlusIcon className="h-5 w-5 text-gray-500" /> },
     { id: "modifyPrime", label: "Modifier une prime", icon: <CurrencyDollarIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "deleteQuote", label: "Supprimer le devis", icon: <TrashIcon className="h-5 w-5 text-red-500" /> }
+    { id: "deleteQuote", label: "Supprimer le devis", icon: <TrashIcon className="h-5 w-5 text-red-500" /> },
+    { id: "addOperation", label: "Ajouter une opération", icon: <PlusIcon className="h-5 w-5 text-gray-500" /> }
   ];
   
   // Add sizing note options when there are specific products
@@ -959,11 +1858,12 @@ const products = [
     price: 8500, 
     tva: 5.5, 
     kwhCumac: 615400,
-    description: 'Marque : **DAIKIN**\nRéférence : **ALTHERMA 3 HMT-14KW**\n- Puissance calorifique: +7 °C / +35 °C: 14 KW\n- COP +7 °C / +55 °C: 2.60\n- Gaz frigorigène: R410A\n- Classe énergétique (chauffage +55°C): A++\n- RENDEMENT ENERGETIQUE Eta wh: 127%\n- Température de fonctionnement C°: -25 à 35\n- Pression acoustique intérieure (dB): 42\n- Pression acoustique extérieure (dB): 49\n- Dimensions unité intérieure (HxLxP): 840x440x390 mm\n- Dimensions unité extérieure (HxLxP): 1440x1160x380 mm\n- Poids unité intérieure: 38 kg\n- Poids unité extérieure: 102 kg',
+    description: 'Marque : DAIKIN\nRéférence : ALTHERMA 3 HMT-14KW\n- Puissance calorifique: +7 °C / +35 °C: 14 KW\n- COP +7 °C / +55 °C: 2.60\n- Gaz frigorigène: R410A\n- Classe énergétique (chauffage +55°C): A++\n- RENDEMENT ENERGETIQUE Eta wh: 127%\n- Température de fonctionnement C°: -25 à 35\n- Pression acoustique intérieure (dB): 42\n- Pression acoustique extérieure (dB): 49\n- Dimensions unité intérieure (HxLxP): 840x440x390 mm\n- Dimensions unité extérieure (HxLxP): 1440x1160x380 mm\n- Poids unité intérieure: 38 kg\n- Poids unité extérieure: 102 kg',
     serviceDescription: '- Pose et installation complète d\'une pompe à chaleur air/eau\n- Forfait déplacement et mise en service comprise\n- Installation d\'un ballon tampon 25L: Bouteilles de mélange et de décantation, pour installations de chauffage corps acier, jaquette skaï, Isolation 35 mm réversibles droite ou gauche de la chaudière pose murale livrée avec 4 bouchons pour circuits inutilisés',
     serviceReference: 'FORFAIT POSE PAC',
     servicePrice: 2750,
-    serviceTva: 10
+    serviceTva: 10,
+    temperatureType: 'Basse Température'
   },
   { 
     id: 'P2', 
@@ -973,11 +1873,12 @@ const products = [
     price: 7200, 
     tva: 5.5, 
     kwhCumac: 555320,
-    description: 'Marque : **MITSUBISHI**\nRéférence : **ECODAN HYDROBOX 11KW**\n- Puissance calorifique: +7 °C / +35 °C: 11 KW\n- COP +7 °C / +35 °C: 4.52\n- Gaz frigorigène: R32\n- Classe énergétique (chauffage +35°C): A+++\n- RENDEMENT ENERGETIQUE Eta wh: 132%\n- Température de fonctionnement C°: -20 à 40\n- Pression acoustique intérieure (dB): 38\n- Pression acoustique extérieure (dB): 45\n- Dimensions unité intérieure (HxLxP): 800x530x360 mm\n- Dimensions unité extérieure (HxLxP): 1020x1050x330 mm\n- Poids unité intérieure: 42 kg\n- Poids unité extérieure: 94 kg',
+    description: 'Marque : MITSUBISHI\nRéférence : ECODAN HYDROBOX 11KW\n- Puissance calorifique: +7 °C / +35 °C: 11 KW\n- COP +7 °C / +35 °C: 4.52\n- Gaz frigorigène: R32\n- Classe énergétique (chauffage +35°C): A+++\n- RENDEMENT ENERGETIQUE Eta wh: 132%\n- Température de fonctionnement C°: -20 à 40\n- Pression acoustique intérieure (dB): 38\n- Pression acoustique extérieure (dB): 45\n- Dimensions unité intérieure (HxLxP): 800x530x360 mm\n- Dimensions unité extérieure (HxLxP): 1020x1050x330 mm\n- Poids unité intérieure: 42 kg\n- Poids unité extérieure: 94 kg',
     serviceDescription: '- Pose et installation complète d\'une pompe à chaleur air/eau\n- Forfait déplacement et mise en service comprise\n- Installation d\'un ballon tampon 25L: Bouteilles de mélange et de décantation, pour installations de chauffage corps acier, jaquette skaï, Isolation 35 mm',
     serviceReference: 'FORFAIT POSE PAC',
     servicePrice: 2500,
-    serviceTva: 10
+    serviceTva: 10,
+    temperatureType: 'Basse Température'
   },
   { 
     id: 'P3', 
@@ -987,11 +1888,12 @@ const products = [
     price: 9300, 
     tva: 5.5, 
     kwhCumac: 628730,
-    description: 'Marque : **ATLANTIC**\nRéférence : **ALFEA EXCELLIA 16KW**\n- Puissance calorifique: +7 °C / +35 °C: 16 KW\n- COP +7 °C / +35 °C: 4.55\n- Gaz frigorigène: R410A\n- Classe énergétique (chauffage +35°C): A+++\n- RENDEMENT ENERGETIQUE Eta wh: 135%\n- Température de fonctionnement C°: -20 à 35\n- Pression acoustique intérieure (dB): 39\n- Pression acoustique extérieure (dB): 48\n- Dimensions unité intérieure (HxLxP): 847x448x482 mm\n- Dimensions unité extérieure (HxLxP): 1428x1080x480 mm\n- Poids unité intérieure: 53 kg\n- Poids unité extérieure: 128 kg',
+    description: 'Marque : ATLANTIC\nRéférence : ALFEA EXCELLIA 16KW\n- Puissance calorifique: +7 °C / +35 °C: 16 KW\n- COP +7 °C / +35 °C: 4.55\n- Gaz frigorigène: R410A\n- Classe énergétique (chauffage +35°C): A+++\n- RENDEMENT ENERGETIQUE Eta wh: 135%\n- Température de fonctionnement C°: -20 à 35\n- Pression acoustique intérieure (dB): 39\n- Pression acoustique extérieure (dB): 48\n- Dimensions unité intérieure (HxLxP): 847x448x482 mm\n- Dimensions unité extérieure (HxLxP): 1428x1080x480 mm\n- Poids unité intérieure: 53 kg\n- Poids unité extérieure: 128 kg',
     serviceDescription: '- Pose et installation complète d\'une pompe à chaleur air/eau\n- Forfait déplacement et mise en service comprise\n- Installation d\'un ballon tampon 25L: Bouteilles de mélange et de décantation, pour installations de chauffage corps acier, jaquette skaï, Isolation 35 mm réversibles droite ou gauche de la chaudière pose murale livrée avec 4 bouchons pour circuits inutilisés',
     serviceReference: 'FORFAIT POSE PAC',
     servicePrice: 2800,
-    serviceTva: 10
+    serviceTva: 10,
+    temperatureType: 'Moyenne Température'
   },
   { 
     id: 'P4', 
@@ -1001,11 +1903,12 @@ const products = [
     price: 3200, 
     tva: 5.5, 
     kwhCumac: 164800,
-    description: 'Marque : **THERMOR**\nRéférence : **AEROMAX 5 - 200L**\n- Capacité : 200L\n- Profil de soutirage : L\n- COP à 7°C : 3,38 (Selon la norme EN 16147)\n- RENDEMENT ENERGETIQUE Eta wh : 133%\n- Puissance de la résistance (W) : 2450\n- Température de fonctionnement C° : -5 à 43\n- Pression acoustique (dB) : 50\n- Hauteur : 1693 mm\n- Poids à vide : 82 kg',
+    description: 'Marque : THERMOR\nRéférence : AEROMAX 5 - 200L\n- Capacité : 200L\n- Profil de soutirage : L\n- COP à 7°C : 3,38 (Selon la norme EN 16147)\n- RENDEMENT ENERGETIQUE Eta wh : 133%\n- Puissance de la résistance (W) : 2450\n- Température de fonctionnement C° : -5 à 43\n- Pression acoustique (dB) : 50\n- Hauteur : 1693 mm\n- Poids à vide : 82 kg',
     serviceDescription: '- Pose et installation complète d\'un chauffe-eau thermodynamique\n- Forfait déplacement et mise en service comprise\n- Raccordement aux réseaux hydrauliques et électriques\n- Évacuation de l\'ancien équipement selon les normes en vigueur',
     serviceReference: 'FORFAIT POSE CHAUFFE-EAU THERMODYNAMIQUE',
     servicePrice: 850,
-    serviceTva: 10
+    serviceTva: 10,
+    temperatureType: 'Haute Température'
   },
   { 
     id: 'P5', 
@@ -1015,14 +1918,16 @@ const products = [
     price: 3450, 
     tva: 5.5, 
     kwhCumac: 172500,
-    description: 'Marque : **ATLANTIC**\nRéférence : **CALYPSO VM 200L**\n- Capacité : 200L\n- Profil de soutirage : L\n- COP à 7°C : 3,35 (Selon la norme EN 16147)\n- RENDEMENT ENERGETIQUE Eta wh : 135%\n- Puissance de la résistance (W) : 2400\n- Température de fonctionnement C° : -5 à 43\n- Pression acoustique (dB) : 46\n- Hauteur : 1617 mm\n- Diamètre : 620 mm\n- Poids à vide : 80 kg',
+    description: 'Marque : ATLANTIC\nRéférence : CALYPSO VM 200L\n- Capacité : 200L\n- Profil de soutirage : L\n- COP à 7°C : 3,35 (Selon la norme EN 16147)\n- RENDEMENT ENERGETIQUE Eta wh : 135%\n- Puissance de la résistance (W) : 2400\n- Température de fonctionnement C° : -5 à 43\n- Pression acoustique (dB) : 46\n- Hauteur : 1617 mm\n- Diamètre : 620 mm\n- Poids à vide : 80 kg',
     serviceDescription: '- Pose et installation complète d\'un chauffe-eau thermodynamique\n- Forfait déplacement et mise en service comprise\n- Raccordement aux réseaux hydrauliques et électriques\n- Évacuation de l\'ancien équipement selon les normes en vigueur',
     serviceReference: 'FORFAIT POSE CHAUFFE-EAU THERMODYNAMIQUE',
     servicePrice: 850,
-    serviceTva: 10
+    serviceTva: 10,
+    temperatureType: 'Haute Température'
   }
 ];
 
+// Updated AddOperationModal with toggles and dropdowns
 const AddOperationModal: React.FC<{
   onClose: () => void;
   onSave: (operation: Partial<Operation>) => void;
@@ -1031,7 +1936,10 @@ const AddOperationModal: React.FC<{
 }> = ({ onClose, onSave, hasDeal }) => {
   const [step, setStep] = useState<'selectOperation' | 'fillDetails'>('selectOperation');
   const [selectedOperation, setSelectedOperation] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [selectedSubcontractor, setSelectedSubcontractor] = useState<string>('');
+  const [showDescription, setShowDescription] = useState<boolean>(false);
   const [operation, setOperation] = useState<Partial<Operation>>({
     reference: '',
     name: '',
@@ -1040,15 +1948,22 @@ const AddOperationModal: React.FC<{
     unitPriceTTC: 0,
     tva: 5.5,
     totalHT: 0,
-    totalTTC: 0
+    totalTTC: 0,
+    coupDePouceOperation: false,
+    hasReceiveDimensionPaper: false
   });
 
   // Sample operation codes with their specific data
   const operationCodes = [
-    { id: 'BAR-TH-101', name: 'BAR-TH-101', kwh: 510530, price: 6800 },
-    { id: 'BAR-TH-104', name: 'BAR-TH-104', kwh: 628730, price: 8200 },
-    { id: 'BAR-TH-112-Granulés', name: 'BAR-TH-112-Granulés', kwh: 950440, price: 12000 },
-    { id: 'BAR-TH-171', name: 'BAR-TH-171', kwh: 615400, price: 9500 }
+    { id: 'BAR-TH-101', name: 'BAR-TH-101', kwh: 510530, price: 6800, description: 'Chaudière individuelle à haute performance énergétique' },
+    { id: 'BAR-TH-104', name: 'BAR-TH-104', kwh: 628730, price: 8200, description: 'Pompe à chaleur de type air/eau ou eau/eau' },
+    { id: 'BAR-TH-106', name: 'BAR-TH-106', kwh: 435200, price: 5500, description: 'Chaudière individuelle à condensation' },
+    { id: 'BAR-TH-112-Granulés', name: 'BAR-TH-112-Granulés', kwh: 950440, price: 12000, description: 'Appareil indépendant de chauffage au bois' },
+    { id: 'BAR-TH-113', name: 'BAR-TH-113', kwh: 890210, price: 14000, description: 'Chaudière biomasse individuelle' },
+    { id: 'BAR-TH-137', name: 'BAR-TH-137', kwh: 328400, price: 7500, description: 'Raccordement dun bâtiment résidentiel à un réseau de chaleur' },
+    { id: 'BAR-TH-143', name: 'BAR-TH-143', kwh: 755300, price: 11500, description: 'Système solaire combiné (SSC)' },
+    { id: 'BAR-TH-159', name: 'BAR-TH-159', kwh: 390800, price: 4900, description: 'Pompe à chaleur hybride individuelle' },
+    { id: 'BAR-TH-171', name: 'BAR-TH-171', kwh: 615400, price: 9500, description: 'Isolation thermique des réseaux hydrauliques de chauffage' }
   ];
 
   // Boiler types
@@ -1060,10 +1975,21 @@ const AddOperationModal: React.FC<{
   // Pump usage types
   const pumpUsages = ["Chauffage", "Chauffage et eau sanitaire"];
 
+  // Dimensioning note options
+  const dimensioningOptions = ["Oui", "Non", "Non applicable"];
+
+  // Filter operations based on search term
+  const filteredOperations = useMemo(() => {
+    return operationCodes.filter(op => 
+      op.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      op.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      op.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
+
   // Handle operation selection with price prefill
   const handleSelectOperation = (opCode: string) => {
     setSelectedOperation(opCode);
-    
     const selectedOp = operationCodes.find(op => op.id === opCode);
     if (selectedOp) {
       setOperation({
@@ -1073,8 +1999,14 @@ const AddOperationModal: React.FC<{
         unitPriceTTC: selectedOp.price
       });
     }
-    
     setStep('fillDetails');
+    setShowDropdown(false);
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setShowDropdown(true);
   };
 
   // Handle product selection with price update
@@ -1101,6 +2033,15 @@ const AddOperationModal: React.FC<{
     });
   };
 
+  // Handle dimensioning note selection
+  const handleDimensioningSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setOperation({
+      ...operation,
+      hasReceiveDimensionPaper: value === "Oui"
+    });
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const newValue = type === 'checkbox' 
@@ -1110,6 +2051,19 @@ const AddOperationModal: React.FC<{
         : value;
     
     setOperation({ ...operation, [name]: newValue });
+  };
+
+  // Toggle handler for "Afficher la description du produit"
+  const handleToggleDescription = () => {
+    setShowDescription(!showDescription);
+  };
+
+  // Toggle handler for "Opération coup de pouce"
+  const handleToggleCoupDePouce = () => {
+    setOperation({
+      ...operation,
+      coupDePouceOperation: !operation.coupDePouceOperation
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1126,6 +2080,52 @@ const AddOperationModal: React.FC<{
       subcontractor: selectedSubcontractor
     });
     onClose();
+  };
+
+  // Close dropdown when clicking outside
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Toggle switch component
+  const Toggle: React.FC<{
+    enabled: boolean;
+    onChange: () => void;
+    label: string;
+  }> = ({ enabled, onChange, label }) => {
+    return (
+      <div className="flex items-center gap-3">
+        <button 
+          type="button"
+          className={`${
+            enabled ? 'bg-blue-600' : 'bg-gray-200'
+          } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+          role="switch"
+          aria-checked={enabled}
+          onClick={onChange}
+        >
+          <span className="sr-only">{label}</span>
+          <span
+            aria-hidden="true"
+            className={`${
+              enabled ? 'translate-x-5' : 'translate-x-0'
+            } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+          />
+        </button>
+        <span className="text-sm text-gray-700">{label}</span>
+      </div>
+    );
   };
 
   if (!hasDeal && step === 'selectOperation') {
@@ -1209,19 +2209,81 @@ const AddOperationModal: React.FC<{
         {/* Modal body */}
         <div className="p-6 max-h-[80vh] overflow-y-auto">
           {step === 'selectOperation' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {operationCodes.map((op) => (
-                <div 
-                  key={op.id}
-                  onClick={() => handleSelectOperation(op.id)}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors"
-                >
-                  <h3 className="text-lg font-medium text-blue-600">{op.name}</h3>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Cliquez pour sélectionner cette opération
-                  </p>
+            <div>
+              <div className="mb-6">
+                <label htmlFor="searchOperation" className="block text-sm font-medium text-gray-700 mb-2">
+                  Rechercher ou sélectionner une opération
+                </label>
+                <div className="relative" ref={dropdownRef}>
+                  <div className="flex">
+                    <div className="relative flex-grow">
+                      <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                      <input
+                        type="text"
+                        id="searchOperation"
+                        placeholder="Rechercher par code ou description..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        onFocus={() => setShowDropdown(true)}
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <button 
+                        type="button" 
+                        className="absolute right-3 top-3"
+                        onClick={() => setShowDropdown(!showDropdown)}
+                      >
+                        <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Dropdown Menu */}
+                  {showDropdown && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-gray-200 overflow-auto max-h-72">
+                      {filteredOperations.length > 0 ? (
+                        filteredOperations.map((op) => (
+                          <div
+                            key={op.id}
+                            onClick={() => handleSelectOperation(op.id)}
+                            className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="flex justify-between">
+                              <div>
+                                <div className="font-medium text-blue-600">{op.id}</div>
+                                <div className="text-sm text-gray-500">{op.description}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-gray-500 text-sm">
+                          Aucune opération trouvée
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ))}
+              </div>
+              
+              <div className="mt-8">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Opérations populaires</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {operationCodes.slice(0, 4).map((op) => (
+                    <div 
+                      key={op.id}
+                      onClick={() => handleSelectOperation(op.id)}
+                      className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-lg font-medium text-blue-600">{op.id}</h3>
+                          <p className="text-gray-500 text-sm mt-1">{op.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -1269,50 +2331,23 @@ const AddOperationModal: React.FC<{
                 </div>
               </div>
               
-              <div className="mb-4">
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    id="showDescription" 
-                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <label htmlFor="showDescription" className="ml-2 text-sm text-gray-700">
-                    Afficher la description du produit
-                  </label>
-                </div>
+              <div className="mb-6 space-y-4">
+                {/* Toggle for Description */}
+                <Toggle 
+                  enabled={showDescription}
+                  onChange={handleToggleDescription}
+                  label="Afficher la description du produit"
+                />
+                
+                {/* Toggle for Coup de pouce */}
+                <Toggle 
+                  enabled={operation.coupDePouceOperation || false}
+                  onChange={handleToggleCoupDePouce}
+                  label="Opération coup de pouce"
+                />
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label htmlFor="coupDePouceOperation" className="block text-sm font-medium text-gray-700 mb-1">
-                    Opération coup de pouce
-                  </label>
-                  <div className="flex space-x-4">
-                    <div className="flex items-center">
-                      <input 
-                        type="radio" 
-                        id="coupDePouceYes" 
-                        name="coupDePouceOperation" 
-                        value="true"
-                        onChange={() => setOperation({...operation, coupDePouceOperation: true})}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
-                      <label htmlFor="coupDePouceYes" className="ml-2 text-sm text-gray-700">Oui</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input 
-                        type="radio" 
-                        id="coupDePouceNo" 
-                        name="coupDePouceOperation" 
-                        value="false"
-                        onChange={() => setOperation({...operation, coupDePouceOperation: false})}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
-                      <label htmlFor="coupDePouceNo" className="ml-2 text-sm text-gray-700">Non</label>
-                    </div>
-                  </div>
-                </div>
-                
                 <div>
                   <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
                     Prix du produit TTC
@@ -1325,6 +2360,22 @@ const AddOperationModal: React.FC<{
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
+                </div>
+                
+                <div>
+                  <label htmlFor="dimensioningNote" className="block text-sm font-medium text-gray-700 mb-1">
+                    Note de dimensionnement remise au bénéficiaire
+                  </label>
+                  <select
+                    id="dimensioningNote"
+                    name="dimensioningNote"
+                    onChange={handleDimensioningSelect}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                    {dimensioningOptions.map(option => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               
@@ -1404,19 +2455,6 @@ const AddOperationModal: React.FC<{
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    id="dimensionPaper" 
-                    name="hasReceiveDimensionPaper"
-                    onChange={(e) => setOperation({...operation, hasReceiveDimensionPaper: e.target.checked})}
-                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <label htmlFor="dimensionPaper" className="ml-2 text-sm text-gray-700">
-                    Une note de dimensionnement a été remise au bénéficiaire
-                  </label>
-                </div>
-                
                 <div>
                   <label htmlFor="housingType" className="block text-sm font-medium text-gray-700 mb-1">
                     Type de logement
@@ -1433,9 +2471,7 @@ const AddOperationModal: React.FC<{
                     ))}
                   </select>
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                
                 <div>
                   <label htmlFor="pumpUsage" className="block text-sm font-medium text-gray-700 mb-1">
                     Usage couvert par la PAC
@@ -1452,7 +2488,9 @@ const AddOperationModal: React.FC<{
                     ))}
                   </select>
                 </div>
-                
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label htmlFor="regulatorBrand" className="block text-sm font-medium text-gray-700 mb-1">
                     Marque du régulateur
@@ -1540,16 +2578,24 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSave }) =>
       // Filter out the Marque and Référence lines from the description
       const filteredDescription = selectedProduct.description
         .split('\n')
-        .filter(line => !line.startsWith('Marque :') && !line.startsWith('Référence :'))
+        .filter(line => !line.startsWith('Marque :') && !line.startsWith('Référence :') && !line.startsWith('- Type de température:'))
         .join('\n');
-
+  
+      // Create a temperature line with proper formatting
+      const temperatureLine = `- Type de température: <span style="font-weight: bold">${selectedProduct.temperatureType}</span>`;
+      
+      // Add the formatted temperature line to the description
+      const newDescription = filteredDescription.startsWith('-') 
+        ? temperatureLine + '\n' + filteredDescription
+        : temperatureLine + '\n' + filteredDescription;
+  
       setProduct({
         ...product,
         reference: selectedProduct.reference,
         name: selectedProduct.name,
         unitPriceTTC: selectedProduct.price,
         tva: selectedProduct.tva,
-        description: filteredDescription,
+        description: newDescription,
         showDescription: true,
         brand: selectedProduct.brand,
         serviceData: {
@@ -2180,6 +3226,40 @@ const DevisEditor: React.FC<{
   const [selectedProductCode, setSelectedProductCode] = useState<string>("");
   const [sizingNotes, setSizingNotes] = useState<SizingNote[]>([]);
 
+  const [showAddSubcontractorModal, setShowAddSubcontractorModal] = useState<boolean>(false);
+  const [selectedSubcontractor, setSelectedSubcontractor] = useState<Subcontractor | null>(null);
+  const [showAddMandataireModal, setShowAddMandataireModal] = useState<boolean>(false);
+  const [selectedMandataire, setSelectedMandataire] = useState<Mandataire | null>(null);
+  const [showAddInformationModal, setShowAddInformationModal] = useState<boolean>(false);
+  // Add these state variables to the DevisEditor component
+  const [showAddDPMairieModal, setShowAddDPMairieModal] = useState<boolean>(false);
+  const [dpMairieData, setDpMairieData] = useState<DPMairieData | null>(null);
+
+  const [showAddFinancingModal, setShowAddFinancingModal] = useState<boolean>(false);
+  const [financingData, setFinancingData] = useState<FinancingData | null>(null);
+  const [showAddIndivisionModal, setShowAddIndivisionModal] = useState<boolean>(false);
+  const [indivisionData, setIndivisionData] = useState<IndivisionData | null>(null);
+  // Inside the DevisEditor component, add this state:
+  const [showAddDocumentModal, setShowAddDocumentModal] = useState<boolean>(false);
+  const [quoteDocuments, setQuoteDocuments] = useState<QuoteDocument[]>([]);
+  const [showAddIncentivesModal, setShowAddIncentivesModal] = useState<boolean>(false);
+  const [incentivesData, setIncentivesData] = useState<IncentivesData>({
+    primeCEE: '',
+    remiseExceptionnelle: '',
+    primeMPR: '',
+    montantPriseEnChargeRAC: '',
+    activiteMaPrimeRenov: false,
+    acompte: ''
+  });
+  const [validUntilDate, setValidUntilDate] = useState<string>('');
+  const [estimatedWorkDate, setEstimatedWorkDate] = useState<string>('');
+  const [commitmentDate, setCommitmentDate] = useState<string>('');
+  const [installationDate, setInstallationDate] = useState<string>('');
+  const [workCompletionDate, setWorkCompletionDate] = useState<string>('');
+
+  const [editingItem, setEditingItem] = useState<TableItem | null>(null);
+  const [showEditItemModal, setShowEditItemModal] = useState<boolean>(false);
+
   // New function to handle adding a sizing note
   const handleAddSizingNote = (sizingNote: SizingNote) => {
     // Add the sizing note to the state
@@ -2190,7 +3270,8 @@ const DevisEditor: React.FC<{
   const dealRatios = {
     'EFFY': 0.0065,
     'ENGIE': 0.0058,
-    'TOTAL': 0.0060
+    'TOTAL': 0.0060,
+    'VIERGE': 0.0042,
   };
 
   // Calculate totals including the deal premium if applicable
@@ -2227,15 +3308,30 @@ const DevisEditor: React.FC<{
     
     // Assuming a fixed MaPrimeRenov value for now
     const primeRenov = hasDeal ? 3000 : 0;
+  
+    // Add incentives from the modal
+    const additionalPrimeCEE = parseFloat(incentivesData.primeCEE || '0');
+    const remiseExceptionnelle = parseFloat(incentivesData.remiseExceptionnelle || '0');
+    const primeMPR = parseFloat(incentivesData.primeMPR || '0');
+    const acompte = parseFloat(incentivesData.acompte || '0');
+    const racCharge = parseFloat(incentivesData.montantPriseEnChargeRAC || '0');
+    
+    // Calculate total discounts
+    const totalDiscounts = primeCEE + primeRenov + additionalPrimeCEE + remiseExceptionnelle + primeMPR + acompte + racCharge;
     
     return { 
       totalHT, 
       totalTTC, 
       primeCEE: parseFloat(primeCEE.toFixed(2)),
       primeRenov,
-      remaining: totalTTC - primeCEE - primeRenov
+      additionalPrimeCEE,
+      remiseExceptionnelle,
+      primeMPR,
+      acompte,
+      racCharge,
+      remaining: totalTTC - totalDiscounts
     };
-  }, [tableItems, hasDeal, dealId, dealRatio]);
+  }, [tableItems, hasDeal, dealId, dealRatio, incentivesData]);
   
   // Handle deal selection
   const handleDealSelect = (selectedDealId: string) => {
@@ -2325,6 +3421,7 @@ const DevisEditor: React.FC<{
     let productReference = '';
     let productDescription = '';
     let kwhCumac = 0;
+    let temperatureType = "Basse Température"; // Default value
     
     if (operation.productId) {
       const product = products.find(p => p.id === operation.productId);
@@ -2333,6 +3430,9 @@ const DevisEditor: React.FC<{
         productReference = product.reference;
         productDescription = product.description;
         kwhCumac = product.kwhCumac;
+        if (product.temperatureType) {
+          temperatureType = product.temperatureType;
+        }
       }
     } else {
       // Fallback values
@@ -2362,7 +3462,7 @@ const DevisEditor: React.FC<{
     const primeCEE = kwhCumac * dealRatio;
     
     // Create a rich formatted name with HTML styling for bold text instead of markdown
-    const formattedName = `<span style="font-weight: bold">${operation.reference}</span> Mise en place d'une pompe à chaleur (PAC) de type air/eau.<br/>Marque : <span style="font-weight: bold">${productBrand}</span><br/>Référence : <span style="font-weight: bold">${productReference}</span><br/>L'efficacité énergétique saisonnière est de : <span style="font-weight: bold">127 %</span> calculée selon le règlement (EU) n°813/2013 de la commission du 2 aout 2013.<br/>La surface chauffée par la PAC est de <span style="font-weight: bold">${operation.heatedArea || 120} m2</span><br/>Surface habitable : <span style="font-weight: bold">${operation.livingArea || 120} m2</span><br/>Type de logement : <span style="font-weight: bold">${operation.housingType || "Maison individuelle"}</span><br/>Classe du régulateur :<br/>Usage couvert par la PAC : <span style="font-weight: bold">${operation.pumpUsage || "Chauffage seul"}</span><br/>Dépose et remplacement d'une chaudière au <span style="font-weight: bold">${operation.oldBoilerType || "Gaz"}</span><br/>Kwh Cumac : <span style="font-weight: bold">${kwhCumac}</span><br/>Prime CEE ${dealId} : <span style="font-weight: bold">${primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span><br/><br/>
+    const formattedName = `<span style="font-weight: bold">${operation.reference}</span> Mise en place d'une pompe à chaleur (PAC) de type air/eau.<br/>Type de température : <span style="font-weight: bold">${temperatureType}</span><br/>Marque : <span style="font-weight: bold">${productBrand}</span><br/>Référence : <span style="font-weight: bold">${productReference}</span><br/>L'efficacité énergétique saisonnière est de : <span style="font-weight: bold">127 %</span> calculée selon le règlement (EU) n°813/2013 de la commission du 2 aout 2013.<br/>La surface chauffée par la PAC est de <span style="font-weight: bold">${operation.heatedArea || 120} m2</span><br/>Surface habitable : <span style="font-weight: bold">${operation.livingArea || 120} m2</span><br/>Type de logement : <span style="font-weight: bold">${operation.housingType || "Maison individuelle"}</span><br/>Classe du régulateur :<br/>Usage couvert par la PAC : <span style="font-weight: bold">${operation.pumpUsage || "Chauffage seul"}</span><br/>Dépose et remplacement d'une chaudière au <span style="font-weight: bold">${operation.oldBoilerType || "Gaz"}</span><br/>Kwh Cumac : <span style="font-weight: bold">${kwhCumac}</span><br/>Prime CEE ${dealId} : <span style="font-weight: bold">${primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span><br/><br/>
 Description : <span style="font-weight: bold">${productDescription}</span><br/><br/>
 ${subContractorInfo}`;
     
@@ -2439,6 +3539,33 @@ ${subContractorInfo}`;
       reference: productCode
     };
   };
+
+  // Add this function to handle saving indivision data
+  const handleSaveIndivision = (data: IndivisionData) => {
+    setIndivisionData(data);
+    
+    // Update additional info to show "Indivision créée"
+    if (!additionalInfo.includes("Indivision créée")) {
+      setAdditionalInfo(prev => 
+        prev ? `${prev}\n\nIndivision créée.` : "Indivision créée."
+      );
+    }
+  };
+
+  // Add this function to handle saving documents
+  const handleSaveDocuments = (documents: QuoteDocument[]) => {
+    setQuoteDocuments(prev => [...prev, ...documents]);
+  };
+
+  // Add this function to handle removing documents
+  const handleRemoveDocument = (id: string) => {
+    setQuoteDocuments(prev => prev.filter(doc => doc.id !== id));
+  };
+
+  // Add this function to handle saving incentives
+  const handleSaveIncentives = (incentives: IncentivesData) => {
+    setIncentivesData(incentives);
+  };
   
   // Modified handleAction function to handle sizing note actions
   const handleAction = (actionId: string, productCode?: string) => {
@@ -2450,13 +3577,21 @@ ${subContractorInfo}`;
     
     switch (actionId) {
       case 'addSubcontractor':
-        alert('Fonctionnalité "Ajouter un sous-traitant" à implémenter');
+        setShowAddSubcontractorModal(true);
         break;
       case 'addAgent':
-        alert('Fonctionnalité "Ajouter un mandataire" à implémenter');
+        setShowAddMandataireModal(true);
         break;
       case 'addInfo':
-        alert('Fonctionnalité "Ajouter une information" à implémenter');
+        setShowAddInformationModal(true);
+        break;
+      case 'addOperation':
+        if (hasDeal) {
+          setShowAddOperationModal(true);
+        } else {
+          // Warn the user that they need to assign a deal first
+          alert('Vous devez d\'abord affecter un deal à ce devis avant de pouvoir ajouter une opération.');
+        }
         break;
       case 'addProduct':
         setShowAddProductModal(true);
@@ -2465,23 +3600,23 @@ ${subContractorInfo}`;
         setShowAddServiceModal(true);
         break;
       case 'addFunding':
-        alert('Fonctionnalité "Ajouter un financement" à implémenter');
+        setShowAddFinancingModal(true);
         break;
       case 'addMairie':
-        alert('Fonctionnalité "Ajouter une DP Mairie" à implémenter');
+        setShowAddDPMairieModal(true);
         break;
       case 'assignToDeal':
         // Now opens modal
         setShowDealModal(true);
         break;
       case 'addDivision':
-        alert('Fonctionnalité "Ajouter une indivision" à implémenter');
+        setShowAddIndivisionModal(true);
         break;
       case 'addDocument':
-        alert('Fonctionnalité "Ajouter un document au devis" à implémenter');
+        setShowAddDocumentModal(true);
         break;
       case 'modifyPrime':
-        alert('Fonctionnalité "Modifier une prime" à implémenter');
+        setShowAddIncentivesModal(true);
         break;
       case 'deleteQuote':
         if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
@@ -2492,6 +3627,44 @@ ${subContractorInfo}`;
       default:
         alert(`Action "${actionId}" à implémenter`);
     }
+  };
+
+  // Add this function to handle saving DP Mairie data
+  const handleSaveDPMairie = (data: DPMairieData) => {
+    setDpMairieData(data);
+    // No longer updating additionalInfo
+  };
+  
+
+  // Add this function to handle saving a subcontractor
+  const handleSaveSubcontractor = (subcontractor: Subcontractor) => {
+    setSelectedSubcontractor(subcontractor);
+  };
+
+  // Add function to handle saving the additional information
+  const handleSaveInformation = (info: string) => {
+    setAdditionalInfo(info);
+  };
+
+  // Add this function to handle saving a mandataire
+  const handleSaveMandataire = (mandataire: Mandataire) => {
+    setSelectedMandataire(mandataire);
+  };
+
+  // Add the handleSaveFinancing function
+  const handleSaveFinancing = (financing: FinancingData) => {
+    setFinancingData(financing);
+  };
+
+  // Helper function to get frequency label
+  const getFrequencyLabel = (frequencyId: string) => {
+    const frequencyMap: {[key: string]: string} = {
+      'monthly': 'Mensuelle',
+      'quarterly': 'Trimestrielle',
+      'biannual': 'Semestrielle',
+      'annual': 'Annuelle'
+    };
+    return frequencyMap[frequencyId] || frequencyId;
   };
 
   // Custom formatter for table cells to hide zeros in MENTION DÉCHETS
@@ -2506,6 +3679,20 @@ ${subContractorInfo}`;
   useEffect(() => {
     console.log('Current tableItems:', tableItems);
   }, [tableItems]);
+
+  const handleEditItem = (item: TableItem) => {
+    setEditingItem(item);
+    setShowEditItemModal(true);
+  };
+
+  // Add this function to the DevisEditor component
+  const handleSaveEditedItem = (editedItem: TableItem) => {
+    setTableItems(prevItems => 
+      prevItems.map(item => 
+        item.id === editedItem.id ? editedItem : item
+      )
+    );
+  };
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-md">
@@ -2532,59 +3719,209 @@ ${subContractorInfo}`;
       {/* Quote and invoice details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-          <label htmlFor="quoteNumber" className="block text-sm font-medium text-gray-700 mb-1">
-            Numéro de devis
-          </label>
-          <input
-            type="text"
-            id="quoteNumber"
-            value={quoteNumber}
-            onChange={(e) => setQuoteNumber(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-100"
-            disabled
-          />
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label htmlFor="quoteNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                Numéro de devis
+              </label>
+              <input
+                type="text"
+                id="quoteNumber"
+                value={quoteNumber}
+                onChange={(e) => setQuoteNumber(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-100"
+                disabled
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="quoteDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Date de devis
+              </label>
+              <input
+                type="date"
+                id="quoteDate"
+                value={quoteDate}
+                onChange={(e) => setQuoteDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="validUntilDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Devis valable jusqu&apos;au
+              </label>
+              <input
+                type="date"
+                id="validUntilDate"
+                value={validUntilDate}
+                onChange={(e) => setValidUntilDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="estimatedWorkDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Date prévisionnelle des travaux
+              </label>
+              <input
+                type="date"
+                id="estimatedWorkDate"
+                value={estimatedWorkDate}
+                onChange={(e) => setEstimatedWorkDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="commitmentDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Date d&apos;engagement
+              </label>
+              <input
+                type="date"
+                id="commitmentDate"
+                value={commitmentDate}
+                onChange={(e) => setCommitmentDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+          </div>
         </div>
         
         <div>
-          <label htmlFor="quoteDate" className="block text-sm font-medium text-gray-700 mb-1">
-            Date de devis
-          </label>
-          <input
-            type="date"
-            id="quoteDate"
-            value={quoteDate}
-            onChange={(e) => setQuoteDate(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="invoiceNumber" className="block text-sm font-medium text-gray-700 mb-1">
-            Numéro de facture
-          </label>
-          <input
-            type="text"
-            id="invoiceNumber"
-            value={invoiceNumber}
-            onChange={(e) => setInvoiceNumber(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-100"
-            disabled
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="invoiceDate" className="block text-sm font-medium text-gray-700 mb-1">
-            Date de facture
-          </label>
-          <input
-            type="date"
-            id="invoiceDate"
-            value={invoiceDate}
-            onChange={(e) => setInvoiceDate(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-          />
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label htmlFor="invoiceNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                Numéro de facture
+              </label>
+              <input
+                type="text"
+                id="invoiceNumber"
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-100"
+                disabled
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="invoiceDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Date de facture
+              </label>
+              <input
+                type="date"
+                id="invoiceDate"
+                value={invoiceDate}
+                onChange={(e) => setInvoiceDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="installationDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Date de pose
+              </label>
+              <input
+                type="date"
+                id="installationDate"
+                value={installationDate}
+                onChange={(e) => setInstallationDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="workCompletionDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Date fin de travaux
+              </label>
+              <input
+                type="date"
+                id="workCompletionDate"
+                value={workCompletionDate}
+                onChange={(e) => setWorkCompletionDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Subcontractor Info Display */}
+      {selectedSubcontractor && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-blue-800">
+              Installateur sous-traitant
+            </h3>
+            <button
+              onClick={() => setSelectedSubcontractor(null)}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <span className="block text-sm font-medium text-blue-700">Entreprise</span>
+              <span className="text-gray-800">{selectedSubcontractor.name}</span>
+            </div>
+            
+            <div>
+              <span className="block text-sm font-medium text-blue-700">Dirigeant</span>
+              <span className="text-gray-800">{selectedSubcontractor.director}</span>
+            </div>
+            
+            <div>
+              <span className="block text-sm font-medium text-blue-700">SIRET</span>
+              <span className="text-gray-800">{selectedSubcontractor.siret}</span>
+            </div>
+            
+            <div className="md:col-span-2">
+              <span className="block text-sm font-medium text-blue-700">Adresse</span>
+              <span className="text-gray-800">{selectedSubcontractor.address}</span>
+            </div>
+            
+            <div>
+              <span className="block text-sm font-medium text-blue-700">N° Décennale</span>
+              <span className="text-gray-800">{selectedSubcontractor.insurance}</span>
+            </div>
+          </div>
+          
+          {selectedSubcontractor.qualifications && selectedSubcontractor.qualifications.length > 0 && (
+            <div className="mt-3">
+              <span className="block text-sm font-medium text-blue-700 mb-1">Qualifications</span>
+              <div className="flex flex-wrap gap-2">
+                {selectedSubcontractor.qualifications.map((qual: string, index: number) => (
+                  <span key={index} className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    {qual}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Simplified Subcontractor Info Display */}
+      {selectedSubcontractor && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <UserGroupIcon className="h-5 w-5 text-blue-600" />
+              <h3 className="font-medium text-blue-800">
+                Installateur sous-traitant: <span className="text-blue-900 font-semibold">{selectedSubcontractor.name}</span>
+              </h3>
+            </div>
+            <button
+              onClick={() => setSelectedSubcontractor(null)}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Item Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
@@ -2653,6 +3990,7 @@ ${subContractorInfo}`;
                         <TrashIcon className="h-5 w-5" />
                       </button>
                       <button
+                        onClick={() => handleEditItem(item)}
                         className="text-blue-600 hover:text-blue-800"
                       >
                         <PencilIcon className="h-5 w-5" />
@@ -2660,8 +3998,8 @@ ${subContractorInfo}`;
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <div className="font-medium text-gray-900">{item.reference}</div>
-                    <div className="text-sm text-gray-500" dangerouslySetInnerHTML={{ __html: item.name }}></div>
+                    {/* <div className="font-medium text-gray-900">{item.reference}</div> */}
+                    <div className="text-sm text-gray-900" dangerouslySetInnerHTML={{ __html: item.name }}></div>
                   </td>
                   <td className="py-3 px-4">{item.reference === 'MENTION DÉCHETS' ? '' : item.quantity}</td>
                   <td className="py-3 px-4">{formatTableCell(item, item.unitPriceHT, val => val.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }))}</td>
@@ -2698,6 +4036,154 @@ ${subContractorInfo}`;
                 placeholder="Ajoutez des informations supplémentaires concernant ce devis..."
               />
             </div>
+
+            {/* Add the Mandataire Info Display right here, after the Information complémentaire section */}
+            {selectedMandataire && (
+              <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-800">Mandataire</h3>
+                  <button
+                    onClick={() => setSelectedMandataire(null)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Nom</p>
+                      <p className="text-gray-900">{selectedMandataire.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Entreprise</p>
+                      <p className="text-gray-900">{selectedMandataire.company}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">SIRET</p>
+                      <p className="text-gray-900">{selectedMandataire.siret}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Contact</p>
+                      <p className="text-gray-900">{selectedMandataire.email}</p>
+                      <p className="text-gray-600 text-sm">{selectedMandataire.phone}</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <p className="text-sm font-medium text-gray-700">Adresse</p>
+                      <p className="text-gray-900">{selectedMandataire.address}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center gap-2 text-amber-700 text-sm">
+                      <InformationCircleIcon className="h-5 w-5 text-amber-500" />
+                      <p>Ce mandataire sera associé à ce devis pour les documents MaPrimeRénov&apos;.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Indivision Info Display */}
+            {indivisionData && (
+              <IndivisionInfoDisplay
+                indivisionData={indivisionData}
+                onRemove={() => setIndivisionData(null)}
+              />
+            )}
+
+            {/* Simplified DP Mairie status box - only shown when dpMairieData exists */}
+            {dpMairieData && (
+              <div className="bg-white p-4 rounded-lg border border-blue-200 mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-blue-100 rounded-md">
+                      <BuildingLibraryIcon className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <p className="text-blue-800 font-medium">DP mairie créée</p>
+                  </div>
+                  <button
+                    onClick={() => setDpMairieData(null)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Financing Information Section - only shown when financing data exists */}
+            {financingData && (
+              <div className="bg-white p-4 rounded-lg border border-gray-200 mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-800">Paiement avec financement</h3>
+                  <button
+                    onClick={() => setFinancingData(null)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  <p className="font-semibold mb-2">Organisme Bancaire : {financingData.bankName}</p>
+                  
+                  <p className="text-gray-700 mb-3">Une offre préalable de crédit a été remise au client aux conditions principales suivantes :</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-600">Montant du prêt :</span>
+                      <span className="ml-1 font-medium">{financingData.loanAmount} €</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Mois de Report :</span>
+                      <span className="ml-1 font-medium">{financingData.deferredMonths}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Taux débiteur fixe :</span>
+                      <span className="ml-1 font-medium">{financingData.fixedRate} %</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Taux annuel effectif global (TAEG) :</span>
+                      <span className="ml-1 font-medium">{financingData.annualPercentageRate} %</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Nombre d&apos;échéances :</span>
+                      <span className="ml-1 font-medium">{financingData.numberOfPayments}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Montant des échéances avec assurance :</span>
+                      <span className="ml-1 font-medium">{financingData.paymentAmountWithInsurance} €</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Montant des échéances sans assurance :</span>
+                      <span className="ml-1 font-medium">{financingData.paymentAmountWithoutInsurance} €</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Périodicité :</span>
+                      <span className="ml-1 font-medium">{getFrequencyLabel(financingData.frequency)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Montant total dû :</span>
+                      <span className="ml-1 font-medium">{financingData.totalAmountDue} €</span>
+                    </div>
+                    {financingData.personalContribution && financingData.personalContribution !== "0" && (
+                      <div>
+                        <span className="text-gray-600">Apport personnel :</span>
+                        <span className="ml-1 font-medium">{financingData.personalContribution} €</span>
+                      </div>
+                    )}
+                    {financingData.sellerName && (
+                      <div>
+                        <span className="text-gray-600">Nom du vendeur :</span>
+                        <span className="ml-1 font-medium">{financingData.sellerName}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
             
             <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
               <div className="flex flex-wrap gap-3">
@@ -2721,6 +4207,10 @@ ${subContractorInfo}`;
                   dealId={dealId}
                   additionalInfo={additionalInfo}
                   sizingNotes={sizingNotes}
+                  financingData={financingData}
+                  dpMairieData={dpMairieData}
+                  indivisionData={indivisionData}
+                  incentivesData={incentivesData}
                 />
               </div>
             </div>
@@ -2812,13 +4302,49 @@ ${subContractorInfo}`;
               
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-gray-600">Prime {dealId}</span>
-                <span className="font-semibold text-green-600">{totals.primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                <span className="font-semibold text-green-600">-{totals.primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
               </div>
               
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-gray-600">Estimation MaPrimeRenov&apos;</span>
-                <span className="font-semibold text-green-600">{totals.primeRenov.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                <span className="font-semibold text-green-600">-{totals.primeRenov.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
               </div>
+              
+              {/* Show additional incentives if they exist */}
+              {incentivesData.primeCEE && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Prime C.E.E supplémentaire</span>
+                  <span className="font-semibold text-green-600">-{parseFloat(incentivesData.primeCEE).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                </div>
+              )}
+              
+              {incentivesData.remiseExceptionnelle && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Remise exceptionnelle</span>
+                  <span className="font-semibold text-green-600">-{parseFloat(incentivesData.remiseExceptionnelle).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                </div>
+              )}
+              
+              {incentivesData.primeMPR && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Prime MPR déduite</span>
+                  <span className="font-semibold text-green-600">-{parseFloat(incentivesData.primeMPR).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                </div>
+              )}
+              
+              {incentivesData.montantPriseEnChargeRAC && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Prise en charge du RAC</span>
+                  <span className="font-semibold text-green-600">-{parseFloat(incentivesData.montantPriseEnChargeRAC).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                </div>
+              )}
+              
+              {incentivesData.acompte && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Acompte</span>
+                  <span className="font-semibold text-amber-600">-{parseFloat(incentivesData.acompte).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                </div>
+              )}
               
               <div className="flex justify-between items-center py-2 mt-2 bg-blue-50 p-2 rounded-lg">
                 <span className="text-blue-800 font-medium">Reste à payer</span>
@@ -2832,6 +4358,12 @@ ${subContractorInfo}`;
           </div>
         </div>
       </div>
+
+      {/* Documents List Section */}
+      <DocumentsList 
+        documents={quoteDocuments} 
+        onRemoveDocument={handleRemoveDocument} 
+      />
       
       {/* Action buttons */}
       <div className="flex justify-end gap-3">
@@ -2886,6 +4418,72 @@ ${subContractorInfo}`;
             onSave={handleAddSizingNote}
             productCode={selectedProductCode}
             productDetails={getProductDetails(selectedProductCode)}
+          />
+        )}
+
+        {showAddSubcontractorModal && (
+          <AddSubcontractorModal
+            onClose={() => setShowAddSubcontractorModal(false)}
+            onSave={handleSaveSubcontractor}
+          />
+        )}
+
+        {showAddMandataireModal && (
+          <AddMandataireModal
+            onClose={() => setShowAddMandataireModal(false)}
+            onSave={handleSaveMandataire}
+          />
+        )}
+
+        {showAddInformationModal && (
+          <AddInformationModal
+            onClose={() => setShowAddInformationModal(false)}
+            onSave={handleSaveInformation}
+            currentInfo={additionalInfo}
+          />
+        )}
+
+        {showAddDPMairieModal && (
+          <AddDPMairieModal
+            onClose={() => setShowAddDPMairieModal(false)}
+            onSave={handleSaveDPMairie}
+          />
+        )}
+
+        {showAddFinancingModal && (
+          <AddFinancingModal
+            onClose={() => setShowAddFinancingModal(false)}
+            onSave={handleSaveFinancing}
+          />
+        )}
+
+        {showAddIndivisionModal && (
+          <AddIndivisionModal
+            onClose={() => setShowAddIndivisionModal(false)}
+            onSave={handleSaveIndivision}
+          />
+        )}
+
+        {showAddDocumentModal && (
+          <AddDocumentModal
+            onClose={() => setShowAddDocumentModal(false)}
+            onSave={handleSaveDocuments}
+          />
+        )}
+
+        {showAddIncentivesModal && (
+            <AddIncentivesModal
+              onClose={() => setShowAddIncentivesModal(false)}
+              onSave={handleSaveIncentives}
+              currentIncentives={incentivesData}
+            />
+        )}
+        
+        {showEditItemModal && editingItem && (
+          <EditItemModal
+            onClose={() => setShowEditItemModal(false)}
+            onSave={handleSaveEditedItem}
+            item={editingItem}
           />
         )}
       </AnimatePresence>

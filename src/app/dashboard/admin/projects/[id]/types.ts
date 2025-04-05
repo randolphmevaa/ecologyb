@@ -56,3 +56,91 @@ export interface SizingNote {
     signatureDate?: string;
     fileUrl: string;
   }
+
+  // Add this to your existing types.ts file
+
+// Define FinancingData interface for the financing modal
+export interface FinancingData {
+  bankName: string;
+  fixedRate: string;
+  paymentAmountWithInsurance: string;
+  loanAmount: string;
+  annualPercentageRate: string;
+  paymentAmountWithoutInsurance: string;
+  frequency: string;
+  deferredMonths: string;
+  numberOfPayments: string;
+  personalContribution: string;
+  totalAmountDue: string;
+  sellerName: string;
+}
+
+// Add this to your types.ts file
+
+export interface DPMairieData {
+  mandataire: string;
+  transmissionVoieElectronique: boolean;
+  terrainLotissement: string; // "oui" | "non" | "je ne sais pas"
+  certificatUrbanisme: string; // "oui" | "non" | "je ne sais pas"
+  zoneAmenagementConcertee: string; // "oui" | "non" | "je ne sais pas"
+  remembrementUrbain: string; // "oui" | "non" | "je ne sais pas"
+  projetUrbainPartenarial: string; // "oui" | "non" | "je ne sais pas"
+  operationInteretNational: string; // "oui" | "non" | "je ne sais pas"
+  precisionsTerrainConcerne: string;
+  immeubleClasseMonumentsHistoriques: boolean;
+  projetConcerne: string; // "résidence principale" | "résidence secondaire"
+  perimetresProtection: {
+    sitePatrimonialRemarquable: boolean;
+    abordsMonumentHistorique: boolean;
+    siteClasse: boolean;
+  };
+  parcellesCadastralesSupplementaires: {
+    parcelle1: string;
+    parcelle2: string;
+    parcelle3: string;
+  };
+  puissanceElectrique: number;
+  puissanceCrete: number;
+  destinationEnergie: string;
+  modeUtilisationLogements: string;
+  titreProjet: string;
+  autresPrecisions: string;
+  superficiePanneauxSol: number;
+  surfacePlancherExistante: number;
+  surfacePlancherSupprimee: number;
+  surfacePlancherCreee: number;
+  travauxConstructionExistante: string;
+  descriptionProjet: string;
+  // DAACT fields
+  numeroDeclarationPrealable: string;
+  dateAchevementChantier: string;
+  totaliteTravaux: boolean;
+  surfacePlancherCreeeDaact: number;
+  dateEnvoiDaact: string;
+}
+
+// Indivision types to be added to your types.ts file
+
+export interface Indivisaire {
+  nom: string;
+  prenom: string;
+  dateNaissance: string;
+  adresse: string;
+  codePostal: string;
+  ville: string;
+}
+
+export interface IndivisionData {
+  typeProprietaire: "occupant" | "bailleur";
+  indivisaires: Indivisaire[];
+}
+
+// Define TypeScript interface for incentives data
+export interface IncentivesData {
+  primeCEE: string;
+  remiseExceptionnelle: string;
+  primeMPR: string;
+  montantPriseEnChargeRAC: string;
+  activiteMaPrimeRenov: boolean;
+  acompte: string;
+}
