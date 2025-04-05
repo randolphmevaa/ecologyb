@@ -157,6 +157,14 @@ import {
             <div class="sizing-note-value">${note.volume} m³</div>
           </div>
           <div class="sizing-note-row">
+          <div class="sizing-note-label">G (Coeff. de construction)</div>
+          <div class="sizing-note-value">${note.constructionCoef || 1}</div>
+        </div>
+        <div class="sizing-note-row">
+          <div class="sizing-note-label">Déperdition</div>
+          <div class="sizing-note-value">${parseFloat(note.heatLoss).toLocaleString('fr-FR')} watts soit ${(parseFloat(note.heatLoss)/1000).toLocaleString('fr-FR')} kW</div>
+        </div>
+          <div class="sizing-note-row">
             <div class="sizing-note-label">Déperdition</div>
             <div class="sizing-note-value">${parseFloat(note.heatLoss).toLocaleString('fr-FR')} watts soit ${(parseFloat(note.heatLoss)/1000).toLocaleString('fr-FR')} kW</div>
           </div>

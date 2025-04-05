@@ -769,14 +769,14 @@ const SizingNoteModal: React.FC<SizingNoteModalProps> = ({ onClose, onSave, prod
     const baseTemperature = parseFloat(formData.baseTemperature.toString()) || -7;
     
     // Construction coefficient (based on building type)
-    let constructionCoef = 1;
-    switch (formData.buildingType) {
-      case "RT 2020": constructionCoef = 0.6; break;
-      case "RT 2012": constructionCoef = 0.8; break;
-      case "RT 2005": constructionCoef = 1; break;
-      case "RT 2000": constructionCoef = 1.2; break;
-      default: constructionCoef = 1;
-    }
+  let constructionCoef = 1;
+  switch (formData.buildingType) {
+    case "RT 2020": constructionCoef = 0.6; break;
+    case "RT 2012": constructionCoef = 0.6; break; // Changed from 0.8 to 0.6
+    case "RT 2005": constructionCoef = 0.8; break; // Changed from 1 to 0.8
+    case "RT 2000": constructionCoef = 0.9; break; // Changed from 1.2 to 0.9
+    default: constructionCoef = 1;
+  }
     
     // Volume calculation
     const volume = heatedArea * ceilingHeight;
@@ -793,7 +793,7 @@ const SizingNoteModal: React.FC<SizingNoteModalProps> = ({ onClose, onSave, prod
     return {
       volume: volume.toFixed(2),
       heatLoss: heatLoss.toFixed(2),
-      dimensioning: (heatLoss / 1000).toFixed(2), // Convert to kW
+      dimensioning: Math.round(heatLoss / 1000).toString(), // Convert to kW
       coverage: 100, // Assuming 100% coverage
       constructionCoef
     };
