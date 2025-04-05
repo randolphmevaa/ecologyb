@@ -296,6 +296,7 @@ interface SizingNoteModalProps {
     brand?: string;
     reference?: string;
   };
+  existingNote?: SizingNote | null;
 }
 
 // Define type for sizing note data
@@ -747,17 +748,17 @@ const serviceOptions: {
 type TableItem = Product | Service | Operation;
 
 // SizingNoteModal component with proper types
-const SizingNoteModal: React.FC<SizingNoteModalProps> = ({ onClose, onSave, productCode, productDetails }) => {
+const SizingNoteModal: React.FC<SizingNoteModalProps> = ({ onClose, onSave, productCode, productDetails, existingNote }) => {
   // Initialize state for all form fields
   const [formData, setFormData] = useState({
-    buildingType: "RT 2012",
-    radiatorType: "Plancher chauffant",
-    waterTemperature: "Basse Température",
-    heatedArea: "",
-    ceilingHeight: "",
-    baseTemperature: -7,
-    desiredTemperature: 19,
-    altitude: 152
+    buildingType: existingNote?.buildingType || "RT 2012",
+    radiatorType: existingNote?.radiatorType || "Plancher chauffant",
+    waterTemperature: existingNote?.waterTemperature || "Basse Température",
+    heatedArea: existingNote?.heatedArea || "",
+    ceilingHeight: existingNote?.ceilingHeight || "",
+    baseTemperature: existingNote?.baseTemperature || -7,
+    desiredTemperature: existingNote?.desiredTemperature || 19,
+    altitude: existingNote?.altitude || 152
   });
 
   // Calculate sizing values based on form data
@@ -821,6 +822,7 @@ const SizingNoteModal: React.FC<SizingNoteModalProps> = ({ onClose, onSave, prod
     
     // Prepare sizing note data
     const sizingNote: SizingNote = {
+      id: existingNote?.id, // Keep existing ID for updates
       productType: productDetails?.name || "Pompe à chaleur",
       productBrand: productDetails?.brand || "Non spécifié",
       productReference: productDetails?.reference || productCode,
@@ -3217,6 +3219,8 @@ const DevisEditor: React.FC<{
   const [additionalInfo, setAdditionalInfo] = useState<string>('');
   
   const [tableItems, setTableItems] = useState<TableItem[]>([]);
+  // Add this with your other state variables
+  const [editingSizingNote, setEditingSizingNote] = useState<SizingNote | null>(null);
   
   const [showAddProductModal, setShowAddProductModal] = useState<boolean>(false);
   const [showAddServiceModal, setShowAddServiceModal] = useState<boolean>(false);
@@ -3262,8 +3266,15 @@ const DevisEditor: React.FC<{
 
   // New function to handle adding a sizing note
   const handleAddSizingNote = (sizingNote: SizingNote) => {
-    // Add the sizing note to the state
-    setSizingNotes(prev => [...prev, { ...sizingNote, id: `sizing-note-${Date.now()}` }]);
+    if (sizingNote.id) {
+      // Update existing note
+      setSizingNotes(prev => prev.map(note => 
+        note.id === sizingNote.id ? sizingNote : note
+      ));
+    } else {
+      // Add new note
+      setSizingNotes(prev => [...prev, { ...sizingNote, id: `sizing-note-${Date.now()}` }]);
+    }
   };
 
   // Deal ratios lookup
@@ -3570,7 +3581,15 @@ ${subContractorInfo}`;
   // Modified handleAction function to handle sizing note actions
   const handleAction = (actionId: string, productCode?: string) => {
     if (actionId.startsWith("sizingNote_") && productCode) {
+      // Find existing sizing note for this product code
+      const existingNote = sizingNotes.find(note => note.productReference === productCode);
       setSelectedProductCode(productCode);
+      // If existing note, set it as the one to edit
+      if (existingNote) {
+        setEditingSizingNote(existingNote);
+      } else {
+        setEditingSizingNote(null);
+      }
       setShowSizingNoteModal(true);
       return;
     }
@@ -4414,10 +4433,14 @@ ${subContractorInfo}`;
 
         {showSizingNoteModal && (
           <SizingNoteModal
-            onClose={() => setShowSizingNoteModal(false)}
+            onClose={() => {
+              setShowSizingNoteModal(false);
+              setEditingSizingNote(null); // Clear the editing state when closing
+            }}
             onSave={handleAddSizingNote}
             productCode={selectedProductCode}
             productDetails={getProductDetails(selectedProductCode)}
+            existingNote={editingSizingNote} // Pass the existing note here
           />
         )}
 
