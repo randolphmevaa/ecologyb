@@ -1536,23 +1536,23 @@ export default function AdminDashboardPage() {
                         </div>
                       </div>
                       
-                      {/* Additional Financial Metrics - Responsive */}
-                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                        <div className="flex flex-col items-center p-1">
-                          <span className="text-[#213f5b]/70 mb-0.5">Dépenses</span>
-                          <span className="font-semibold text-[#213f5b]">{formatCurrency(750000)}</span>
+                      {/* Simple grid with non-wrapping values */}
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-[#213f5b]/70">Dépenses</span>
+                          <span className="text-sm font-medium text-[#213f5b] whitespace-nowrap">750 k€</span>
                         </div>
-                        <div className="flex flex-col items-center p-1">
-                          <span className="text-[#213f5b]/70 mb-0.5">Encaissé</span>
-                          <span className="font-semibold text-[#213f5b]">{formatCurrency(980000)}</span>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-[#213f5b]/70">Encaissé</span>
+                          <span className="text-sm font-medium text-[#213f5b] whitespace-nowrap">980 k€</span>
                         </div>
-                        <div className="flex flex-col items-center p-1">
-                          <span className="text-[#213f5b]/70 mb-0.5">Marge</span>
-                          <span className="font-semibold text-[#213f5b]">40%</span>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-[#213f5b]/70">Marge</span>
+                          <span className="text-sm font-medium text-[#213f5b] whitespace-nowrap">40%</span>
                         </div>
-                        <div className="flex flex-col items-center p-1">
-                          <span className="text-[#213f5b]/70 mb-0.5">Bénéfice</span>
-                          <span className="font-semibold text-green-600">{formatCurrency(500000)}</span>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-[#213f5b]/70">Bénéfice</span>
+                          <span className="text-sm font-medium text-green-600 whitespace-nowrap">500 k€</span>
                         </div>
                       </div>
                       

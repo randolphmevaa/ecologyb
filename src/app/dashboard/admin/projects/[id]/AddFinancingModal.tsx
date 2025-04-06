@@ -1,6 +1,6 @@
 import { BanknotesIcon, XMarkIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Define TypeScript interface for financing data
 interface FinancingData {
@@ -48,9 +48,12 @@ interface FinancingData {
   interface AddFinancingModalProps {
     onClose: () => void;
     onSave: (financing: FinancingData) => void;
+    existingFinancing?: FinancingData | null; // NEW
   }
   
-  const AddFinancingModal: React.FC<AddFinancingModalProps> = ({ onClose, onSave }) => {
+  
+  const AddFinancingModal: React.FC<AddFinancingModalProps> = ({ onClose, onSave, existingFinancing }) => {
+    const isEditMode = !!existingFinancing;
     const [selectedFinancing, setSelectedFinancing] = useState<string>("");
     const [financing, setFinancing] = useState<FinancingData>({
       bankName: "",
@@ -66,6 +69,12 @@ interface FinancingData {
       totalAmountDue: "",
       sellerName: ""
     });
+
+    useEffect(() => {
+      if (existingFinancing) {
+        setFinancing(existingFinancing);
+      }
+    }, [existingFinancing]);
   
     // Handle financing selection
     const handleSelectFinancing = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -142,7 +151,7 @@ interface FinancingData {
                   <BanknotesIcon className="h-6 w-6 text-white" />
                 </div>
                 <h2 className="text-xl font-bold text-white">
-                  Ajouter un financement
+                  {isEditMode ? "Modifier un financement" : "Ajouter un financement"}
                 </h2>
               </div>
               <button

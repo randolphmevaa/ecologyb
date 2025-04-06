@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   XMarkIcon,
@@ -7,19 +7,18 @@ import {
   CalendarIcon
 } from '@heroicons/react/24/outline';
 
-// Define TypeScript interface for DP Mairie data
 interface DPMairieData {
   mandataire: string;
   transmissionVoieElectronique: boolean;
-  terrainLotissement: string; // "oui" | "non" | "je ne sais pas"
-  certificatUrbanisme: string; // "oui" | "non" | "je ne sais pas"
-  zoneAmenagementConcertee: string; // "oui" | "non" | "je ne sais pas"
-  remembrementUrbain: string; // "oui" | "non" | "je ne sais pas"
-  projetUrbainPartenarial: string; // "oui" | "non" | "je ne sais pas"
-  operationInteretNational: string; // "oui" | "non" | "je ne sais pas"
+  terrainLotissement: string;
+  certificatUrbanisme: string;
+  zoneAmenagementConcertee: string;
+  remembrementUrbain: string;
+  projetUrbainPartenarial: string;
+  operationInteretNational: string;
   precisionsTerrainConcerne: string;
   immeubleClasseMonumentsHistoriques: boolean;
-  projetConcerne: string; // "résidence principale" | "résidence secondaire"
+  projetConcerne: string;
   perimetresProtection: {
     sitePatrimonialRemarquable: boolean;
     abordsMonumentHistorique: boolean;
@@ -42,7 +41,6 @@ interface DPMairieData {
   surfacePlancherCreee: number;
   travauxConstructionExistante: string;
   descriptionProjet: string;
-  // DAACT fields
   numeroDeclarationPrealable: string;
   dateAchevementChantier: string;
   totaliteTravaux: boolean;
@@ -53,6 +51,8 @@ interface DPMairieData {
 interface AddDPMairieModalProps {
   onClose: () => void;
   onSave: (dpMairieData: DPMairieData) => void;
+  // NEW PROP
+  existingDpMairie?: DPMairieData | null;
 }
 
 // Sample mandataires for the dropdown
@@ -62,82 +62,101 @@ const mandatairesDPMairie = [
   { id: "DP3", name: "Cabinet d'architecture Laurent" },
 ];
 
-const AddDPMairieModal: React.FC<AddDPMairieModalProps> = ({ onClose, onSave }) => {
-  // Form state with initial values
-  const [formData, setFormData] = useState<DPMairieData>({
-    mandataire: "",
-    transmissionVoieElectronique: true,
-    terrainLotissement: "je ne sais pas",
-    certificatUrbanisme: "je ne sais pas",
-    zoneAmenagementConcertee: "je ne sais pas",
-    remembrementUrbain: "je ne sais pas",
-    projetUrbainPartenarial: "je ne sais pas",
-    operationInteretNational: "je ne sais pas",
-    precisionsTerrainConcerne: "",
-    immeubleClasseMonumentsHistoriques: false,
-    projetConcerne: "résidence principale",
-    perimetresProtection: {
-      sitePatrimonialRemarquable: false,
-      abordsMonumentHistorique: false,
-      siteClasse: false,
-    },
-    parcellesCadastralesSupplementaires: {
-      parcelle1: "",
-      parcelle2: "",
-      parcelle3: "",
-    },
-    puissanceElectrique: 0,
-    puissanceCrete: 0,
-    destinationEnergie: "",
-    modeUtilisationLogements: "",
-    titreProjet: "",
-    autresPrecisions: "",
-    superficiePanneauxSol: 0,
-    surfacePlancherExistante: 0,
-    surfacePlancherSupprimee: 0,
-    surfacePlancherCreee: 0,
-    travauxConstructionExistante: "",
-    descriptionProjet: "",
-    numeroDeclarationPrealable: "",
-    dateAchevementChantier: "",
-    totaliteTravaux: false,
-    surfacePlancherCreeeDaact: 0,
-    dateEnvoiDaact: "",
-  });
-  
+const AddDPMairieModal: React.FC<AddDPMairieModalProps> = ({
+  onClose,
+  onSave,
+  existingDpMairie
+}) => {
+  // Determine if we're editing an existing DP Mairie
+  // const isEditMode = !!existingDpMairie;
+
+  // Pre-fill formData if editing; otherwise use blank.
+  const [formData, setFormData] = useState<DPMairieData>(
+    existingDpMairie || {
+      mandataire: "",
+      transmissionVoieElectronique: true,
+      terrainLotissement: "je ne sais pas",
+      certificatUrbanisme: "je ne sais pas",
+      zoneAmenagementConcertee: "je ne sais pas",
+      remembrementUrbain: "je ne sais pas",
+      projetUrbainPartenarial: "je ne sais pas",
+      operationInteretNational: "je ne sais pas",
+      precisionsTerrainConcerne: "",
+      immeubleClasseMonumentsHistoriques: false,
+      projetConcerne: "résidence principale",
+      perimetresProtection: {
+        sitePatrimonialRemarquable: false,
+        abordsMonumentHistorique: false,
+        siteClasse: false,
+      },
+      parcellesCadastralesSupplementaires: {
+        parcelle1: "",
+        parcelle2: "",
+        parcelle3: "",
+      },
+      puissanceElectrique: 0,
+      puissanceCrete: 0,
+      destinationEnergie: "",
+      modeUtilisationLogements: "",
+      titreProjet: "",
+      autresPrecisions: "",
+      superficiePanneauxSol: 0,
+      surfacePlancherExistante: 0,
+      surfacePlancherSupprimee: 0,
+      surfacePlancherCreee: 0,
+      travauxConstructionExistante: "",
+      descriptionProjet: "",
+      numeroDeclarationPrealable: "",
+      dateAchevementChantier: "",
+      totaliteTravaux: false,
+      surfacePlancherCreeeDaact: 0,
+      dateEnvoiDaact: "",
+    }
+  );
+
+  // If `existingDpMairie` changes later, update formData
+  useEffect(() => {
+    if (existingDpMairie) {
+      setFormData(existingDpMairie);
+    }
+  }, [existingDpMairie]);
+
+  // Decide the modal title
+  // const modalTitle = isEditMode
+  //   ? "Modifier une DP Mairie"
+  //   : "Ajouter une DP Mairie";
+
   // Handle standard input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type } = e.target;
-    
-    // Handle checkboxes separately
-    if (type === 'checkbox') {
+
+    // Checkboxes
+    if (type === "checkbox") {
       setFormData({
         ...formData,
-        [name]: (e.target as HTMLInputElement).checked
+        [name]: (e.target as HTMLInputElement).checked,
       });
     } 
-    // Handle number inputs
-    else if (type === 'number') {
+    // number inputs
+    else if (type === "number") {
       setFormData({
         ...formData,
-        [name]: value === '' ? 0 : parseFloat(value)
+        [name]: value === "" ? 0 : parseFloat(value),
       });
-    }
-    // Handle all other inputs
+    } 
+    // everything else
     else {
       setFormData({
         ...formData,
-        [name]: value
+        [name]: value,
       });
     }
   };
-  
-  // Create a type for the nested fields
-  type NestedField = {
-    [key: string]: string | boolean | number;
-  };
 
-  // Update the handleNestedChange function with proper typing
+  // Nested changes (for objects inside formData)
+  type NestedField = { [key: string]: string | boolean | number };
   const handleNestedChange = (
     category: keyof DPMairieData, 
     field: string, 
@@ -147,22 +166,23 @@ const AddDPMairieModal: React.FC<AddDPMairieModalProps> = ({ onClose, onSave }) 
       ...formData,
       [category]: {
         ...(formData[category] as NestedField),
-        [field]: value
-      }
+        [field]: value,
+      },
     });
   };
 
-  // Handle radio button changes
+  // Radio button changes
   const handleRadioChange = (name: string, value: string | boolean) => {
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
-  
-  // Handle form submission
+
+  // Submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // We always just call onSave with the updated formData
     onSave(formData);
     onClose();
   };

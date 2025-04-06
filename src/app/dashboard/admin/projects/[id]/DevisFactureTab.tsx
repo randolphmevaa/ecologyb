@@ -98,6 +98,20 @@ interface DevisFactureTabProps {
 //   dateEnvoiDaact: string;
 // }
 
+// type ActionMenuProps = {
+//   onAction: (action: string, productCode?: string) => void;
+//   onShowDealModal: () => void;
+//   tableItems?: TableItem[];
+//   hasAgent: boolean;
+//   hasSubcontractor: boolean;
+//   hasInformation: boolean;
+//   hasFunding: boolean;
+//   hasMairie: boolean;
+//   hasDeal: boolean;
+//   hasDivision: boolean;
+// };
+
+
 // Document types and statuses
 type DocumentType = "devis" | "facture";
 type DocumentStatus = "brouillon" | "envoyé" | "signé" | "payé" | "refusé" | "expiré";
@@ -334,6 +348,7 @@ interface Subcontractor {
 interface AddSubcontractorModalProps {
   onClose: () => void;
   onSave: (subcontractor: Subcontractor) => void;
+  existingSubcontractor?: Subcontractor | null;
 }
 
 interface SubcontractorFormState {
@@ -359,6 +374,7 @@ interface Mandataire {
 interface AddMandataireModalProps {
   onClose: () => void;
   onSave: (mandataire: Mandataire) => void;
+  existingMandataire?: Mandataire | null;
 }
 
 // Sample mandataires data
@@ -491,17 +507,25 @@ const AddInformationModal: React.FC<AddInformationModalProps> = ({ onClose, onSa
 };
 
 // Add Mandataire Modal Component
-const AddMandataireModal: React.FC<AddMandataireModalProps> = ({ onClose, onSave }) => {
-  const [selectedMandataire, setSelectedMandataire] = useState<string>("");
+const AddMandataireModal: React.FC<AddMandataireModalProps> = ({ onClose, onSave, existingMandataire }) => {
+  // 1) Determine if we are editing
+  const isEditMode = !!existingMandataire;
+
+  // 2) Title changes if we’re in edit mode
+  const modalTitle = isEditMode ? "Modifier un mandataire" : "Ajouter un mandataire";
+
+  // 3) If editing, pre-select the existing mandataire ID
+  const [selectedMandataire, setSelectedMandataire] = useState<string>(
+    existingMandataire ? existingMandataire.id : ""
+  );
+  // const [selectedMandataire, setSelectedMandataire] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredMandataires, setFilteredMandataires] = useState<Mandataire[]>(mandataires);
 
-  // Handle search term change
+  // Filter as user types
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
     setSearchTerm(term);
-    
-    // Filter mandataires based on search term
     if (term.trim() === "") {
       setFilteredMandataires(mandataires);
     } else {
@@ -513,20 +537,17 @@ const AddMandataireModal: React.FC<AddMandataireModalProps> = ({ onClose, onSave
     }
   };
 
-  // Handle mandataire selection
   const handleSelectMandataire = (id: string) => {
     setSelectedMandataire(id);
   };
 
-  // Handle form submission
+  // 4) On submit, if we have a selectedMandataire, pass that to onSave
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!selectedMandataire) {
       alert("Veuillez sélectionner un mandataire");
       return;
     }
-    
     const mandataire = mandataires.find(m => m.id === selectedMandataire);
     if (mandataire) {
       onSave(mandataire);
@@ -551,9 +572,8 @@ const AddMandataireModal: React.FC<AddMandataireModalProps> = ({ onClose, onSave
               <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
                 <UserIcon className="h-6 w-6 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-white">
-                Ajouter un mandataire
-              </h2>
+              {/* Dynamically show the modal title */}
+              <h2 className="text-xl font-bold text-white">{modalTitle}</h2>
             </div>
             <button
               onClick={onClose}
@@ -568,20 +588,24 @@ const AddMandataireModal: React.FC<AddMandataireModalProps> = ({ onClose, onSave
         <div className="p-6 max-h-[80vh] overflow-y-auto">
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
-              {/* Warning message */}
+              {/* Warning */}
               <div className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-800">
                 <div className="flex items-center gap-2">
                   <ExclamationCircleIcon className="h-6 w-6 text-amber-600" />
                   <h3 className="font-bold">ATTENTION :</h3>
                 </div>
                 <p className="mt-1">
-                  En l&apos;absence de la civilité et du numéro de dossier MPR dans la fiche client, les documents MAPRIMERENOV ne seront pas générés.
+                  En l&apos;absence de la civilité et du numéro de dossier MPR dans la fiche client, 
+                  les documents MAPRIMERENOV ne seront pas générés.
                 </p>
               </div>
               
-              {/* Search and select mandataire */}
+              {/* Search and select */}
               <div className="mb-4">
-                <label htmlFor="searchMandataire" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="searchMandataire"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Rechercher un mandataire
                 </label>
                 <div className="relative">
@@ -592,7 +616,8 @@ const AddMandataireModal: React.FC<AddMandataireModalProps> = ({ onClose, onSave
                     value={searchTerm}
                     onChange={handleSearchChange}
                     placeholder="Rechercher par nom ou entreprise..."
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg
+                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -638,11 +663,12 @@ const AddMandataireModal: React.FC<AddMandataireModalProps> = ({ onClose, onSave
               {/* Display selected mandataire details */}
               {selectedMandataire && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <h4 className="font-medium text-gray-900 mb-2">Détails du mandataire sélectionné</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Détails du mandataire sélectionné
+                  </h4>
                   {(() => {
                     const mandataire = mandataires.find(m => m.id === selectedMandataire);
                     if (!mandataire) return null;
-                    
                     return (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                         <div>
@@ -1140,38 +1166,55 @@ const DocumentStatusBadge: React.FC<{ status: DocumentStatus }> = ({ status }) =
 };
 
 // Add Subcontractor Modal component
-const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({ onClose, onSave }) => {
-  const [selectedSubcontractor, setSelectedSubcontractor] = useState<string>("");
+const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({
+  onClose,
+  onSave,
+  existingSubcontractor,
+}) => {
+  // Detect if we are editing
+  const isEditMode = !!existingSubcontractor; 
+
+  // When editing, load that subcontractor into local state
   const [subcontractorInfo, setSubcontractorInfo] = useState<SubcontractorFormState>({
-    name: "",
-    address: "",
-    director: "",
-    siret: "",
-    insurance: "",
-    qualifications: []
+    name: existingSubcontractor?.name || "",
+    address: existingSubcontractor?.address || "",
+    director: existingSubcontractor?.director || "",
+    siret: existingSubcontractor?.siret || "",
+    insurance: existingSubcontractor?.insurance || "",
+    qualifications: existingSubcontractor?.qualifications || []
   });
-  const [addNew, setAddNew] = useState<boolean>(false);
+
+  // We can hide or reuse "addNew" logic if we want
+  const [addNew, setAddNew] = useState<boolean>(!isEditMode); 
+  // If isEditMode=true, we skip the "select from existing" flow.
+
+  const [selectedSubcontractor, setSelectedSubcontractor] = useState<string>("");
+
   const [qualification, setQualification] = useState<string>("");
 
-  // Handle selecting an existing subcontractor
+  // Possibly hide the "select an existing subcontractor" step if isEditMode
+  // ...
+
+  // Handlers below
   const handleSelectSubcontractor = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // If user picks a known subcontractor
     const selected = e.target.value;
     setSelectedSubcontractor(selected);
-    
+
     if (selected) {
-      const subcontractor = subcontractors.find(sc => sc.id === selected);
-      if (subcontractor) {
+      const sub = subcontractors.find(sc => sc.id === selected);
+      if (sub) {
         setSubcontractorInfo({
-          name: subcontractor.name,
-          address: subcontractor.address,
-          director: subcontractor.director,
-          siret: subcontractor.siret,
-          insurance: subcontractor.insurance,
-          qualifications: [...subcontractor.qualifications]
+          name: sub.name,
+          address: sub.address,
+          director: sub.director,
+          siret: sub.siret,
+          insurance: sub.insurance,
+          qualifications: [...sub.qualifications]
         });
       }
     } else {
-      // Reset form if "Select" option is chosen
+      // Reset the form
       setSubcontractorInfo({
         name: "",
         address: "",
@@ -1183,61 +1226,73 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({ onClose, 
     }
   };
 
-  // Handle form input changes for new subcontractor
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setSubcontractorInfo({
-      ...subcontractorInfo,
-      [name]: value
-    });
+    setSubcontractorInfo(prev => ({ ...prev, [name]: value }));
   };
 
-  // Add a qualification to the list
+  // Add / Remove qualifications
   const handleAddQualification = () => {
     if (qualification.trim()) {
-      setSubcontractorInfo({
-        ...subcontractorInfo,
-        qualifications: [...subcontractorInfo.qualifications, qualification]
-      });
+      setSubcontractorInfo(prev => ({
+        ...prev,
+        qualifications: [...prev.qualifications, qualification]
+      }));
       setQualification("");
     }
   };
 
-  // Remove a qualification from the list
   const handleRemoveQualification = (index: number) => {
-    const newQualifications = [...subcontractorInfo.qualifications];
-    newQualifications.splice(index, 1);
-    setSubcontractorInfo({
-      ...subcontractorInfo,
-      qualifications: newQualifications
+    setSubcontractorInfo(prev => {
+      const newQuals = [...prev.qualifications];
+      newQuals.splice(index, 1);
+      return { ...prev, qualifications: newQuals };
     });
   };
 
-  // Handle form submission
+  // Submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (isEditMode) {
+      // We are truly editing the existing subcontractor
+      const updatedSubcontractor: Subcontractor = {
+        // Keep the existing ID if you have it
+        id: existingSubcontractor!.id, 
+        ...subcontractorInfo
+      };
+      onSave(updatedSubcontractor);
+      onClose();
+      return;
+    }
+
+    // Otherwise, the old approach: pick existing or add new
     if (addNew) {
-      // For a new subcontractor, we'd typically make an API call here
-      // For now, we'll just simulate adding a new subcontractor with a generated ID
+      const newId = `SC${Math.floor(Math.random() * 1000)}`;
       const newSubcontractor: Subcontractor = {
-        id: `SC${Math.floor(Math.random() * 1000)}`,
+        id: newId,
         ...subcontractorInfo
       };
       onSave(newSubcontractor);
+      onClose();
     } else {
-      // For an existing subcontractor, pass the selected one
-      const subcontractor = subcontractors.find(sc => sc.id === selectedSubcontractor);
-      if (subcontractor) {
-        onSave(subcontractor);
-      } else {
+      // Using an existing subcontractor from the dropdown
+      const chosen = subcontractors.find(sc => sc.id === selectedSubcontractor);
+      if (!chosen) {
         alert("Veuillez sélectionner un sous-traitant");
         return;
       }
+      onSave(chosen);
+      onClose();
     }
-    
-    onClose();
   };
+
+  // Title changes if editing
+  const modalTitle = isEditMode
+    ? "Modifier un sous-traitant"
+    : addNew
+      ? "Ajouter un nouveau sous-traitant"
+      : "Sélectionner un sous-traitant";
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -1248,7 +1303,7 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({ onClose, 
         transition={{ type: "spring", damping: 25 }}
         className="bg-white rounded-xl w-full max-w-3xl m-4 overflow-hidden shadow-2xl"
       >
-        {/* Modal header */}
+        {/* Header */}
         <div className="relative bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-4">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full -mr-10 -mt-10 opacity-20" />
           <div className="flex items-center justify-between relative z-10">
@@ -1256,9 +1311,7 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({ onClose, 
               <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
                 <UserGroupIcon className="h-6 w-6 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-white">
-                {addNew ? "Ajouter un nouveau sous-traitant" : "Sélectionner un sous-traitant"}
-              </h2>
+              <h2 className="text-xl font-bold text-white">{modalTitle}</h2>
             </div>
             <button
               onClick={onClose}
@@ -1268,174 +1321,180 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({ onClose, 
             </button>
           </div>
         </div>
-        
-        {/* Modal body */}
+
+        {/* Body */}
         <div className="p-6 max-h-[80vh] overflow-y-auto">
           <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <div className="flex items-center mb-4">
-                <input 
-                  type="checkbox" 
-                  id="addNew" 
-                  checked={addNew}
-                  onChange={() => setAddNew(!addNew)}
-                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                />
-                <label htmlFor="addNew" className="ml-2 text-sm text-gray-700">
-                  Ajouter un nouveau sous-traitant
-                </label>
-              </div>
-              
-              {!addNew && (
-                <div className="mb-4">
-                  <label htmlFor="subcontractor" className="block text-sm font-medium text-gray-700 mb-1">
-                    Sélectionnez un sous-traitant
-                  </label>
-                  <select
-                    id="subcontractor"
-                    value={selectedSubcontractor}
-                    onChange={handleSelectSubcontractor}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  >
-                    <option value="">-- Sélectionnez un sous-traitant --</option>
-                    {subcontractors.map(sc => (
-                      <option key={sc.id} value={sc.id}>{sc.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Nom de l&apos;entreprise*
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={subcontractorInfo.name}
-                    onChange={handleChange}
-                    disabled={!addNew && !!selectedSubcontractor}
-                    required
-                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            {/* If we are editing an existing sub, skip the “Add New” checkbox + select. */}
+            {!isEditMode && (
+              <div className="mb-6">
+                <div className="flex items-center mb-4">
+                  <input 
+                    type="checkbox" 
+                    id="addNew" 
+                    checked={addNew}
+                    onChange={() => setAddNew(!addNew)}
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                   />
-                </div>
-                
-                <div>
-                  <label htmlFor="director" className="block text-sm font-medium text-gray-700 mb-1">
-                    Dirigeant*
+                  <label htmlFor="addNew" className="ml-2 text-sm text-gray-700">
+                    Ajouter un nouveau sous-traitant
                   </label>
-                  <input
-                    type="text"
-                    id="director"
-                    name="director"
-                    value={subcontractorInfo.director}
-                    onChange={handleChange}
-                    disabled={!addNew && !!selectedSubcontractor}
-                    required
-                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
                 </div>
+
+                {/* If not “addNew”, show the dropdown to pick an existing sub */}
+                {!addNew && (
+                  <div className="mb-4">
+                    <label
+                      htmlFor="subcontractor"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Sélectionnez un sous-traitant
+                    </label>
+                    <select
+                      id="subcontractor"
+                      value={selectedSubcontractor}
+                      onChange={handleSelectSubcontractor}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    >
+                      <option value="">-- Sélectionnez un sous-traitant --</option>
+                      {subcontractors.map(sc => (
+                        <option key={sc.id} value={sc.id}>{sc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
-              
-              <div className="mb-4">
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                  Adresse*
+            )}
+
+            {/* Now the common form fields, used for either Add or Edit */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nom de l&apos;entreprise*
                 </label>
                 <input
                   type="text"
-                  id="address"
-                  name="address"
-                  value={subcontractorInfo.address}
+                  id="name"
+                  name="name"
+                  value={subcontractorInfo.name}
                   onChange={handleChange}
-                  disabled={!addNew && !!selectedSubcontractor}
+                  disabled={!addNew && !isEditMode && !!selectedSubcontractor}
                   required
                   className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label htmlFor="siret" className="block text-sm font-medium text-gray-700 mb-1">
-                    Numéro SIRET*
-                  </label>
-                  <input
-                    type="text"
-                    id="siret"
-                    name="siret"
-                    value={subcontractorInfo.siret}
-                    onChange={handleChange}
-                    disabled={!addNew && !!selectedSubcontractor}
-                    required
-                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="insurance" className="block text-sm font-medium text-gray-700 mb-1">
-                    N° Décennale*
-                  </label>
-                  <input
-                    type="text"
-                    id="insurance"
-                    name="insurance"
-                    value={subcontractorInfo.insurance}
-                    onChange={handleChange}
-                    disabled={!addNew && !!selectedSubcontractor}
-                    required
-                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                </div>
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Qualifications RGE
+              <div>
+                <label htmlFor="director" className="block text-sm font-medium text-gray-700 mb-1">
+                  Dirigeant*
                 </label>
-                
-                {addNew && (
-                  <div className="flex gap-2 mb-2">
-                    <input
-                      type="text"
-                      value={qualification}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQualification(e.target.value)}
-                      placeholder="Ex: RGE QualiPac: QPAC/12345 (Valide du 15/02/2023 au 15/02/2024)"
-                      className="flex-grow border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddQualification}
-                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                      <PlusIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                )}
-                
-                <div className="space-y-2 mt-2">
-                  {subcontractorInfo.qualifications.map((qual, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                      <span className="text-sm">{qual}</span>
-                      {addNew && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveQualification(index)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <XMarkIcon className="h-5 w-5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  
-                  {subcontractorInfo.qualifications.length === 0 && (
-                    <p className="text-sm text-gray-500 italic">Aucune qualification ajoutée</p>
-                  )}
-                </div>
+                <input
+                  type="text"
+                  id="director"
+                  name="director"
+                  value={subcontractorInfo.director}
+                  onChange={handleChange}
+                  disabled={!addNew && !isEditMode && !!selectedSubcontractor}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
               </div>
             </div>
-            
+            <div className="mb-4">
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                Adresse*
+              </label>
+              <input
+                type="text"
+                id="address"
+                name="address"
+                value={subcontractorInfo.address}
+                onChange={handleChange}
+                disabled={!addNew && !isEditMode && !!selectedSubcontractor}
+                required
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label htmlFor="siret" className="block text-sm font-medium text-gray-700 mb-1">
+                  Numéro SIRET*
+                </label>
+                <input
+                  type="text"
+                  id="siret"
+                  name="siret"
+                  value={subcontractorInfo.siret}
+                  onChange={handleChange}
+                  disabled={!addNew && !isEditMode && !!selectedSubcontractor}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+              <div>
+                <label htmlFor="insurance" className="block text-sm font-medium text-gray-700 mb-1">
+                  N° Décennale*
+                </label>
+                <input
+                  type="text"
+                  id="insurance"
+                  name="insurance"
+                  value={subcontractorInfo.insurance}
+                  onChange={handleChange}
+                  disabled={!addNew && !isEditMode && !!selectedSubcontractor}
+                  required
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+            </div>
+
+            {/* Qualifications */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Qualifications RGE
+              </label>
+              {/* Only allow adding/removing if “addNew” or “isEditMode” */}
+              {(addNew || isEditMode) && (
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={qualification}
+                    onChange={(e) => setQualification(e.target.value)}
+                    placeholder="Ex: RGE QualiPac..."
+                    className="flex-grow border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddQualification}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+              <div className="space-y-2 mt-2">
+                {subcontractorInfo.qualifications.map((qual, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <span className="text-sm">{qual}</span>
+                    {(addNew || isEditMode) && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveQualification(idx)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <XMarkIcon className="h-5 w-5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {subcontractorInfo.qualifications.length === 0 && (
+                  <p className="text-sm text-gray-500 italic">
+                    Aucune qualification ajoutée
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer actions */}
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"
@@ -1448,7 +1507,7 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({ onClose, 
                 type="submit"
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg transition hover:bg-blue-700"
               >
-                Enregistrer
+                {isEditMode ? "Enregistrer les modifications" : "Enregistrer"}
               </button>
             </div>
           </form>
@@ -1689,61 +1748,158 @@ const DealSelectionModal: React.FC<{
 };
 
 // First, let's modify the ActionMenu component to add the Deal selection functionality
-const ActionMenu: React.FC<{ 
+const ActionMenu: React.FC<{
   onAction: (action: string, productCode?: string) => void;
   onShowDealModal: () => void;
   tableItems?: TableItem[];
-}> = ({ onAction, onShowDealModal, tableItems = [] }) => {
-  const [isOpen, setIsOpen] = useState(false);
+
+  // NEW
+  hasMandataire: boolean;
+  hasSubcontractor: boolean;
+  hasInformation: boolean;
+  hasFinancing: boolean;
+  hasMairie: boolean;
+  hasDeal: boolean;
+  hasDivision: boolean;
+}> = ({
+  onAction,
+  onShowDealModal,
+  tableItems = [],
   
-  // Check if there are any BAR-TH-171, BAR-TH-113 or BAR-TH-143 in the table
+  hasMandataire,
+  hasSubcontractor,
+  hasInformation,
+  hasFinancing,
+  hasMairie,
+  hasDeal,
+  hasDivision
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Example: figure out if your tableItems includes references that matter
   const specificProductCodes = useMemo(() => {
     const specificCodes = ["BAR-TH-171", "BAR-TH-113", "BAR-TH-143"];
     return tableItems
       .filter(item => item.reference && specificCodes.includes(item.reference))
       .map(item => item.reference)
-      .filter((value, index, self) => self.indexOf(value) === index); // Get unique values
+      .filter((value, index, self) => self.indexOf(value) === index);
   }, [tableItems]);
-  
+
+  // Build the base actions, conditionally changing labels
   const baseActions = [
-    { id: "addSubcontractor", label: "Ajouter un sous-traitant", icon: <UserGroupIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "addAgent", label: "Ajouter un mandataire", icon: <UserIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "addInfo", label: "Ajouter une information", icon: <InformationCircleIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "addProduct", label: "Ajouter un produit", icon: <ShoppingCartIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "addService", label: "Ajouter une prestation", icon: <WrenchScrewdriverIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "addFunding", label: "Ajouter un financement", icon: <BanknotesIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "addMairie", label: "Ajouter une DP Mairie", icon: <BuildingLibraryIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "assignToDeal", label: "Affecter à un deal", icon: <LinkIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "addDivision", label: "Ajouter une indivision", icon: <UsersIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "addDocument", label: "Ajouter un document au devis", icon: <FolderPlusIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "modifyPrime", label: "Modifier une prime", icon: <CurrencyDollarIcon className="h-5 w-5 text-gray-500" /> },
-    { id: "deleteQuote", label: "Supprimer le devis", icon: <TrashIcon className="h-5 w-5 text-red-500" /> },
-    { id: "addOperation", label: "Ajouter une opération", icon: <PlusIcon className="h-5 w-5 text-gray-500" /> }
+    {
+      id: "addSubcontractor",
+      label: hasSubcontractor
+        ? "Modifier un sous-traitant"
+        : "Ajouter un sous-traitant",
+      icon: hasSubcontractor
+        ? <PencilIcon className="h-5 w-5 text-gray-500" />
+        : <UserGroupIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "addAgent",
+      label: hasMandataire
+        ? "Modifier un mandataire"
+        : "Ajouter un mandataire",
+      icon: hasMandataire
+        ? <PencilIcon className="h-5 w-5 text-gray-500" />
+        : <UserIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "addInfo",
+      label: hasInformation
+        ? "Modifier une information"
+        : "Ajouter une information",
+      icon: hasInformation
+        ? <PencilIcon className="h-5 w-5 text-gray-500" />
+        : <InformationCircleIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "addProduct",
+      label: "Ajouter un produit",
+      icon: <ShoppingCartIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "addService",
+      label: "Ajouter une prestation",
+      icon: <WrenchScrewdriverIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "addFunding",
+      label: hasFinancing
+        ? "Modifier un financement"
+        : "Ajouter un financement",
+      icon: hasFinancing
+        ? <PencilIcon className="h-5 w-5 text-gray-500" />
+        : <BanknotesIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "addMairie",
+      label: hasMairie
+        ? "Modifier une DP Mairie"
+        : "Ajouter une DP Mairie",
+      icon: hasMairie
+        ? <PencilIcon className="h-5 w-5 text-gray-500" />
+        : <BuildingLibraryIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "assignToDeal",
+      label: hasDeal
+        ? "Modifier le deal"
+        : "Affecter à un deal",
+      icon: hasDeal
+        ? <PencilIcon className="h-5 w-5 text-gray-500" />
+        : <LinkIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "addDivision",
+      label: hasDivision
+        ? "Modifier une indivision"
+        : "Ajouter une indivision",
+      icon: hasDivision
+        ? <PencilIcon className="h-5 w-5 text-gray-500" />
+        : <UsersIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "addDocument",
+      label: "Ajouter un document au devis",
+      icon: <FolderPlusIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "modifyPrime",
+      label: "Modifier une prime",
+      icon: <CurrencyDollarIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "deleteQuote",
+      label: "Supprimer le devis",
+      icon: <TrashIcon className="h-5 w-5 text-red-500" />
+    },
+    {
+      id: "addOperation",
+      label: "Ajouter une opération",
+      icon: <PlusIcon className="h-5 w-5 text-gray-500" />
+    }
   ];
   
-  // Add sizing note options when there are specific products
+
+  // Insert sizing note actions if relevant
   const actions = useMemo(() => {
     let allActions = [...baseActions];
-    
-    // Insert sizing note actions before deleteQuote
     if (specificProductCodes.length > 0) {
       const deleteQuoteIndex = allActions.findIndex(action => action.id === "deleteQuote");
-      
-      // Create sizing note actions for each specific product code
       const sizingNoteActions = specificProductCodes.map(code => ({
         id: `sizingNote_${code}`,
         label: `Note de dimensionnement ${code}`,
         icon: <DocumentCheckIcon className="h-5 w-5 text-gray-500" />
       }));
       
-      // Insert sizing note actions before deleteQuote
       allActions = [
         ...allActions.slice(0, deleteQuoteIndex),
         ...sizingNoteActions,
         ...allActions.slice(deleteQuoteIndex)
       ];
     }
-    
     return allActions;
   }, [baseActions, specificProductCodes]);
 
@@ -1752,7 +1908,6 @@ const ActionMenu: React.FC<{
       setIsOpen(false);
       onShowDealModal();
     } else if (actionId.startsWith("sizingNote_")) {
-      // Extract product code from action ID
       const productCode = actionId.replace("sizingNote_", "");
       onAction(actionId, productCode);
       setIsOpen(false);
@@ -1771,14 +1926,11 @@ const ActionMenu: React.FC<{
         <span>Actions</span>
         <EllipsisHorizontalIcon className="h-5 w-5" />
       </button>
-      
+
       <AnimatePresence>
         {isOpen && (
           <>
-            <div 
-              className="fixed inset-0 z-40" 
-              onClick={() => setIsOpen(false)}
-            />
+            <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1809,6 +1961,7 @@ const ActionMenu: React.FC<{
     </div>
   );
 };
+
 
 // Enhanced subcontractor data
 const subcontractors = [
@@ -3203,7 +3356,6 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ onClose, onSave }) =>
   );
 };
 
-
 // Updated DevisEditor Component with functional PDF dropdown
 const DevisEditor: React.FC<{
   quoteId?: string;
@@ -3238,6 +3390,8 @@ const DevisEditor: React.FC<{
   // Add these state variables to the DevisEditor component
   const [showAddDPMairieModal, setShowAddDPMairieModal] = useState<boolean>(false);
   const [dpMairieData, setDpMairieData] = useState<DPMairieData | null>(null);
+  const [preVisitDate, setPreVisitDate] = useState<string>('');
+  const [paymentDueDate, setPaymentDueDate] = useState<string>('');
 
   const [showAddFinancingModal, setShowAddFinancingModal] = useState<boolean>(false);
   const [financingData, setFinancingData] = useState<FinancingData | null>(null);
@@ -3263,6 +3417,13 @@ const DevisEditor: React.FC<{
 
   const [editingItem, setEditingItem] = useState<TableItem | null>(null);
   const [showEditItemModal, setShowEditItemModal] = useState<boolean>(false);
+  const hasMandataire = Boolean(selectedMandataire);
+  const hasSubcontractor = Boolean(selectedSubcontractor);
+  const hasInformation = Boolean(additionalInfo && additionalInfo.trim() !== "");
+  const hasFinancing = Boolean(financingData);
+  const hasMairie = Boolean(dpMairieData);
+  const hasDealSet = Boolean(dealId && dealId.trim() !== "");
+  const hasDivision = Boolean(indivisionData);
 
   // New function to handle adding a sizing note
   const handleAddSizingNote = (sizingNote: SizingNote) => {
@@ -3725,7 +3886,21 @@ ${subContractorInfo}`;
           <span>Dupliquer le devis</span>
         </button>
         
-        <ActionMenu onAction={handleAction} onShowDealModal={() => setShowDealModal(true)} tableItems={tableItems} />
+        <ActionMenu
+          onAction={handleAction}
+          onShowDealModal={() => setShowDealModal(true)}
+          tableItems={tableItems}
+
+          // NEW PROPS
+          hasMandataire={hasMandataire}
+          hasSubcontractor={hasSubcontractor}
+          hasInformation={hasInformation}
+          hasFinancing={hasFinancing}
+          hasMairie={hasMairie}
+          hasDeal={hasDealSet}
+          hasDivision={hasDivision}
+        />
+
         
         {dealId && (
           <div className="px-4 py-2.5 bg-green-100 text-green-700 rounded-lg flex items-center gap-2">
@@ -3775,6 +3950,19 @@ ${subContractorInfo}`;
                 id="validUntilDate"
                 value={validUntilDate}
                 onChange={(e) => setValidUntilDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="preVisitDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Date de prévisite ou d&apos;audit
+              </label>
+              <input
+                type="date"
+                id="preVisitDate"
+                value={preVisitDate}
+                onChange={(e) => setPreVisitDate(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
             </div>
@@ -3832,6 +4020,19 @@ ${subContractorInfo}`;
                 id="invoiceDate"
                 value={invoiceDate}
                 onChange={(e) => setInvoiceDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="paymentDueDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Date de règlement avant le
+              </label>
+              <input
+                type="date"
+                id="paymentDueDate"
+                value={paymentDueDate}
+                onChange={(e) => setPaymentDueDate(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
             </div>
@@ -4448,6 +4649,7 @@ ${subContractorInfo}`;
           <AddSubcontractorModal
             onClose={() => setShowAddSubcontractorModal(false)}
             onSave={handleSaveSubcontractor}
+            existingSubcontractor={selectedSubcontractor}
           />
         )}
 
@@ -4455,6 +4657,7 @@ ${subContractorInfo}`;
           <AddMandataireModal
             onClose={() => setShowAddMandataireModal(false)}
             onSave={handleSaveMandataire}
+            existingMandataire={selectedMandataire}
           />
         )}
 
@@ -4463,6 +4666,7 @@ ${subContractorInfo}`;
             onClose={() => setShowAddInformationModal(false)}
             onSave={handleSaveInformation}
             currentInfo={additionalInfo}
+            // currentInfo={additionalInfo}
           />
         )}
 
@@ -4470,6 +4674,7 @@ ${subContractorInfo}`;
           <AddDPMairieModal
             onClose={() => setShowAddDPMairieModal(false)}
             onSave={handleSaveDPMairie}
+            existingDpMairie={dpMairieData}
           />
         )}
 
@@ -4477,6 +4682,7 @@ ${subContractorInfo}`;
           <AddFinancingModal
             onClose={() => setShowAddFinancingModal(false)}
             onSave={handleSaveFinancing}
+            existingFinancing={financingData}
           />
         )}
 
@@ -4499,6 +4705,7 @@ ${subContractorInfo}`;
               onClose={() => setShowAddIncentivesModal(false)}
               onSave={handleSaveIncentives}
               currentIncentives={incentivesData}
+              tableItems={tableItems}
             />
         )}
         

@@ -71,6 +71,31 @@ interface OperationForm {
   maprimeRenovViolet?: string;
 }
 
+// Zone colors
+// const ZONE_COLORS = {
+//   H1: {
+//     bg: "bg-blue-100",
+//     border: "border-blue-300",
+//     text: "text-blue-800",
+//     focusRing: "focus:ring-blue-500",
+//     label: "text-blue-700"
+//   },
+//   H2: {
+//     bg: "bg-yellow-100",
+//     border: "border-yellow-300",
+//     text: "text-yellow-800",
+//     focusRing: "focus:ring-yellow-500",
+//     label: "text-yellow-700"
+//   },
+//   H3: {
+//     bg: "bg-red-100",
+//     border: "border-red-300",
+//     text: "text-red-800",
+//     focusRing: "focus:ring-red-500",
+//     label: "text-red-700"
+//   }
+// };
+
 // Sample data for operations
 const SAMPLE_OPERATIONS: Operation[] = [
   {
@@ -335,15 +360,6 @@ export default function OperationsPage() {
     });
   };
 
-  // Checkbox change handler
-  // const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, checked } = e.target;
-  //   setOperationForm({
-  //     ...operationForm,
-  //     [name]: checked
-  //   });
-  // };
-
   // Cancel form handler
   const handleCancelForm = () => {
     setViewMode("list");
@@ -359,6 +375,19 @@ export default function OperationsPage() {
 
   // Define the allowed operation codes for coup de pouce
   const coupDePouceAllowedCodes = ["BAR-TH-171", "BAR-TH-113", "BAR-TH-143"];
+
+  // Helper function to render a zone badge with proper color
+  const renderZoneBadge = (zone: string) => {
+    const colorClass = zone === "H1" ? "bg-blue-100 text-blue-800 border-blue-300" : 
+                      zone === "H2" ? "bg-yellow-100 text-yellow-800 border-yellow-300" : 
+                      "bg-red-100 text-red-800 border-red-300";
+    
+    return (
+      <span className={`ml-1 text-xs font-medium inline-flex items-center px-2 py-0.5 rounded-full ${colorClass} border`}>
+        {zone}
+      </span>
+    );
+  };
 
   return (
     <div className="flex h-screen bg-gradient-to-b from-[#f8fafc] to-[#f0f7ff]">
@@ -533,9 +562,9 @@ export default function OperationsPage() {
                               {operation.coupDePouce && coupDePouceAllowedCodes.includes(operation.code) && (
                                 <div>
                                   <p className="text-xs text-[#213f5b] opacity-75 mb-1">Coup de Pouce</p>
-                                  <p className="text-sm font-medium text-[#213f5b]">
+                                  <p className="text-sm font-medium text-[#213f5b] flex items-center">
                                     {operation.kwhCumacCoupDePouce && parseInt(operation.kwhCumacCoupDePouce).toLocaleString()} kWh 
-                                    {operation.h1h2h3Selection && ` (${operation.h1h2h3Selection})`}
+                                    {operation.h1h2h3Selection && renderZoneBadge(operation.h1h2h3Selection)}
                                   </p>
                                 </div>
                               )}
@@ -544,9 +573,9 @@ export default function OperationsPage() {
                               {operation.horsCoupDePouce && coupDePouceAllowedCodes.includes(operation.code) && (
                                 <div>
                                   <p className="text-xs text-[#213f5b] opacity-75 mb-1">Hors Coup de Pouce</p>
-                                  <p className="text-sm font-medium text-[#213f5b]">
+                                  <p className="text-sm font-medium text-[#213f5b] flex items-center">
                                     {operation.kwhCumacHorsCoupDePouce && parseInt(operation.kwhCumacHorsCoupDePouce).toLocaleString()} kWh 
-                                    {operation.h1h2h3HorsSelection && ` (${operation.h1h2h3HorsSelection})`}
+                                    {operation.h1h2h3HorsSelection && renderZoneBadge(operation.h1h2h3HorsSelection)}
                                   </p>
                                 </div>
                               )}
@@ -727,46 +756,49 @@ export default function OperationsPage() {
                                     />
                                   </div>
                                   
-                                  {/* Zone inputs stacked vertically */}
+                                  {/* Zone inputs stacked vertically with color coding */}
                                   <div className="space-y-4">
                                     <div className="space-y-2">
-                                      <label className="block text-sm font-medium text-[#213f5b] mb-1">
-                                        Zone H1 - kWh Cumac
+                                      <label className="block text-sm font-medium text-blue-700 mb-1 flex items-center">
+                                        <span className="w-3 h-3 inline-block bg-blue-500 rounded-full mr-2"></span>
+                                        Zone H1 - kWh Cumac (Bleue)
                                       </label>
                                       <input
                                         type="text"
                                         name="kwhCumacCoupDePouceH1"
                                         value={operationForm.kwhCumacCoupDePouceH1 || ""}
                                         onChange={handleOperationFormChange}
-                                        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                        className="w-full px-3 py-2 border border-blue-300 bg-blue-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-blue-800 placeholder-blue-300"
                                         placeholder="kWh Cumac pour H1"
                                       />
                                     </div>
                                     
                                     <div className="space-y-2">
-                                      <label className="block text-sm font-medium text-[#213f5b] mb-1">
-                                        Zone H2 - kWh Cumac
+                                      <label className="block text-sm font-medium text-yellow-700 mb-1 flex items-center">
+                                        <span className="w-3 h-3 inline-block bg-yellow-500 rounded-full mr-2"></span>
+                                        Zone H2 - kWh Cumac (Jaune)
                                       </label>
                                       <input
                                         type="text"
                                         name="kwhCumacCoupDePouceH2"
                                         value={operationForm.kwhCumacCoupDePouceH2 || ""}
                                         onChange={handleOperationFormChange}
-                                        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                        className="w-full px-3 py-2 border border-yellow-300 bg-yellow-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500 text-yellow-800 placeholder-yellow-300"
                                         placeholder="kWh Cumac pour H2"
                                       />
                                     </div>
                                     
                                     <div className="space-y-2">
-                                      <label className="block text-sm font-medium text-[#213f5b] mb-1">
-                                        Zone H3 - kWh Cumac
+                                      <label className="block text-sm font-medium text-red-700 mb-1 flex items-center">
+                                        <span className="w-3 h-3 inline-block bg-red-500 rounded-full mr-2"></span>
+                                        Zone H3 - kWh Cumac (Rouge)
                                       </label>
                                       <input
                                         type="text"
                                         name="kwhCumacCoupDePouceH3"
                                         value={operationForm.kwhCumacCoupDePouceH3 || ""}
                                         onChange={handleOperationFormChange}
-                                        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                        className="w-full px-3 py-2 border border-red-300 bg-red-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-red-800 placeholder-red-300"
                                         placeholder="kWh Cumac pour H3"
                                       />
                                     </div>
@@ -792,46 +824,49 @@ export default function OperationsPage() {
                                     />
                                   </div>
                                   
-                                  {/* Zone inputs stacked vertically */}
+                                  {/* Zone inputs stacked vertically with color coding */}
                                   <div className="space-y-4">
                                     <div className="space-y-2">
-                                      <label className="block text-sm font-medium text-[#213f5b] mb-1">
-                                        Zone H1 - kWh Cumac
+                                      <label className="block text-sm font-medium text-blue-700 mb-1 flex items-center">
+                                        <span className="w-3 h-3 inline-block bg-blue-500 rounded-full mr-2"></span>
+                                        Zone H1 - kWh Cumac (Bleue)
                                       </label>
                                       <input
                                         type="text"
                                         name="kwhCumacHorsCoupDePouceH1"
                                         value={operationForm.kwhCumacHorsCoupDePouceH1 || ""}
                                         onChange={handleOperationFormChange}
-                                        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                        className="w-full px-3 py-2 border border-blue-300 bg-blue-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-blue-800 placeholder-blue-300"
                                         placeholder="kWh Cumac pour H1"
                                       />
                                     </div>
                                     
                                     <div className="space-y-2">
-                                      <label className="block text-sm font-medium text-[#213f5b] mb-1">
-                                        Zone H2 - kWh Cumac
+                                      <label className="block text-sm font-medium text-yellow-700 mb-1 flex items-center">
+                                        <span className="w-3 h-3 inline-block bg-yellow-500 rounded-full mr-2"></span>
+                                        Zone H2 - kWh Cumac (Jaune)
                                       </label>
                                       <input
                                         type="text"
                                         name="kwhCumacHorsCoupDePouceH2"
                                         value={operationForm.kwhCumacHorsCoupDePouceH2 || ""}
                                         onChange={handleOperationFormChange}
-                                        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                        className="w-full px-3 py-2 border border-yellow-300 bg-yellow-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500 text-yellow-800 placeholder-yellow-300"
                                         placeholder="kWh Cumac pour H2"
                                       />
                                     </div>
                                     
                                     <div className="space-y-2">
-                                      <label className="block text-sm font-medium text-[#213f5b] mb-1">
-                                        Zone H3 - kWh Cumac
+                                      <label className="block text-sm font-medium text-red-700 mb-1 flex items-center">
+                                        <span className="w-3 h-3 inline-block bg-red-500 rounded-full mr-2"></span>
+                                        Zone H3 - kWh Cumac (Rouge)
                                       </label>
                                       <input
                                         type="text"
                                         name="kwhCumacHorsCoupDePouceH3"
                                         value={operationForm.kwhCumacHorsCoupDePouceH3 || ""}
                                         onChange={handleOperationFormChange}
-                                        className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                        className="w-full px-3 py-2 border border-red-300 bg-red-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-red-800 placeholder-red-300"
                                         placeholder="kWh Cumac pour H3"
                                       />
                                     </div>
@@ -842,45 +877,48 @@ export default function OperationsPage() {
                           ) : (
                             // For all other operations: Show only H1, H2, H3 zone fields (no Hors fields)
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              {/* Only standard zone inputs */}
+                              {/* Only standard zone inputs with color coding */}
                               <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1">
-                                  Zone H1 - kWh Cumac
+                                <label className="block text-sm font-medium text-blue-700 mb-1 flex items-center">
+                                  <span className="w-3 h-3 inline-block bg-blue-500 rounded-full mr-2"></span>
+                                  Zone H1 - kWh Cumac (Bleue)
                                 </label>
                                 <input
                                   type="text"
                                   name="kwhCumacCoupDePouceH1"
                                   value={operationForm.kwhCumacCoupDePouceH1 || ""}
                                   onChange={handleOperationFormChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  className="w-full px-3 py-2 border border-blue-300 bg-blue-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-blue-800 placeholder-blue-300"
                                   placeholder="kWh Cumac pour H1"
                                 />
                               </div>
                               
                               <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1">
-                                  Zone H2 - kWh Cumac
+                                <label className="block text-sm font-medium text-yellow-700 mb-1 flex items-center">
+                                  <span className="w-3 h-3 inline-block bg-yellow-500 rounded-full mr-2"></span>
+                                  Zone H2 - kWh Cumac (Jaune)
                                 </label>
                                 <input
                                   type="text"
                                   name="kwhCumacCoupDePouceH2"
                                   value={operationForm.kwhCumacCoupDePouceH2 || ""}
                                   onChange={handleOperationFormChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  className="w-full px-3 py-2 border border-yellow-300 bg-yellow-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500 text-yellow-800 placeholder-yellow-300"
                                   placeholder="kWh Cumac pour H2"
                                 />
                               </div>
                               
                               <div className="space-y-2">
-                                <label className="block text-sm font-medium text-[#213f5b] mb-1">
-                                  Zone H3 - kWh Cumac
+                                <label className="block text-sm font-medium text-red-700 mb-1 flex items-center">
+                                  <span className="w-3 h-3 inline-block bg-red-500 rounded-full mr-2"></span>
+                                  Zone H3 - kWh Cumac (Rouge)
                                 </label>
                                 <input
                                   type="text"
                                   name="kwhCumacCoupDePouceH3"
                                   value={operationForm.kwhCumacCoupDePouceH3 || ""}
                                   onChange={handleOperationFormChange}
-                                  className="w-full px-3 py-2 border border-[#bfddf9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#213f5b]"
+                                  className="w-full px-3 py-2 border border-red-300 bg-red-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-red-800 placeholder-red-300"
                                   placeholder="kWh Cumac pour H3"
                                 />
                               </div>
