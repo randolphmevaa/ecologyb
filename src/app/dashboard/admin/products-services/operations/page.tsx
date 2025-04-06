@@ -740,7 +740,15 @@ export default function OperationsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               {/* Coup de pouce section - LEFT SIDE */}
                               <div className="space-y-3">
-                                <h4 className="text-md font-medium text-[#213f5b]">Coup de pouce</h4>
+                                <h4 className="text-md font-medium text-[#213f5b] flex items-center">
+                                Coup de pouce
+                                  <img 
+                                    src="/cee.png" 
+                                    alt="CEE Logo" 
+                                    className="w-6 h-6 ml-2"
+                                  />
+                                  
+                                </h4>
                                 <div className="space-y-4">
                                   <div className="space-y-2">
                                     <label className="block text-sm font-medium text-[#213f5b] mb-1">
@@ -808,7 +816,15 @@ export default function OperationsPage() {
                               
                               {/* Hors coup de pouce section - RIGHT SIDE */}
                               <div className="space-y-3">
-                                <h4 className="text-md font-medium text-[#213f5b]">Hors coup de pouce</h4>
+                                <h4 className="text-md font-medium text-[#213f5b] flex items-center">
+                                Hors coup de pouce
+                                  <img 
+                                    src="/cee.png" 
+                                    alt="CEE Logo" 
+                                    className="w-6 h-6 ml-2"
+                                  />
+                                
+                                </h4>
                                 <div className="space-y-4">
                                   <div className="space-y-2">
                                     <label className="block text-sm font-medium text-[#213f5b] mb-1">
@@ -927,7 +943,15 @@ export default function OperationsPage() {
 
                           {/* MaPrimeRenov section - unchanged */}
                           <div className="mt-6 pt-4 border-t">
-                            <h3 className="text-lg font-medium text-[#213f5b] mb-3">MaPrimeRenov</h3>
+                            <h3 className="text-lg font-medium text-[#213f5b] mb-3 flex items-center">
+                            MaPrimeRenov
+                                <img 
+                                  src="/mpr.svg" 
+                                  alt="MaPrimeRenov Logo" 
+                                  className="w-5 h-5 ml-2"
+                                />
+                              
+                            </h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
