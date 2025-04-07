@@ -27,6 +27,7 @@
     "formidable": "^3.5.2",
     "framer-motion": "^12.4.10",
     "googleapis": "^148.0.0",
+    "html2pdf.js": "^0.10.3",
     "jspdf": "^3.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.476.0",
