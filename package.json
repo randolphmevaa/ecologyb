@@ -35,6 +35,7 @@
     "mongodb": "^6.13.0",
     "mongoose": "^8.9.6",
     "next": "^15.2.1",
+    "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
     "react-big-calendar": "^1.18.0",
     "react-datepicker": "^8.0.0",

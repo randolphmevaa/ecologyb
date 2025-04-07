@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { PDFDocument } from 'pdf-lib';
 import { 
   DocumentTextIcon, 
   ChevronDownIcon,
@@ -27,6 +28,8 @@ interface PDFGeneratorProps {
   indivisionData?: IndivisionData | null; // Add indivision data prop
   incentivesData?: IncentivesData;
 }
+
+// type IndivisaireField = keyof Indivisaire;
 
 const PDFGenerator: React.FC<PDFGeneratorProps> = ({ 
   tableItems, 
@@ -63,6 +66,16 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
     setDropdownVisible(!dropdownVisible);
   };
 
+  // Add this function to download a file from the public directory
+// const downloadFileFromPublic = (filename: string) => {
+//   const link = document.createElement('a');
+//   link.href = `${process.env.PUBLIC_URL || ''}/${filename}`;
+//   link.download = filename;
+//   document.body.appendChild(link);
+//   link.click();
+//   document.body.removeChild(link);
+// };
+
   // Call the appropriate PDF generator function based on selection
   const handleGenerateDevisPDF = () => {
     generateDevisPDF(
@@ -90,6 +103,148 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
     setDropdownVisible(false);
   };
 
+  // Define the function with proper typing
+const generateAttestationIndivisionPDF = async (indivisionData: IndivisionData) => {
+  try {
+    console.log("Generating PDF with data:", JSON.stringify(indivisionData, null, 2));
+    
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/attestation_indivision.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    
+    // Get the form from the document
+    const form = pdfDoc.getForm();
+    
+    // Get all form fields to debug them
+    const fields = form.getFields();
+    console.log("Available PDF form fields:", fields.map(f => f.getName()));
+    
+    // Add proprietor type to the form
+    try {
+      const proprietaireTypeText = indivisionData.typeProprietaire === 'occupant' 
+        ? 'Propriétaire occupant' 
+        : 'Propriétaire bailleur';
+      
+      console.log("Setting type proprietaire to:", proprietaireTypeText);
+      
+      // Try multiple possible field names for proprietor type
+      const possibleTypeFields = ['Champ-type-proprietaire', 'type-proprietaire', 'proprietaire_type'];
+      for (const fieldName of possibleTypeFields) {
+        try {
+          const field = form.getTextField(fieldName);
+          field.setText(proprietaireTypeText);
+          console.log(`Successfully set ${fieldName} field`);
+          break;
+        } catch {
+          console.log(`Field ${fieldName} not found, trying next option`);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to set proprietaire type:', e);
+    }
+    
+    // Fill in fields for each indivisaire - FIXED TYPING ISSUES HERE
+    indivisionData.indivisaires.forEach((indivisaire, index) => {
+      // Skip empty entries
+      if (!indivisaire.nom.trim() && !indivisaire.prenom.trim()) return;
+      
+      console.log(`Filling data for indivisaire ${index}:`, indivisaire);
+      
+      // Use explicit field access instead of dynamic indexing to avoid TypeScript errors
+      const baseOffset = index * 10;
+      
+      // Try to set nom field
+      try {
+        const fieldName = `Champ-texte${baseOffset}`;
+        const field = form.getTextField(fieldName);
+        field.setText(indivisaire.nom);
+        console.log(`Successfully set ${fieldName} to "${indivisaire.nom}"`);
+      } catch {
+        console.log(`Failed to set nom field for indivisaire ${index}`);
+      }
+      
+      // Try to set prenom field
+      try {
+        const fieldName = `Champ-texte${baseOffset + 1}`;
+        const field = form.getTextField(fieldName);
+        field.setText(indivisaire.prenom);
+        console.log(`Successfully set ${fieldName} to "${indivisaire.prenom}"`);
+      } catch {
+        console.log(`Failed to set prenom field for indivisaire ${index}`);
+      }
+      
+      // Try to set dateNaissance field
+      try {
+        const fieldName = `Champ-texte${baseOffset + 3}`;
+        const field = form.getTextField(fieldName);
+        field.setText(indivisaire.dateNaissance);
+        console.log(`Successfully set ${fieldName} to "${indivisaire.dateNaissance}"`);
+      } catch  {
+        console.log(`Failed to set dateNaissance field for indivisaire ${index}`);
+      }
+      
+      // Try to set adresse field
+      try {
+        const fieldName = `Champ-texte${baseOffset + 4}`;
+        const field = form.getTextField(fieldName);
+        field.setText(indivisaire.adresse);
+        console.log(`Successfully set ${fieldName} to "${indivisaire.adresse}"`);
+      } catch  {
+        console.log(`Failed to set adresse field for indivisaire ${index}`);
+      }
+      
+      // Try to set codePostal field
+      try {
+        const fieldName = `Champ-texte${baseOffset + 5}`;
+        const field = form.getTextField(fieldName);
+        field.setText(indivisaire.codePostal);
+        console.log(`Successfully set ${fieldName} to "${indivisaire.codePostal}"`);
+      } catch  {
+        console.log(`Failed to set codePostal field for indivisaire ${index}`);
+      }
+      
+      // Try to set ville field
+      try {
+        const fieldName = `Champ-texte${baseOffset + 6}`;
+        const field = form.getTextField(fieldName);
+        field.setText(indivisaire.ville);
+        console.log(`Successfully set ${fieldName} to "${indivisaire.ville}"`);
+      } catch {
+        console.log(`Failed to set ville field for indivisaire ${index}`);
+      }
+    });
+    
+    // Save the PDF
+    const pdfBytes = await pdfDoc.save();
+    
+    // Create a blob and open in a new tab instead of downloading
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    
+    console.log("Opening PDF in new tab");
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    // Fixed error handling
+    console.error('Error generating PDF:', error);
+    
+    let errorMessage = 'Une erreur inconnue est survenue';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
   // Function to generate other document types
   const generateDocument = (documentType: string) => {
     switch (documentType) {
@@ -106,11 +261,17 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
         alert(`Génération de l'Attestation Propriétaire bailleur en cours...`);
         break;
       case 'attestation-indivision':
-        // Generate Attestation d'indivision
-        alert(`Génération de l'Attestation d'indivision en cours...`);
-        break;
-      default:
-        alert(`Génération de document "${documentType}" à implémenter.`);
+      // Generate filled Attestation d'indivision
+      if (indivisionData) {
+        console.log("Generating attestation d'indivision with data:", indivisionData);
+        generateAttestationIndivisionPDF(indivisionData);
+      } else {
+        console.error("No indivision data available");
+        alert('Données d\'indivision non disponibles. Veuillez d\'abord configurer l\'indivision.');
+      }
+      break;
+        default:
+          alert(`Génération de document "${documentType}" à implémenter.`);
     }
     setDropdownVisible(false);
   };
