@@ -57,370 +57,6 @@ interface FinancingData {
   sellerName: string;
 }
 
-// Styles specific to the quote PDF
-// const getDevisStyles = () => `
-//   .info-grid {
-//     display: flex;
-//     gap: 10mm;
-//     margin-bottom: 12mm;
-//   }
-  
-//   .info-box {
-//     flex: 1;
-//     border-radius: 2mm;
-//     padding: 4mm;
-//     position: relative;
-//   }
-  
-//   .client-box {
-//     background-color: var(--extra-light-blue);
-//     border-left: 3px solid var(--light-blue);
-//   }
-  
-//   .details-box {
-//     background-color: var(--extra-light-green);
-//     border-left: 3px solid var(--light-green);
-//   }
-  
-//   .box-title {
-//     font-size: 14px;
-//     font-weight: 600;
-//     color: var(--navy);
-//     margin-bottom: 4mm;
-//     padding-bottom: 2mm;
-//     border-bottom: 1px solid rgba(0,0,0,0.05);
-//   }
-  
-//   .info-row {
-//     display: grid;
-//     grid-template-columns: 90px 1fr;
-//     gap: 2mm;
-//     margin-bottom: 2.5mm;
-//     align-items: center;
-//   }
-  
-//   .info-label {
-//     font-size: 10px;
-//     color: #666;
-//     font-weight: 600;
-//   }
-  
-//   .info-value {
-//     font-size: 11px;
-//     color: #333;
-//   }
-  
-//   /* Table Styling */
-//   .section-title {
-//     position: relative;
-//     font-size: 16px;
-//     font-weight: 600;
-//     color: var(--navy);
-//     margin-bottom: 4mm;
-//     padding-bottom: 2mm;
-//     border-bottom: 1px solid var(--light-blue);
-//   }
-  
-//   .section-title::before {
-//     content: '';
-//     position: absolute;
-//     left: 0;
-//     bottom: -1px;
-//     width: 30mm;
-//     height: 2px;
-//     background-color: var(--navy);
-//   }
-  
-//   .table-wrapper {
-//     margin-bottom: 12mm;
-//     border-radius: 2mm;
-//     overflow: hidden;
-//     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-//   }
-  
-//   table {
-//     width: 100%;
-//     border-collapse: collapse;
-//   }
-  
-//   thead {
-//     background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%);
-//     color: white;
-//   }
-  
-//   th {
-//     text-align: left;
-//     padding: 3mm 4mm;
-//     font-size: 11px;
-//     font-weight: 600;
-//     letter-spacing: 0.5px;
-//   }
-  
-//   td {
-//     padding: 3mm 4mm;
-//     font-size: 10px;
-//     border-bottom: 1px solid #f0f0f0;
-//     vertical-align: top;
-//   }
-  
-//   tr:last-child td {
-//     border-bottom: none;
-//   }
-  
-//   tr:nth-child(even) {
-//     background-color: #f9fafc;
-//   }
-  
-//   .item-name {
-//     font-weight: 600;
-//     color: var(--navy);
-//     font-size: 11px;
-//     margin-bottom: 1mm;
-//   }
-  
-//   .item-desc {
-//     font-size: 9px;
-//     color: #666;
-//     line-height: 1.5;
-//   }
-  
-//   /* Sizing Note Styling */
-//   .sizing-note-section {
-//     margin-bottom: 12mm;
-//     background-color: var(--extra-light-blue);
-//     padding: 4mm;
-//     border-radius: 2mm;
-//     border-left: 3px solid var(--light-blue);
-//   }
-  
-//   .sizing-note-title {
-//     font-size: 14px;
-//     font-weight: 600;
-//     color: var(--navy);
-//     margin-bottom: 4mm;
-//     padding-bottom: 2mm;
-//     border-bottom: 1px solid rgba(0,0,0,0.05);
-//   }
-  
-//   .sizing-note-grid {
-//     display: grid;
-//     grid-template-columns: 1fr 1fr;
-//     gap: 3mm;
-//     margin-bottom: 4mm;
-//   }
-  
-//   .sizing-note-row {
-//     display: flex;
-//     align-items: center;
-//   }
-  
-//   .sizing-note-label {
-//     font-size: 10px;
-//     color: #666;
-//     font-weight: 600;
-//     width: 100px;
-//     flex-shrink: 0;
-//   }
-  
-//   .sizing-note-value {
-//     font-size: 11px;
-//     color: #333;
-//     font-weight: 500;
-//   }
-  
-//   .sizing-note-details {
-//     background-color: rgba(255,255,255,0.5);
-//     padding: 3mm;
-//     border-radius: 1mm;
-//   }
-  
-//   .sizing-note-subtitle {
-//     font-size: 12px;
-//     color: var(--navy);
-//     margin-bottom: 3mm;
-//     font-weight: 500;
-//   }
-  
-//   .sizing-note-tech-grid {
-//     display: grid;
-//     grid-template-columns: 1fr 1fr 1fr;
-//     gap: 2mm;
-//   }
-  
-//   .sizing-note-tech-item {
-//     margin-bottom: 1.5mm;
-//   }
-  
-//   .sizing-note-tech-label {
-//     font-size: 9px;
-//     color: #666;
-//     margin-bottom: 0.5mm;
-//   }
-  
-//   .sizing-note-tech-value {
-//     font-size: 10px;
-//     color: #333;
-//     font-weight: 500;
-//   }
-  
-//   /* Financial Summary Styling */
-//   .finance-wrapper {
-//     display: flex;
-//     justify-content: flex-end;
-//     margin-bottom: 12mm;
-//   }
-  
-//   .finance-summary {
-//     width: 75mm;
-//     border-radius: 2mm;
-//     overflow: hidden;
-//     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-//     background-color: white;
-//   }
-  
-//   .finance-header {
-//     background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%);
-//     color: white;
-//     padding: 3mm 4mm;
-//     font-size: 13px;
-//     font-weight: 600;
-//   }
-  
-//   .finance-row {
-//     display: flex;
-//     justify-content: space-between;
-//     padding: 2.5mm 4mm;
-//     border-bottom: 1px solid #f0f0f0;
-//   }
-  
-//   .finance-row:last-child {
-//     border-bottom: none;
-//   }
-  
-//   .finance-label {
-//     font-size: 10px;
-//     font-weight: 500;
-//     color: #555;
-//   }
-  
-//   .finance-value {
-//     font-size: 11px;
-//     font-weight: 600;
-//     color: #333;
-//   }
-  
-//   .primes .finance-label, .primes .finance-value {
-//     color: #047857;
-//   }
-  
-//   .final-total {
-//     background-color: var(--extra-light-blue);
-//     padding: 3mm 4mm;
-//   }
-  
-//   .final-total .finance-label, .final-total .finance-value {
-//     font-size: 13px;
-//     font-weight: 700;
-//     color: var(--navy);
-//   }
-  
-//   /* Additional Info */
-//   .additional-section {
-//     margin-bottom: 12mm;
-//     padding: 4mm;
-//     background-color: #f9fafc;
-//     border-radius: 2mm;
-//     border-left: 3px solid var(--navy);
-//   }
-  
-//   .additional-title {
-//     font-size: 14px;
-//     font-weight: 600;
-//     color: var(--navy);
-//     margin-bottom: 3mm;
-//     padding-bottom: 2mm;
-//     border-bottom: 1px solid rgba(0,0,0,0.05);
-//   }
-  
-//   .additional-content {
-//     font-size: 10px;
-//     color: #555;
-//     line-height: 1.6;
-//   }
-  
-//   /* Signature Section */
-//   .signature-section {
-//     display: flex;
-//     gap: 8mm;
-//     margin-bottom: 8mm;
-//   }
-  
-//   .signature-box {
-//     flex: 1;
-//     padding: 4mm;
-//     border-radius: 2mm;
-//     position: relative;
-//   }
-  
-//   .signature-company {
-//     background-color: var(--extra-light-blue);
-//     border: 1px solid var(--light-blue);
-//   }
-  
-//   .signature-client {
-//     background-color: var(--extra-light-green);
-//     border: 1px solid var(--light-green);
-//   }
-  
-//   .signature-title {
-//     font-size: 12px;
-//     font-weight: 600;
-//     color: var(--navy);
-//     margin-bottom: 8mm;
-//   }
-  
-//   .signature-line {
-//     display: block;
-//     width: 100%;
-//     height: 1px;
-//     background-color: #ddd;
-//     margin-bottom: 3mm;
-//   }
-  
-//   .signature-date {
-//     font-size: 9px;
-//     color: #666;
-//   }
-  
-//   .signature-note {
-//     position: absolute;
-//     bottom: 2mm;
-//     left: 4mm;
-//     font-size: 8px;
-//     color: #888;
-//     font-style: italic;
-//   }
-  
-//   /* Terms and Conditions */
-//   .terms-content {
-//     font-size: 9px;
-//     color: #444;
-//     line-height: 1.6;
-//   }
-  
-//   .terms-content h4 {
-//     color: var(--navy);
-//     font-size: 11px;
-//     font-weight: 600;
-//     margin: 4mm 0 1.5mm;
-//   }
-  
-//   .terms-content p {
-//     margin-bottom: 2.5mm;
-//   }
-// `;
-
-
 // Add a function to get the deal name from the deal ID
 const getDealName = (dealId?: string): string => {
   if (!dealId) return '';
@@ -539,31 +175,39 @@ const getCustomerAndQuoteInfo = (
 // Generate the products table HTML
 const getProductsTable = (tableItems: TableItem[]) => `
   <!-- Products Table -->
-  <h3 class="section-title">Détail des prestations</h3>
+
   <div class="table-wrapper">
     <table>
       <thead>
         <tr>
-          <th style="width: 40%">Désignation</th>
-          <th style="width: 10%">Qté</th>
-          <th style="width: 15%">Prix unitaire HT</th>
-          <th style="width: 10%">TVA</th>
-          <th style="width: 25%">Total HT</th>
+          <th style="width: 45%">Détail</th>
+          <th style="width: 7%">Qté</th>
+          <th style="width: 10%">PU HT</th>
+          <th style="width: 10%">PU TTC</th>
+          <th style="width: 6%">TVA</th>
+          <th style="width: 11%"><strong>Total HT</strong></th>
+          <th style="width: 11%"><strong>Total TTC</strong></th>
         </tr>
       </thead>
       <tbody>
-        ${tableItems.map(item => `
+        ${tableItems.map(item => {
+          // Calculate PU TTC and Total TTC
+          const unitPriceTTC = item.unitPriceHT * (1 + item.tva/100);
+          const totalTTC = item.totalHT * (1 + item.tva/100);
+          
+          return `
           <tr>
             <td>
-              <div class="item-name">${item.reference}</div>
-              <div class="item-desc">${item.name.replace(/<[^>]*>/g, '')}</div>
+              <div class="item-desc">${item.name}</div>
             </td>
             <td>${item.reference === 'MENTION DÉCHETS' ? '' : item.quantity}</td>
             <td>${item.reference === 'MENTION DÉCHETS' ? '' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(item.unitPriceHT)}</td>
+            <td>${item.reference === 'MENTION DÉCHETS' ? '' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(unitPriceTTC)}</td>
             <td>${item.reference === 'MENTION DÉCHETS' ? '' : item.tva + '%'}</td>
-            <td>${item.reference === 'MENTION DÉCHETS' ? '' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(item.totalHT)}</td>
+            <td><strong>${item.reference === 'MENTION DÉCHETS' ? '' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(item.totalHT)}</strong></td>
+            <td><strong>${item.reference === 'MENTION DÉCHETS' ? '' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalTTC)}</strong></td>
           </tr>
-        `).join('')}
+        `}).join('')}
       </tbody>
     </table>
   </div>
@@ -683,7 +327,7 @@ const getTermes = (dealId?: string): string => {
   `;
 };
 
-// Update the getFinancialSummary function to use the deal name instead of dealId
+// Updated getFinancialSummary function with signature section
 const getFinancialSummary = (
   totals: FinancialTotals, 
   dealId?: string, 
@@ -697,6 +341,23 @@ const getFinancialSummary = (
   let html = `
     <!-- Financial Summary -->
     <div class="finance-wrapper">
+      <!-- Signature Section (Left Side) -->
+      <div class="signature-payment-section">
+        <div class="signature-area">
+          <div class="signature-instruction">
+            Apposer signature précédée de la mention<br>
+            "Lu et approuvé, bon pour accord"
+          </div>
+          <div class="signature-line"></div>
+          <div class="signature-date-line">Le : _____________________</div>
+        </div>
+        <div class="payment-method">
+          <div class="payment-method-title">Mode de paiement :</div>
+          <div class="payment-method-options">Chèque, CB ou virement bancaire</div>
+        </div>
+      </div>
+      
+      <!-- Financial Summary (Right Side) -->
       <div class="finance-summary">
         <div class="finance-header">Récapitulatif Financier</div>
         <div class="finance-row">
@@ -817,25 +478,6 @@ const getAdditionalInfo = (additionalInfo: string) => {
   `;
 };
 
-// Generate the signature section HTML
-const getSignatureSection = (formattedDate: string) => `
-  <!-- Signature Section -->
-  <div class="signature-section">
-    <div class="signature-box signature-company">
-      <div class="signature-title">Signature du prestataire</div>
-      <span class="signature-line"></span>
-      <div class="signature-date">Fait à Sarcelles, le ${formattedDate}</div>
-      <div class="signature-note">Signature et cachet</div>
-    </div>
-    <div class="signature-box signature-client">
-      <div class="signature-title">Signature du client</div>
-      <span class="signature-line"></span>
-      <div class="signature-date">Fait à ________________, le ____ / ____ / ________</div>
-      <div class="signature-note">Bon pour accord</div>
-    </div>
-  </div>
-`;
-
 // Generate the terms and conditions HTML for page 2
 const getTermsAndConditions = (quoteNumber: string, formattedDate: string) => `
   <div class="document-title">
@@ -895,6 +537,76 @@ const getTermsAndConditions = (quoteNumber: string, formattedDate: string) => `
 
 // Add styling for financing section in getDevisStyles function
 const getDevisStyles = () => `
+/* Updated Financial Summary Styling */
+.finance-wrapper {
+  display: flex;
+  justify-content: space-between; /* Changed from flex-end to space-between */
+  align-items: flex-start;
+  margin-bottom: 12mm;
+  width: 100%;
+}
+
+/* New styles for signature and payment method section */
+.signature-payment-section {
+  width: 50%; /* Take up half of the available space */
+  padding-right: 10mm;
+}
+
+.signature-area {
+  margin-bottom: 8mm;
+  border-radius: 2mm;
+  padding: 4mm;
+  background-color: #f9f9f9;
+  border: 1px solid #e5e7eb;
+}
+
+.signature-instruction {
+  font-size: 11px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 10mm;
+  text-align: center;
+}
+
+.signature-line {
+  height: 0.5mm;
+  background-color: #e5e7eb;
+  margin-bottom: 5mm;
+}
+
+.signature-date-line {
+  font-size: 10px;
+  color: #333;
+}
+
+.payment-method {
+  border-radius: 2mm;
+  padding: 4mm;
+  background-color: #f9f9f9;
+  border: 1px solid #e5e7eb;
+}
+
+.payment-method-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 3mm;
+}
+
+.payment-method-options {
+  font-size: 10px;
+  color: #555;
+}
+
+/* Update finance summary to take less width */
+.finance-summary {
+  width: 45%; /* Take less than half the space */
+  border-radius: 2mm;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  background-color: white;
+}
+
   .info-grid {
     display: flex;
     gap: 5mm;
@@ -1392,8 +1104,6 @@ const getFinancingSection = (financingData: FinancingData) => {
   `;
 };
 
-// In the generateDevisPDF function, let's make sure to separate these sections properly:
-
 export const generateDevisPDF = (
   tableItems: TableItem[],
   quoteNumber: string,
@@ -1473,12 +1183,11 @@ export const generateDevisPDF = (
               ${getCustomerAndQuoteInfo(clientName, quoteNumber, formattedDate, dealId, clientDetails)}
               ${getProductsTable(tableItems)}
               ${getSizingNotesSection(sizingNotes)}
-              ${getFinancialSummary(totals, dealId, incentivesData, hasOperations)}
               ${additionalInfo ? getAdditionalInfo(additionalInfo) : ''}
               ${showMaPrimeRenovConditions && totals.primeRenov !== undefined ? getMaPrimeRenovConditions(totals.primeRenov) : ''}
               ${getTermes(dealId)} <!-- Always include the Termes et conditions section -->
               ${financingData ? getFinancingSection(financingData) : ''}
-              ${getSignatureSection(formattedDate)}
+              ${getFinancialSummary(totals, dealId, incentivesData, hasOperations)}
             </div>
           </div>
           

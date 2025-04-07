@@ -75,32 +75,13 @@ export const companyInfo = {
     }
     
     .content {
-      padding: 10mm 18mm 35mm 18mm;
-    }
-    
-    /* Header Styling */
-    .header-band {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 12mm;
-      background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%);
-    }
-    
-    .header-accent {
-      position: absolute;
-      top: 12mm;
-      left: 0;
-      width: 10mm;
-      height: 50mm;
-      background: linear-gradient(180deg, var(--navy) 0%, transparent 100%);
+      padding: 10mm 10mm 10mm 10mm
     }
     
     .logo-container {
       position: absolute;
-      top: 18mm;
-      left: 18mm;
+      top: 10mm;
+      left: 10mm;
       display: flex;
       align-items: center;
     }
@@ -124,8 +105,8 @@ export const companyInfo = {
     
     .company-info {
       position: absolute;
-      top: 20mm;
-      right: 18mm;
+      top: 10mm;
+      right: 10mm;
       text-align: right;
       font-size: 8px;
       font-weight: 500;
@@ -135,7 +116,7 @@ export const companyInfo = {
     
     /* Main Content Styling */
     .main-content {
-      margin-top: 30mm;
+      margin-top: 100px;
     }
     
     .document-title {
