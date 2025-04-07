@@ -228,7 +228,7 @@ export const generateSizingNotePDF = (
   clientName: string = "Client",
   sizingNotes: SizingNote[] = [],
   clientAddress: string = "",
-  additionalInfo: any = {}
+  additionalInfo: { cadastralPlot?: string; phone?: string; email?: string } = {}
 ) => {
   // Check if there are sizing notes
   if (sizingNotes.length === 0) {
