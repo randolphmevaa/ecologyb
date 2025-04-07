@@ -135,8 +135,6 @@ export interface IndivisionData {
   indivisaires: Indivisaire[];
 }
 
-// Define TypeScript interface for incentives data
-// types.ts
 export interface IncentivesData {
   primeCEE: string;
   remiseExceptionnelle: string;
@@ -144,6 +142,6 @@ export interface IncentivesData {
   montantPriseEnChargeRAC: string;
   activiteMaPrimeRenov: boolean;
   acompte: string;
-  [key: string]: string | boolean; // needed if you allow dynamic keys
+  // Add an index signature to allow for dynamic properties
+  [key: string]: string | boolean | number;
 }
-

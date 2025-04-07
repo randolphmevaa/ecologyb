@@ -3447,63 +3447,84 @@ const DevisEditor: React.FC<{
   };
 
   // Calculate totals including the deal premium if applicable
-  const totals = useMemo(() => {
-    const totalHT = tableItems.reduce((sum, item) => sum + item.totalHT, 0);
-    const totalTTC = tableItems.reduce((sum, item) => sum + item.totalTTC, 0);
-    
-    // Calculate Prime CEE if we have a deal
-    let primeCEE = 0;
-    if (hasDeal && dealId) {
-      // Find operations and calculate their kWh cumac value
-      const operations = tableItems.filter(item => item.id.startsWith('op-'));
-      operations.forEach(op => {
-        const opRef = op.reference;
-        // Find the corresponding product to get kWh cumac
-        let kwhCumac = 0;
-        if ('productId' in op && op.productId) {
-          const product = products.find(p => p.id === op.productId);
-          if (product) {
-            kwhCumac = product.kwhCumac;
-          }
-        } else {
-          // Fallback to operation code
-          if (opRef === 'BAR-TH-101') kwhCumac = 510530;
-          else if (opRef === 'BAR-TH-104') kwhCumac = 628730;
-          else if (opRef === 'BAR-TH-112-Granulés') kwhCumac = 950440;
-          else if (opRef === 'BAR-TH-171') kwhCumac = 615400;
-        }
-        
-        // Calculate prime
-        primeCEE += kwhCumac * dealRatio;
-      });
-    }
-    
-    // Assuming a fixed MaPrimeRenov value for now
-    const primeRenov = hasDeal ? 3000 : 0;
+  // Calculate totals including the deal premium if applicable
+const totals = useMemo(() => {
+  const totalHT = tableItems.reduce((sum, item) => sum + item.totalHT, 0);
+  const totalTTC = tableItems.reduce((sum, item) => sum + item.totalTTC, 0);
   
-    // Add incentives from the modal
-    const additionalPrimeCEE = parseFloat(incentivesData.primeCEE || '0');
-    const remiseExceptionnelle = parseFloat(incentivesData.remiseExceptionnelle || '0');
-    const primeMPR = parseFloat(incentivesData.primeMPR || '0');
-    const acompte = parseFloat(incentivesData.acompte || '0');
-    const racCharge = parseFloat(incentivesData.montantPriseEnChargeRAC || '0');
-    
-    // Calculate total discounts
-    const totalDiscounts = primeCEE + primeRenov + additionalPrimeCEE + remiseExceptionnelle + primeMPR + acompte + racCharge;
-    
-    return { 
-      totalHT, 
-      totalTTC, 
-      primeCEE: parseFloat(primeCEE.toFixed(2)),
-      primeRenov,
-      additionalPrimeCEE,
-      remiseExceptionnelle,
-      primeMPR,
-      acompte,
-      racCharge,
-      remaining: totalTTC - totalDiscounts
-    };
-  }, [tableItems, hasDeal, dealId, dealRatio, incentivesData]);
+  // Calculate Prime CEE if we have a deal
+  let primeCEE = 0;
+  if (hasDeal && dealId) {
+    // Find operations and calculate their kWh cumac value
+    const operations = tableItems.filter(item => item.id?.startsWith('op-'));
+    operations.forEach(op => {
+      const opRef = op.reference;
+      // Find the corresponding product to get kWh cumac
+      let kwhCumac = 0;
+      if ('productId' in op && op.productId) {
+        const product = products.find(p => p.id === op.productId);
+        if (product) {
+          kwhCumac = product.kwhCumac;
+        }
+      } else {
+        // Fallback to operation code
+        if (opRef === 'BAR-TH-101') kwhCumac = 510530;
+        else if (opRef === 'BAR-TH-104') kwhCumac = 628730;
+        else if (opRef === 'BAR-TH-112-Granulés') kwhCumac = 950440;
+        else if (opRef === 'BAR-TH-171') kwhCumac = 615400;
+      }
+      
+      // Calculate prime
+      primeCEE += kwhCumac * dealRatio;
+    });
+  }
+  
+  // Assuming a fixed MaPrimeRenov value for now
+  const primeRenov = hasDeal ? 3000 : 0;
+
+  // Add incentives from the modal - Ensure all values are proper numbers
+  const additionalPrimeCEE = parseFloat(incentivesData.primeCEE || '0') || 0;
+  const remiseExceptionnelle = parseFloat(incentivesData.remiseExceptionnelle || '0') || 0;
+  
+  // Determine which MaPrimeRenov amount to use based on selection
+  let primeMPR = 0;
+  let primeRenovToUse = 0;
+  
+  if (incentivesData.primeMPR === 'Prime MPR deduite') {
+    primeRenovToUse = primeRenov;
+    // Don't add primeMPR if we're using primeRenov
+  } else {
+    primeMPR = parseFloat(incentivesData.primeMPR || '0') || 0;
+    // Don't use primeRenov
+  }
+  
+  const acompte = parseFloat(incentivesData.acompte || '0') || 0;
+  const racCharge = parseFloat(incentivesData.montantPriseEnChargeRAC || '0') || 0;
+  
+  // Calculate total discounts - be explicit about adding numbers
+  const totalDiscounts = primeCEE + primeRenovToUse + additionalPrimeCEE + 
+                        remiseExceptionnelle + primeMPR + acompte + racCharge;
+  
+  // Ensure totalTTC and totalDiscounts are valid numbers
+  const validTotalTTC = !isNaN(totalTTC) ? totalTTC : 0;
+  const validTotalDiscounts = !isNaN(totalDiscounts) ? totalDiscounts : 0;
+  
+  // Calculate remaining amount
+  const remaining = validTotalTTC - validTotalDiscounts;
+  
+  return { 
+    totalHT, 
+    totalTTC: validTotalTTC, 
+    primeCEE: parseFloat(primeCEE.toFixed(2)),
+    primeRenov,
+    additionalPrimeCEE,
+    remiseExceptionnelle,
+    primeMPR,
+    acompte,
+    racCharge,
+    remaining: remaining
+  };
+}, [tableItems, hasDeal, dealId, dealRatio, incentivesData]);
   
   // Handle deal selection
   const handleDealSelect = (selectedDealId: string) => {
@@ -4520,46 +4541,45 @@ ${subContractorInfo}`;
                 <span className="font-bold text-lg">{totals.totalTTC.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
               </div>
               
+              {/* Prime DEAL_ID */}
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-gray-600">Prime {dealId}</span>
                 <span className="font-semibold text-green-600">-{totals.primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
               </div>
-              
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-gray-600">Estimation MaPrimeRenov&apos;</span>
-                <span className="font-semibold text-green-600">-{totals.primeRenov.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
-              </div>
-              
+
+              {/* Only show MaPrimeRenov if primeMPR is "Prime MPR deduite" */}
+              {incentivesData.primeMPR === 'Prime MPR deduite' && totals.primeRenov > 0 && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Estimation MaPrimeRenov&apos;</span>
+                  <span className="font-semibold text-green-600">-{totals.primeRenov.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                </div>
+              )}
+
               {/* Show additional incentives if they exist */}
-              {incentivesData.primeCEE && (
+              {incentivesData.primeCEE && parseFloat(incentivesData.primeCEE) > 0 && (
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Prime C.E.E supplémentaire</span>
                   <span className="font-semibold text-green-600">-{parseFloat(incentivesData.primeCEE).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
                 </div>
               )}
-              
-              {incentivesData.remiseExceptionnelle && (
+
+              {incentivesData.remiseExceptionnelle && parseFloat(incentivesData.remiseExceptionnelle) > 0 && (
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Remise exceptionnelle</span>
                   <span className="font-semibold text-green-600">-{parseFloat(incentivesData.remiseExceptionnelle).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
                 </div>
               )}
-              
-              {incentivesData.primeMPR && (
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Prime MPR déduite</span>
-                  <span className="font-semibold text-green-600">-{parseFloat(incentivesData.primeMPR).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
-                </div>
-              )}
-              
-              {incentivesData.montantPriseEnChargeRAC && (
+
+              {/* Remove the primeMPR line since it's represented by Estimation MaPrimeRenov' */}
+
+              {incentivesData.montantPriseEnChargeRAC && parseFloat(incentivesData.montantPriseEnChargeRAC) > 0 && (
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Prise en charge du RAC</span>
                   <span className="font-semibold text-green-600">-{parseFloat(incentivesData.montantPriseEnChargeRAC).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
                 </div>
               )}
-              
-              {incentivesData.acompte && (
+
+              {incentivesData.acompte && parseFloat(incentivesData.acompte) > 0 && (
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Acompte</span>
                   <span className="font-semibold text-amber-600">-{parseFloat(incentivesData.acompte).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>

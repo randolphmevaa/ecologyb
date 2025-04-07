@@ -420,69 +420,121 @@ interface FinancingData {
 //   }
 // `;
 
-// Generate the customer and quote information HTML
-const getCustomerAndQuoteInfo = (clientName: string, quoteNumber: string, formattedDate: string, dealId?: string) => `
+
+// Add a function to get the deal name from the deal ID
+const getDealName = (dealId?: string): string => {
+  if (!dealId) return '';
+  
+  // Map of deal IDs to their display names
+  const dealMap: {[key: string]: string} = {
+    'VIERGE': 'Deal vierge',
+    'EFFY': 'EFFY'
+    // Add more deals here as needed
+  };
+  
+  return dealMap[dealId] || dealId; // Return the mapped name or the ID if no mapping exists
+};
+
+// Update the getCustomerAndQuoteInfo function to include DEVIS number and client name
+const getCustomerAndQuoteInfo = (
+  clientName: string, 
+  quoteNumber: string, 
+  quoteDate: string, 
+  dealId?: string,
+  clientDetails?: {
+    street?: string,
+    postalCode?: string,
+    city?: string,
+    cadastralParcel?: string,
+    phoneNumber?: string,
+    zone?: string,
+    houseType?: string,
+    houseAge?: string,
+    precarity?: string,
+    heatingType?: string,
+    dwellingType?: string,
+    clientNumber?: string,
+    subcontractor?: {
+      name?: string,
+      address?: string,
+      leader?: string,
+      siret?: string,
+      decennialNumber?: string,
+      qualifications?: string[]
+    }
+  }
+) => `
   <!-- Client and Devis Info -->
   <div class="info-grid">
     <div class="info-box client-box">
-      <h3 class="box-title">Informations Client</h3>
-      <div class="info-row">
-        <div class="info-label">Nom</div>
-        <div class="info-value">${clientName}</div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Adresse</div>
-        <div class="info-value">Adresse du client</div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Code postal</div>
-        <div class="info-value">Code postal</div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Ville</div>
-        <div class="info-value">Ville</div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Téléphone</div>
-        <div class="info-value">Téléphone du client</div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Email</div>
-        <div class="info-value">Email du client</div>
-      </div>
-    </div>
-    
-    <div class="info-box details-box">
-      <h3 class="box-title">Détails du Devis</h3>
-      <div class="info-row">
-        <div class="info-label">N° Devis</div>
-        <div class="info-value">${quoteNumber}</div>
+      <h3 class="box-title" style="margin-bottom: 2mm;">DEVIS : ${quoteNumber}</h3>
+      <div style="font-size: 11px; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid rgba(0,0,0,0.05);">
+        Numéro client : ${clientDetails?.clientNumber || 'N/A'}
       </div>
       <div class="info-row">
         <div class="info-label">Date</div>
-        <div class="info-value">${formattedDate}</div>
+        <div class="info-value">${formatDate(quoteDate)}</div>
       </div>
+      
+      ${clientDetails?.subcontractor ? `
       <div class="info-row">
-        <div class="info-label">Validité</div>
-        <div class="info-value">30 jours</div>
-      </div>
-      ${dealId ? `
-      <div class="info-row">
-        <div class="info-label">Deal</div>
-        <div class="info-value">${dealId}</div>
+        <div class="info-label">Travaux sous-traités</div>
+        <div class="info-value">
+          <strong>${clientDetails.subcontractor.name}</strong><br>
+          ${clientDetails.subcontractor.address}<br>
+          Dirigeant : ${clientDetails.subcontractor.leader}<br>
+          N° de Siret : ${clientDetails.subcontractor.siret}<br>
+          N° Décennale : ${clientDetails.subcontractor.decennialNumber}<br>
+          ${clientDetails.subcontractor.qualifications ? 
+            `- ${clientDetails.subcontractor.qualifications.join(' - ')}` : ''}
+        </div>
       </div>
       ` : ''}
-      <div class="info-row">
-        <div class="info-label">Consultant</div>
-        <div class="info-value">Berreby Georges</div>
+    </div>
+    
+    <div class="info-box details-box">
+      <h3 class="box-title" style="margin-bottom: 2mm;">${clientName.toUpperCase()}</h3>
+      <div style="font-size: 11px; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid rgba(0,0,0,0.05);">
+        Détails du projet
       </div>
       <div class="info-row">
-        <div class="info-label">Ref. Client</div>
-        <div class="info-value">ECO-${Math.floor(1000 + Math.random() * 9000)}</div>
+        <div class="info-label">Adresse</div>
+        <div class="info-value">${clientDetails?.street || 'Adresse non renseignée'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Code postal</div>
+        <div class="info-value">${clientDetails?.postalCode || 'N/A'} ${clientDetails?.city || ''}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Parcelle cadastrale</div>
+        <div class="info-value">${clientDetails?.cadastralParcel || 'N/A'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Téléphone</div>
+        <div class="info-value">${clientDetails?.phoneNumber || 'N/A'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Zone</div>
+        <div class="info-value">${clientDetails?.zone || 'N/A'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Type de maison</div>
+        <div class="info-value">${clientDetails?.houseType || 'N/A'} ${clientDetails?.houseAge || ''}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Précarité</div>
+        <div class="info-value">${clientDetails?.precarity || 'N/A'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Type de chauffage</div>
+        <div class="info-value">${clientDetails?.heatingType || 'N/A'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Type de logement</div>
+        <div class="info-value">${clientDetails?.dwellingType || 'N/A'}</div>
       </div>
     </div>
-  </div>
-`;
+  </div>`;
 
 // Generate the products table HTML
 const getProductsTable = (tableItems: TableItem[]) => `
@@ -599,9 +651,9 @@ const getSizingNotesSection = (sizingNotes: SizingNote[]) => {
   `;
 };
 
-// Add this new function to generate the MaPrimeRénov conditions text
-const getMaPrimeRenovConditions = (primeRenovAmount: number): string => {
-  if (!primeRenovAmount) return '';
+// First, let's modify the getMaPrimeRenovConditions function to remove the "Termes et conditions" part
+const getMaPrimeRenovConditions = (primeRenovAmount: number | undefined): string => {
+  if (primeRenovAmount === undefined || primeRenovAmount === 0) return '';
   
   const formattedAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(primeRenovAmount);
   
@@ -611,21 +663,36 @@ const getMaPrimeRenovConditions = (primeRenovAmount: number): string => {
       <h3 class="additional-title">Conditions particulières relatives à l'aide MaPrimeRénov'</h3>
       <div class="additional-content">
         <p>(**) Conditions particulières relatives à l'aide ANAH / MaPrimeRénov Cette offre est cumulable avec l'aide MaPrimeRénov', accordée uniquement après analyse du dossier, d'un montant estimatif de ${formattedAmount}. Dans le cas où l'aide notifiée au client est inférieure au montant de l'aide prévisionnelle, l'usager n'est pas lié par le devis et l'entreprise s'engage à proposer un devis rectificatif. Le client conserve alors un droit de rétractation d'une durée de quatorze jours à partir de la date de présentation du devis rectificatif. L'aide MaPrimeRénov' est conditionnelle et soumise à la conformité des pièces justificatives et informations déclarées par le bénéficiaire. En cas de fausse déclaration, de manoeuvre frauduleuse ou de changement du projet de travaux subventionné, le bénéficiaire s'expose au retrait et reversement de tout ou partie de la prime. Les services de l'Anah pourront faire procéder à tout contrôle des engagements et sanctionner le bénéficiaire et son mandataire éventuel des manquements constatés. Prime versée par l'ANAH d'un montant prévisionnel de ${formattedAmount} dans le cadre du dispositif MaPrimeRénov'</p>
-        
-        <p style="margin-top: 4mm;"><strong>Termes et conditions</strong><br/>Montant final versé par Effy en votre nom et pour votre compte dans le cadre du mandat que vous avez signé et du dispositif des Certificats d'Économies d'Énergie. Cette déduction est conditionnée à la réception, dans les délais de validité de votre demande de Prime Effy, d'un dossier conforme et validé par Effy, et des travaux contrôlés conformes en l'absence duquel vous devrez nous régler directement ce montant.</p>
       </div>
     </div>
   `;
 };
 
-// Generate the financial summary HTML with incentives data
-// Updated getFinancialSummary with hasOperations parameter
+// Now, let's create a new function for "Termes et conditions"
+const getTermes = (dealId?: string): string => {
+  const dealName = getDealName(dealId);
+  
+  return `
+    <!-- Termes et Conditions CEE -->
+    <div class="additional-section" style="margin-top: 8mm; background-color: #f9f9f9; border-left: 3px solid #6B7280;">
+      <h3 class="additional-title">Termes et conditions</h3>
+      <div class="additional-content">
+        <p>Montant final versé par ${dealName} en votre nom et pour votre compte dans le cadre du mandat que vous avez signé et du dispositif des Certificats d'Économies d'Énergie. Cette déduction est conditionnée à la réception, dans les délais de validité de votre demande de Prime ${dealName}, d'un dossier conforme et validé par ${dealName}, et des travaux contrôlés conformes en l'absence duquel vous devrez nous régler directement ce montant.</p>
+      </div>
+    </div>
+  `;
+};
+
+// Update the getFinancialSummary function to use the deal name instead of dealId
 const getFinancialSummary = (
   totals: FinancialTotals, 
   dealId?: string, 
   incentivesData?: IncentivesData | null,
   hasOperations: boolean = false
 ): string => {
+  // Get the deal name if dealId is provided
+  const dealName = getDealName(dealId);
+  
   // Base HTML code
   let html = `
     <!-- Financial Summary -->
@@ -650,19 +717,24 @@ const getFinancialSummary = (
   if (dealId && totals.primeCEE) {
     html += `
         <div class="finance-row primes">
-          <div class="finance-label">Prime ${dealId}</div>
+          <div class="finance-label">Prime ${dealName}</div>
           <div class="finance-value">-${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totals.primeCEE)}</div>
         </div>
     `;
     
-    // Only show Estimation MaPrimeRenov when operations exist
-    if (hasOperations && totals.primeRenov) {
-      html += `
-        <div class="finance-row primes">
-          <div class="finance-label">Estimation MaPrimeRenov'</div>
-          <div class="finance-value">-${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totals.primeRenov)}</div>
-        </div>
-      `;
+    // Only show Estimation MaPrimeRenov when operations exist AND Prime MPR is set to "Prime MPR deduite"
+    const showMaPrimeRenov = hasOperations && 
+    incentivesData && 
+    incentivesData.primeMPR === "Prime MPR deduite" && 
+    totals.primeRenov !== undefined;
+
+    if (showMaPrimeRenov && totals.primeRenov !== undefined) {
+    html += `
+    <div class="finance-row primes">
+    <div class="finance-label">Estimation MaPrimeRenov'</div>
+    <div class="finance-value">-${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totals.primeRenov)}</div>
+    </div>
+    `;
     }
   }
 
@@ -825,8 +897,9 @@ const getTermsAndConditions = (quoteNumber: string, formattedDate: string) => `
 const getDevisStyles = () => `
   .info-grid {
     display: flex;
-    gap: 10mm;
-    margin-bottom: 12mm;
+    gap: 5mm;
+    margin-bottom: 5mm;
+    margin-top: 5mm;
   }
   
   .info-box {
@@ -1319,7 +1392,8 @@ const getFinancingSection = (financingData: FinancingData) => {
   `;
 };
 
-// Update the main function to accept financingData parameter
+// In the generateDevisPDF function, let's make sure to separate these sections properly:
+
 export const generateDevisPDF = (
   tableItems: TableItem[],
   quoteNumber: string,
@@ -1331,14 +1405,45 @@ export const generateDevisPDF = (
   sizingNotes: SizingNote[] = [],
   financingData: FinancingData | null = null,
   incentivesData: IncentivesData | null = null,
-  // dpMairieData = null,
-  // indivisionData = null
+  clientDetails = {
+    street: '13 ROUTE DU POINT GAGNARD',
+    postalCode: '13014',
+    city: 'MARSEILLE',
+    cadastralParcel: '000 / ZA / 0061',
+    phoneNumber: '+336122336',
+    zone: 'ZONE H3',
+    houseType: 'Maison individuelle',
+    houseAge: 'de + 15 ans',
+    precarity: 'Modeste',
+    heatingType: 'Bois',
+    dwellingType: 'Maison individuelle',
+    clientNumber: '76-750595907',
+    subcontractor: {
+      name: 'BATI VAMOS',
+      address: '20 ROUTE DU TREMBLAY 91480 VARENNES JARCY',
+      leader: 'VAMOS ALEXANDRU MIHAI',
+      siret: '83275406300028',
+      decennialNumber: 'F53728Y',
+      qualifications: [
+        'RGE QualiPac/65461', 
+        'RGE QualiBois/65461', 
+        'RGE QualiSol/65461', 
+        'RGE QualiPv/65461'
+      ]
+    }
+  }
 ) => {
   // Check if operations exist in the tableItems
   const hasOperations = tableItems.some(item => 
     item.id?.startsWith('op-') || // Check by ID if available
     item.reference?.startsWith('BAR-TH-') // Check by operation reference code pattern
   );
+
+  // Check if we should show MaPrimeRenov conditions
+  const showMaPrimeRenovConditions = hasOperations && 
+                                    incentivesData && 
+                                    incentivesData.activiteMaPrimeRenov && 
+                                    totals.primeRenov !== undefined;
 
   // Open print window
   const printWindow = openPrintWindow(`Devis ${quoteNumber}`);
@@ -1363,21 +1468,15 @@ export const generateDevisPDF = (
           ${getCompanyHeader()}
           
           <!-- Main Content -->
-          <div class="content">
+          <div class="content" style="margin-top: 0mm;">
             <div class="main-content">
-              <!-- Document Title -->
-              <div class="document-title">
-                <div class="small-label">Proposition commerciale</div>
-                <h1 class="title">DEVIS</h1>
-                <div class="subtitle">N° <strong>${quoteNumber}</strong> | Créé le <strong>${formattedDate}</strong></div>
-              </div>
-              
-              ${getCustomerAndQuoteInfo(clientName, quoteNumber, formattedDate, dealId)}
+              ${getCustomerAndQuoteInfo(clientName, quoteNumber, formattedDate, dealId, clientDetails)}
               ${getProductsTable(tableItems)}
               ${getSizingNotesSection(sizingNotes)}
               ${getFinancialSummary(totals, dealId, incentivesData, hasOperations)}
               ${additionalInfo ? getAdditionalInfo(additionalInfo) : ''}
-              ${hasOperations && totals.primeRenov ? getMaPrimeRenovConditions(totals.primeRenov) : ''}
+              ${showMaPrimeRenovConditions && totals.primeRenov !== undefined ? getMaPrimeRenovConditions(totals.primeRenov) : ''}
+              ${getTermes(dealId)} <!-- Always include the Termes et conditions section -->
               ${financingData ? getFinancingSection(financingData) : ''}
               ${getSignatureSection(formattedDate)}
             </div>

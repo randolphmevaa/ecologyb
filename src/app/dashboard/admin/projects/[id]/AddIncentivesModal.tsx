@@ -1,6 +1,6 @@
 import { CurrencyDollarIcon, XMarkIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { IncentivesData } from "./types";
 
 // Product and Service types
@@ -78,61 +78,55 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
   tableItems = []
 }) => {
   // 1) Filter only the references you want.
-  //    If you need ALL references, remove the .includes(...) condition
   const operations = tableItems.filter(item => 
     item.reference && ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
   );
 
   // 2) Initialize the local state with any existing incentives
-  const [incentives, setIncentives] = useState<IncentivesData>({
-    ...currentIncentives,
-  });
-
-  // 3) Effect: for each operation, if we haven't already set primeCEE_x or primeMPR_x, 
-  //    prefill from currentIncentives.primeCEE / primeMPR (or default '0').
-  useEffect(() => {
-    const updatedIncentives = { ...incentives };
-
+  const [incentives, setIncentives] = useState<IncentivesData>(() => {
+    // Initial state calculation
+    const initialState = { ...currentIncentives };
+    
+    // Pre-populate operation-specific fields
     operations.forEach((op) => {
       const ceeKey = `primeCEE_${op.reference}`;
       const mprKey = `primeMPR_${op.reference}`;
-
-      if (!updatedIncentives[ceeKey]) {
-        // Pre-fill from the global primeCEE if it exists, else "0"
-        updatedIncentives[ceeKey] = currentIncentives.primeCEE || "0";
+      
+      // Only set if not already in currentIncentives
+      if (!initialState[ceeKey]) {
+        initialState[ceeKey] = currentIncentives.primeCEE || "0";
       }
-      if (!updatedIncentives[mprKey]) {
-        // Pre-fill from the global primeMPR if it exists, else "0"
-        updatedIncentives[mprKey] = currentIncentives.primeMPR || "0";
+      if (!initialState[mprKey]) {
+        initialState[mprKey] = currentIncentives.primeMPR || "0";
       }
     });
+    
+    return initialState;
+  });
 
-    setIncentives(updatedIncentives);
-  }, [operations]);
-
-  // Handle input changes, including checkboxes
+  // Handle regular input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-
+    
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
       setIncentives(prev => ({
         ...prev,
-        [name]: checked,
+        [name]: checked
       }));
     } else {
       setIncentives(prev => ({
         ...prev,
-        [name]: value,
+        [name]: value
       }));
     }
   };
 
-  // Toggle for maPrimeRenov
+  // Handle toggle for maPrimeRenov
   const handleToggleChange = () => {
     setIncentives(prev => ({
       ...prev,
-      activiteMaPrimeRenov: !prev.activiteMaPrimeRenov,
+      activiteMaPrimeRenov: !prev.activiteMaPrimeRenov
     }));
   };
 

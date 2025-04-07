@@ -75,7 +75,7 @@ export const companyInfo = {
     }
     
     .content {
-      padding: 25mm 18mm 35mm 18mm;
+      padding: 10mm 18mm 35mm 18mm;
     }
     
     /* Header Styling */
@@ -140,7 +140,7 @@ export const companyInfo = {
     
     .document-title {
       position: relative;
-      margin-bottom: 10mm;
+      margin-bottom: 0mm;
     }
     
     .small-label {
@@ -265,29 +265,24 @@ export const companyInfo = {
       }
     }
   `;
-  
+
   // Function to generate HTML for the company header
   export const getCompanyHeader = () => `
-    <!-- Header Elements -->
-    <div class="header-band"></div>
-    <div class="header-accent"></div>
-    
-    <!-- Logo and Company Info -->
-    <div class="logo-container">
-      <div class="logo-bg">
-        <div class="logo-text">E'B</div>
-      </div>
-    </div>
-    
-    <div class="company-info">
-      <div>${companyInfo.legalForm} ${companyInfo.name}</div>
-      <div>${companyInfo.address}</div>
-      <div>Tél: ${companyInfo.phone} | Email: ${companyInfo.email}</div>
-      <div>Site web: ${companyInfo.website}</div>
-    </div>
-    
-    <!-- Watermark -->
-    <div class="watermark">ECOLOGY'B</div>
+  <!-- Header Elements -->
+  <div class="header-band"></div>
+  <div class="header-accent"></div>
+
+  <!-- Logo and Certification Logo -->
+  <div class="logo-container" style="display: flex; align-items: center; background: none; border: none; box-shadow: none;">
+    <img src="/ecologyb.png" alt="ECOLOGY'B" style="max-height: 60px; max-width: 150px; object-fit: contain;" />
+  </div>
+
+  <div class="company-info" style="display: flex; justify-content: flex-end; align-items: center;">
+    <img src="/logos/qualipac.png" alt="RGE QualiPac" style="max-height: 60px; max-width: 150px; object-fit: contain;" />
+  </div>
+
+  <!-- Watermark -->
+  <div class="watermark">ECOLOGY'B</div>
   `;
   
   // Function to generate HTML for the company footer
