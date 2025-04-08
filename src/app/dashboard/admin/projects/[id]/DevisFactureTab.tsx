@@ -1576,7 +1576,7 @@ const DealSelectionModal: React.FC<{
 }> = ({ onClose, onSelect }) => {
   // Deals data - only "Deal vierge" and "Effy" as requested
   const deals = [
-    { id: 'VIERGE', name: 'Deal vierge', ratio: 0.0042 },
+    { id: 'CEE', name: 'Deal vierge', ratio: 0.0042 },
     { id: 'EFFY', name: 'EFFY', ratio: 0.0065 }
   ];
 
@@ -3443,7 +3443,7 @@ const DevisEditor: React.FC<{
     'EFFY': 0.0065,
     'ENGIE': 0.0058,
     'TOTAL': 0.0060,
-    'VIERGE': 0.0042,
+    'CEE': 0.0042,
   };
 
   // Calculate totals including the deal premium if applicable

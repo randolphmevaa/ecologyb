@@ -63,7 +63,7 @@ const getDealName = (dealId?: string): string => {
   
   // Map of deal IDs to their display names
   const dealMap: {[key: string]: string} = {
-    'VIERGE': 'Deal vierge',
+    'CEE': 'CEE',
     'EFFY': 'EFFY'
     // Add more deals here as needed
   };
