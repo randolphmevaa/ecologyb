@@ -66,15 +66,172 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
     setDropdownVisible(!dropdownVisible);
   };
 
-  // Add this function to download a file from the public directory
-// const downloadFileFromPublic = (filename: string) => {
-//   const link = document.createElement('a');
-//   link.href = `${process.env.PUBLIC_URL || ''}/${filename}`;
-//   link.download = filename;
-//   document.body.appendChild(link);
-//   link.click();
-//   document.body.removeChild(link);
-// };
+  // Add this new function to generate the Attestation mise en service ECOLOGY'B PDF
+  const generateAttestationMiseEnServicePDF = async () => {
+    try {
+      console.log("Generating Attestation mise en service ECOLOGY'B PDF");
+      
+      // Fetch the PDF template from public directory
+      const formUrl = `${process.env.PUBLIC_URL || ''}/Attestation_mise_en_service.pdf`;
+      const formPdfBytes = await fetch(formUrl).then(res => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+        }
+        return res.arrayBuffer();
+      });
+      
+      // Load the PDF document
+      const pdfDoc = await PDFDocument.load(formPdfBytes);
+      const form = pdfDoc.getForm();
+      
+      // Get all form fields for debugging
+      const fields = form.getFields();
+      console.log("Available PDF form fields:", fields.map(f => f.getName()));
+      
+      // Get current date and format it
+      // const currentDate = new Date();
+      // const formattedDate = currentDate.toLocaleDateString('fr-FR');
+      
+      // Use client data if available, otherwise use sample data
+      const clientData = {
+        nom: clientName || 'Dupont Jean',
+        adresse: indivisionData?.indivisaires[0]?.adresse || '15 rue de la République',
+        email: 'client@example.com',
+        phone: '06 12 34 56 78'
+      };
+      
+      // Use sous-traitant sample data (you would replace this with actual data)
+      const sousTraitantData = {
+        nom: 'Technique Services',
+        adresse: '10 avenue des Artisans, 75020 Paris',
+        email: 'contact@techniqueservices.fr',
+        siret: '12345678901234',
+        societe: 'TECHNIQUE SERVICES SARL'
+      };
+      
+      // Fill the client fields
+      try {
+        // Client full name
+        const fieldName = `nom, prénom`;
+        const field = form.getTextField(fieldName);
+        field.setText(clientData.nom);
+        console.log(`Successfully set ${fieldName} to "${clientData.nom}"`);
+      } catch (e) {
+        console.warn(`Failed to set nom, prénom field:`, e);
+      }
+      
+      try {
+        // Client address
+        const fieldName = `adresse`;
+        const field = form.getTextField(fieldName);
+        field.setText(clientData.adresse);
+        console.log(`Successfully set ${fieldName} to "${clientData.adresse}"`);
+      } catch (e) {
+        console.warn(`Failed to set adresse field:`, e);
+      }
+      
+      try {
+        // Client email
+        const fieldName = `e-mail`;
+        const field = form.getTextField(fieldName);
+        field.setText(clientData.email);
+        console.log(`Successfully set ${fieldName} to "${clientData.email}"`);
+      } catch (e) {
+        console.warn(`Failed to set e-mail field:`, e);
+      }
+      
+      try {
+        // Client phone
+        const fieldName = `phone`;
+        const field = form.getTextField(fieldName);
+        field.setText(clientData.phone);
+        console.log(`Successfully set ${fieldName} to "${clientData.phone}"`);
+      } catch (e) {
+        console.warn(`Failed to set phone field:`, e);
+      }
+      
+      // Fill the sous-traitant fields
+      try {
+        // Sous-traitant name
+        const fieldName = `sous-traitant-nom`;
+        const field = form.getTextField(fieldName);
+        field.setText(sousTraitantData.nom);
+        console.log(`Successfully set ${fieldName} to "${sousTraitantData.nom}"`);
+      } catch (e) {
+        console.warn(`Failed to set sous-traitant-nom field:`, e);
+      }
+      
+      try {
+        // Sous-traitant business name
+        const fieldName = `sous-traitant`;
+        const field = form.getTextField(fieldName);
+        field.setText(sousTraitantData.nom);
+        console.log(`Successfully set ${fieldName} to "${sousTraitantData.nom}"`);
+      } catch (e) {
+        console.warn(`Failed to set sous-traitant field:`, e);
+      }
+      
+      try {
+        // Sous-traitant address
+        const fieldName = `sous-traitant-adresse`;
+        const field = form.getTextField(fieldName);
+        field.setText(sousTraitantData.adresse);
+        console.log(`Successfully set ${fieldName} to "${sousTraitantData.adresse}"`);
+      } catch (e) {
+        console.warn(`Failed to set sous-traitant-adresse field:`, e);
+      }
+      
+      try {
+        // Sous-traitant email
+        const fieldName = `email`;
+        const field = form.getTextField(fieldName);
+        field.setText(sousTraitantData.email);
+        console.log(`Successfully set ${fieldName} to "${sousTraitantData.email}"`);
+      } catch (e) {
+        console.warn(`Failed to set email field:`, e);
+      }
+      
+      try {
+        // Company name
+        const fieldName = `société`;
+        const field = form.getTextField(fieldName);
+        field.setText(sousTraitantData.societe);
+        console.log(`Successfully set ${fieldName} to "${sousTraitantData.societe}"`);
+      } catch (e) {
+        console.warn(`Failed to set société field:`, e);
+      }
+      
+      try {
+        // SIRET number
+        const fieldName = `SIRET`;
+        const field = form.getTextField(fieldName);
+        field.setText(sousTraitantData.siret);
+        console.log(`Successfully set ${fieldName} to "${sousTraitantData.siret}"`);
+      } catch (e) {
+        console.warn(`Failed to set SIRET field:`, e);
+      }
+      
+      // IMPORTANT: Flatten the form to make fields uneditable
+      form.flatten();
+      console.log("Form flattened - all fields converted to regular content");
+      
+      // Save the PDF with security settings to make it uneditable
+      const pdfBytes = await pdfDoc.save({
+        updateFieldAppearances: true,
+        useObjectStreams: false
+      });
+      
+      // Create blob and open in new tab
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+      alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+    }
+  };
 
   // Call the appropriate PDF generator function based on selection
   const handleGenerateDevisPDF = () => {
@@ -103,13 +260,647 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
     setDropdownVisible(false);
   };
 
-  // Define the function with proper typing
-const generateAttestationIndivisionPDF = async (indivisionData: IndivisionData) => {
+  // Add this new function to generate the Attestation de Fin de Travaux PDF
+const generateAttestationFinTravauxPDF = async () => {
   try {
-    console.log("Generating PDF with data:", JSON.stringify(indivisionData, null, 2));
+    console.log("Generating Attestation de Fin de Travaux PDF");
     
     // Fetch the PDF template from public directory
-    const formUrl = `${process.env.PUBLIC_URL || ''}/attestation_indivision.pdf`;
+    const formUrl = `${process.env.PUBLIC_URL || ''}/AFT.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    const form = pdfDoc.getForm();
+    
+    // Get all form fields for debugging
+    const fields = form.getFields();
+    console.log("Available PDF form fields:", fields.map(f => f.getName()));
+    
+    // Get current date and format it
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString('fr-FR');
+    
+    // Use indivision data if available, otherwise use sample data
+    const personData = indivisionData?.indivisaires[0] || {
+      nom: 'Dupont',
+      prenom: 'Jean',
+      adresse: '15 rue de la République',
+      codePostal: '75001',
+      ville: 'Paris'
+    };
+    
+    // Fill the specified fields
+    
+    // Address
+    try {
+      const fieldName = `adresse`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.adresse);
+      console.log(`Successfully set ${fieldName} to "${personData.adresse}"`);
+    } catch (e) {
+      console.warn(`Failed to set address field:`, e);
+    }
+    
+    // Postal code
+    try {
+      const fieldName = `code`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.codePostal);
+      console.log(`Successfully set ${fieldName} to "${personData.codePostal}"`);
+    } catch (e) {
+      console.warn(`Failed to set postal code field:`, e);
+    }
+    
+    // Date
+    try {
+      const fieldName = `date`;
+      const field = form.getTextField(fieldName);
+      field.setText(formattedDate);
+      console.log(`Successfully set ${fieldName} to "${formattedDate}"`);
+    } catch (e) {
+      console.warn(`Failed to set date field:`, e);
+    }
+    
+    // Last name
+    try {
+      const fieldName = `nom`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.nom);
+      console.log(`Successfully set ${fieldName} to "${personData.nom}"`);
+    } catch (e) {
+      console.warn(`Failed to set nom field:`, e);
+    }
+    
+    // Land plot (parcelle) - using a default value
+    try {
+      const fieldName = `parcelle`;
+      const field = form.getTextField(fieldName);
+      const defaultParcelle = "AB-123456"; // Default value
+      field.setText(defaultParcelle);
+      console.log(`Successfully set ${fieldName} to "${defaultParcelle}"`);
+    } catch (e) {
+      console.warn(`Failed to set parcelle field:`, e);
+    }
+    
+    // Phone number - using a default value
+    try {
+      const fieldName = `phone`;
+      const field = form.getTextField(fieldName);
+      const defaultPhone = "06 12 34 56 78"; // Default value
+      field.setText(defaultPhone);
+      console.log(`Successfully set ${fieldName} to "${defaultPhone}"`);
+    } catch (e) {
+      console.warn(`Failed to set phone field:`, e);
+    }
+    
+    // First name
+    try {
+      const fieldName = `prénom`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.prenom);
+      console.log(`Successfully set ${fieldName} to "${personData.prenom}"`);
+    } catch (e) {
+      console.warn(`Failed to set prénom field:`, e);
+    }
+    
+    // City
+    try {
+      const fieldName = `ville`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.ville);
+      console.log(`Successfully set ${fieldName} to "${personData.ville}"`);
+    } catch (e) {
+      console.warn(`Failed to set ville field:`, e);
+    }
+    
+    // IMPORTANT: Flatten the form to make fields uneditable
+    form.flatten();
+    console.log("Form flattened - all fields converted to regular content");
+    
+    // Save the PDF with security settings to make it uneditable
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false
+    });
+    
+    // Create blob and open in new tab
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
+// Function to generate Attestation Simplifiée PDF
+const generateAttestationSimplifiee = async () => {
+  try {
+    console.log("Generating Attestation Simplifiée PDF");
+    
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/AS.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    const form = pdfDoc.getForm();
+    
+    // Get all form fields for debugging
+    const fields = form.getFields();
+    console.log("Available PDF form fields:", fields.map(f => f.getName()));
+    
+    // Get current date and format it
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString('fr-FR');
+    
+    // Use client data if available, otherwise use sample data
+    const personData = indivisionData?.indivisaires[0] || {
+      nom: clientName?.split(' ')[0] || 'Delacott',
+      prenom: clientName?.split(' ')[1] || 'Michel',
+      adresse: '15 rue de la République',
+      codePostal: '75001',
+      ville: 'Paris'
+    };
+    
+    // Fill the specified fields
+    
+    // Last name
+    try {
+      const fieldName = `Nom`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.nom);
+      console.log(`Successfully set ${fieldName} to "${personData.nom}"`);
+    } catch (e) {
+      console.warn(`Failed to set Nom field:`, e);
+    }
+    
+    // First name
+    try {
+      const fieldName = `Prenom`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.prenom);
+      console.log(`Successfully set ${fieldName} to "${personData.prenom}"`);
+    } catch (e) {
+      console.warn(`Failed to set Prenom field:`, e);
+    }
+    
+    // Address
+    try {
+      const fieldName = `Adresse`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.adresse);
+      console.log(`Successfully set ${fieldName} to "${personData.adresse}"`);
+    } catch (e) {
+      console.warn(`Failed to set Adresse field:`, e);
+    }
+    
+    // Postal code
+    try {
+      const fieldName = `CodePostal`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.codePostal);
+      console.log(`Successfully set ${fieldName} to "${personData.codePostal}"`);
+    } catch (e) {
+      console.warn(`Failed to set CodePostal field:`, e);
+    }
+    
+    // City
+    try {
+      const fieldName = `Commune`;
+      const field = form.getTextField(fieldName);
+      field.setText(personData.ville);
+      console.log(`Successfully set ${fieldName} to "${personData.ville}"`);
+    } catch (e) {
+      console.warn(`Failed to set Commune field:`, e);
+    }
+    
+    // Date
+    try {
+      const fieldName = `date`;
+      const field = form.getTextField(fieldName);
+      field.setText(formattedDate);
+      console.log(`Successfully set ${fieldName} to "${formattedDate}"`);
+    } catch (e) {
+      console.warn(`Failed to set date field:`, e);
+    }
+    
+    // IMPORTANT: Flatten the form to make fields uneditable
+    form.flatten();
+    console.log("Form flattened - all fields converted to regular content");
+    
+    // Save the PDF with security settings to make it uneditable
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false
+    });
+    
+    // Create blob and open in new tab
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
+  // Define the function with proper typing
+  const generateAttestationIndivisionPDF = async (indivisionData: IndivisionData) => {
+    try {
+      console.log("Generating PDF with data:", JSON.stringify(indivisionData, null, 2));
+      
+      // Fetch the PDF template from public directory
+      const formUrl = `${process.env.PUBLIC_URL || ''}/ATTESTATION_INDIV.pdf`;
+      const formPdfBytes = await fetch(formUrl).then(res => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+        }
+        return res.arrayBuffer();
+      });
+      
+      // Load the PDF document
+      const pdfDoc = await PDFDocument.load(formPdfBytes);
+      const form = pdfDoc.getForm();
+      
+      // Get all form fields for debugging
+      const fields = form.getFields();
+      console.log("Available PDF form fields:", fields.map(f => f.getName()));
+      
+      // Add proprietor type to the form
+      try {
+        const proprietaireTypeText = indivisionData.typeProprietaire === 'occupant' 
+          ? 'Propriétaire occupant' 
+          : 'Propriétaire bailleur';
+        
+        // Try multiple possible field names for proprietor type
+        const possibconstypeFields = ['Champ-type-proprietaire', 'type-proprietaire', 'proprietaire_type'];
+        for (const fieldName of possibconstypeFields) {
+          try {
+            const field = form.getTextField(fieldName);
+            field.setText(proprietaireTypeText);
+            console.log(`Successfully set ${fieldName} field`);
+            break;
+          } catch {
+            console.log(`Field ${fieldName} not found, trying next option`);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to set proprietaire type:', e);
+      }
+      
+      // Get current date and year info
+      const currentDate = new Date();
+      const formattedDate = currentDate.toLocaleDateString('fr-FR');
+      const currentYearLastTwoDigits = currentDate.getFullYear().toString().slice(-2);
+      
+      // Set MPR year field (last 2 digits of current year)
+      try {
+        const fieldName = `MPR20`;
+        const field = form.getTextField(fieldName);
+        field.setText(currentYearLastTwoDigits);
+        console.log(`Successfully set ${fieldName} to "${currentYearLastTwoDigits}"`);
+      } catch (e) {
+        console.warn(`Failed to set MPR20 field:`, e);
+      }
+      
+      // Set client number field - fixed TypeScript error
+      try {
+        const fieldName = `numero`;
+        const field = form.getTextField(fieldName);
+        // Use 123654 as default client number since clientNumber is not in the type
+        const clientNumber = "123654";
+        field.setText(clientNumber);
+        console.log(`Successfully set ${fieldName} to "${clientNumber}"`);
+      } catch (e) {
+        console.warn(`Failed to set numero field:`, e);
+      }
+      
+      // Set current date field
+      try {
+        const fieldName = `date`;
+        const field = form.getTextField(fieldName);
+        field.setText(formattedDate);
+        console.log(`Successfully set ${fieldName} to "${formattedDate}"`);
+      } catch (e) {
+        console.warn(`Failed to set date field:`, e);
+      }
+      
+      // Fill in fields for each indivisaire
+      indivisionData.indivisaires.forEach((indivisaire, index) => {
+        // Skip empty entries
+        if (!indivisaire.nom.trim() && !indivisaire.prenom.trim()) return;
+        
+        console.log(`Filling data for indivisaire ${index}:`, indivisaire);
+        
+        // Create combined address string
+        const combinedAddress = `${indivisaire.adresse}, ${indivisaire.codePostal} ${indivisaire.ville}`;
+        
+        // COMBINED FIELD 1: Combine nom, prénom et date de naissance
+        try {
+          const fieldName = `nom, prénom et date de naissance`;
+          const field = form.getTextField(fieldName);
+          const combinedValue = `${indivisaire.nom} ${indivisaire.prenom}, né(e) le ${indivisaire.dateNaissance}`;
+          field.setText(combinedValue);
+          console.log(`Successfully set ${fieldName} to "${combinedValue}"`);
+        } catch (e) {
+          console.warn(`Failed to set combined name field for indivisaire ${index}:`, e);
+        }
+        
+        // COMBINED FIELD 2: Combine address fields for lieu de résidence principale
+        try {
+          const fieldName = `lieu de résidence principale`;
+          const field = form.getTextField(fieldName);
+          field.setText(combinedAddress);
+          console.log(`Successfully set ${fieldName} to "${combinedAddress}"`);
+        } catch (e) {
+          console.warn(`Failed to set combined address field for indivisaire ${index}:`, e);
+        }
+        
+        // COMBINED FIELD 3: Address for indivision property field for this indivisaire
+        try {
+          const fieldName = `adresse du bien appartenant à l'indivision ${index + 1}`;
+          const field = form.getTextField(fieldName);
+          field.setText(combinedAddress);
+          console.log(`Successfully set ${fieldName} to "${combinedAddress}"`);
+        } catch (e) {
+          console.warn(`Failed to set indivision address field ${index + 1}:`, e);
+        }
+        
+        // Set Nom, prénom field
+        try {
+          const fieldName = `Nom, prénom`;
+          const field = form.getTextField(fieldName);
+          const fullName = `${indivisaire.nom} ${indivisaire.prenom}`;
+          field.setText(fullName);
+          console.log(`Successfully set ${fieldName} to "${fullName}"`);
+        } catch (e) {
+          console.warn(`Failed to set Nom, prénom field:`, e);
+        }
+        
+        // Set lieu field with ville
+        try {
+          const fieldName = `lieu`;
+          const field = form.getTextField(fieldName);
+          field.setText(indivisaire.ville);
+          console.log(`Successfully set ${fieldName} to "${indivisaire.ville}"`);
+        } catch (e) {
+          console.warn(`Failed to set lieu field:`, e);
+        }
+      });
+      
+      // IMPORTANT: Flatten the form to make fields uneditable
+      form.flatten();
+      console.log("Form flattened - all fields converted to regular content");
+      
+      // Save the PDF with security settings to make it uneditable
+      const pdfBytes = await pdfDoc.save({
+        updateFieldAppearances: true,
+        useObjectStreams: false
+      });
+      
+      // Create blob and open in new tab
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+      alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+    }
+  };
+
+  // Add this new function to generate the Attestation Propriétaire bailleur PDF
+const generateAttestationProprietaireBailleurPDF = async (indivisionData: IndivisionData) => {
+  try {
+    console.log("Generating Attestation Propriétaire bailleur PDF with data:", JSON.stringify(indivisionData, null, 2));
+    
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/ATTESTATION_PROP.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    const form = pdfDoc.getForm();
+    
+    // Get all form fields for debugging
+    const fields = form.getFields();
+    console.log("Available PDF form fields:", fields.map(f => f.getName()));
+    
+    // Get current date and year info
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString('fr-FR');
+    
+    // Use the first indivisaire's data if available
+    const firstIndivisaire = indivisionData.indivisaires[0] || {
+      nom: '',
+      prenom: '',
+      dateNaissance: '',
+      adresse: '',
+      codePostal: '',
+      ville: ''
+    };
+    
+    // Fill the specified fields
+    
+    // Name, first name and birth date
+    try {
+      const fieldName = `nom, prénom`;
+      const field = form.getTextField(fieldName);
+      const combinedValue = `${firstIndivisaire.nom} ${firstIndivisaire.prenom}, né(e) le ${firstIndivisaire.dateNaissance}`;
+      field.setText(combinedValue);
+      console.log(`Successfully set ${fieldName} to "${combinedValue}"`);
+    } catch (e) {
+      console.warn(`Failed to set nom et prénom et date de naissance field:`, e);
+    }
+    
+    // MPR field
+    try {
+      const fieldName = `MPR`;
+      const field = form.getTextField(fieldName);
+      const mprNumber = "123654"; // Use fallback as specified
+      field.setText(mprNumber);
+      console.log(`Successfully set ${fieldName} to "${mprNumber}"`);
+    } catch (e) {
+      console.warn(`Failed to set MPR field:`, e);
+    }
+    
+    // Address line 1
+    try {
+      const fieldName = `adresse complète avec le numéro d'appart`;
+      const field = form.getTextField(fieldName);
+      const address = firstIndivisaire.adresse;
+      field.setText(address);
+      console.log(`Successfully set ${fieldName} to "${address}"`);
+    } catch (e) {
+      console.warn(`Failed to set address field:`, e);
+    }
+    
+    // Address line 2
+    try {
+      const fieldName = `adresse complète avec numéro d'appart suite`;
+      const field = form.getTextField(fieldName);
+      const addressLine2 = `${firstIndivisaire.codePostal} ${firstIndivisaire.ville}`;
+      field.setText(addressLine2);
+      console.log(`Successfully set ${fieldName} to "${addressLine2}"`);
+    } catch (e) {
+      console.warn(`Failed to set address line 2 field:`, e);
+    }
+    
+    // City
+    try {
+      const fieldName = `ville`;
+      const field = form.getTextField(fieldName);
+      field.setText(firstIndivisaire.ville);
+      console.log(`Successfully set ${fieldName} to "${firstIndivisaire.ville}"`);
+    } catch (e) {
+      console.warn(`Failed to set ville field:`, e);
+    }
+    
+    // Date
+    try {
+      const fieldName = `date`;
+      const field = form.getTextField(fieldName);
+      field.setText(formattedDate);
+      console.log(`Successfully set ${fieldName} to "${formattedDate}"`);
+    } catch (e) {
+      console.warn(`Failed to set date field:`, e);
+    }
+    
+    // IMPORTANT: Flatten the form to make fields uneditable
+    form.flatten();
+    console.log("Form flattened - all fields converted to regular content");
+    
+    // Save the PDF with security settings to make it uneditable
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false,
+      // Removed unsupported permissions property
+    });
+    
+    // Create blob and open in new tab
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
+// Function to generate Cession de créance de RENOLIB PDF
+const generateCessionCreanceRenolibPDF = async () => {
+  try {
+    console.log("Generating Cession de créance de RENOLIB PDF");
+    
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/Cession_RENOLIB.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    const form = pdfDoc.getForm();
+    
+    // Get all form fields for debugging
+    const fields = form.getFields();
+    console.log("Available PDF form fields:", fields.map(f => f.getName()));
+    
+    // Use client data if available, otherwise use sample data
+    const personName = clientName || 'Dupont Jean';
+    
+    // Use quote data
+    const amount = totals.totalTTC ? `${totals.totalTTC.toFixed(2)} €` : '5000.00 €';
+    const quoteNum = quoteNumber || 'DEVIS-2025-001';
+    
+    // Fill the specified fields
+    
+    // Client name
+    try {
+      const fieldName = `Nom`;
+      const field = form.getTextField(fieldName);
+      field.setText(personName);
+      console.log(`Successfully set ${fieldName} to "${personName}"`);
+    } catch (e) {
+      console.warn(`Failed to set Nom field:`, e);
+    }
+    
+    // Amount
+    try {
+      const fieldName = `montant`;
+      const field = form.getTextField(fieldName);
+      field.setText(amount);
+      console.log(`Successfully set ${fieldName} to "${amount}"`);
+    } catch (e) {
+      console.warn(`Failed to set montant field:`, e);
+    }
+    
+    // Quote number
+    try {
+      const fieldName = `numero-devis`;
+      const field = form.getTextField(fieldName);
+      field.setText(quoteNum);
+      console.log(`Successfully set ${fieldName} to "${quoteNum}"`);
+    } catch (e) {
+      console.warn(`Failed to set numero-devis field:`, e);
+    }
+    
+    // IMPORTANT: Flatten the form to make fields uneditable
+    form.flatten();
+    console.log("Form flattened - all fields converted to regular content");
+    
+    // Save the PDF with security settings to make it uneditable
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false
+    });
+    
+    // Create blob and open in new tab
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
+// Function to generate DP Mairie PDF
+const generateDPMairiePDF = async () => {
+  try {
+    console.log("Generating DP Mairie PDF");
+    
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/DP_Mairie.pdf`;
     const formPdfBytes = await fetch(formUrl).then(res => {
       if (!res.ok) {
         throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
@@ -120,161 +911,328 @@ const generateAttestationIndivisionPDF = async (indivisionData: IndivisionData) 
     // Load the PDF document
     const pdfDoc = await PDFDocument.load(formPdfBytes);
     
-    // Get the form from the document
-    const form = pdfDoc.getForm();
-    
-    // Get all form fields to debug them
-    const fields = form.getFields();
-    console.log("Available PDF form fields:", fields.map(f => f.getName()));
-    
-    // Add proprietor type to the form
-    try {
-      const proprietaireTypeText = indivisionData.typeProprietaire === 'occupant' 
-        ? 'Propriétaire occupant' 
-        : 'Propriétaire bailleur';
-      
-      console.log("Setting type proprietaire to:", proprietaireTypeText);
-      
-      // Try multiple possible field names for proprietor type
-      const possibleTypeFields = ['Champ-type-proprietaire', 'type-proprietaire', 'proprietaire_type'];
-      for (const fieldName of possibleTypeFields) {
-        try {
-          const field = form.getTextField(fieldName);
-          field.setText(proprietaireTypeText);
-          console.log(`Successfully set ${fieldName} field`);
-          break;
-        } catch {
-          console.log(`Field ${fieldName} not found, trying next option`);
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to set proprietaire type:', e);
-    }
-    
-    // Fill in fields for each indivisaire - FIXED TYPING ISSUES HERE
-    indivisionData.indivisaires.forEach((indivisaire, index) => {
-      // Skip empty entries
-      if (!indivisaire.nom.trim() && !indivisaire.prenom.trim()) return;
-      
-      console.log(`Filling data for indivisaire ${index}:`, indivisaire);
-      
-      // Use explicit field access instead of dynamic indexing to avoid TypeScript errors
-      const baseOffset = index * 10;
-      
-      // Try to set nom field
-      try {
-        const fieldName = `Champ-texte${baseOffset}`;
-        const field = form.getTextField(fieldName);
-        field.setText(indivisaire.nom);
-        console.log(`Successfully set ${fieldName} to "${indivisaire.nom}"`);
-      } catch {
-        console.log(`Failed to set nom field for indivisaire ${index}`);
-      }
-      
-      // Try to set prenom field
-      try {
-        const fieldName = `Champ-texte${baseOffset + 1}`;
-        const field = form.getTextField(fieldName);
-        field.setText(indivisaire.prenom);
-        console.log(`Successfully set ${fieldName} to "${indivisaire.prenom}"`);
-      } catch {
-        console.log(`Failed to set prenom field for indivisaire ${index}`);
-      }
-      
-      // Try to set dateNaissance field
-      try {
-        const fieldName = `Champ-texte${baseOffset + 3}`;
-        const field = form.getTextField(fieldName);
-        field.setText(indivisaire.dateNaissance);
-        console.log(`Successfully set ${fieldName} to "${indivisaire.dateNaissance}"`);
-      } catch  {
-        console.log(`Failed to set dateNaissance field for indivisaire ${index}`);
-      }
-      
-      // Try to set adresse field
-      try {
-        const fieldName = `Champ-texte${baseOffset + 4}`;
-        const field = form.getTextField(fieldName);
-        field.setText(indivisaire.adresse);
-        console.log(`Successfully set ${fieldName} to "${indivisaire.adresse}"`);
-      } catch  {
-        console.log(`Failed to set adresse field for indivisaire ${index}`);
-      }
-      
-      // Try to set codePostal field
-      try {
-        const fieldName = `Champ-texte${baseOffset + 5}`;
-        const field = form.getTextField(fieldName);
-        field.setText(indivisaire.codePostal);
-        console.log(`Successfully set ${fieldName} to "${indivisaire.codePostal}"`);
-      } catch  {
-        console.log(`Failed to set codePostal field for indivisaire ${index}`);
-      }
-      
-      // Try to set ville field
-      try {
-        const fieldName = `Champ-texte${baseOffset + 6}`;
-        const field = form.getTextField(fieldName);
-        field.setText(indivisaire.ville);
-        console.log(`Successfully set ${fieldName} to "${indivisaire.ville}"`);
-      } catch {
-        console.log(`Failed to set ville field for indivisaire ${index}`);
-      }
+    // Save the PDF
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false
     });
     
-    // Save the PDF
-    const pdfBytes = await pdfDoc.save();
-    
-    // Create a blob and open in a new tab instead of downloading
+    // Create blob and open in new tab
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const blobUrl = URL.createObjectURL(blob);
-    
-    console.log("Opening PDF in new tab");
     window.open(blobUrl, '_blank');
     
   } catch (error) {
-    // Fixed error handling
     console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
+// Function to generate DAACT PDF
+const generateDAACTPDF = async () => {
+  try {
+    console.log("Generating DAACT PDF");
     
-    let errorMessage = 'Une erreur inconnue est survenue';
-    if (error instanceof Error) {
-      errorMessage = error.message;
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/DAACT.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    
+    // Save the PDF
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false
+    });
+    
+    // Create blob and open in new tab
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
+// Function to generate ENEDIS PDF
+const generateENEDISPDF = async () => {
+  try {
+    console.log("Generating ENEDIS PDF");
+    
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/Enedis_.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    
+    // Save the PDF
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false
+    });
+    
+    // Create blob and open in new tab
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
+// Function to generate ECO-PTZ PDF
+const generateECOPTZPDF = async () => {
+  try {
+    console.log("Generating ECO-PTZ PDF");
+    
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/ECO-PTZ.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    const form = pdfDoc.getForm();
+    
+    // Get all form fields for debugging
+    const fields = form.getFields();
+    console.log("Available PDF form fields:", fields.map(f => f.getName()));
+    
+    // Get current date and format it
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString('fr-FR');
+    
+    // Fill date field
+    try {
+      const fieldName = `date`;
+      const field = form.getTextField(fieldName);
+      field.setText(formattedDate);
+      console.log(`Successfully set ${fieldName} to "${formattedDate}"`);
+    } catch (e) {
+      console.warn(`Failed to set date field:`, e);
     }
     
+    // IMPORTANT: Flatten the form to make fields uneditable
+    form.flatten();
+    console.log("Form flattened - all fields converted to regular content");
+    
+    // Save the PDF with security settings to make it uneditable
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false
+    });
+    
+    // Create blob and open in new tab
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
+// Function to generate Mandat de perception de fond EFFY PDF
+const generateMandatPerceptionEffyPDF = async () => {
+  try {
+    console.log("Generating Mandat de perception de fond EFFY PDF");
+    
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/Checklist_Effy.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    
+    // Save the PDF
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false
+    });
+    
+    // Create blob and open in new tab
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
+  }
+};
+
+// Function to generate CGV (Conditions générales de vente) PDF
+const generateCGVPDF = async () => {
+  try {
+    console.log("Generating CGV PDF");
+    
+    // Fetch the PDF template from public directory
+    const formUrl = `${process.env.PUBLIC_URL || ''}/CGV.pdf`;
+    const formPdfBytes = await fetch(formUrl).then(res => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF template: ${res.status} ${res.statusText}`);
+      }
+      return res.arrayBuffer();
+    });
+    
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    
+    // Save the PDF
+    const pdfBytes = await pdfDoc.save({
+      updateFieldAppearances: true,
+      useObjectStreams: false
+    });
+    
+    // Create blob and open in new tab
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
     alert('Une erreur est survenue lors de la génération du PDF: ' + errorMessage);
   }
 };
 
   // Function to generate other document types
-  const generateDocument = (documentType: string) => {
-    switch (documentType) {
-      case 'dp-mairie':
-        // Generate DP Mairie document
-        alert(`Génération de la DP Mairie en cours...`);
-        break;
-      case 'daact':
-        // Generate DAACT document
-        alert(`Génération de la Déclaration attestant l'achèvement et la conformité des travaux (DAACT) en cours...`);
-        break;
-      case 'attestation-proprietaire-bailleur':
-        // Generate Attestation Propriétaire bailleur
-        alert(`Génération de l'Attestation Propriétaire bailleur en cours...`);
-        break;
-      case 'attestation-indivision':
+const generateDocument = (documentType: string) => {
+  switch (documentType) {
+    case 'dp-mairie':
+      // Generate DP Mairie document
+      generateDPMairiePDF();
+      break;
+    case 'daact':
+      // Generate DAACT document
+      generateDAACTPDF();
+      break;
+    case 'enedis':
+      // Generate ENEDIS document
+      generateENEDISPDF();
+      break;
+    case 'eco-ptz':
+      // Generate ECO-PTZ document
+      generateECOPTZPDF();
+      break;
+    case 'attestation-proprietaire-bailleur':
+      // Generate Attestation Propriétaire bailleur
+      if (indivisionData) {
+        console.log("Generating attestation propriétaire bailleur with data:", indivisionData);
+        generateAttestationProprietaireBailleurPDF(indivisionData);
+      } else {
+        // Use sample data until API is available
+        const sampleIndivisionData = {
+          typeProprietaire: 'bailleur',
+          indivisaires: [
+            {
+              nom: 'Martin',
+              prenom: 'Pierre',
+              dateNaissance: '10/03/1975',
+              adresse: '15 avenue Victor Hugo',
+              codePostal: '75016',
+              ville: 'Paris'
+            }
+          ]
+        };
+        console.log("Using sample proprietaire bailleur data:", sampleIndivisionData);
+        generateAttestationProprietaireBailleurPDF(sampleIndivisionData as IndivisionData);
+      }
+      break;
+    case 'attestation-indivision':
       // Generate filled Attestation d'indivision
       if (indivisionData) {
         console.log("Generating attestation d'indivision with data:", indivisionData);
         generateAttestationIndivisionPDF(indivisionData);
       } else {
-        console.error("No indivision data available");
-        alert('Données d\'indivision non disponibles. Veuillez d\'abord configurer l\'indivision.');
+        // Use sample data until API is available
+        const sampleIndivisionData = {
+          typeProprietaire: 'occupant',
+          indivisaires: [
+            {
+              nom: 'Dupont',
+              prenom: 'Jean',
+              dateNaissance: '01/01/1980',
+              adresse: '10 rue de la Paix',
+              codePostal: '75001',
+              ville: 'Paris'
+            },
+            {
+              nom: 'Durand',
+              prenom: 'Marie',
+              dateNaissance: '15/05/1982',
+              adresse: '10 rue de la Paix',
+              codePostal: '75001',
+              ville: 'Paris'
+            }
+          ]
+        };
+        console.log("Using sample indivision data:", sampleIndivisionData);
+        generateAttestationIndivisionPDF(sampleIndivisionData as IndivisionData);
       }
       break;
-        default:
-          alert(`Génération de document "${documentType}" à implémenter.`);
-    }
-    setDropdownVisible(false);
-  };
+    case 'Attestation de Fin des Travaux': // Make sure this matches the ID in the items array
+      // Generate Attestation de Fin des Travaux
+      generateAttestationFinTravauxPDF();
+      break;
+    case 'Attestation mise en service ECOLOGY\'B': // Add the new case
+      // Generate Attestation mise en service ECOLOGY'B
+      generateAttestationMiseEnServicePDF();
+      break;
+    case 'Attestation Simplifiée': // Add the new Attestation Simplifiée case
+      // Generate Attestation Simplifiée
+      generateAttestationSimplifiee();
+      break;
+    case 'Cession de créance de RENOLIB': // Add the new Cession de créance case
+      // Generate Cession de créance de RENOLIB
+      generateCessionCreanceRenolibPDF();
+      break;
+    case 'Conditions générales de vente':
+      // Generate CGV document
+      generateCGVPDF();
+      break;
+    case 'Mandat de perception de fond EFFY':
+      // Generate Mandat de perception de fond EFFY document
+      generateMandatPerceptionEffyPDF();
+      break;
+    default:
+      alert(`Génération de document "${documentType}" à implémenter.`);
+  }
+  setDropdownVisible(false);
+};
+
+
 
   // Group documents by category for better organization
   const documentCategories = [
@@ -297,14 +1255,16 @@ const generateAttestationIndivisionPDF = async (indivisionData: IndivisionData) 
         { id: "dossier-cee", label: "Dossier CEE", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Dossier CEE") },
         { id: "courrier-rac", label: "Courrier de prise en charge du RAC", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Courrier de prise en charge du RAC") },
         { id: "attestation-fin", label: "Attestation de Fin des Travaux", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Attestation de Fin des Travaux") },
-        { id: "attestation-mise-service", label: "Attestation mise en service ECOLOGY'B", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Attestation mise en service ECOLOGY'B") }
+        { id: "attestation-mise-service", label: "Attestation mise en service ECOLOGY'B", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Attestation mise en service ECOLOGY'B") },
+        { id: "attestation-simplifiee", label: "Attestation Simplifiée", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Attestation Simplifiée") },
+        { id: "enedis", label: "ENEDIS", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("enedis") }
       ]
     },
     {
       name: "Documents financiers",
       items: [
         { id: "cession-creance", label: "Cession de créance de RENOLIB", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Cession de créance de RENOLIB") },
-        { id: "eco-ptz", label: "ECO-PTZ", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("ECO-PTZ") },
+        { id: "eco-ptz", label: "ECO-PTZ", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("eco-ptz") },
         { id: "mandat-perception", label: "Mandat de perception de fond EFFY", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Mandat de perception de fond EFFY") },
         { id: "cgv", label: "Conditions générales de vente", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Conditions générales de vente") }
       ]
@@ -333,32 +1293,31 @@ const generateAttestationIndivisionPDF = async (indivisionData: IndivisionData) 
     documentCategories.push(dpMairieCategory);
   }
 
-  // Add Indivision category if indivisionData exists
-  if (indivisionData) {
-    const indivisionCategory = {
-      name: "Documents d'indivision",
-      items: [
-        { 
-          id: "attestation-indivision", 
-          label: "Attestation d'indivision", 
-          icon: <UserGroupIcon className="h-4 w-4 text-orange-500" />, 
-          action: () => generateDocument("attestation-indivision") 
-        }
-      ]
-    };
-    
-    // Add Attestation Propriétaire bailleur if typeProprietaire is "bailleur"
-    if (indivisionData.typeProprietaire === "bailleur") {
-      indivisionCategory.items.push({
-        id: "attestation-proprietaire-bailleur", 
-        label: "Attestation Propriétaire bailleur", 
-        icon: <DocumentCheckIcon className="h-4 w-4 text-orange-500" />, 
-        action: () => generateDocument("attestation-proprietaire-bailleur")
-      });
+  // Always add the indivision category to documentCategories
+const indivisionCategory = {
+  name: "Documents d'indivision",
+  items: [
+    { 
+      id: "attestation-indivision", 
+      label: "Attestation d'indivision", 
+      icon: <UserGroupIcon className="h-4 w-4 text-orange-500" />, 
+      action: () => generateDocument("attestation-indivision") 
     }
-    
-    documentCategories.push(indivisionCategory);
-  }
+  ]
+};
+
+// Only conditionally add the proprietaire-bailleur document if we know it's needed
+if (indivisionData?.typeProprietaire === "bailleur") {
+  indivisionCategory.items.push({
+    id: "attestation-proprietaire-bailleur", 
+    label: "Attestation Propriétaire bailleur", 
+    icon: <DocumentCheckIcon className="h-4 w-4 text-orange-500" />, 
+    action: () => generateDocument("attestation-proprietaire-bailleur")
+  });
+}
+
+// Always add this category
+documentCategories.push(indivisionCategory);
 
   return (
     <div className="relative" ref={dropdownRef}>
