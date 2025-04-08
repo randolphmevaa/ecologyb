@@ -1189,17 +1189,41 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({
   // If isEditMode=true, we skip the "select from existing" flow.
 
   const [selectedSubcontractor, setSelectedSubcontractor] = useState<string>("");
-
   const [qualification, setQualification] = useState<string>("");
+  
+  // Searchable dropdown state
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Filter subcontractors based on search query
+  const filteredSubcontractors = subcontractors.filter(sc => 
+    sc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    sc.siret.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Possibly hide the "select an existing subcontractor" step if isEditMode
   // ...
 
   // Handlers below
-  const handleSelectSubcontractor = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSelectSubcontractor = (selected: string) => {
     // If user picks a known subcontractor
-    const selected = e.target.value;
     setSelectedSubcontractor(selected);
+    setIsDropdownOpen(false);
 
     if (selected) {
       const sub = subcontractors.find(sc => sc.id === selected);
@@ -1325,7 +1349,7 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({
         {/* Body */}
         <div className="p-6 max-h-[80vh] overflow-y-auto">
           <form onSubmit={handleSubmit}>
-            {/* If we are editing an existing sub, skip the “Add New” checkbox + select. */}
+            {/* If we are editing an existing sub, skip the "Add New" checkbox + select. */}
             {!isEditMode && (
               <div className="mb-6">
                 <div className="flex items-center mb-4">
@@ -1341,7 +1365,7 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({
                   </label>
                 </div>
 
-                {/* If not “addNew”, show the dropdown to pick an existing sub */}
+                {/* If not "addNew", show the dropdown to pick an existing sub */}
                 {!addNew && (
                   <div className="mb-4">
                     <label
@@ -1350,17 +1374,79 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({
                     >
                       Sélectionnez un sous-traitant
                     </label>
-                    <select
-                      id="subcontractor"
-                      value={selectedSubcontractor}
-                      onChange={handleSelectSubcontractor}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    >
-                      <option value="">-- Sélectionnez un sous-traitant --</option>
-                      {subcontractors.map(sc => (
-                        <option key={sc.id} value={sc.id}>{sc.name}</option>
-                      ))}
-                    </select>
+                    
+                    {/* Custom searchable dropdown */}
+                    <div className="relative" ref={dropdownRef}>
+                      <div 
+                        className="flex items-center justify-between w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition cursor-pointer"
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      >
+                        <div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                          {selectedSubcontractor 
+                            ? subcontractors.find(sc => sc.id === selectedSubcontractor)?.name || '-- Sélectionnez un sous-traitant --'
+                            : '-- Sélectionnez un sous-traitant --'
+                          }
+                        </div>
+                        <svg 
+                          className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`} 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24" 
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      </div>
+                      
+                      {isDropdownOpen && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden">
+                          <div className="sticky top-0 bg-white border-b border-gray-300">
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg className="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                                </svg>
+                              </div>
+                              <input
+                                type="text"
+                                id="subcontractorSearch"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Rechercher par nom ou SIRET..."
+                                className="w-full pl-10 py-2.5 px-3 border-0 text-sm focus:ring-0 focus:outline-none"
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="max-h-60 overflow-y-auto">
+                            {filteredSubcontractors.length === 0 ? (
+                              <div className="p-3 text-gray-500 text-center">Aucun sous-traitant trouvé</div>
+                            ) : (
+                              <ul>
+                                <li 
+                                  className="p-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100"
+                                  onClick={() => handleSelectSubcontractor("")}
+                                >
+                                  -- Sélectionnez un sous-traitant --
+                                </li>
+                                {filteredSubcontractors.map(sc => (
+                                  <li 
+                                    key={sc.id} 
+                                    className={`p-2.5 hover:bg-blue-50 cursor-pointer ${selectedSubcontractor === sc.id ? 'bg-blue-100' : ''}`}
+                                    onClick={() => handleSelectSubcontractor(sc.id)}
+                                  >
+                                    <div className="font-medium">{sc.name}</div>
+                                    <div className="text-xs text-gray-500">SIRET: {sc.siret}</div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1452,7 +1538,7 @@ const AddSubcontractorModal: React.FC<AddSubcontractorModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Qualifications RGE
               </label>
-              {/* Only allow adding/removing if “addNew” or “isEditMode” */}
+              {/* Only allow adding/removing if "addNew" or "isEditMode" */}
               {(addNew || isEditMode) && (
                 <div className="flex gap-2 mb-2">
                   <input
@@ -2713,6 +2799,26 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSave }) =>
     subcontractor: ''
   });
   
+  // Add state for product dropdown
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const newValue = type === 'checkbox' 
@@ -2724,9 +2830,17 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSave }) =>
     setProduct({ ...product, [name]: newValue });
   };
 
-  const handleSelectProduct = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
+  // Filter products based on search query
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    product.reference.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSelectProduct = (selectedId: string) => {
     if (!selectedId) return;
+    
+    setSelectedProductId(selectedId);
+    setIsDropdownOpen(false);
     
     const selectedProduct = products.find(p => p.id === selectedId);
     if (selectedProduct) {
@@ -2893,16 +3007,80 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSave }) =>
                 <label htmlFor="selectProduct" className="block text-sm font-medium text-gray-700 mb-1">
                   Sélectionner un produit (optionnel)
                 </label>
-                <select
-                  id="selectProduct"
-                  onChange={handleSelectProduct}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                >
-                  <option value="">-- Sélectionnez un produit --</option>
-                  {products.map(product => (
-                    <option key={product.id} value={product.id}>{product.name}</option>
-                  ))}
-                </select>
+                <div className="relative" ref={dropdownRef}>
+                  <div 
+                    className="flex items-center justify-between w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition cursor-pointer"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  >
+                    <div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {selectedProductId 
+                        ? products.find(p => p.id === selectedProductId)?.name || '-- Sélectionnez un produit --'
+                        : '-- Sélectionnez un produit --'
+                      }
+                    </div>
+                    <svg 
+                      className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24" 
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                  
+                  {isDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden">
+                      <div className="sticky top-0 bg-white border-b border-gray-300">
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                            </svg>
+                          </div>
+                          <input
+                            type="text"
+                            id="productSearch"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Rechercher par nom ou référence..."
+                            className="w-full pl-10 py-2.5 px-3 border-0 text-sm focus:ring-0 focus:outline-none"
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredProducts.length === 0 ? (
+                          <div className="p-3 text-gray-500 text-center">Aucun produit trouvé</div>
+                        ) : (
+                          <ul>
+                            <li 
+                              className="p-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100"
+                              onClick={() => {
+                                setSelectedProductId('');
+                                setIsDropdownOpen(false);
+                              }}
+                            >
+                              -- Sélectionnez un produit --
+                            </li>
+                            {filteredProducts.map(product => (
+                              <li 
+                                key={product.id} 
+                                className={`p-2.5 hover:bg-blue-50 cursor-pointer ${selectedProductId === product.id ? 'bg-blue-100' : ''}`}
+                                onClick={() => handleSelectProduct(product.id)}
+                              >
+                                <div className="font-medium">{product.name}</div>
+                                <div className="text-xs text-gray-500">Réf: {product.reference}</div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div>
@@ -3098,6 +3276,32 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ onClose, onSave }) =>
     showDescription: true
   });
 
+  // Add state for searchable dropdown
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Filter services based on search query
+  const filteredServices = serviceOptions.filter(service => 
+    service.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    service.reference.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const newValue = type === 'checkbox' 
@@ -3109,9 +3313,14 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ onClose, onSave }) =>
     setService({ ...service, [name]: newValue });
   };
 
-  const handleSelectService = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
-    if (!selectedId) return;
+  const handleSelectService = (selectedId: string) => {
+    if (!selectedId) {
+      setSelectedServiceId('');
+      return;
+    }
+    
+    setSelectedServiceId(selectedId);
+    setIsDropdownOpen(false);
     
     const selectedService = serviceOptions.find(s => s.id === selectedId);
     if (selectedService) {
@@ -3191,16 +3400,79 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ onClose, onSave }) =>
               <label htmlFor="selectService" className="block text-sm font-medium text-gray-700 mb-1">
                 Sélectionner une prestation (optionnel)
               </label>
-              <select
-                id="selectService"
-                onChange={handleSelectService}
-                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              >
-                <option value="">-- Sélectionnez une prestation --</option>
-                {serviceOptions.map((serviceOption) => (
-                  <option key={serviceOption.id} value={serviceOption.id}>{serviceOption.name}</option>
-                ))}
-              </select>
+              
+              {/* Custom searchable dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <div 
+                  className="flex items-center justify-between w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition cursor-pointer"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  <div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                    {selectedServiceId 
+                      ? serviceOptions.find(s => s.id === selectedServiceId)?.name || '-- Sélectionnez une prestation --'
+                      : '-- Sélectionnez une prestation --'
+                    }
+                  </div>
+                  <svg 
+                    className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+                
+                {isDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden">
+                    <div className="sticky top-0 bg-white border-b border-gray-300">
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <svg className="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          id="serviceSearch"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Rechercher par nom ou référence..."
+                          className="w-full pl-10 py-2.5 px-3 border-0 text-sm focus:ring-0 focus:outline-none"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="max-h-60 overflow-y-auto">
+                      {filteredServices.length === 0 ? (
+                        <div className="p-3 text-gray-500 text-center">Aucune prestation trouvée</div>
+                      ) : (
+                        <ul>
+                          <li 
+                            className="p-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100"
+                            onClick={() => handleSelectService('')}
+                          >
+                            -- Sélectionnez une prestation --
+                          </li>
+                          {filteredServices.map(serviceOption => (
+                            <li 
+                              key={serviceOption.id} 
+                              className={`p-2.5 hover:bg-blue-50 cursor-pointer ${selectedServiceId === serviceOption.id ? 'bg-blue-100' : ''}`}
+                              onClick={() => handleSelectService(serviceOption.id)}
+                            >
+                              <div className="font-medium">{serviceOption.name}</div>
+                              <div className="text-xs text-gray-500">Réf: {serviceOption.reference}</div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -3447,84 +3719,101 @@ const DevisEditor: React.FC<{
   };
 
   // Calculate totals including the deal premium if applicable
-  // Calculate totals including the deal premium if applicable
-const totals = useMemo(() => {
-  const totalHT = tableItems.reduce((sum, item) => sum + item.totalHT, 0);
-  const totalTTC = tableItems.reduce((sum, item) => sum + item.totalTTC, 0);
-  
-  // Calculate Prime CEE if we have a deal
-  let primeCEE = 0;
-  if (hasDeal && dealId) {
-    // Find operations and calculate their kWh cumac value
-    const operations = tableItems.filter(item => item.id?.startsWith('op-'));
-    operations.forEach(op => {
-      const opRef = op.reference;
-      // Find the corresponding product to get kWh cumac
-      let kwhCumac = 0;
-      if ('productId' in op && op.productId) {
-        const product = products.find(p => p.id === op.productId);
-        if (product) {
-          kwhCumac = product.kwhCumac;
+  const totals = useMemo(() => {
+    const totalHT = tableItems.reduce((sum, item) => sum + item.totalHT, 0);
+    const totalTTC = tableItems.reduce((sum, item) => sum + item.totalTTC, 0);
+    
+    // Calculate Prime CEE if we have a deal
+    let primeCEE = 0;
+    if (hasDeal && dealId) {
+      // Find operations and calculate their kWh cumac value
+      const operations = tableItems.filter(item => item.id?.startsWith('op-'));
+      operations.forEach(op => {
+        const opRef = op.reference;
+        // Find the corresponding product to get kWh cumac
+        let kwhCumac = 0;
+        if ('productId' in op && op.productId) {
+          const product = products.find(p => p.id === op.productId);
+          if (product) {
+            kwhCumac = product.kwhCumac;
+          }
+        } else {
+          // Fallback to operation code
+          if (opRef === 'BAR-TH-101') kwhCumac = 510530;
+          else if (opRef === 'BAR-TH-104') kwhCumac = 628730;
+          else if (opRef === 'BAR-TH-112-Granulés') kwhCumac = 950440;
+          else if (opRef === 'BAR-TH-171') kwhCumac = 615400;
         }
-      } else {
-        // Fallback to operation code
-        if (opRef === 'BAR-TH-101') kwhCumac = 510530;
-        else if (opRef === 'BAR-TH-104') kwhCumac = 628730;
-        else if (opRef === 'BAR-TH-112-Granulés') kwhCumac = 950440;
-        else if (opRef === 'BAR-TH-171') kwhCumac = 615400;
-      }
-      
-      // Calculate prime
-      primeCEE += kwhCumac * dealRatio;
-    });
-  }
-  
-  // Assuming a fixed MaPrimeRenov value for now
-  const primeRenov = hasDeal ? 3000 : 0;
-
-  // Add incentives from the modal - Ensure all values are proper numbers
-  const additionalPrimeCEE = parseFloat(incentivesData.primeCEE || '0') || 0;
-  const remiseExceptionnelle = parseFloat(incentivesData.remiseExceptionnelle || '0') || 0;
-  
-  // Determine which MaPrimeRenov amount to use based on selection
-  let primeMPR = 0;
-  let primeRenovToUse = 0;
-  
-  if (incentivesData.primeMPR === 'Prime MPR deduite') {
-    primeRenovToUse = primeRenov;
-    // Don't add primeMPR if we're using primeRenov
-  } else {
-    primeMPR = parseFloat(incentivesData.primeMPR || '0') || 0;
-    // Don't use primeRenov
-  }
-  
-  const acompte = parseFloat(incentivesData.acompte || '0') || 0;
-  const racCharge = parseFloat(incentivesData.montantPriseEnChargeRAC || '0') || 0;
-  
-  // Calculate total discounts - be explicit about adding numbers
-  const totalDiscounts = primeCEE + primeRenovToUse + additionalPrimeCEE + 
-                        remiseExceptionnelle + primeMPR + acompte + racCharge;
-  
-  // Ensure totalTTC and totalDiscounts are valid numbers
-  const validTotalTTC = !isNaN(totalTTC) ? totalTTC : 0;
-  const validTotalDiscounts = !isNaN(totalDiscounts) ? totalDiscounts : 0;
-  
-  // Calculate remaining amount
-  const remaining = validTotalTTC - validTotalDiscounts;
-  
-  return { 
-    totalHT, 
-    totalTTC: validTotalTTC, 
-    primeCEE: parseFloat(primeCEE.toFixed(2)),
-    primeRenov,
-    additionalPrimeCEE,
-    remiseExceptionnelle,
-    primeMPR,
-    acompte,
-    racCharge,
-    remaining: remaining
-  };
-}, [tableItems, hasDeal, dealId, dealRatio, incentivesData]);
+        
+        // Calculate prime
+        primeCEE += kwhCumac * dealRatio;
+      });
+    }
+    
+    // Calculate MaPrimeRenov dynamically from operation-specific inputs
+    let calculatedPrimeRenov = 0;
+    const operations = tableItems.filter(item => 
+      item.reference && ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
+    );
+    
+    // If we have specific operations, look for their MPR values
+    if (operations.length > 0) {
+      operations.forEach(op => {
+        const mprKey = `primeMPR_${op.reference}`;
+        if (incentivesData[mprKey]) {
+          const value = parseFloat(incentivesData[mprKey] as string || '0') || 0;
+          calculatedPrimeRenov += value;
+        }
+      });
+    }
+    
+    // If no operation-specific values were found and we have a deal, use a default
+    if (calculatedPrimeRenov === 0 && hasDeal) {
+      calculatedPrimeRenov = 3000; // Only use default if no specific values were entered
+    }
+    
+    // Add incentives from the modal - Ensure all values are proper numbers
+    const additionalPrimeCEE = parseFloat(incentivesData.primeCEE || '0') || 0;
+    const remiseExceptionnelle = parseFloat(incentivesData.remiseExceptionnelle || '0') || 0;
+    
+    // Determine which MaPrimeRenov amount to use based on selection
+    let primeMPR = 0;
+    let primeRenovToUse = 0;
+    
+    if (incentivesData.primeMPR === 'Prime MPR deduite') {
+      primeRenovToUse = calculatedPrimeRenov; // Use the dynamic calculated value
+    } else {
+      primeMPR = parseFloat(incentivesData.primeMPR || '0') || 0;
+      // Don't use calculatedPrimeRenov when "Prime MPR non deduite" is selected
+    }
+    
+    const acompte = parseFloat(incentivesData.acompte || '0') || 0;
+    const racCharge = parseFloat(incentivesData.montantPriseEnChargeRAC || '0') || 0;
+    
+    // Calculate total discounts - be explicit about adding numbers
+    const totalDiscounts = primeCEE + primeRenovToUse + additionalPrimeCEE + 
+                          remiseExceptionnelle + primeMPR + acompte + racCharge;
+    
+    // Ensure totalTTC and totalDiscounts are valid numbers
+    const validTotalTTC = !isNaN(totalTTC) ? totalTTC : 0;
+    const validTotalDiscounts = !isNaN(totalDiscounts) ? totalDiscounts : 0;
+    
+    // Calculate remaining amount
+    const remaining = validTotalTTC - validTotalDiscounts;
+    
+    return { 
+      totalHT, 
+      totalTTC: validTotalTTC, 
+      primeCEE: parseFloat(primeCEE.toFixed(2)),
+      primeRenov: calculatedPrimeRenov, // Return the calculated value instead of the hard-coded one
+      additionalPrimeCEE,
+      remiseExceptionnelle,
+      primeMPR,
+      acompte,
+      racCharge,
+      remaining: remaining
+    };
+  }, [tableItems, hasDeal, dealId, dealRatio, incentivesData]);
   
   // Handle deal selection
   const handleDealSelect = (selectedDealId: string) => {

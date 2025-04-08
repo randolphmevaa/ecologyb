@@ -634,7 +634,7 @@ const generateAttestationSimplifiee = async () => {
         
         // COMBINED FIELD 3: Address for indivision property field for this indivisaire
         try {
-          const fieldName = `adresse du bien appartenant à l'indivision ${index + 1}`;
+          const fieldName = `adresse du bien appartenant à l’indivision 1`;
           const field = form.getTextField(fieldName);
           field.setText(combinedAddress);
           console.log(`Successfully set ${fieldName} to "${combinedAddress}"`);
@@ -1232,9 +1232,7 @@ const generateDocument = (documentType: string) => {
   setDropdownVisible(false);
 };
 
-
-
-  // Group documents by category for better organization
+  // Group documents by category for better organization but with standardized icon colors
   const documentCategories = [
     {
       name: "Documents de base",
@@ -1246,27 +1244,27 @@ const generateDocument = (documentType: string) => {
     {
       name: "Documents techniques",
       items: sizingNotes.length > 0 ? [
-        { id: "sizing-note", label: "Note de dimensionnement", icon: <DocumentCheckIcon className="h-4 w-4 text-green-500" />, action: handleGenerateSizingNotePDF }
+        { id: "sizing-note", label: "Note de dimensionnement", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: handleGenerateSizingNotePDF }
       ] : []
     },
     {
       name: "Documents administratifs",
       items: [
-        { id: "dossier-cee", label: "Dossier CEE", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Dossier CEE") },
-        { id: "courrier-rac", label: "Courrier de prise en charge du RAC", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Courrier de prise en charge du RAC") },
-        { id: "attestation-fin", label: "Attestation de Fin des Travaux", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Attestation de Fin des Travaux") },
-        { id: "attestation-mise-service", label: "Attestation mise en service ECOLOGY'B", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Attestation mise en service ECOLOGY'B") },
-        { id: "attestation-simplifiee", label: "Attestation Simplifiée", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Attestation Simplifiée") },
-        { id: "enedis", label: "ENEDIS", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("enedis") }
+        { id: "dossier-cee", label: "Dossier CEE", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Dossier CEE") },
+        { id: "courrier-rac", label: "Courrier de prise en charge du RAC", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Courrier de prise en charge du RAC") },
+        { id: "attestation-fin", label: "Attestation de Fin des Travaux", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Attestation de Fin des Travaux") },
+        { id: "attestation-mise-service", label: "Attestation mise en service ECOLOGY'B", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Attestation mise en service ECOLOGY'B") },
+        { id: "attestation-simplifiee", label: "Attestation Simplifiée", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Attestation Simplifiée") },
+        { id: "enedis", label: "ENEDIS", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("enedis") }
       ]
     },
     {
       name: "Documents financiers",
       items: [
-        { id: "cession-creance", label: "Cession de créance de RENOLIB", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Cession de créance de RENOLIB") },
-        { id: "eco-ptz", label: "ECO-PTZ", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("eco-ptz") },
-        { id: "mandat-perception", label: "Mandat de perception de fond EFFY", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Mandat de perception de fond EFFY") },
-        { id: "cgv", label: "Conditions générales de vente", icon: <DocumentCheckIcon className="h-4 w-4 text-gray-500" />, action: () => generateDocument("Conditions générales de vente") }
+        { id: "cession-creance", label: "Cession de créance de RENOLIB", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Cession de créance de RENOLIB") },
+        { id: "eco-ptz", label: "ECO-PTZ", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("eco-ptz") },
+        { id: "mandat-perception", label: "Mandat de perception de fond EFFY", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Mandat de perception de fond EFFY") },
+        { id: "cgv", label: "Conditions générales de vente", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Conditions générales de vente") }
       ]
     }
   ];
@@ -1276,7 +1274,7 @@ const generateDocument = (documentType: string) => {
     const dpMairieCategory = {
       name: "Documents d'urbanisme",
       items: [
-        { id: "dp-mairie", label: "DP Mairie", icon: <BuildingLibraryIcon className="h-4 w-4 text-purple-500" />, action: () => generateDocument("dp-mairie") }
+        { id: "dp-mairie", label: "DP Mairie", icon: <BuildingLibraryIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("dp-mairie") }
       ]
     };
     
@@ -1285,7 +1283,7 @@ const generateDocument = (documentType: string) => {
       dpMairieCategory.items.push({
         id: "daact", 
         label: "Déclaration d'achèvement (DAACT)", 
-        icon: <DocumentCheckIcon className="h-4 w-4 text-purple-500" />, 
+        icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, 
         action: () => generateDocument("daact")
       });
     }
@@ -1300,7 +1298,7 @@ const indivisionCategory = {
     { 
       id: "attestation-indivision", 
       label: "Attestation d'indivision", 
-      icon: <UserGroupIcon className="h-4 w-4 text-orange-500" />, 
+      icon: <UserGroupIcon className="h-4 w-4 text-blue-500" />, 
       action: () => generateDocument("attestation-indivision") 
     }
   ]
@@ -1311,13 +1309,16 @@ if (indivisionData?.typeProprietaire === "bailleur") {
   indivisionCategory.items.push({
     id: "attestation-proprietaire-bailleur", 
     label: "Attestation Propriétaire bailleur", 
-    icon: <DocumentCheckIcon className="h-4 w-4 text-orange-500" />, 
+    icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, 
     action: () => generateDocument("attestation-proprietaire-bailleur")
   });
 }
 
 // Always add this category
 documentCategories.push(indivisionCategory);
+
+  // Flatten all document items from all categories into a single array
+  const allDocuments = documentCategories.flatMap(category => category.items);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -1343,27 +1344,18 @@ documentCategories.push(indivisionCategory);
           </div>
           
           <div className="p-2 max-h-80 overflow-y-auto">
-            {documentCategories.map((category, idx) => (
-              category.items.length > 0 && (
-                <div key={idx} className="mb-3 last:mb-0">
-                  <div className="font-medium text-gray-600 text-xs uppercase tracking-wider px-2 py-1">
-                    {category.name}
-                  </div>
-                  <div className="space-y-0.5 mt-1">
-                    {category.items.map(item => (
-                      <div 
-                        key={item.id} 
-                        className="px-2 py-2 hover:bg-blue-50 cursor-pointer rounded text-sm flex items-center gap-2 transition-colors"
-                        onClick={item.action}
-                      >
-                        {item.icon}
-                        <span>{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
+            <div className="space-y-0.5">
+              {allDocuments.map(item => (
+                <div 
+                  key={item.id} 
+                  className="px-2 py-2 hover:bg-blue-50 cursor-pointer rounded text-sm flex items-center gap-2 transition-colors"
+                  onClick={item.action}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
                 </div>
-              )
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}

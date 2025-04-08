@@ -232,8 +232,8 @@ export default function AddContactDossierPage() {
       workCity: "",
       workCountry: "France",
       isNewAddress: false,
-      hasDifferentWorkAddress: false, // Added property
-      isNewWorkAddress: false, // Added property
+      hasDifferentWorkAddress: false,
+      isNewWorkAddress: false,
       phone: "",
       email: "",
       role: "Client / Customer (Client Portal)",

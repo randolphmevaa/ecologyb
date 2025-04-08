@@ -852,7 +852,7 @@ export default function OperationsPage() {
                                         name="kwhCumacHorsCoupDePouceH1"
                                         value={operationForm.kwhCumacHorsCoupDePouceH1 || ""}
                                         onChange={handleOperationFormChange}
-                                        className="w-full px-3 py-2 border border-blue-300 bg-blue-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-blue-800 placeholder-blue-300"
+                                        className="w-full px-3 py-2 border border-blue-300 bg-blue-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         placeholder="kWh Cumac pour H1"
                                       />
                                     </div>
@@ -904,7 +904,7 @@ export default function OperationsPage() {
                                   name="kwhCumacCoupDePouceH1"
                                   value={operationForm.kwhCumacCoupDePouceH1 || ""}
                                   onChange={handleOperationFormChange}
-                                  className="w-full px-3 py-2 border border-blue-300 bg-blue-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-blue-800 placeholder-blue-300"
+                                  className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-blue-800"
                                   placeholder="kWh Cumac pour H1"
                                 />
                               </div>
@@ -919,7 +919,7 @@ export default function OperationsPage() {
                                   name="kwhCumacCoupDePouceH2"
                                   value={operationForm.kwhCumacCoupDePouceH2 || ""}
                                   onChange={handleOperationFormChange}
-                                  className="w-full px-3 py-2 border border-yellow-300 bg-yellow-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500 text-yellow-800 placeholder-yellow-300"
+                                  className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500 text-yellow-800"
                                   placeholder="kWh Cumac pour H2"
                                 />
                               </div>
@@ -934,7 +934,7 @@ export default function OperationsPage() {
                                   name="kwhCumacCoupDePouceH3"
                                   value={operationForm.kwhCumacCoupDePouceH3 || ""}
                                   onChange={handleOperationFormChange}
-                                  className="w-full px-3 py-2 border border-red-300 bg-red-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-red-800 placeholder-red-300"
+                                  className="w-full px-3 py-2 border border-red-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-red-800"
                                   placeholder="kWh Cumac pour H3"
                                 />
                               </div>
