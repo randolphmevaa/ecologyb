@@ -40,7 +40,8 @@ import {
   FolderPlusIcon,
   CurrencyDollarIcon,
   TrashIcon,
-  ChevronUpIcon
+  ChevronUpIcon,
+  TagIcon
 } from "@heroicons/react/24/outline";
 import PDFGenerator from "./PDFGenerator";
 import AddFinancingModal from "./AddFinancingModal";
@@ -131,6 +132,7 @@ interface Document {
   signatureStatus: SignatureStatus;
   signatureDate?: string;
   fileUrl: string;
+  customName?: string;
 }
 
 // Define TypeScript interface for financing data
@@ -5204,9 +5206,23 @@ const DocumentPreview: React.FC<{
   onRequestSignature: (document: Document) => void;
   onSendReminder: (document: Document) => void;
   onEditDocument: (document: Document) => void;
-}> = ({ document, onRequestSignature, onSendReminder, onEditDocument }) => {
-  const [customName, setCustomName] = useState<string>("");
+  onUpdateCustomName: (documentId: string, customName: string) => void;
+}> = ({ document, onRequestSignature, onSendReminder, onEditDocument, onUpdateCustomName }) => {
+  const [customName, setCustomName] = useState<string>(document.customName || "");
   const [isCustomizing, setIsCustomizing] = useState<boolean>(false);
+  // const [documents, setDocuments] = useState<Document[]>([]);
+
+  
+  // Update local state when document changes
+  useEffect(() => {
+    setCustomName(document.customName || "");
+  }, [document.id, document.customName]);
+  
+  // Save custom name to parent component/database
+  const saveCustomName = () => {
+    onUpdateCustomName(document.id, customName);
+    setIsCustomizing(false);
+  };
   
   // Generate filename based on document type and custom name
   const getFileName = () => {
@@ -5240,7 +5256,7 @@ const DocumentPreview: React.FC<{
                     autoFocus
                   />
                   <button 
-                    onClick={() => setIsCustomizing(false)}
+                    onClick={saveCustomName}
                     className="p-1 text-blue-600 hover:text-blue-800"
                   >
                     <CheckIcon className="h-5 w-5" />
@@ -5316,19 +5332,27 @@ const DocumentPreview: React.FC<{
       {/* Document preview iframe */}
       <div className="flex-grow relative bg-gray-100 rounded-lg overflow-hidden mb-4">
         {document.fileUrl ? (
-          <iframe 
-            src={document.fileUrl}
-            className="w-full h-full"
-            title={`Aperçu du ${document.type} #${document.reference}`}
-          />
+          <div className="relative h-full">
+            {/* Custom name badge overlay */}
+            {customName && (
+              <div className="absolute top-2 right-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium z-10">
+                {customName}
+              </div>
+            )}
+            <iframe 
+              src={document.fileUrl}
+              className="w-full h-full"
+              title={`Aperçu du ${document.type} #${document.reference}`}
+            />
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full">
             <DocumentTextIcon className="h-16 w-16 text-gray-400 mb-4" />
             <p className="text-gray-500">Aperçu non disponible</p>
             {customName && (
-              <p className="text-blue-600 mt-3">
-                Nom personnalisé: {customName}
-              </p>
+              <div className="mt-3 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                {customName}
+              </div>
             )}
             <p className="text-xs text-gray-500 mt-2">
               Fichier de téléchargement: {getFileName()}
@@ -5444,6 +5468,40 @@ const DevisFactureTab: React.FC<DevisFactureTabProps> = ({ contactId }) => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [showSignatureModal, setShowSignatureModal] = useState<boolean>(false);
   const [showDevisEditor, setShowDevisEditor] = useState<boolean>(false);
+  // Function to update custom name for a specific document
+const handleUpdateCustomName = (documentId: string, customName: string) => {
+  // Update the document in the local state
+  setDocuments(prevDocuments => 
+    prevDocuments.map(doc => 
+      doc.id === documentId 
+        ? { ...doc, customName } 
+        : doc
+    )
+  );
+  
+  // You would also want to save this to your backend/database
+  // This is just a placeholder for where you would make that API call
+  // saveDocumentCustomNameToDatabase(documentId, customName);
+};
+// Placeholder function for saving to database
+// const saveDocumentCustomNameToDatabase = async (documentId: string, customName: string) => {
+//   try {
+//     // Example API call - replace with your actual implementation
+//     await api.post('/documents/update-custom-name', {
+//       documentId,
+//       customName
+//     });
+    
+//     // Optional: show success notification
+//     // showNotification('Nom personnalisé enregistré');
+//   } catch (error) {
+//     console.error('Failed to save custom name:', error);
+//     // Optional: show error notification
+//     // showNotification('Échec de l\'enregistrement du nom personnalisé', 'error');
+    
+//     // You might want to revert the local state change on error
+//   }
+// };
   
   // Fetch documents on mount and when contactId changes
   useEffect(() => {
@@ -5575,9 +5633,11 @@ const DevisFactureTab: React.FC<DevisFactureTabProps> = ({ contactId }) => {
       }
       
       // Default string comparison
-      if (a[sortKey] < b[sortKey])
+      const aValue = a[sortKey] ?? "";
+      const bValue = b[sortKey] ?? "";
+      if (aValue < bValue)
         return sortDirection === "asc" ? -1 : 1;
-      if (a[sortKey] > b[sortKey])
+      if (aValue > bValue)
         return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
@@ -5903,7 +5963,17 @@ const DevisFactureTab: React.FC<DevisFactureTabProps> = ({ contactId }) => {
                       } transition-all cursor-pointer`}
                     >
                       <div className="p-4">
-                        <div className="flex items-center justify-between mb-2">
+                        {/* Custom Name Display - Now at the top */}
+                        {doc.customName && (
+                          <div className="mb-2">
+                            <span className="text-blue-700 font-medium inline-flex items-center">
+                              <TagIcon className="h-4 w-4 mr-1" />
+                              {doc.customName}
+                            </span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center">
                             {doc.type === "devis" ? (
                               <DocumentIcon className="h-5 w-5 text-blue-600 mr-2" />
@@ -5976,11 +6046,13 @@ const DevisFactureTab: React.FC<DevisFactureTabProps> = ({ contactId }) => {
                   </p>
                 </div>
               ) : (
+                
                 <DocumentPreview 
                   document={selectedDocument}
                   onRequestSignature={handleRequestSignature}
                   onSendReminder={handleSendReminder}
                   onEditDocument={handleEditDocument}
+                  onUpdateCustomName={handleUpdateCustomName}
                 />
               )}
             </div>
