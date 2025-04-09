@@ -1112,8 +1112,8 @@ function SalesHeader({ user, contactId }) {
   ];
 
   const createDropdownItems = [
-    { type: "contact", label: "Créer un client", icon: UserCircleIcon },
-    { type: "lead", label: "Créer un lead", icon: SparklesIcon },
+    { type: "contact", label: "Créer un prospect", icon: UserCircleIcon },
+    // { type: "lead", label: "Créer un lead", icon: SparklesIcon },
     { type: "ticket", label: "Créer un ticket S.A.V", icon: TicketIcon },
   ];
 
@@ -1313,8 +1313,8 @@ function AdminHeader({ user, contactId }) {
   ];
 
   const createDropdownItems = [
-    { type: "contact", label: "Créer un client", icon: UserCircleIcon },
-    { type: "lead", label: "Créer un lead", icon: SparklesIcon },
+    { type: "contact", label: "Créer un prospect", icon: UserCircleIcon },
+    // { type: "lead", label: "Créer un lead", icon: SparklesIcon },
     { type: "dossier", label: "Créer un dossier", icon: FolderIcon },
     { type: "ticket", label: "Créer un ticket S.A.V", icon: TicketIcon },
     { type: "document", label: "Ajouter un document", icon: DocumentIcon },
