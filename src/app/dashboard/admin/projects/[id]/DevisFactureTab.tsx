@@ -36,7 +36,7 @@ import {
   BanknotesIcon,
   BuildingLibraryIcon,
   LinkIcon,
-  UsersIcon,
+  // UsersIcon,
   FolderPlusIcon,
   CurrencyDollarIcon,
   TrashIcon,
@@ -1858,7 +1858,7 @@ const ActionMenu: React.FC<{
   hasFinancing,
   hasMairie,
   hasDeal,
-  hasDivision
+  // hasDivision
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -1937,15 +1937,15 @@ const ActionMenu: React.FC<{
         ? <PencilIcon className="h-5 w-5 text-gray-500" />
         : <LinkIcon className="h-5 w-5 text-gray-500" />
     },
-    {
-      id: "addDivision",
-      label: hasDivision
-        ? "Modifier une indivision"
-        : "Ajouter une indivision",
-      icon: hasDivision
-        ? <PencilIcon className="h-5 w-5 text-gray-500" />
-        : <UsersIcon className="h-5 w-5 text-gray-500" />
-    },
+    // {
+    //   id: "addDivision",
+    //   label: hasDivision
+    //     ? "Modifier une indivision"
+    //     : "Ajouter une indivision",
+    //   icon: hasDivision
+    //     ? <PencilIcon className="h-5 w-5 text-gray-500" />
+    //     : <UsersIcon className="h-5 w-5 text-gray-500" />
+    // },
     {
       id: "addDocument",
       label: "Ajouter un document au devis",
@@ -3945,7 +3945,7 @@ const DevisEditor: React.FC<{
     const primeCEE = kwhCumac * dealRatio;
     
     // Create a rich formatted name with HTML styling for bold text instead of markdown
-    const formattedName = `<span style="font-weight: bold">${operation.reference}</span> Mise en place d'une pompe à chaleur (PAC) de type air/eau.<br/>Type de température : <span style="font-weight: bold">${temperatureType}</span><br/>Marque : <span style="font-weight: bold">${productBrand}</span><br/>Référence : <span style="font-weight: bold">${productReference}</span><br/>L'efficacité énergétique saisonnière est de : <span style="font-weight: bold">127 %</span> calculée selon le règlement (EU) n°813/2013 de la commission du 2 aout 2013.<br/>La surface chauffée par la PAC est de <span style="font-weight: bold">${operation.heatedArea || 120} m2</span><br/>Surface habitable : <span style="font-weight: bold">${operation.livingArea || 120} m2</span><br/>Type de logement : <span style="font-weight: bold">${operation.housingType || "Maison individuelle"}</span><br/>Classe du régulateur :<br/>Usage couvert par la PAC : <span style="font-weight: bold">${operation.pumpUsage || "Chauffage seul"}</span><br/>Dépose et remplacement d'une chaudière au <span style="font-weight: bold">${operation.oldBoilerType || "Gaz"}</span><br/>Kwh Cumac : <span style="font-weight: bold">${kwhCumac}</span><br/>Prime CEE ${dealId} : <span style="font-weight: bold">${primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span><br/><br/>
+    const formattedName = `<span style="font-weight: bold">${operation.reference}</span> Mise en place d'une pompe à chaleur (PAC) de type air/eau.<br/><br/>Type de température : <span style="font-weight: bold">${temperatureType}</span><br/>Marque : <span style="font-weight: bold">${productBrand}</span><br/>Référence : <span style="font-weight: bold">${productReference}</span><br/>L'efficacité énergétique saisonnière est de : <span style="font-weight: bold">127 %</span> calculée selon le règlement (EU) n°813/2013 de la commission du 2 aout 2013.<br/>La surface chauffée par la PAC est de <span style="font-weight: bold">${operation.heatedArea || 120} m2</span><br/>Surface habitable : <span style="font-weight: bold">${operation.livingArea || 120} m2</span><br/>Type de logement : <span style="font-weight: bold">${operation.housingType || "Maison individuelle"}</span><br/>Classe du régulateur :<br/>Usage couvert par la PAC : <span style="font-weight: bold">${operation.pumpUsage || "Chauffage seul"}</span><br/>Dépose et remplacement d'une chaudière au <span style="font-weight: bold">${operation.oldBoilerType || "Gaz"}</span><br/><br/>Kwh Cumac : <span style="font-weight: bold">${kwhCumac}</span><br/>Prime ${dealId} : <span style="font-weight: bold">${primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span><br/><br/>
 Description : <span style="font-weight: bold">${productDescription}</span><br/><br/>
 ${subContractorInfo}`;
     

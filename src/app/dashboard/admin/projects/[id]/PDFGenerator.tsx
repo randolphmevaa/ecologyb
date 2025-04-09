@@ -131,20 +131,20 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
     return `${prefix}_${quoteNumber}.pdf`;
   };
 
-  // Common function to handle downloading PDFs with the custom filename
-  const downloadPDF = (pdfBytes: Uint8Array, documentType: string) => {
-    const filename = getCustomFileName(documentType);
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  // // Common function to handle downloading PDFs with the custom filename
+  // const downloadPDF = (pdfBytes: Uint8Array, documentType: string) => {
+  //   const filename = getCustomFileName(documentType);
+  //   const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     
-    // Create a download link
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
-  };
+  //   // Create a download link
+  //   const link = document.createElement('a');
+  //   link.href = URL.createObjectURL(blob);
+  //   link.download = filename;
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  //   URL.revokeObjectURL(link.href);
+  // };
 
   // Modified function for attestation mise en service
   const generateAttestationMiseEnServicePDF = async () => {
@@ -298,7 +298,9 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
       });
       
       // Use the downloadPDF function with the custom filename
-      downloadPDF(pdfBytes, "attestation-mise-service");
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
       
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -475,7 +477,9 @@ const generateAttestationFinTravauxPDF = async () => {
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "attestation-fin");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -592,7 +596,9 @@ const generateAttestationSimplifiee = async () => {
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "attestation-simplifiee");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -715,7 +721,7 @@ const generateAttestationSimplifiee = async () => {
         
         // COMBINED FIELD 3: Address for indivision property field for this indivisaire
         try {
-          const fieldName = `adresse du bien appartenant à l'indivision 1`;
+          const fieldName = `adresse du bien appartenant à l’indivision 1`;
           const field = form.getTextField(fieldName);
           field.setText(combinedAddress);
           console.log(`Successfully set ${fieldName} to "${combinedAddress}"`);
@@ -756,7 +762,9 @@ const generateAttestationSimplifiee = async () => {
       });
       
       // Use the downloadPDF function with the custom filename
-      downloadPDF(pdfBytes, "attestation-indivision");
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
       
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -879,7 +887,9 @@ const generateAttestationProprietaireBailleurPDF = async (indivisionData: Indivi
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "proprietaire-bailleur");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -960,7 +970,9 @@ const generateCessionCreanceRenolibPDF = async () => {
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "cession-creance");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -993,7 +1005,9 @@ const generateDPMairiePDF = async () => {
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "dp-mairie");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -1026,7 +1040,9 @@ const generateDAACTPDF = async () => {
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "daact");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -1059,7 +1075,10 @@ const generateENEDISPDF = async () => {
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "enedis");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -1115,7 +1134,9 @@ const generateECOPTZPDF = async () => {
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "eco-ptz");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -1148,7 +1169,9 @@ const generateMandatPerceptionEffyPDF = async () => {
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "mandat-perception");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -1181,7 +1204,9 @@ const generateCGVPDF = async () => {
     });
     
     // Use the downloadPDF function with the custom filename
-    downloadPDF(pdfBytes, "cgv");
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
     
   } catch (error) {
     console.error('Error generating PDF:', error);

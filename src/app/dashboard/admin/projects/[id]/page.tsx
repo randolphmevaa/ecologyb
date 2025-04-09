@@ -458,7 +458,7 @@ function StepProgress({ currentStep, onStepClick }: StepProgressProps) {
 
   // Define weights for each step.
   // Here, steps 2-5 have a weight of 2 while steps 1, 6, and 7 have a weight of 1.
-  const stepWeights = [1, 1.25, 1.6, 1.5, 1.4, 2, 1];
+  const stepWeights = [1, 1.25, 1.6, 1.5, 1.4, 1.8, 1.5];
   const totalWeight = stepWeights.reduce((sum, weight) => sum + weight, 0);
   const currentWeight = stepWeights
     .slice(0, currentStep)
