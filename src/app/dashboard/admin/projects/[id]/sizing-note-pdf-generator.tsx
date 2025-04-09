@@ -5,8 +5,7 @@ import {
   getCommonStyles, 
   getCompanyHeader, 
   getCompanyFooter,
-  openPrintWindow,
-  triggerPrint
+  // openPrintWindow  // Remove triggerPrint import
 } from './pdf-utils';
 
 import { SizingNote } from './types';
@@ -219,6 +218,37 @@ const getSizingNoteStyles = () => `
     width: 60mm;
     height: auto;
   }
+  
+  /* Print button styling */
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    .print-button {
+      display: none;
+    }
+  }
+  
+  .print-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 9999;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .print-button:hover {
+    background-color: #2563eb;
+  }
 `;
 
 // Main function to generate the sizing note PDF
@@ -239,9 +269,12 @@ export const generateSizingNotePDF = (
   // Use the first sizing note for the document
   const sizingNote = sizingNotes[0];
   
-  // Open print window
-  const printWindow = openPrintWindow(`Note de dimensionnement - ${quoteNumber}`);
-  if (!printWindow) return;
+  // Open a new tab instead of using the print window
+  const newTab = window.open('', '_blank');
+  if (!newTab) {
+    alert('Le bloqueur de fenêtres pop-up a empêché l\'ouverture de l\'aperçu. Veuillez autoriser les fenêtres pop-up pour ce site.');
+    return;
+  }
   
   // Format date
   const formattedDate = formatDate(quoteDate);
@@ -267,7 +300,7 @@ export const generateSizingNotePDF = (
   const coverage = (dimensioningValue * 1000 * 100) / heatLoss;
   
   // Generate HTML content
-  printWindow.document.write(`
+  const htmlContent = `
     <html>
       <head>
         <title>Note de dimensionnement - ${quoteNumber}</title>
@@ -277,6 +310,9 @@ export const generateSizingNotePDF = (
         </style>
       </head>
       <body>
+        <!-- Add a print button -->
+        <button class="print-button" onclick="window.print()">Imprimer</button>
+        
         <!-- Page 1 -->
         <div class="page">
           ${getCompanyHeader()}
@@ -482,8 +518,10 @@ export const generateSizingNotePDF = (
         </div>
       </body>
     </html>
-  `);
+  `;
   
-  // Trigger print
-  triggerPrint(printWindow);
+  // Write the HTML content to the new tab
+  newTab.document.open();
+  newTab.document.write(htmlContent);
+  newTab.document.close();
 };

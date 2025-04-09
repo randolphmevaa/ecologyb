@@ -25,11 +25,10 @@ interface PDFGeneratorProps {
   sizingNotes?: SizingNote[];
   financingData?: FinancingData | null;
   dpMairieData?: DPMairieData | null;
-  indivisionData?: IndivisionData | null; // Add indivision data prop
+  indivisionData?: IndivisionData | null;
   incentivesData?: IncentivesData;
+  customName?: string; // Add the customName prop
 }
-
-// type IndivisaireField = keyof Indivisaire;
 
 const PDFGenerator: React.FC<PDFGeneratorProps> = ({ 
   tableItems, 
@@ -43,7 +42,8 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
   financingData = null,
   dpMairieData = null,
   indivisionData = null,
-  incentivesData = null // Add with default value
+  incentivesData = null,
+  customName = "" // Add with default value
 }) => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,7 +66,87 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
     setDropdownVisible(!dropdownVisible);
   };
 
-  // Add this new function to generate the Attestation mise en service ECOLOGY'B PDF
+  // New function to generate custom filenames
+  const getCustomFileName = (documentType: string): string => {
+    let prefix: string;
+    
+    // Determine the appropriate prefix based on document type
+    switch (documentType) {
+      case "devis":
+        prefix = "Devis";
+        break;
+      case "facture":
+        prefix = "Facture";
+        break;
+      case "sizing-note":
+        prefix = "Note_Dimensionnement";
+        break;
+      case "attestation-fin":
+        prefix = "Attestation_Fin_Travaux";
+        break;
+      case "attestation-mise-service":
+        prefix = "Attestation_Mise_En_Service";
+        break;
+      case "attestation-simplifiee":
+        prefix = "Attestation_Simplifiee";
+        break;
+      case "attestation-indivision":
+        prefix = "Attestation_Indivision";
+        break;
+      case "proprietaire-bailleur":
+        prefix = "Attestation_Proprietaire_Bailleur";
+        break;
+      case "cession-creance":
+        prefix = "Cession_Creance_RENOLIB";
+        break;
+      case "dp-mairie":
+        prefix = "DP_Mairie";
+        break;
+      case "daact":
+        prefix = "DAACT";
+        break;
+      case "enedis":
+        prefix = "ENEDIS";
+        break;
+      case "eco-ptz":
+        prefix = "ECO_PTZ";
+        break;
+      case "mandat-perception":
+        prefix = "Mandat_Perception_EFFY";
+        break;
+      case "cgv":
+        prefix = "CGV";
+        break;
+      default:
+        prefix = documentType.replace(/\s+/g, '_');
+    }
+    
+    if (customName && customName.trim() !== "") {
+      // Sanitize the custom name for file use
+      const sanitizedName = customName.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '');
+      return `${prefix}_${sanitizedName}.pdf`;
+    }
+    
+    // Default to using the reference number
+    return `${prefix}_${quoteNumber}.pdf`;
+  };
+
+  // Common function to handle downloading PDFs with the custom filename
+  const downloadPDF = (pdfBytes: Uint8Array, documentType: string) => {
+    const filename = getCustomFileName(documentType);
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    
+    // Create a download link
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
+  // Modified function for attestation mise en service
   const generateAttestationMiseEnServicePDF = async () => {
     try {
       console.log("Generating Attestation mise en service ECOLOGY'B PDF");
@@ -87,10 +167,6 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
       // Get all form fields for debugging
       const fields = form.getFields();
       console.log("Available PDF form fields:", fields.map(f => f.getName()));
-      
-      // Get current date and format it
-      // const currentDate = new Date();
-      // const formattedDate = currentDate.toLocaleDateString('fr-FR');
       
       // Use client data if available, otherwise use sample data
       const clientData = {
@@ -221,10 +297,8 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
         useObjectStreams: false
       });
       
-      // Create blob and open in new tab
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
+      // Use the downloadPDF function with the custom filename
+      downloadPDF(pdfBytes, "attestation-mise-service");
       
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -233,32 +307,43 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
     }
   };
 
-  // Call the appropriate PDF generator function based on selection
-  const handleGenerateDevisPDF = () => {
-    generateDevisPDF(
-      tableItems,
-      quoteNumber,
-      quoteDate,
-      clientName,
-      totals,
-      dealId,
-      additionalInfo,
-      sizingNotes,
-      financingData,
-      incentivesData // Pass incentivesData to the generator
-    );
-    setDropdownVisible(false);
-  };
+// Export this function or make it available to the devis-pdf-generator module
+// const getCustomFilename = () => {
+//   return currentCustomFilename;
+// };
 
-  const handleGenerateSizingNotePDF = () => {
-    generateSizingNotePDF(
-      quoteNumber,
-      quoteDate,
-      clientName,
-      sizingNotes
-    );
-    setDropdownVisible(false);
-  };
+// Modified handler function - doesn't pass filename directly
+const handleGenerateDevisPDF = () => {
+  
+  // Then call the generator without the filename parameter
+  generateDevisPDF(
+    tableItems,
+    quoteNumber,
+    quoteDate,
+    clientName,
+    totals,
+    dealId,
+    additionalInfo,
+    sizingNotes,
+    financingData,
+    incentivesData
+  );
+  setDropdownVisible(false);
+};
+
+
+  // Similarly, update the sizing note generation
+const handleGenerateSizingNotePDF = () => {
+  
+  // Then call the generator without the filename parameter
+  generateSizingNotePDF(
+    quoteNumber,
+    quoteDate,
+    clientName,
+    sizingNotes
+  );
+  setDropdownVisible(false);
+};
 
   // Add this new function to generate the Attestation de Fin de Travaux PDF
 const generateAttestationFinTravauxPDF = async () => {
@@ -389,10 +474,8 @@ const generateAttestationFinTravauxPDF = async () => {
       useObjectStreams: false
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "attestation-fin");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -508,10 +591,8 @@ const generateAttestationSimplifiee = async () => {
       useObjectStreams: false
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "attestation-simplifiee");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -634,7 +715,7 @@ const generateAttestationSimplifiee = async () => {
         
         // COMBINED FIELD 3: Address for indivision property field for this indivisaire
         try {
-          const fieldName = `adresse du bien appartenant à l’indivision 1`;
+          const fieldName = `adresse du bien appartenant à l'indivision 1`;
           const field = form.getTextField(fieldName);
           field.setText(combinedAddress);
           console.log(`Successfully set ${fieldName} to "${combinedAddress}"`);
@@ -674,10 +755,8 @@ const generateAttestationSimplifiee = async () => {
         useObjectStreams: false
       });
       
-      // Create blob and open in new tab
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
+      // Use the downloadPDF function with the custom filename
+      downloadPDF(pdfBytes, "attestation-indivision");
       
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -799,10 +878,8 @@ const generateAttestationProprietaireBailleurPDF = async (indivisionData: Indivi
       // Removed unsupported permissions property
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "proprietaire-bailleur");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -882,10 +959,8 @@ const generateCessionCreanceRenolibPDF = async () => {
       useObjectStreams: false
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "cession-creance");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -917,10 +992,8 @@ const generateDPMairiePDF = async () => {
       useObjectStreams: false
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "dp-mairie");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -952,10 +1025,8 @@ const generateDAACTPDF = async () => {
       useObjectStreams: false
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "daact");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -987,10 +1058,8 @@ const generateENEDISPDF = async () => {
       useObjectStreams: false
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "enedis");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -1045,10 +1114,8 @@ const generateECOPTZPDF = async () => {
       useObjectStreams: false
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "eco-ptz");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -1080,10 +1147,8 @@ const generateMandatPerceptionEffyPDF = async () => {
       useObjectStreams: false
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "mandat-perception");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -1115,10 +1180,8 @@ const generateCGVPDF = async () => {
       useObjectStreams: false
     });
     
-    // Create blob and open in new tab
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    // Use the downloadPDF function with the custom filename
+    downloadPDF(pdfBytes, "cgv");
     
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -1356,6 +1419,16 @@ documentCategories.push(indivisionCategory);
                 </div>
               ))}
             </div>
+            
+            {/* Display custom filename preview if customName exists */}
+            {customName && (
+              <div className="mt-3 pt-3 border-t border-gray-200 px-2 py-2 text-xs text-gray-600">
+                <span className="font-medium">Nom personnalisé:</span> 
+                <div className="mt-1 bg-gray-100 p-1.5 rounded text-sm font-mono truncate">
+                  {getCustomFileName("devis")}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -3640,6 +3640,7 @@ const DevisEditor: React.FC<{
   const [hasDeal, setHasDeal] = useState<boolean>(false);
   const [dealId, setDealId] = useState<string>('');
   const [dealRatio, setDealRatio] = useState<number>(0);
+  const [customName, setCustomName] = useState<string>("");
   const [additionalInfo, setAdditionalInfo] = useState<string>('');
   
   const [tableItems, setTableItems] = useState<TableItem[]>([]);
@@ -4184,6 +4185,19 @@ ${subContractorInfo}`;
     );
   };
 
+  const getCustomFileName = () => {
+    const docType = quoteId ? "Devis" : "Facture"; // Determine if it's a quote or invoice
+    const reference = quoteId ? quoteNumber : invoiceNumber;
+    
+    if (customName) {
+      // Replace spaces with underscores and remove special characters
+      const sanitizedName = customName.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '');
+      return `${docType}_${sanitizedName}.pdf`;
+    }
+    
+    return `${docType}_${reference}.pdf`;
+  };
+
   return (
     <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-md">
       {/* Action buttons */}
@@ -4222,6 +4236,37 @@ ${subContractorInfo}`;
       
       {/* Quote and invoice details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="col-span-full mb-4">
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="customName" className="block text-sm font-medium text-gray-700">
+              Nom personnalisé du document
+            </label>
+            <div className="text-xs text-gray-500">
+              <span className="italic">Ex: Devis_pour_john</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              id="customName"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="Ajouter un nom personnalisé pour le téléchargement..."
+              className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+            {customName && (
+              <div className="text-sm text-gray-600 whitespace-nowrap">
+                Fichier: {getCustomFileName()}
+              </div>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Ce nom sera utilisé lors du téléchargement du document. Si aucun nom n&apos;est spécifié, le numéro de référence sera utilisé.
+          </p>
+        </div>
+      </div>
+
         <div>
           <div className="grid grid-cols-1 gap-4">
             <div>
@@ -4741,6 +4786,7 @@ ${subContractorInfo}`;
                   dpMairieData={dpMairieData}
                   indivisionData={indivisionData}
                   incentivesData={incentivesData}
+                  customName={customName}
                 />
               </div>
             </div>
@@ -5152,19 +5198,79 @@ const SendSignatureRequestModal: React.FC<{
   );
 };
 
-// Document preview component
+// Document preview component with custom naming feature
 const DocumentPreview: React.FC<{
   document: Document;
   onRequestSignature: (document: Document) => void;
   onSendReminder: (document: Document) => void;
   onEditDocument: (document: Document) => void;
 }> = ({ document, onRequestSignature, onSendReminder, onEditDocument }) => {
+  const [customName, setCustomName] = useState<string>("");
+  const [isCustomizing, setIsCustomizing] = useState<boolean>(false);
+  
+  // Generate filename based on document type and custom name
+  const getFileName = () => {
+    const baseType = document.type === "devis" ? "Devis" : "Facture";
+    
+    if (customName) {
+      // Replace spaces with underscores and remove special characters
+      const sanitizedName = customName.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '');
+      return `${baseType}_${sanitizedName}.pdf`;
+    }
+    
+    return `${baseType}_${document.reference}.pdf`;
+  };
+  
   return (
     <div className="h-full flex flex-col">
       {/* Document header */}
       <div className="border-b border-gray-200 pb-4 mb-4">
         <div className="flex justify-between items-start mb-6">
           <div>
+            {/* Custom name section */}
+            <div className="mb-2">
+              {isCustomizing ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="Ajouter un nom personnalisé..."
+                    className="px-3 py-1.5 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    autoFocus
+                  />
+                  <button 
+                    onClick={() => setIsCustomizing(false)}
+                    className="p-1 text-blue-600 hover:text-blue-800"
+                  >
+                    <CheckIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  {customName ? (
+                    <div className="text-blue-600 font-medium mb-1">{customName}</div>
+                  ) : (
+                    <button
+                      onClick={() => setIsCustomizing(true)}
+                      className="flex items-center text-blue-600 hover:text-blue-800 text-sm mb-1"
+                    >
+                      <PlusIcon className="h-4 w-4 mr-1" />
+                      Ajouter un nom personnalisé
+                    </button>
+                  )}
+                  {customName && (
+                    <button 
+                      onClick={() => setIsCustomizing(true)} 
+                      className="ml-2 text-gray-400 hover:text-blue-600"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <h2 className="text-2xl font-bold text-gray-900 mb-1">
               {document.type === "devis" ? "Devis" : "Facture"} #{document.reference}
             </h2>
@@ -5219,6 +5325,14 @@ const DocumentPreview: React.FC<{
           <div className="flex flex-col items-center justify-center h-full">
             <DocumentTextIcon className="h-16 w-16 text-gray-400 mb-4" />
             <p className="text-gray-500">Aperçu non disponible</p>
+            {customName && (
+              <p className="text-blue-600 mt-3">
+                Nom personnalisé: {customName}
+              </p>
+            )}
+            <p className="text-xs text-gray-500 mt-2">
+              Fichier de téléchargement: {getFileName()}
+            </p>
           </div>
         )}
       </div>
@@ -5236,7 +5350,7 @@ const DocumentPreview: React.FC<{
         </a>
         <a
           href={document.fileUrl}
-          download={`${document.type}_${document.reference}.pdf`}
+          download={getFileName()}
           className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
         >
           <ArrowDownTrayIcon className="h-5 w-5 text-gray-500" />

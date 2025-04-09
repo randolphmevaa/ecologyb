@@ -1,12 +1,37 @@
 // Devis PDF Generator Module
+// Add these lines at the beginning of your devis-pdf-generator.tsx file
+// (after the imports but before any other code)
 
+// Store custom filename
+let customFilename = "";
+
+/**
+ * Sets a custom filename to be used for the next PDF generation
+ * @param filename The custom filename to use (without extension)
+ */
+export const setCustomFilename = (filename: string) => {
+  customFilename = filename;
+};
+
+/**
+ * Gets the current custom filename
+ * @returns The current custom filename
+ */
+export const getCustomFilename = () => {
+  return customFilename;
+};
+
+// Then modify the openPrintWindow function or create a wrapper
+// If you don't have direct access to modify openPrintWindow, create this wrapper function:
+
+// import { openPrintWindow as originalOpenPrintWindow } from './pdf-utils';
 import { 
   formatDate, 
   getCommonStyles, 
   getCompanyHeader, 
   getCompanyFooter,
-  openPrintWindow,
-  triggerPrint
+  // openPrintWindow,
+  // triggerPrint
 } from './pdf-utils';
 
 import { SizingNote } from './types';
@@ -56,6 +81,20 @@ interface FinancingData {
   totalAmountDue: string;
   sellerName: string;
 }
+
+// Also modify the openPrintWindow function to return a new tab instead of a print window
+// const openPrintWindow = (defaultTitle: string) => {
+//   // Use custom filename if available, otherwise use the default
+//   const title = customFilename || defaultTitle;
+  
+//   // Open a new tab instead of using the original function
+//   const newTab = window.open('', '_blank');
+  
+//   // Reset custom filename after use to avoid affecting future generations
+//   customFilename = "";
+  
+//   return newTab;
+// };
 
 // Add a function to get the deal name from the deal ID
 const getDealName = (dealId?: string): string => {
@@ -1104,6 +1143,9 @@ const getFinancingSection = (financingData: FinancingData) => {
   `;
 };
 
+// Modify the generateDevisPDF function in devis-pdf-generator.tsx
+// Replace the last part of the function with this:
+
 export const generateDevisPDF = (
   tableItems: TableItem[],
   quoteNumber: string,
@@ -1154,25 +1196,57 @@ export const generateDevisPDF = (
                                     incentivesData && 
                                     incentivesData.activiteMaPrimeRenov && 
                                     totals.primeRenov !== undefined;
-
-  // Open print window
-  const printWindow = openPrintWindow(`Devis ${quoteNumber}`);
-  if (!printWindow) return;
   
   // Format date
   const formattedDate = formatDate(quoteDate);
   
   // Generate HTML content
-  printWindow.document.write(`
+  const htmlContent = `
+    <!DOCTYPE html>
     <html>
       <head>
         <title>Devis ${quoteNumber}</title>
         <style>
           ${getCommonStyles()}
           ${getDevisStyles()}
+          
+          /* Add print-specific styles */
+          @media print {
+            body {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            .print-button {
+              display: none;
+            }
+          }
+          
+          /* Add a print button style */
+          .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 9999;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+          
+          .print-button:hover {
+            background-color: #2563eb;
+          }
         </style>
       </head>
       <body>
+        <!-- Add a print button -->
+        <button class="print-button" onclick="window.print()">Imprimer</button>
+        
         <!-- Page 1 -->
         <div class="page">
           ${getCompanyHeader()}
@@ -1209,8 +1283,17 @@ export const generateDevisPDF = (
         </div>
       </body>
     </html>
-  `);
+  `;
   
-  // Trigger print
-  triggerPrint(printWindow);
+  // Open a new tab instead of using the print window
+  const newTab = window.open('', '_blank');
+  if (!newTab) {
+    alert('Le bloqueur de fenêtres pop-up a empêché l\'ouverture de l\'aperçu. Veuillez autoriser les fenêtres pop-up pour ce site.');
+    return;
+  }
+  
+  // Write the HTML content to the new tab
+  newTab.document.open();
+  newTab.document.write(htmlContent);
+  newTab.document.close();
 };
