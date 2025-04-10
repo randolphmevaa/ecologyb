@@ -4,7 +4,7 @@ import {
   formatDate, 
   getCommonStyles, 
   getCompanyHeader, 
-  getCompanyFooter,
+  // getCompanyFooter,
   // openPrintWindow  // Remove triggerPrint import
 } from './pdf-utils';
 
@@ -13,31 +13,31 @@ import { SizingNote } from './types';
 // Styles specific to the sizing note PDF
 const getSizingNoteStyles = () => `
   .info-box {
-    border-radius: 2mm;
-    padding: 5mm;
-    margin-bottom: 10mm;
+    border-radius: 1mm;
+    padding: 2mm;  /* Further reduced from 3mm to 2mm */
+    margin-bottom: 3mm;  /* Further reduced from 6mm to 3mm */
     position: relative;
   }
   
   .general-info-box {
     background-color: var(--extra-light-blue);
-    border-left: 3px solid var(--light-blue);
+    border-left: 2px solid var(--light-blue);
   }
   
   .box-title {
-    font-size: 14px;
+    font-size: 12px;  /* Reduced from 14px to 12px */
     font-weight: 600;
     color: var(--navy);
-    margin-bottom: 4mm;
-    padding-bottom: 2mm;
+    margin-bottom: 1mm;  /* Further reduced from 2mm to 1mm */
+    padding-bottom: 0.5mm;  /* Further reduced from 1mm to 0.5mm */
     border-bottom: 1px solid rgba(0,0,0,0.05);
   }
   
   /* Two column layout */
   .two-column-layout {
     display: flex;
-    gap: 15mm;
-    margin-top: 10mm;
+    gap: 8mm;  /* Reduced from 15mm to 8mm */
+    margin-top: 4mm;  /* Further reduced from 8mm to 4mm */
   }
   
   .left-column {
@@ -50,52 +50,52 @@ const getSizingNoteStyles = () => `
   
   /* Client info section */
   .client-name {
-    font-size: 16px;
+    font-size: 14px;  /* Reduced from 16px to 14px */
     font-weight: 600;
     text-transform: uppercase;
-    margin-bottom: 3mm;
+    margin-bottom: 1mm;  /* Further reduced from 2mm to 1mm */
   }
   
   .client-address {
-    font-size: 12px;
-    margin-bottom: 5mm;
+    font-size: 11px;  /* Reduced from 12px to 11px */
+    margin-bottom: 1.5mm;  /* Further reduced from 3mm to 1.5mm */
   }
   
   /* Info grid */
   .info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 3mm;
+    gap: 1mm;  /* Further reduced from 2mm to 1mm */
   }
   
   .info-item {
-    margin-bottom: 3mm;
+    margin-bottom: 1mm;  /* Further reduced from 2mm to 1mm */
   }
   
   .info-label {
-    font-size: 10px;
+    font-size: 9px;  /* Reduced from 10px to 9px */
     color: #666;
     font-weight: 600;
-    margin-bottom: 1mm;
+    margin-bottom: 0.2mm;  /* Further reduced from 0.5mm to 0.2mm */
   }
   
   .info-value {
-    font-size: 11px;
+    font-size: 10px;  /* Reduced from 11px to 10px */
     color: #333;
     font-weight: 500;
   }
   
   /* Equipment info */
   .equipment-info {
-    margin-top: 10mm;
+    margin-top: 3mm;  /* Further reduced from 8mm to 3mm */
   }
   
   /* Images container */
   .images-container {
-    margin-top: 10mm;
+    margin-top: 3mm;  /* Further reduced from 8mm to 3mm */
     display: flex;
     flex-direction: column;
-    gap: 10mm;
+    gap: 3mm;  /* Further reduced from 8mm to 3mm */
   }
   
   .image-wrapper {
@@ -106,19 +106,20 @@ const getSizingNoteStyles = () => `
     width: 100%;
     height: auto;
     display: block;
+    max-height: 80mm;  /* Added max-height to keep images from taking too much space */
   }
   
   /* Sizing section */
   .sizing-section {
     background-color: var(--extra-light-blue);
-    border-left: 3px solid var(--light-blue);
+    border-left: 2px solid var(--light-blue);
   }
   
   .sizing-formula {
-    font-size: 12px;
+    font-size: 10px;  /* Reduced from 12px to 10px */
     font-style: italic;
-    margin-bottom: 5mm;
-    padding: 3mm;
+    margin-bottom: 1.5mm;  /* Further reduced from 3mm to 1.5mm */
+    padding: 1mm;  /* Further reduced from 2mm to 1mm */
     background-color: rgba(255,255,255,0.5);
     border-radius: 1mm;
   }
@@ -126,96 +127,96 @@ const getSizingNoteStyles = () => `
   .sizing-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 3mm;
-    margin-bottom: 5mm;
+    gap: 1mm;  /* Further reduced from 2mm to 1mm */
+    margin-bottom: 1.5mm;  /* Further reduced from 3mm to 1.5mm */
   }
   
   .calculation-step {
-    margin-bottom: 4mm;
+    margin-bottom: 1mm;  /* Further reduced from 2mm to 1mm */
   }
   
   .calculation-title {
-    font-size: 12px;
+    font-size: 10px;  /* Reduced from 12px to 10px */
     font-weight: 600;
-    margin-bottom: 2mm;
+    margin-bottom: 0.5mm;  /* Further reduced from 1mm to 0.5mm */
   }
   
   .calculation-result {
-    font-size: 12px;
-    padding: 2mm;
+    font-size: 10px;  /* Reduced from 12px to 10px */
+    padding: 0.8mm;  /* Further reduced from 1.5mm to 0.8mm */
     background-color: rgba(255,255,255,0.5);
-    border-radius: 1mm;
+    border-radius: 0.5mm;
     display: inline-block;
   }
   
   /* Notes section */
   .notes-section {
-    margin: 10mm 0;
-    font-size: 11px;
-    line-height: 1.5;
+    margin: 3mm 0;  /* Further reduced from 8mm to 3mm */
+    font-size: 9px;  /* Reduced from 11px to 9px */
+    line-height: 1.3;  /* Further reduced from 1.4 to 1.3 */
   }
   
   /* Results section */
   .results-section {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 5mm;
-    margin: 10mm 0;
+    gap: 2mm;  /* Further reduced from 4mm to 2mm */
+    margin: 3mm 0;  /* Further reduced from 8mm to 3mm */
   }
   
   .result-item {
     background-color: rgba(240,240,240,0.5);
-    padding: 3mm;
-    border-radius: 1mm;
+    padding: 1mm;  /* Further reduced from 2mm to 1mm */
+    border-radius: 0.5mm;
   }
   
   .result-label {
-    font-size: 10px;
+    font-size: 9px;  /* Reduced from 10px to 9px */
     color: #666;
-    margin-bottom: 2mm;
+    margin-bottom: 0.5mm;  /* Further reduced from 1mm to 0.5mm */
   }
   
   .result-value {
-    font-size: 14px;
+    font-size: 12px;  /* Reduced from 14px to 12px */
     font-weight: 600;
     color: var(--navy);
   }
   
   /* Coverage section */
   .coverage-section {
-    margin: 10mm 0;
+    margin: 3mm 0;  /* Further reduced from 8mm to 3mm */
   }
   
   .coverage-explanation {
-    font-size: 10px;
-    margin-bottom: 2mm;
+    font-size: 9px;  /* Reduced from 10px to 9px */
+    margin-bottom: 0.5mm;  /* Further reduced from 1mm to 0.5mm */
   }
   
   .coverage-result {
-    font-size: 14px;
+    font-size: 12px;  /* Reduced from 14px to 12px */
     font-weight: 600;
     color: var(--navy);
   }
   
   /* Signature section */
   .signature-section {
-    margin-top: 15mm;
+    margin-top: 4mm;  /* Further reduced from 10mm to 4mm */
     border-top: 1px solid #eee;
-    padding-top: 10mm;
+    padding-top: 3mm;  /* Further reduced from 8mm to 3mm */
   }
   
   .signature-company {
     font-weight: 600;
-    margin-bottom: 2mm;
+    margin-bottom: 1mm;  /* Reduced from 2mm to 1mm */
   }
   
   .signature-details {
-    font-size: 11px;
-    margin-bottom: 5mm;
+    font-size: 9px;  /* Reduced from 11px to 9px */
+    margin-bottom: 2mm;  /* Further reduced from 4mm to 2mm */
   }
   
   .signature-image {
-    width: 60mm;
+    width: 40mm;  /* Reduced from 60mm to 40mm */
     height: auto;
   }
   
@@ -321,9 +322,9 @@ export const generateSizingNotePDF = (
           <div class="content">
             <div class="main-content">
               <!-- Document Title -->
-              <div class="document-title">
-                <div class="small-label">Document technique</div>
-                <h1 class="title">NOTE DE DIMENSIONNEMENT</h1>
+              <div class="document-title" style="margin-bottom: 2mm;">
+                <div class="small-label" style="font-size: 9px; margin-bottom: 1mm;">Document technique</div>
+                <h1 class="title" style="font-size: 16px; margin: 0;">NOTE DE DIMENSIONNEMENT</h1>
               </div>
               
               <!-- Two Column Layout -->
@@ -491,7 +492,7 @@ export const generateSizingNotePDF = (
                     </div>
                     <div class="coverage-result">${coverage.toFixed(0)} %</div>
                     
-                    <div class="coverage-explanation" style="margin-top: 5mm;">
+                    <div class="coverage-explanation" style="margin-top: 2mm;">
                       Le dimensionnement correct du matériel à installer est de
                     </div>
                     <div class="coverage-result">${sizingNote.dimensioning || '0'} KWs</div>
@@ -514,7 +515,7 @@ export const generateSizingNotePDF = (
             </div>
           </div>
           
-          ${getCompanyFooter('Page 1/1')}
+
         </div>
       </body>
     </html>
