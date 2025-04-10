@@ -46,7 +46,7 @@ export default function DialerPanel({
         setDialStatus('error');
         setStatusMessage('Failed to initiate call. Please try again.');
       }
-    } catch  {
+    } catch {
       setDialStatus('error');
       setStatusMessage('An error occurred while making the call');
     }

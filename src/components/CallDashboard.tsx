@@ -8,6 +8,7 @@ import ActiveCallsPanel from './dashboard/ActiveCallsPanel';
 import DialerPanel from './dashboard/DialerPanel';
 import AgentStatusPanel from './dashboard/AgentStatusPanel';
 import CallDetailsModal from './dashboard/CallDetailsModal';
+import CTILogsPanel from './dashboard/CTILogsPanel';
 import { useInterval } from '@/hooks/useInterval';
 
 export default function CallDashboard() {
@@ -19,6 +20,7 @@ export default function CallDashboard() {
   const [selectedCustomer, setSelectedCustomer] = useState<ZammadUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDiagnostics, setShowDiagnostics] = useState<boolean>(false);
   const [callStats, setCallStats] = useState({
     today: { total: 0, missed: 0, completed: 0 },
     week: { total: 0, missed: 0, completed: 0 },
@@ -31,21 +33,31 @@ export default function CallDashboard() {
       const response = await fetch('/api/pbx?action=callHistory&limit=100');
       const result = await response.json();
       
+      console.log("Call history response:", result);
+      
       if (result.success) {
-        setCalls(result.data);
-        
-        // Filter active calls
-        const active = result.data.filter((call: PBXCall) => call.status === 'active');
-        setActiveCalls(active);
-        
-        // Calculate call statistics
-        calculateCallStats(result.data);
+        // Check if data exists and is an array
+        if (Array.isArray(result.data) && result.data.length > 0) {
+          setCalls(result.data);
+          
+          // Filter active calls
+          const active = result.data.filter((call: PBXCall) => call.status === 'active');
+          setActiveCalls(active);
+          
+          // Calculate call statistics
+          calculateCallStats(result.data);
+        } else {
+          console.log("No call data found or empty array returned");
+          // If no data, show a message but don't clear existing data
+          setError("No call data found. Your PBX may not have any recorded calls yet.");
+        }
       } else {
+        console.error("API returned error:", result.error);
         setError(result.error || 'Failed to fetch call history');
       }
     } catch (err) {
+      console.error("Error fetching call history:", err);
       setError('Error connecting to Zammad API');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -246,6 +258,15 @@ export default function CallDashboard() {
                 </div>
               )}
               <button
+                onClick={() => setShowDiagnostics(true)}
+                className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                View Raw CTI Logs
+              </button>
+              <button
                 onClick={() => Promise.all([fetchCallHistory(), fetchExtensions()])}
                 className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
               >
@@ -344,6 +365,11 @@ export default function CallDashboard() {
           onCreateTicket={createTicket}
           isLoading={loading}
         />
+      )}
+      
+      {/* Diagnostics Modal */}
+      {showDiagnostics && (
+        <CTILogsPanel onClose={() => setShowDiagnostics(false)} />
       )}
     </div>
   );

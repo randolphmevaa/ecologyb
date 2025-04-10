@@ -51,7 +51,7 @@ export default function CallDetailsModal({
         setTicketStatus('error');
         setTicketError('Failed to create ticket. Please try again.');
       }
-    } catch  {
+    } catch {
       setTicketStatus('error');
       setTicketError('An unexpected error occurred');
     }

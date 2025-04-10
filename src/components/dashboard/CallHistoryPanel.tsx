@@ -40,10 +40,10 @@ export default function CallHistoryPanel({
 
   // Sort the filtered calls
   const sortedCalls = [...filteredCalls].sort((a, b) => {
-    if ((a[sortField] ?? '') < (b[sortField] ?? '')) return sortDirection === 'asc' ? -1 : 1;
-    if ((a[sortField] ?? '') > (b[sortField] ?? '')) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  });
+  if ((a[sortField] ?? '') < (b[sortField] ?? '')) return sortDirection === 'asc' ? -1 : 1;
+  if ((a[sortField] ?? '') > (b[sortField] ?? '')) return sortDirection === 'asc' ? 1 : -1;
+  return 0;
+});
 
   // Paginate calls
   const totalPages = Math.ceil(sortedCalls.length / rowsPerPage);
@@ -238,10 +238,10 @@ export default function CallHistoryPanel({
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {call.caller}
+                      {call.caller_pretty || call.caller}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {call.recipient}
+                      {call.recipient_pretty || call.recipient}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

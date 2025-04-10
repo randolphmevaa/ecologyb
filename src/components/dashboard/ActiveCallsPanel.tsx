@@ -132,10 +132,10 @@ export default function ActiveCallsPanel({
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {call.caller}
+                    {call.caller_pretty || call.caller}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {call.recipient}
+                    {call.recipient_pretty || call.recipient}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span className="text-red-600 font-medium animate-pulse">
