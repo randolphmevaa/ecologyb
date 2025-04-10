@@ -1,5 +1,5 @@
-import { useState, ReactNode } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState,  ReactNode } from "react";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import {
   XMarkIcon,
   ChevronLeftIcon,
@@ -14,19 +14,35 @@ import {
   PlusCircleIcon,
   MinusCircleIcon,
   ArrowPathIcon,
-  // StarIcon,
+  StarIcon,
   // ShieldExclamationIcon,
   // BoltIcon,
-  // CubeIcon
+  CubeIcon,
+  UserIcon,
+  ClockIcon,
+  DevicePhoneMobileIcon,
+  BuildingOfficeIcon,
+  // CurrencyEuroIcon,
+  ArrowsPointingOutIcon,
+  PlusIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  // HomeIcon,
+  // ChevronDownIcon,
+  AdjustmentsHorizontalIcon
 } from "@heroicons/react/24/outline";
 import { 
   ShieldCheckIcon, 
   CheckCircleIcon,
   TruckIcon,
   FireIcon,
-  // LightBulbIcon,
-  // BoltIcon as BoltSolidIcon,
-  // SparklesIcon
+  LightBulbIcon,
+  BoltIcon as BoltSolidIcon,
+  // SparklesIcon,
+  CalendarDaysIcon,
+  Cog8ToothIcon,
+  // LockClosedIcon,
+  // ArrowTrendingUpIcon
 } from "@heroicons/react/24/solid";
 
 // TypeScript interfaces for component props
@@ -53,9 +69,11 @@ const Modal = ({ isOpen, children }: ModalProps) => {
 
 // TypeScript interfaces for our data models
 interface TimeSlot {
+  id: string;
   time: string;
   duration: number; // in minutes
   available: boolean;
+  installerCount?: number; // Number of available installers
 }
 
 interface AvailableSlot {
@@ -71,7 +89,8 @@ interface Installer {
   rating: number;
   specialty: string;
   available: boolean;
-  image: string;
+  iconColor: string;
+  iconBgColor: string;
   installations: number;
   verified: boolean;
   experience?: number; // Years of experience
@@ -85,7 +104,9 @@ interface Product {
   category: string;
   price: number;
   rating: number;
-  image: string;
+  icon: React.ReactNode;
+  iconColor: string;
+  iconBgColor: string;
   stock: number;
   energy: string;
   power: string;
@@ -103,7 +124,9 @@ interface Accessory {
   id: number;
   name: string;
   price: number;
-  image: string;
+  icon: React.ReactNode;
+  iconColor: string;
+  iconBgColor: string;
   stock: number;
   description: string;
   compatibility?: string[]; // Compatible with which products
@@ -118,6 +141,16 @@ interface CalendarDay {
   hasSlots?: boolean;
 }
 
+interface DraggableAppointment {
+  id: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  title: string;
+  content?: string;
+  color: string;
+}
+
 // Available installation slots for the agenda
 const availableSlots: AvailableSlot[] = [
   { 
@@ -125,10 +158,10 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-15", 
     times: ["08:00", "11:00", "14:00", "16:00"],
     timeSlots: [
-      { time: "08:00", duration: 120, available: true },
-      { time: "11:00", duration: 120, available: true },
-      { time: "14:00", duration: 120, available: true },
-      { time: "16:00", duration: 120, available: true }
+      { id: "slot-1-1", time: "08:00", duration: 120, available: true, installerCount: 3 },
+      { id: "slot-1-2", time: "11:00", duration: 120, available: true, installerCount: 1 },
+      { id: "slot-1-3", time: "14:00", duration: 120, available: true, installerCount: 2 },
+      { id: "slot-1-4", time: "16:00", duration: 120, available: true, installerCount: 3 }
     ]
   },
   { 
@@ -136,9 +169,9 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-16", 
     times: ["09:00", "13:00", "15:00"],
     timeSlots: [
-      { time: "09:00", duration: 120, available: true },
-      { time: "13:00", duration: 120, available: true },
-      { time: "15:00", duration: 120, available: true }
+      { id: "slot-2-1", time: "09:00", duration: 120, available: true, installerCount: 2 },
+      { id: "slot-2-2", time: "13:00", duration: 120, available: true, installerCount: 4 },
+      { id: "slot-2-3", time: "15:00", duration: 120, available: true, installerCount: 1 }
     ]
   },
   { 
@@ -146,10 +179,10 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-17", 
     times: ["08:30", "10:30", "14:30", "16:30"],
     timeSlots: [
-      { time: "08:30", duration: 120, available: true },
-      { time: "10:30", duration: 120, available: true },
-      { time: "14:30", duration: 120, available: true },
-      { time: "16:30", duration: 120, available: true }
+      { id: "slot-3-1", time: "08:30", duration: 120, available: true, installerCount: 5 },
+      { id: "slot-3-2", time: "10:30", duration: 120, available: true, installerCount: 3 },
+      { id: "slot-3-3", time: "14:30", duration: 120, available: true, installerCount: 2 },
+      { id: "slot-3-4", time: "16:30", duration: 120, available: true, installerCount: 1 }
     ]
   },
   { 
@@ -157,9 +190,9 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-18", 
     times: ["08:00", "12:00", "15:00"],
     timeSlots: [
-      { time: "08:00", duration: 120, available: true },
-      { time: "12:00", duration: 120, available: true },
-      { time: "15:00", duration: 120, available: true }
+      { id: "slot-4-1", time: "08:00", duration: 120, available: true, installerCount: 4 },
+      { id: "slot-4-2", time: "12:00", duration: 120, available: true, installerCount: 3 },
+      { id: "slot-4-3", time: "15:00", duration: 120, available: true, installerCount: 2 }
     ]
   },
   { 
@@ -167,8 +200,8 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-19", 
     times: ["10:00", "14:00"],
     timeSlots: [
-      { time: "10:00", duration: 120, available: true },
-      { time: "14:00", duration: 120, available: true }
+      { id: "slot-5-1", time: "10:00", duration: 120, available: true, installerCount: 3 },
+      { id: "slot-5-2", time: "14:00", duration: 120, available: true, installerCount: 2 }
     ]
   },
   { 
@@ -176,9 +209,9 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-22", 
     times: ["09:00", "13:30", "16:00"],
     timeSlots: [
-      { time: "09:00", duration: 120, available: true },
-      { time: "13:30", duration: 120, available: true },
-      { time: "16:00", duration: 120, available: true }
+      { id: "slot-6-1", time: "09:00", duration: 120, available: true, installerCount: 1 },
+      { id: "slot-6-2", time: "13:30", duration: 120, available: true, installerCount: 3 },
+      { id: "slot-6-3", time: "16:00", duration: 120, available: true, installerCount: 2 }
     ]
   },
   { 
@@ -186,10 +219,10 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-23", 
     times: ["08:00", "10:30", "14:00", "15:30"],
     timeSlots: [
-      { time: "08:00", duration: 120, available: true },
-      { time: "10:30", duration: 120, available: true },
-      { time: "14:00", duration: 120, available: true },
-      { time: "15:30", duration: 120, available: true }
+      { id: "slot-7-1", time: "08:00", duration: 120, available: true, installerCount: 4 },
+      { id: "slot-7-2", time: "10:30", duration: 120, available: true, installerCount: 2 },
+      { id: "slot-7-3", time: "14:00", duration: 120, available: true, installerCount: 3 },
+      { id: "slot-7-4", time: "15:30", duration: 120, available: true, installerCount: 1 }
     ]
   },
   { 
@@ -197,9 +230,9 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-24", 
     times: ["09:30", "13:00", "16:30"],
     timeSlots: [
-      { time: "09:30", duration: 120, available: true },
-      { time: "13:00", duration: 120, available: true },
-      { time: "16:30", duration: 120, available: true }
+      { id: "slot-8-1", time: "09:30", duration: 120, available: true, installerCount: 2 },
+      { id: "slot-8-2", time: "13:00", duration: 120, available: true, installerCount: 5 },
+      { id: "slot-8-3", time: "16:30", duration: 120, available: true, installerCount: 1 }
     ]
   },
   { 
@@ -207,9 +240,9 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-25", 
     times: ["08:30", "11:30", "14:30"],
     timeSlots: [
-      { time: "08:30", duration: 120, available: true },
-      { time: "11:30", duration: 120, available: true },
-      { time: "14:30", duration: 120, available: true }
+      { id: "slot-9-1", time: "08:30", duration: 120, available: true, installerCount: 3 },
+      { id: "slot-9-2", time: "11:30", duration: 120, available: true, installerCount: 2 },
+      { id: "slot-9-3", time: "14:30", duration: 120, available: true, installerCount: 1 }
     ]
   },
   { 
@@ -217,8 +250,8 @@ const availableSlots: AvailableSlot[] = [
     date: "2025-04-26", 
     times: ["10:00", "14:00"],
     timeSlots: [
-      { time: "10:00", duration: 120, available: true },
-      { time: "14:00", duration: 120, available: true }
+      { id: "slot-10-1", time: "10:00", duration: 120, available: true, installerCount: 4 },
+      { id: "slot-10-2", time: "14:00", duration: 120, available: true, installerCount: 1 }
     ]
   }
 ];
@@ -231,7 +264,8 @@ const installers: Installer[] = [
     rating: 4.9, 
     specialty: "Chauffage", 
     available: true, 
-    image: "/api/placeholder/48/48", 
+    iconColor: "text-blue-600",
+    iconBgColor: "bg-blue-100",
     installations: 127, 
     verified: true,
     experience: 8,
@@ -244,7 +278,8 @@ const installers: Installer[] = [
     rating: 4.8, 
     specialty: "Électricité", 
     available: true, 
-    image: "/api/placeholder/48/48", 
+    iconColor: "text-amber-600",
+    iconBgColor: "bg-amber-100",
     installations: 98, 
     verified: true,
     experience: 6,
@@ -257,7 +292,8 @@ const installers: Installer[] = [
     rating: 4.7, 
     specialty: "Plomberie", 
     available: false, 
-    image: "/api/placeholder/48/48", 
+    iconColor: "text-sky-600",
+    iconBgColor: "bg-sky-100",
     installations: 75, 
     verified: true,
     experience: 5,
@@ -270,7 +306,8 @@ const installers: Installer[] = [
     rating: 4.9, 
     specialty: "Polyvalent", 
     available: true, 
-    image: "/api/placeholder/48/48", 
+    iconColor: "text-purple-600",
+    iconBgColor: "bg-purple-100",
     installations: 156, 
     verified: true,
     experience: 10,
@@ -283,7 +320,8 @@ const installers: Installer[] = [
     rating: 4.6, 
     specialty: "Chauffage", 
     available: true, 
-    image: "/api/placeholder/48/48", 
+    iconColor: "text-green-600",
+    iconBgColor: "bg-green-100",
     installations: 68, 
     verified: false,
     experience: 3,
@@ -300,7 +338,9 @@ const products: Product[] = [
     category: "Chauffage", 
     price: 3499, 
     rating: 4.8, 
-    image: "/api/placeholder/80/80", 
+    icon: <BoltSolidIcon className="h-full w-full" />,
+    iconColor: "text-blue-600",
+    iconBgColor: "bg-blue-100",
     stock: 12,
     energy: "A+++",
     power: "8 kW",
@@ -319,7 +359,9 @@ const products: Product[] = [
     category: "Climatisation", 
     price: 2799, 
     rating: 4.7, 
-    image: "/api/placeholder/80/80", 
+    icon: <LightBulbIcon className="h-full w-full" />,
+    iconColor: "text-cyan-600",
+    iconBgColor: "bg-cyan-100",
     stock: 8,
     energy: "A++",
     power: "12000 BTU",
@@ -338,7 +380,9 @@ const products: Product[] = [
     category: "Chauffage", 
     price: 2299, 
     rating: 4.9, 
-    image: "/api/placeholder/80/80", 
+    icon: <FireIcon className="h-full w-full" />,
+    iconColor: "text-orange-600",
+    iconBgColor: "bg-orange-100",
     stock: 5,
     energy: "A++",
     power: "24 kW",
@@ -357,7 +401,9 @@ const products: Product[] = [
     category: "Chauffage", 
     price: 899, 
     rating: 4.5, 
-    image: "/api/placeholder/80/80", 
+    icon: <Cog8ToothIcon className="h-full w-full" />,
+    iconColor: "text-purple-600",
+    iconBgColor: "bg-purple-100",
     stock: 23,
     energy: "A+",
     power: "1500 W",
@@ -378,7 +424,9 @@ const accessories: Accessory[] = [
     id: 101, 
     name: "Kit d'installation standard", 
     price: 199, 
-    image: "/api/placeholder/60/60", 
+    icon: <WrenchScrewdriverIcon className="h-full w-full" />,
+    iconColor: "text-gray-600",
+    iconBgColor: "bg-gray-100",
     stock: 45,
     description: "Kit complet avec tuyaux, supports et raccords",
     compatibility: ["Pompe à chaleur EcoHeat Pro", "Climatiseur réversible AirMax"],
@@ -389,7 +437,9 @@ const accessories: Accessory[] = [
     id: 102, 
     name: "Protection antigel premium", 
     price: 149, 
-    image: "/api/placeholder/60/60", 
+    icon: <ShieldCheckIcon className="h-full w-full" />,
+    iconColor: "text-indigo-600",
+    iconBgColor: "bg-indigo-100",
     stock: 32,
     description: "Protection contre le gel jusqu'à -25°C",
     compatibility: ["Pompe à chaleur EcoHeat Pro"],
@@ -400,7 +450,9 @@ const accessories: Accessory[] = [
     id: 103, 
     name: "Support mural renforcé", 
     price: 89, 
-    image: "/api/placeholder/60/60", 
+    icon: <BuildingOfficeIcon className="h-full w-full" />,
+    iconColor: "text-lime-600",
+    iconBgColor: "bg-lime-100",
     stock: 18,
     description: "Support anti-vibration pour unité extérieure",
     compatibility: ["Pompe à chaleur EcoHeat Pro", "Climatiseur réversible AirMax"],
@@ -411,7 +463,9 @@ const accessories: Accessory[] = [
     id: 104, 
     name: "Module Wi-Fi EcoConnect", 
     price: 129, 
-    image: "/api/placeholder/60/60", 
+    icon: <DevicePhoneMobileIcon className="h-full w-full" />,
+    iconColor: "text-sky-600",
+    iconBgColor: "bg-sky-100",
     stock: 27,
     description: "Contrôle à distance via smartphone",
     compatibility: ["Pompe à chaleur EcoHeat Pro", "Chaudière condensation EcoBoiler"],
@@ -420,23 +474,169 @@ const accessories: Accessory[] = [
   }
 ];
 
+// Define preset appointment slots for the advanced calendar
+const presetAppointments: DraggableAppointment[] = [
+  {
+    id: "appt-1",
+    startTime: "09:00",
+    endTime: "11:00",
+    duration: 120,
+    title: "Installation PAC",
+    content: "Installation complète avec test",
+    color: "bg-blue-100 border-blue-300 text-blue-800"
+  },
+  {
+    id: "appt-2",
+    startTime: "13:00",
+    endTime: "15:00",
+    duration: 120,
+    title: "Maintenance syst.",
+    content: "Vérification annuelle",
+    color: "bg-green-100 border-green-300 text-green-800"
+  },
+  {
+    id: "appt-3",
+    startTime: "15:30",
+    endTime: "17:00",
+    duration: 90,
+    title: "Dépannage",
+    content: "Intervention urgente",
+    color: "bg-red-100 border-red-300 text-red-800"
+  }
+];
+
+interface InstallationData {
+  date: string;
+  time: string;
+  installer: Installer | undefined;
+  product: Product;
+  quantity: number;
+  accessories: Accessory[];
+  notes: string;
+  total: number;
+  address: string;
+  status: string;
+}
+
+const hourMarkers = Array.from({ length: 11 }, (_, i) => {
+  const hour = i + 8; // Start at 8 AM
+  return `${hour}:00`;
+});
+
 interface EnhancedInstallationModalProps {
   // Optional props can be added here if needed
   initialStep?: number;
-  onComplete?: (data: {
-    date: string;
-    time: string;
-    installer: Installer | undefined;
-    product: Product | null;
-    quantity: number;
-    accessories: Accessory[];
-    notes: string;
-    total: number;
-    address: string;
-    status: string;
-  }) => void;
+  onComplete?: (data: InstallationData) => void;
   clientAddress?: string;
 }
+
+// TimeSlot component for draggable appointments
+const TimeSlotAppointment = ({ 
+  appointment,
+  isSelected,
+  onSelect,
+  onResize
+}: { 
+  appointment: DraggableAppointment, 
+  isSelected: boolean,
+  onSelect: () => void,
+  onResize: (newDuration: number) => void
+}) => {
+  const dragControls = useDragControls();
+  const [isDragging, setIsDragging] = useState(false);
+  const [, setIsResizing] = useState(false);
+  const [currentHeight, setCurrentHeight] = useState<number>(appointment.duration);
+  // const startRef = useRef<HTMLDivElement>(null);
+  
+  // Calculate position in the grid
+  const startHour = parseInt(appointment.startTime.split(':')[0], 10);
+  const startMinute = parseInt(appointment.startTime.split(':')[1], 10);
+  const topPosition = (startHour - 8) * 60 + startMinute; // 8 AM is our 0 position
+  
+  return (
+    <motion.div
+      drag="y"
+      dragControls={dragControls}
+      dragConstraints={{ top: 0, bottom: 600 }}
+      dragElastic={0.1}
+      dragMomentum={false}
+      whileDrag={{ zIndex: 10 }}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={() => setIsDragging(false)}
+      style={{ 
+        top: `${topPosition}px`,
+        height: `${currentHeight}px`
+      }}
+      className={`absolute left-16 right-4 rounded-md px-2 py-1.5 border shadow-sm cursor-move
+        ${appointment.color} ${isSelected ? 'ring-2 ring-offset-1 ring-blue-500' : ''} 
+        ${isDragging ? 'opacity-70' : ''}
+      `}
+      onClick={onSelect}
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="font-medium text-sm">{appointment.title}</div>
+          <div className="text-xs opacity-90">{appointment.startTime} - {appointment.endTime}</div>
+        </div>
+        {isSelected && (
+          <div className="flex space-x-1">
+            <button className="p-0.5 hover:bg-white/20 rounded">
+              <PencilIcon className="h-3 w-3" />
+            </button>
+            <button className="p-0.5 hover:bg-white/20 rounded">
+              <TrashIcon className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+      </div>
+      
+      {/* Resize handle */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize flex items-center justify-center"
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          setIsResizing(true);
+          
+          const startY = e.clientY;
+          const startHeight = currentHeight;
+          
+          const handleMouseMove = (moveEvent: MouseEvent) => {
+            const deltaY = moveEvent.clientY - startY;
+            const newHeight = Math.max(30, Math.min(240, startHeight + deltaY));
+            setCurrentHeight(newHeight);
+          };
+          
+          const handleMouseUp = () => {
+            setIsResizing(false);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            
+            // Call the resize callback with the new duration
+            onResize(currentHeight);
+          };
+          
+          document.addEventListener('mousemove', handleMouseMove);
+          document.addEventListener('mouseup', handleMouseUp);
+        }}
+      >
+        <div className="h-1 w-10 bg-current opacity-30 rounded-full" />
+      </div>
+    </motion.div>
+  );
+};
+
+// PencilIcon and TrashIcon components for appointment actions
+const PencilIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+  </svg>
+);
+
+const TrashIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  </svg>
+);
 
 const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   initialStep = 1,
@@ -453,13 +653,15 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [ , setSelectedTimeSlot] = useState<TimeSlot | null>(null);
-  const [calendarView, setCalendarView] = useState<"month" | "day" | "week">("month");
+  const [calendarView, setCalendarView] = useState<"month" | "day" | "week" | "schedule">("schedule");
+  const [selectedAppointment, setSelectedAppointment] = useState<string | null>(null);
+  const [appointments, setAppointments] = useState<DraggableAppointment[]>(presetAppointments);
   
   // Installer state
   const [selectedInstaller, setSelectedInstaller] = useState<number | null>(null);
   const [installationNotes, setInstallationNotes] = useState<string>("");
-  const [ , setSearchInstallerQuery] = useState<string>("");
-  const [ , setInstallerFilterSpecialty] = useState<string | null>(null);
+  const [searchInstallerQuery, setSearchInstallerQuery] = useState<string>("");
+  const [installerFilterSpecialty, setInstallerFilterSpecialty] = useState<string | null>(null);
   
   // Product state
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -467,13 +669,18 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   const [showAccessories, setShowAccessories] = useState<boolean>(false);
   const [selectedAccessories, setSelectedAccessories] = useState<Accessory[]>([]);
   const [orderReserved, setOrderReserved] = useState<boolean>(false);
-  const [ , setProductSearchQuery] = useState<string>("");
-  const [ , setProductCategoryFilter] = useState<string | null>(null);
+  const [productSearchQuery, setProductSearchQuery] = useState<string>("");
+  const [productCategoryFilter, setProductCategoryFilter] = useState<string | null>(null);
   
   // UI state
-  const [ , setShowInstallerDetails] = useState<boolean>(false);
+  const [showInstallerDetails, setShowInstallerDetails] = useState<boolean>(false);
   const [ , setShowProductDetails] = useState<boolean>(false);
   const [ , setActiveDetailTab] = useState<string>("specs");
+  
+  // Advanced calendar state
+  const [showMiniMonth, setShowMiniMonth] = useState<boolean>(true);
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(new Date(2025, 3, 14)); // April 14, 2025
+  // const [draggedAppointment, setDraggedAppointment] = useState<DraggableAppointment | null>(null);
   
   // Cart totals
   const cartTotal = selectedProduct 
@@ -482,30 +689,30 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
     : 0;
   
   // Filtered installers based on search and filters
-  // const filteredInstallers = installers
-  //   .filter(installer => 
-  //     installer.available && 
-  //     (searchInstallerQuery === "" || 
-  //      installer.name.toLowerCase().includes(searchInstallerQuery.toLowerCase()) ||
-  //      installer.specialty.toLowerCase().includes(searchInstallerQuery.toLowerCase())) &&
-  //     (installerFilterSpecialty === null || installer.specialty === installerFilterSpecialty)
-  //   );
+  const filteredInstallers = installers
+    .filter(installer => 
+      installer.available && 
+      (searchInstallerQuery === "" || 
+       installer.name.toLowerCase().includes(searchInstallerQuery.toLowerCase()) ||
+       installer.specialty.toLowerCase().includes(searchInstallerQuery.toLowerCase())) &&
+      (installerFilterSpecialty === null || installer.specialty === installerFilterSpecialty)
+    );
     
   // Filtered products based on search and filters
-  // const filteredProducts = products
-  //   .filter(product => 
-  //     (productSearchQuery === "" || 
-  //      product.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
-  //      product.category.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
-  //      product.description?.toLowerCase().includes(productSearchQuery.toLowerCase())) &&
-  //     (productCategoryFilter === null || product.category === productCategoryFilter)
-  //   );
+  const filteredProducts = products
+    .filter(product => 
+      (productSearchQuery === "" || 
+       product.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+       product.category.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+       product.description?.toLowerCase().includes(productSearchQuery.toLowerCase())) &&
+      (productCategoryFilter === null || product.category === productCategoryFilter)
+    );
     
   // Get available specialties for filtering
-  // const availableSpecialties = Array.from(new Set(installers.map(installer => installer.specialty)));
+  const availableSpecialties = Array.from(new Set(installers.map(installer => installer.specialty)));
   
   // Get available product categories for filtering
-  // const availableCategories = Array.from(new Set(products.map(product => product.category)));
+  const availableCategories = Array.from(new Set(products.map(product => product.category)));
   
   // Reset form state when modal is opened
   const openModal = (): void => {
@@ -526,7 +733,7 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
     setShowAccessories(false);
     setSelectedAccessories([]);
     setOrderReserved(false);
-    setCalendarView("month");
+    setCalendarView("schedule");
     setSearchInstallerQuery("");
     setInstallerFilterSpecialty(null);
     setProductSearchQuery("");
@@ -614,6 +821,37 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
     return slot ? slot.times.length : 0;
   };
   
+  // Handle appointment resize
+  const handleAppointmentResize = (appointmentId: string, newDuration: number): void => {
+    setAppointments(appointments.map(appointment => {
+      if (appointment.id === appointmentId) {
+        const startHour = parseInt(appointment.startTime.split(':')[0], 10);
+        const startMinute = parseInt(appointment.startTime.split(':')[1], 10);
+        
+        // Calculate new end time based on duration
+        const durationHours = Math.floor(newDuration / 60);
+        const durationMinutes = newDuration % 60;
+        
+        let endHour = startHour + durationHours;
+        let endMinute = startMinute + durationMinutes;
+        
+        if (endMinute >= 60) {
+          endHour += 1;
+          endMinute -= 60;
+        }
+        
+        const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+        
+        return {
+          ...appointment,
+          duration: newDuration,
+          endTime
+        };
+      }
+      return appointment;
+    }));
+  };
+  
   // Adjust first day to make Monday the first day of the week (0 = Monday, 6 = Sunday)
   const adjustFirstDay = (day: number): number => {
     return day === 0 ? 6 : day - 1;
@@ -672,36 +910,36 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   };
   
   // Generate week view data centered around selected date
-  const generateWeekView = (): CalendarDay[] => {
-    if (!selectedDate) return [];
+  // const generateWeekView = (): CalendarDay[] => {
+  //   if (!selectedDate) return [];
     
-    const selectedDateObj = new Date(selectedDate);
-    const dayOfWeek = selectedDateObj.getDay();
-    const sunday = new Date(selectedDateObj);
-    sunday.setDate(selectedDateObj.getDate() - dayOfWeek);
+  //   const selectedDateObj = new Date(selectedDate);
+  //   const dayOfWeek = selectedDateObj.getDay();
+  //   const sunday = new Date(selectedDateObj);
+  //   sunday.setDate(selectedDateObj.getDate() - dayOfWeek);
     
-    const weekDays: CalendarDay[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(sunday);
-      date.setDate(sunday.getDate() + i);
-      const dateString = date.toISOString().split('T')[0];
+  //   const weekDays: CalendarDay[] = [];
+  //   for (let i = 0; i < 7; i++) {
+  //     const date = new Date(sunday);
+  //     date.setDate(sunday.getDate() + i);
+  //     const dateString = date.toISOString().split('T')[0];
       
-      weekDays.push({
-        date,
-        dateString,
-        isCurrentMonth: date.getMonth() === currentMonth.getMonth(),
-        hasSlots: hasAvailableSlots(dateString)
-      });
-    }
+  //     weekDays.push({
+  //       date,
+  //       dateString,
+  //       isCurrentMonth: date.getMonth() === currentMonth.getMonth(),
+  //       hasSlots: hasAvailableSlots(dateString)
+  //     });
+  //   }
     
-    return weekDays;
-  };
+  //   return weekDays;
+  // };
   
   // Get time slots for a specific date with detailed information
-  // const getTimeSlots = (dateString: string): TimeSlot[] => {
-  //   const slot = availableSlots.find(slot => slot.date === dateString);
-  //   return slot?.timeSlots || [];
-  // };
+  const getTimeSlots = (dateString: string): TimeSlot[] => {
+    const slot = availableSlots.find(slot => slot.date === dateString);
+    return slot?.timeSlots || [];
+  };
   
   // Navigate to previous month
   const goToPreviousMonth = () => {
@@ -716,6 +954,31 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   // Format month name
   const formatMonth = (date: Date) => {
     return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  };
+  
+  // Navigate to previous week
+  const goToPreviousWeek = () => {
+    const newDate = new Date(currentWeekStart);
+    newDate.setDate(newDate.getDate() - 7);
+    setCurrentWeekStart(newDate);
+  };
+  
+  // Navigate to next week
+  const goToNextWeek = () => {
+    const newDate = new Date(currentWeekStart);
+    newDate.setDate(newDate.getDate() + 7);
+    setCurrentWeekStart(newDate);
+  };
+  
+  // Generate days for the week view
+  const generateWeekDays = (): Date[] => {
+    const days: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(currentWeekStart);
+      day.setDate(currentWeekStart.getDate() + i);
+      days.push(day);
+    }
+    return days;
   };
 
   // Modal animation variants
@@ -759,7 +1022,7 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="relative inline-block w-full max-w-4xl transform rounded-2xl bg-white text-left align-middle shadow-xl transition-all sm:align-middle sm:max-w-4xl"
+          className="relative inline-block w-full max-w-6xl transform rounded-2xl bg-white text-left align-middle shadow-xl transition-all sm:align-middle"
         >
           {/* Modal header with gradient background */}
           <div className="relative overflow-hidden rounded-t-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 pt-6">
@@ -827,7 +1090,7 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
 
           {/* Modal body with steps */}
           <div className="px-6 py-6 sm:px-8 sm:py-8 max-h-[70vh] overflow-y-auto">
-            {/* Step 1: Enhanced Calendar/Agenda */}
+            {/* Step 1: Enhanced Google-like Calendar/Agenda */}
             {currentStep === 1 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -837,71 +1100,334 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
               >
                 <div>
                   <h4 className="text-lg font-medium text-gray-900">Sélectionnez une date et un horaire</h4>
-                  <p className="mt-1 text-sm text-gray-500">Consultez l&apos;agenda des disponibilités pour planifier l&apos;installation</p>
+                  <p className="mt-1 text-sm text-gray-500">Consultez le calendrier et planifiez l&apos;installation en fonction des disponibilités</p>
                 </div>
                 
-                {/* Enhanced Calendar view */}
+                {/* Top-tier Calendar view, Google Calendar-like */}
                 <div className="rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  {/* Calendar header */}
-                  <div className="bg-white p-5 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="h-10 w-10 flex items-center justify-center rounded-full bg-green-100 text-green-600">
-                          <CalendarIcon className="h-5 w-5" />
-                        </div>
-                        <h5 className="text-base font-medium text-gray-800 capitalize">
-                          {formatMonth(currentMonth)}
-                        </h5>
+                  {/* Calendar Toolbar */}
+                  <div className="bg-white px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={() => setCalendarView("schedule")}
+                        className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md ${
+                          calendarView === "schedule" 
+                            ? "bg-blue-100 text-blue-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <CalendarIcon className="w-4 h-4 mr-1.5" />
+                        Planning
+                      </button>
+                      <button 
+                        onClick={() => setCalendarView("month")}
+                        className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md ${
+                          calendarView === "month" 
+                            ? "bg-blue-100 text-blue-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <CalendarDaysIcon className="w-4 h-4 mr-1.5" />
+                        Mois
+                      </button>
+                      <button 
+                        onClick={() => setCalendarView("week")}
+                        className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md ${
+                          calendarView === "week" 
+                            ? "bg-blue-100 text-blue-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <AdjustmentsHorizontalIcon className="w-4 h-4 mr-1.5" />
+                        Semaine
+                      </button>
+                      <button 
+                        onClick={() => setCalendarView("day")}
+                        className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md ${
+                          calendarView === "day" 
+                            ? "bg-blue-100 text-blue-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <ClockIcon className="w-4 h-4 mr-1.5" />
+                        Jour
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <button 
+                        onClick={calendarView === "month" ? goToPreviousMonth : goToPreviousWeek}
+                        className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100"
+                      >
+                        <ChevronLeftIcon className="h-5 w-5" />
+                      </button>
+                      
+                      <div className="text-sm font-medium text-gray-900">
+                        {calendarView === "month" ? formatMonth(currentMonth) : 
+                          calendarView === "week" || calendarView === "schedule" ? 
+                          `${new Date(currentWeekStart).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} - ${
+                            new Date(new Date(currentWeekStart).setDate(currentWeekStart.getDate() + 6))
+                            .toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+                          }` : 
+                          selectedDate ? 
+                          new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) :
+                          "Sélectionnez une date"
+                        }
                       </div>
                       
-                      <div className="flex items-center space-x-3">
-                        {/* Calendar view toggle */}
-                        <div className="flex p-1 rounded-lg bg-gray-100 text-xs font-medium">
-                          <button
-                            onClick={() => setCalendarView("month")}
-                            className={`px-3 py-1.5 rounded-md transition ${
-                              calendarView === "month"
-                                ? "bg-white text-gray-800 shadow-sm"
-                                : "text-gray-600 hover:bg-gray-50"
-                            }`}
-                          >
-                            Mois
-                          </button>
-                          <button
-                            onClick={() => setCalendarView("day")}
-                            disabled={!selectedDate}
-                            className={`px-3 py-1.5 rounded-md transition ${
-                              calendarView === "day"
-                                ? "bg-white text-gray-800 shadow-sm"
-                                : selectedDate
-                                ? "text-gray-600 hover:bg-gray-50"
-                                : "text-gray-400 cursor-not-allowed"
-                            }`}
-                          >
-                            Jour
-                          </button>
-                        </div>
-                        
-                        {/* Month navigation */}
-                        <div className="flex space-x-2">
-                          <button 
-                            onClick={goToPreviousMonth}
-                            className="h-8 w-8 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 transition"
-                          >
-                            <ChevronLeftIcon className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={goToNextMonth}
-                            className="h-8 w-8 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 transition"
-                          >
-                            <ChevronRightIcon className="h-4 w-4" />
-                          </button>
-                        </div>
+                      <button 
+                        onClick={calendarView === "month" ? goToNextMonth : goToNextWeek}
+                        className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100"
+                      >
+                        <ChevronRightIcon className="h-5 w-5" />
+                      </button>
+                      
+                      {/* Additional actions */}
+                      <div className="flex items-center pl-2 space-x-1.5 ml-2 border-l border-gray-200">
+                        <button className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100">
+                          <MagnifyingGlassIcon className="h-4 w-4" />
+                        </button>
+                        <button className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100">
+                          <FunnelIcon className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => setShowMiniMonth(!showMiniMonth)}
+                          className={`p-1.5 rounded-md ${showMiniMonth ? "bg-blue-100 text-blue-700" : "text-gray-500 hover:bg-gray-100"}`}
+                        >
+                          <ArrowsPointingOutIcon className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Calendar grid - Month view */}
+                  {/* Calendar body - Google Calendar inspired Schedule view */}
+                  {calendarView === "schedule" && (
+                    <div className="flex">
+                      {/* Side mini month calendar when enabled */}
+                      {showMiniMonth && (
+                        <div className="w-64 p-3 border-r border-gray-200 bg-gray-50">
+                          {/* Mini month view */}
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-medium text-gray-500 uppercase">
+                                {currentMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                              </span>
+                              <div className="flex space-x-1">
+                                <button 
+                                  onClick={goToPreviousMonth}
+                                  className="p-1 rounded-full text-gray-500 hover:bg-gray-200"
+                                >
+                                  <ChevronLeftIcon className="h-3 w-3" />
+                                </button>
+                                <button 
+                                  onClick={goToNextMonth}
+                                  className="p-1 rounded-full text-gray-500 hover:bg-gray-200"
+                                >
+                                  <ChevronRightIcon className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </div>
+                            
+                            {/* Mini calendar days */}
+                            <div className="grid grid-cols-7 gap-1 text-center">
+                              {["L", "M", "M", "J", "V", "S", "D"].map((day, i) => (
+                                <div key={`day-label-${i}`} className="text-xs text-gray-500 font-medium py-1">
+                                  {day}
+                                </div>
+                              ))}
+                              
+                              {generateCalendarDays().map((day, index) => {
+                                const isSelected = selectedDate === day.dateString;
+                                const isToday = new Date().toDateString() === day.date.toDateString();
+                                
+                                return (
+                                  <button
+                                    key={`mini-day-${index}`}
+                                    onClick={() => {
+                                      if (day.hasSlots) {
+                                        setSelectedDate(day.dateString);
+                                        // Update the currentWeekStart to contain this date
+                                        const newWeekStart = new Date(day.date);
+                                        const dayOfWeek = newWeekStart.getDay(); // 0 = Sunday, 1 = Monday, ...
+                                        newWeekStart.setDate(newWeekStart.getDate() - dayOfWeek);
+                                        setCurrentWeekStart(newWeekStart);
+                                      }
+                                    }}
+                                    disabled={!day.hasSlots && day.isCurrentMonth}
+                                    className={`h-6 w-6 flex items-center justify-center text-xs rounded-full 
+                                      ${!day.isCurrentMonth ? "text-gray-400" : 
+                                        isSelected ? "bg-blue-600 text-white" : 
+                                        isToday ? "bg-blue-100 text-blue-800" : 
+                                        day.hasSlots ? "hover:bg-blue-50 text-gray-800" : 
+                                        "text-gray-800"}`}
+                                  >
+                                    {day.date.getDate()}
+                                    {day.hasSlots && !isSelected && (
+                                      <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-green-500"></span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          
+                          {/* Available appointment types */}
+                          <div>
+                            <h6 className="text-xs font-medium text-gray-500 uppercase mb-2">Types de Rendez-vous</h6>
+                            <div className="space-y-2">
+                              <div className="flex items-center text-sm p-2 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                                <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                                <span>Installation (2h)</span>
+                              </div>
+                              <div className="flex items-center text-sm p-2 rounded-md hover:bg-gray-100">
+                                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                                <span>Maintenance (2h)</span>
+                              </div>
+                              <div className="flex items-center text-sm p-2 rounded-md hover:bg-gray-100">
+                                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                                <span>Dépannage (1h30)</span>
+                              </div>
+                              <div className="flex items-center text-sm p-2 rounded-md hover:bg-gray-100">
+                                <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
+                                <span>Consultation (1h)</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Weekly schedule view */}
+                      <div className="flex-1 overflow-auto">
+                        {/* Week days header */}
+                        <div className="flex border-b border-gray-200 bg-gray-50">
+                          <div className="w-16 flex-shrink-0 border-r border-gray-200 py-2"></div>
+                          {generateWeekDays().map((date, idx) => {
+                            const dateString = date.toISOString().split('T')[0];
+                            const isToday = new Date().toDateString() === date.toDateString();
+                            const isSelectedDay = selectedDate === dateString;
+                            
+                            return (
+                              <div 
+                                key={`weekday-${idx}`} 
+                                className={`flex-1 text-center p-2 min-w-[100px] ${isToday ? "bg-blue-50" : ""}`}
+                                onClick={() => setSelectedDate(dateString)}
+                              >
+                                <div className={`text-sm font-medium ${isToday ? "text-blue-700" : "text-gray-700"}`}>
+                                  {date.toLocaleDateString('fr-FR', { weekday: 'short' })}
+                                </div>
+                                <div className={`flex items-center justify-center h-7 w-7 mx-auto ${
+                                  isSelectedDay 
+                                    ? "bg-blue-600 text-white rounded-full" 
+                                    : isToday 
+                                    ? "bg-blue-100 text-blue-800 rounded-full" 
+                                    : ""
+                                }`}>
+                                  {date.getDate()}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        {/* Time grid */}
+                        <div className="relative">
+                          {/* Time markers */}
+                          <div className="flex">
+                            <div className="w-16 flex-shrink-0 border-r border-gray-200">
+                              {hourMarkers.map((hour, idx) => (
+                                <div 
+                                  key={`hour-${idx}`} 
+                                  className="h-20 flex items-center justify-center text-xs text-gray-500"
+                                  style={{ height: "60px" }}
+                                >
+                                  {hour}
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {/* Day columns with grid lines */}
+                            <div className="flex-1 flex">
+                              {generateWeekDays().map((date, dayIdx) => {
+                                const dateString = date.toISOString().split('T')[0];
+                                const isToday = new Date().toDateString() === date.toDateString();
+                                
+                                return (
+                                  <div 
+                                    key={`day-col-${dayIdx}`}
+                                    className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${isToday ? "bg-blue-50/30" : ""}`}
+                                  >
+                                    {/* Horizontal time grid lines */}
+                                    {hourMarkers.map((_, idx) => (
+                                      <div 
+                                        key={`grid-${dayIdx}-${idx}`}
+                                        className="h-[60px] border-b border-gray-100"
+                                      ></div>
+                                    ))}
+                                    
+                                    {/* Time slots */}
+                                    {getTimeSlots(dateString).map((slot, slotIdx) => {
+                                      const isSelected = selectedDate === dateString && selectedTime === slot.time;
+                                      const startHour = parseInt(slot.time.split(':')[0], 10);
+                                      const startMinute = parseInt(slot.time.split(':')[1], 10);
+                                      const topPosition = (startHour - 8) * 60 + startMinute; // 8AM is our start
+                                      
+                                      return (
+                                        <motion.div
+                                          key={`slot-${dayIdx}-${slotIdx}`}
+                                          whileHover={{ scale: 1.02 }}
+                                          whileTap={{ scale: 0.98 }}
+                                          onClick={() => {
+                                            setSelectedDate(dateString);
+                                            setSelectedTime(slot.time);
+                                            setSelectedTimeSlot(slot);
+                                          }}
+                                          style={{ top: `${topPosition}px`, height: `${slot.duration}px` }}
+                                          className={`absolute left-1 right-1 rounded-md border shadow-sm px-2 py-1.5 cursor-pointer ${
+                                            isSelected 
+                                              ? "bg-blue-100 border-blue-300 text-blue-800 z-10 ring-2 ring-blue-500/50"
+                                              : "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                                          }`}
+                                        >
+                                          <div className="flex justify-between items-start">
+                                            <div>
+                                              <div className="font-medium text-sm">Installation</div>
+                                              <div className="text-xs">{slot.time} - {
+                                                (() => {
+                                                  const [hours, minutes] = slot.time.split(':').map(Number);
+                                                  const endTime = new Date(2025, 0, 1, hours, minutes);
+                                                  endTime.setMinutes(endTime.getMinutes() + slot.duration);
+                                                  return endTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                                })()
+                                              }</div>
+                                            </div>
+                                            <div className="text-xs bg-white/60 px-1.5 py-0.5 rounded-full">
+                                              {slot.installerCount} installateurs
+                                            </div>
+                                          </div>
+                                          {isSelected && (
+                                            <motion.div 
+                                              initial={{ opacity: 0 }}
+                                              animate={{ opacity: 1 }}
+                                              className="absolute bottom-0 left-0 right-0 h-6 bg-blue-500/10 flex items-center justify-center rounded-b-md"
+                                            >
+                                              <CheckIcon className="h-3.5 w-3.5 text-blue-700" />
+                                              <span className="text-xs font-medium text-blue-700 ml-1">Sélectionné</span>
+                                            </motion.div>
+                                          )}
+                                        </motion.div>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Month view calendar - grid view */}
                   {calendarView === "month" && (
                     <div className="bg-white p-4">
                       {/* Week days */}
@@ -937,51 +1463,78 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                                 }
                               }}
                               disabled={!day.isCurrentMonth || !day.hasSlots}
-                              className={`relative h-14 rounded-lg border p-1 text-center transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+                              className={`relative h-24 rounded-lg border p-1 text-center transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 ${
                                 !day.isCurrentMonth
                                   ? "border-transparent bg-white text-gray-300"
                                   : isSelected
-                                  ? "border-green-500 bg-green-50 text-green-700 shadow-md ring-1 ring-green-500/30"
+                                  ? "border-blue-500 bg-blue-50 text-blue-700 shadow-md ring-1 ring-blue-500/30"
                                   : isToday && day.hasSlots
                                   ? "cursor-pointer border-blue-300 bg-blue-50/30 text-blue-700 shadow-sm"
                                   : day.hasSlots
-                                  ? "cursor-pointer border-gray-100 hover:border-green-200 hover:bg-green-50/50 hover:shadow-sm"
+                                  ? "cursor-pointer border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 hover:shadow-sm"
                                   : "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400"
                               }`}
                             >
-                              <div className="flex flex-col items-center justify-center h-full">
-                                {/* Date with special indicator for today */}
-                                {isToday ? (
-                                  <div className={`flex items-center justify-center h-6 w-6 rounded-full ${
-                                    isSelected 
-                                      ? "bg-green-500 text-white"
-                                      : "bg-blue-500 text-white"
-                                  }`}>
-                                    <span className="text-xs font-bold">{day.date.getDate()}</span>
-                                  </div>
-                                ) : (
-                                  <span className={`text-sm ${isSelected ? "font-medium" : ""}`}>
-                                    {day.date.getDate()}
-                                  </span>
-                                )}
-                                
-                                {/* Enhanced indicator for available slots */}
-                                {day.isCurrentMonth && day.hasSlots && (
-                                  <div className="mt-1 text-center">
-                                    <div className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs ${
-                                      isSelected
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-gray-100 text-gray-700"
+                              <div className="flex flex-col h-full">
+                                {/* Date header */}
+                                <div className="flex justify-between items-center mb-1">
+                                  {/* Date with special indicator for today */}
+                                  {isToday ? (
+                                    <div className={`flex items-center justify-center h-6 w-6 rounded-full ${
+                                      isSelected 
+                                        ? "bg-blue-500 text-white"
+                                        : "bg-blue-500 text-white"
                                     }`}>
-                                      <span>{slotCount}</span>
+                                      <span className="text-xs font-bold">{day.date.getDate()}</span>
                                     </div>
+                                  ) : (
+                                    <span className={`text-sm ${isSelected ? "font-medium" : ""} px-1`}>
+                                      {day.date.getDate()}
+                                    </span>
+                                  )}
+                                  
+                                  {/* Slot count indicator */}
+                                  {day.isCurrentMonth && day.hasSlots && (
+                                    <span className={`text-xs rounded-full px-1.5 ${
+                                      isSelected
+                                        ? "bg-blue-200 text-blue-800"
+                                        : "bg-green-100 text-green-700"
+                                    }`}>
+                                      {slotCount}
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                {/* Time slot indicators */}
+                                {day.isCurrentMonth && day.hasSlots && (
+                                  <div className="flex flex-col space-y-1 mt-1 text-left">
+                                    {availableSlots
+                                      .find(slot => slot.date === day.dateString)
+                                      ?.times.slice(0, 2).map((time, idx) => (
+                                        <div 
+                                          key={`time-${idx}`} 
+                                          className={`text-xs px-1.5 py-0.5 rounded truncate ${
+                                            isSelected
+                                              ? "bg-blue-100 text-blue-800"
+                                              : "bg-gray-100 text-gray-700"
+                                          }`}
+                                        >
+                                          {time} - Installation
+                                        </div>
+                                      ))
+                                    }
+                                    {(availableSlots.find(slot => slot.date === day.dateString)?.times.length || 0) > 2 && (
+                                      <div className="text-xs text-gray-500 pl-1.5">
+                                        +{(availableSlots.find(slot => slot.date === day.dateString)?.times.length || 0) - 2} autres
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
                               
                               {/* Enhanced hover effect */}
                               {day.isCurrentMonth && day.hasSlots && !isSelected && (
-                                <div className="absolute inset-0 rounded-lg border-2 border-green-500/70 opacity-0 hover:opacity-100 transition-opacity" />
+                                <div className="absolute inset-0 rounded-lg border-2 border-blue-500/70 opacity-0 hover:opacity-100 transition-opacity" />
                               )}
                             </motion.button>
                           );
@@ -990,227 +1543,225 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                     </div>
                   )}
                   
-                  {/* NEW: Week view */}
-                  {calendarView === "week" && selectedDate && (
-                    <div className="bg-white p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h6 className="text-sm font-medium text-gray-700 flex items-center">
-                          <span className="capitalize">Semaine du {new Date(selectedDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</span>
-                          <button 
-                            onClick={() => setCalendarView("month")}
-                            className="ml-2 text-xs text-blue-600 hover:text-blue-700 flex items-center"
-                          >
-                            <ChevronLeftIcon className="h-3.5 w-3.5 mr-0.5" />
-                            Vue mois
-                          </button>
-                        </h6>
-                      </div>
-                      
-                      {/* Week days header */}
-                      <div className="grid grid-cols-7 gap-2 mb-2">
-                        {["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"].map((day, i) => (
-                          <div key={i} className="text-center">
-                            <span className="text-xs font-medium text-gray-500">{day}</span>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {/* Week days content */}
-                      <div className="grid grid-cols-7 gap-2">
-                        {generateWeekView().map((day, index) => {
-                          const isSelected = selectedDate === day.dateString;
-                          const slotCount = day.hasSlots ? getAvailableSlotCount(day.dateString) : 0;
+                  {/* Week view */}
+                  {calendarView === "week" && (
+                    <div className="bg-white">
+                      {/* Week header */}
+                      <div className="flex border-b border-gray-200">
+                        <div className="w-16 flex-shrink-0 p-3 border-r border-gray-200"></div>
+                        {generateWeekDays().map((date, idx) => {
+                          const dateString = date.toISOString().split('T')[0];
+                          const isToday = new Date().toDateString() === date.toDateString();
+                          const isSelected = selectedDate === dateString;
                           
                           return (
-                            <motion.button
-                              key={index}
-                              whileHover={day.hasSlots ? { scale: 1.05 } : {}}
-                              whileTap={day.hasSlots ? { scale: 0.95 } : {}}
-                              onClick={() => {
-                                if (day.hasSlots) {
-                                  setSelectedDate(day.dateString);
-                                  setSelectedTime(null);
-                                  setSelectedTimeSlot(null);
-                                  setCalendarView("day");
-                                }
-                              }}
-                              disabled={!day.hasSlots}
-                              className={`flex flex-col items-center p-2 rounded-lg border transition-all ${
-                                isSelected
-                                  ? "border-green-500 bg-green-50 text-green-700 shadow-md"
-                                  : day.hasSlots
-                                  ? "border-gray-200 hover:border-green-200 hover:bg-green-50/50"
-                                  : "border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed"
-                              }`}
+                            <div 
+                              key={`week-header-${idx}`}
+                              className={`flex-1 p-3 text-center ${isToday ? "bg-blue-50" : ""}`}
                             >
-                              <span className="text-sm font-medium">
-                                {day.date.getDate()}
-                              </span>
-                              
-                              {day.hasSlots && (
-                                <div className="mt-1 text-xs text-center">
-                                  <span className={`inline-block rounded-full px-1.5 py-0.5 ${
-                                    isSelected
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-gray-100 text-gray-700"
-                                  }`}>
-                                    {slotCount} dispo
-                                  </span>
-                                </div>
-                              )}
-                            </motion.button>
+                              <div className="text-xs font-medium text-gray-500 uppercase">
+                                {date.toLocaleDateString('fr-FR', { weekday: 'short' })}
+                              </div>
+                              <div className={`inline-flex items-center justify-center h-7 w-7 mt-1 ${
+                                isSelected
+                                  ? "bg-blue-600 text-white rounded-full"
+                                  : isToday
+                                  ? "bg-blue-100 text-blue-800 rounded-full"
+                                  : ""
+                              }`}>
+                                {date.getDate()}
+                              </div>
+                            </div>
                           );
                         })}
+                      </div>
+                      
+                      {/* Week Time Grid */}
+                      <div className="flex">
+                        {/* Time column */}
+                        <div className="w-16 flex-shrink-0 border-r border-gray-200">
+                          {[...Array(13)].map((_, idx) => {
+                            const hour = 8 + idx;
+                            return (
+                              <div 
+                                key={`time-marker-${idx}`}
+                                className="h-20 flex items-center justify-center text-xs text-gray-500 border-b border-gray-100"
+                              >
+                                {hour}:00
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        {/* Day columns */}
+                        <div className="flex flex-1">
+                          {generateWeekDays().map((date, dayIdx) => {
+                            const dateString = date.toISOString().split('T')[0];
+                            const isToday = new Date().toDateString() === date.toDateString();
+                            
+                            return (
+                              <div
+                                key={`week-col-${dayIdx}`}
+                                className={`flex-1 relative border-r border-gray-100 ${isToday ? "bg-blue-50/20" : ""}`}
+                              >
+                                {/* Hour grid */}
+                                {[...Array(13)].map((_, hourIdx) => (
+                                  <div
+                                    key={`grid-${dayIdx}-${hourIdx}`}
+                                    className="h-20 border-b border-gray-100"
+                                  ></div>
+                                ))}
+                                
+                                {/* Appointment slots for this day */}
+                                {getTimeSlots(dateString).map((slot, slotIdx) => {
+                                  const isSelected = selectedDate === dateString && selectedTime === slot.time;
+                                  const hour = parseInt(slot.time.split(':')[0], 10);
+                                  const minute = parseInt(slot.time.split(':')[1], 10);
+                                  const topPosition = (hour - 8) * 80 + (minute / 60) * 80;
+                                  const heightPosition = (slot.duration / 60) * 80;
+                                  
+                                  return (
+                                    <motion.div
+                                      key={`week-slot-${dayIdx}-${slotIdx}`}
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      onClick={() => {
+                                        setSelectedDate(dateString);
+                                        setSelectedTime(slot.time);
+                                        setSelectedTimeSlot(slot);
+                                      }}
+                                      style={{ 
+                                        top: `${topPosition}px`, 
+                                        height: `${heightPosition}px`
+                                      }}
+                                      className={`absolute left-0.5 right-0.5 px-2 py-1 rounded shadow-sm border ${
+                                        isSelected 
+                                          ? "bg-blue-100 border-blue-300 text-blue-800 z-20"
+                                          : "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                                      }`}
+                                    >
+                                      <div className="text-xs font-medium truncate">
+                                        Installation
+                                      </div>
+                                      <div className="text-xs opacity-70 truncate">
+                                        {slot.time}
+                                      </div>
+                                      {isSelected && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-blue-200/40 flex items-center justify-center">
+                                          <span className="text-[10px] font-medium text-blue-700">Sélectionné</span>
+                                        </div>
+                                      )}
+                                    </motion.div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}
                   
-                  {/* Calendar view - Enhanced Day view */}
+                  {/* Day view calendar - Enhanced with timeline */}
                   {calendarView === "day" && selectedDate && (
-                    <div className="bg-white p-5 space-y-4">
-                      <div className="flex items-center justify-between">
+                    <div className="bg-white">
+                      {/* Day header */}
+                      <div className="flex border-b border-gray-200 bg-gray-50 p-3 items-center justify-between">
                         <div className="flex items-center">
-                          <div className="h-8 w-8 flex items-center justify-center rounded-full bg-green-100 text-green-600 mr-2">
+                          <div className="h-8 w-8 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-2">
                             <CalendarIcon className="h-4 w-4" />
                           </div>
                           <div>
-                            <span className="text-xs text-gray-500 block">Disponibilités</span>
                             <h6 className="text-sm font-medium text-gray-800 capitalize">
                               {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                             </h6>
+                            <div className="text-xs text-gray-500">
+                              {getTimeSlots(selectedDate).length} créneaux disponibles
+                            </div>
                           </div>
                         </div>
                         
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1">
                           <button 
-                            onClick={() => setCalendarView("month")}
-                            className="px-2 py-1 text-xs text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md flex items-center transition-colors"
+                            onClick={() => {
+                              const currentDate = new Date(selectedDate);
+                              currentDate.setDate(currentDate.getDate() - 1);
+                              setSelectedDate(currentDate.toISOString().split('T')[0]);
+                            }}
+                            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-200"
                           >
-                            <ChevronLeftIcon className="h-3.5 w-3.5 mr-0.5" />
-                            Mois
+                            <ChevronLeftIcon className="h-5 w-5" />
                           </button>
                           <button 
-                            onClick={() => setCalendarView("week")}
-                            className="px-2 py-1 text-xs text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md flex items-center transition-colors"
+                            onClick={() => {
+                              const currentDate = new Date(selectedDate);
+                              currentDate.setDate(currentDate.getDate() + 1);
+                              setSelectedDate(currentDate.toISOString().split('T')[0]);
+                            }}
+                            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-200"
                           >
-                            <ChevronLeftIcon className="h-3.5 w-3.5 mr-0.5" />
-                            Semaine
+                            <ChevronRightIcon className="h-5 w-5" />
+                          </button>
+                          <button 
+                            onClick={() => setCalendarView("schedule")}
+                            className="p-1.5 rounded-md text-blue-600 bg-blue-50 hover:bg-blue-100"
+                          >
+                            <ArrowsPointingOutIcon className="h-5 w-5" />
                           </button>
                         </div>
                       </div>
                       
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full flex items-center">
-                          <CheckCircleIcon className="h-3 w-3 mr-1" />
-                          {availableSlots.find(slot => slot.date === selectedDate)?.times.length || 0} créneaux disponibles
-                        </span>
-                        
-                        {/* Morning/Afternoon filter buttons */}
-                        <div className="flex p-0.5 rounded-lg bg-gray-100 text-xs font-medium">
-                          <button className="px-3 py-1 rounded-md bg-white text-gray-800 shadow-sm">
-                            Tous
-                          </button>
-                          <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-50">
-                            Matin
-                          </button>
-                          <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-50">
-                            Après-midi
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {/* Timeline view for time slots - Enhanced design */}
-                      <div className="relative pt-4 pb-1">
-                        {/* Timeline line */}
-                        <div className="absolute left-5 top-4 bottom-0 w-0.5 bg-gray-200"></div>
-                        
-                        {/* Time slots along timeline */}
-                        <div className="space-y-4">
-                          {availableSlots
-                            .find(slot => slot.date === selectedDate)
-                            ?.timeSlots?.map((timeSlot, index) => {
-                              const isSelected = selectedTime === timeSlot.time;
-                              const hour = parseInt(timeSlot.time.split(':')[0], 10);
-                              const isMorning = hour < 12;
-                              
-                              return (
-                                <motion.div
-                                  key={index}
-                                  whileHover={{ x: 4 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  onClick={() => {
-                                    setSelectedTime(timeSlot.time);
-                                    setSelectedTimeSlot(timeSlot);
-                                  }}
-                                  className={`flex items-start relative cursor-pointer group ml-2 pl-10 pr-3 py-3 rounded-lg border transition-all ${
-                                    isSelected
-                                      ? "border-green-500 bg-green-50 shadow-md"
-                                      : "border-gray-200 hover:border-green-300 hover:bg-green-50/50 hover:shadow-sm"
-                                  }`}
-                                >
-                                  {/* Timeline dot */}
-                                  <div className={`absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1/2 flex items-center justify-center h-5 w-5 rounded-full border-2 border-white z-10 ${
-                                    isSelected 
-                                      ? "bg-green-500" 
-                                      : "bg-gray-300 group-hover:bg-green-400"
-                                  }`}>
-                                    {isSelected && <CheckIcon className="h-3 w-3 text-white" />}
-                                  </div>
-                                  
-                                  {/* Time indicator */}
-                                  <div className={`flex items-center justify-center h-11 w-11 rounded-full mr-3 ${
-                                    isSelected ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-                                  }`}>
-                                    <div className="text-center">
-                                      <span className="text-sm font-bold block leading-none">
-                                        {timeSlot.time}
-                                      </span>
-                                      <span className="text-xs opacity-70">
-                                        {isMorning ? "AM" : "PM"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Slot details */}
-                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span className={`text-base ${isSelected ? "font-medium text-green-700" : "text-gray-700"}`}>
-                                        Créneau d&apos;installation
-                                      </span>
-                                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                        isSelected 
-                                          ? "bg-green-100 text-green-800" 
-                                          : "bg-gray-100 text-gray-700"
-                                      }`}>
-                                        Disponible
-                                      </span>
-                                    </div>
-                                    <div className="mt-0.5 flex items-center text-xs text-gray-500">
-                                      <svg className="h-3.5 w-3.5 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                      </svg>
-                                      <span>Durée: {timeSlot.duration / 60} heure{timeSlot.duration / 60 > 1 ? 's' : ''}</span>
-                                      
-                                      <span className="mx-2 text-gray-300">•</span>
-                                      
-                                      <svg className="h-3.5 w-3.5 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                                      </svg>
-                                      <span>{isMorning ? 'Équipe du matin' : 'Équipe du soir'}</span>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Selection indicator */}
-                                  {isSelected && (
-                                    <div className="ml-2 flex-shrink-0">
-                                      <div className="bg-green-100 rounded-full p-1.5 text-green-600">
-                                        <CheckIcon className="h-4 w-4" />
-                                      </div>
-                                    </div>
-                                  )}
-                                </motion.div>
-                              );
-                            })}
+                      {/* Advanced time grid with draggable appointments */}
+                      <div className="relative h-[600px] overflow-y-auto">
+                        {/* Hour markers */}
+                        <div className="flex">
+                          <div className="w-16 flex-shrink-0 border-r border-gray-200 bg-gray-50">
+                            {hourMarkers.map((hour, idx) => (
+                              <div 
+                                key={`day-hour-${idx}`}
+                                className="h-[60px] flex items-center justify-center text-xs text-gray-500 border-b border-gray-200"
+                              >
+                                {hour}
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* Appointment grid */}
+                          <div className="flex-1 relative">
+                            {/* Hour grid lines */}
+                            {hourMarkers.map((_, idx) => (
+                              <div 
+                                key={`day-grid-${idx}`}
+                                className="h-[60px] border-b border-gray-100"
+                              ></div>
+                            ))}
+                            
+                            {/* Current time indicator */}
+                            <div 
+                              className="absolute left-0 right-0 h-0.5 bg-red-500 z-10"
+                              style={{ top: "180px" }} // 3 hours from 8AM = 11AM
+                            >
+                              <div className="absolute -left-1 -top-1.5 h-3 w-3 rounded-full bg-red-500"></div>
+                            </div>
+                            
+                            {/* Draggable appointment examples */}
+                            {appointments.map((appointment) => (
+                              <TimeSlotAppointment 
+                                key={appointment.id}
+                                appointment={appointment}
+                                isSelected={selectedAppointment === appointment.id}
+                                onSelect={() => setSelectedAppointment(appointment.id)}
+                                onResize={(newDuration) => handleAppointmentResize(appointment.id, newDuration)}
+                              />
+                            ))}
+                            
+                            {/* Add appointment button */}
+                            <button
+                              className="absolute right-4 bottom-4 h-12 w-12 rounded-full bg-blue-600 text-white shadow-lg flex items-center justify-center hover:bg-blue-700 transition-colors"
+                            >
+                              <PlusIcon className="h-6 w-6" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1220,10 +1771,10 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                   {selectedDate && selectedTime && (
                     <div className="border-t border-gray-100 bg-gray-50 p-4">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 flex items-center justify-center rounded-full bg-green-100 text-green-600 mr-3">
+                        <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-3">
                           <CheckIcon className="h-5 w-5" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
                             Créneau sélectionné
                           </span>
@@ -1231,25 +1782,35 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                             {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à {selectedTime}
                           </p>
                         </div>
+                        <button 
+                          onClick={() => {
+                            setSelectedDate(null);
+                            setSelectedTime(null);
+                            setSelectedTimeSlot(null);
+                          }}
+                          className="px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                        >
+                          Changer
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
                 
-                {/* Time selection help */}
+                {/* Scheduling help */}
                 <div className="flex items-start p-4 rounded-lg bg-blue-50 text-blue-800">
                   <svg className="h-5 w-5 flex-shrink-0 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                   <div className="text-sm">
-                    <p className="font-medium mb-1">Sélection de créneau</p>
-                    <p>Choisissez une date avec des disponibilités (indiquées par des points) puis sélectionnez l&apos;horaire qui vous convient.</p>
+                    <p className="font-medium mb-1">Planning et organisation</p>
+                    <p>Le calendrier vous permet de sélectionner un créneau disponible, de visualiser les rendez-vous existants, et d&apos;organiser les installations. Vous pouvez également faire glisser les rendez-vous pour les déplacer ou les redimensionner selon vos besoins.</p>
                   </div>
                 </div>
               </motion.div>
             )}
             
-            {/* Step 2: Installer Selection */}
+            {/* Step 2: Enhanced Installer Selection */}
             {currentStep === 2 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -1262,31 +1823,85 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                   <p className="mt-1 text-sm text-gray-500">Choisissez un professionnel certifié pour réaliser cette installation</p>
                 </div>
                 
-                {/* Enhanced installer cards with hover effects */}
-                <div className="space-y-3">
-                  {installers
-                    .filter(installer => installer.available)
-                    .map(installer => (
-                      <motion.button
+                {/* Search and filter bar */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      value={searchInstallerQuery}
+                      onChange={(e) => setSearchInstallerQuery(e.target.value)}
+                      className="block w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 py-2 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Rechercher un installateur..."
+                    />
+                  </div>
+                  
+                  <div className="sm:w-56">
+                    <select
+                      value={installerFilterSpecialty || ""}
+                      onChange={(e) => setInstallerFilterSpecialty(e.target.value || null)}
+                      className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">Toutes les spécialités</option>
+                      {availableSpecialties.map((specialty, index) => (
+                        <option key={index} value={specialty}>{specialty}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Installer count */}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
+                    {filteredInstallers.length} installateur{filteredInstallers.length > 1 ? 's' : ''} disponible{filteredInstallers.length > 1 ? 's' : ''}
+                  </span>
+                  
+                  {/* View toggle - list/grid */}
+                  <div className="flex bg-gray-100 p-0.5 rounded-lg">
+                    <button className="p-1.5 rounded-md bg-white shadow-sm text-gray-700">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                      </svg>
+                    </button>
+                    <button className="p-1.5 rounded-md text-gray-500">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Enhanced installer cards with icons instead of images */}
+                {filteredInstallers.length > 0 ? (
+                  <div className="space-y-3">
+                    {filteredInstallers.map(installer => (
+                      <motion.div
                         key={installer.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
-                        onClick={() => setSelectedInstaller(installer.id)}
-                        className={`flex w-full items-center rounded-xl border p-4 transition-all hover:shadow-md ${
+                        onClick={() => {
+                          setSelectedInstaller(installer.id);
+                          setShowInstallerDetails(false);
+                        }}
+                        className={`flex w-full items-center rounded-xl border p-4 transition-all cursor-pointer hover:shadow-md ${
                           selectedInstaller === installer.id
-                            ? "border-green-500 bg-green-50 shadow-sm"
-                            : "border-gray-200 bg-white hover:border-green-200 hover:bg-green-50/30"
+                            ? "border-blue-500 bg-blue-50 shadow-sm"
+                            : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/30"
                         }`}
                       >
-                        {/* Installer avatar */}
-                        <div className={`relative mr-4 h-14 w-14 flex-shrink-0 rounded-full ${
-                          selectedInstaller === installer.id ? "ring-2 ring-green-500" : ""
+                        {/* Installer icon */}
+                        <div className={`relative mr-4 h-16 w-16 flex-shrink-0 rounded-full overflow-hidden ${
+                          selectedInstaller === installer.id ? "ring-2 ring-blue-500" : ""
                         }`}>
-                          <img
-                            src={installer.image} 
-                            alt={installer.name}
-                            className="h-full w-full rounded-full object-cover"
-                          />
+                          <div className={`h-full w-full flex items-center justify-center ${installer.iconBgColor}`}>
+                            <UserIcon className={`h-8 w-8 ${installer.iconColor}`} />
+                          </div>
                           {installer.verified && (
                             <div className="absolute -right-1 -bottom-1 h-5 w-5 rounded-full bg-green-100 p-0.5 ring-2 ring-white">
                               <ShieldCheckIcon className="h-full w-full text-green-600" />
@@ -1296,24 +1911,34 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                         
                         {/* Installer details */}
                         <div className="flex-1 text-left">
-                          <div className="flex items-center">
-                            <h5 className={`text-base font-medium ${
-                              selectedInstaller === installer.id ? "text-green-700" : "text-gray-900"
-                            }`}>
-                              {installer.name}
-                            </h5>
-                            <div className="ml-2 flex items-center">
-                              <svg className="h-4 w-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                              <span className="ml-1 text-xs font-medium text-gray-600">{installer.rating}</span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <h5 className={`text-base font-medium ${
+                                selectedInstaller === installer.id ? "text-blue-700" : "text-gray-900"
+                              }`}>
+                                {installer.name}
+                              </h5>
+                              <div className="ml-2 flex items-center">
+                                <StarIcon className="h-4 w-4 text-amber-400 fill-current" />
+                                <span className="ml-1 text-xs font-medium text-gray-600">{installer.rating}</span>
+                              </div>
                             </div>
+                            
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedInstaller(installer.id);
+                                setShowInstallerDetails(!showInstallerDetails);
+                              }} 
+                              className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                            >
+                              Détails
+                            </button>
                           </div>
                           
                           <div className="mt-1 flex flex-wrap items-center gap-y-1 gap-x-3">
-                            <span className="flex items-center text-xs text-gray-500">
-                              <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-1"></span>
-                              Spécialité: {installer.specialty}
+                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+                              {installer.specialty}
                             </span>
                             
                             <span className="flex items-center text-xs text-gray-500">
@@ -1323,56 +1948,217 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                               {installer.installations} installations
                             </span>
                             
-                            <span className="text-xs font-medium text-green-600">
-                              Disponible {selectedDate ? `le ${new Date(selectedDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}` : ''}
+                            <span className="flex items-center text-xs text-gray-500">
+                              <svg className="mr-1 h-3.5 w-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              {installer.experience} ans d&apos;exp.
+                            </span>
+                          </div>
+                          
+                          <div className="mt-2 flex items-center">
+                            <span className="inline-flex items-center text-xs font-medium text-green-600">
+                              <CheckCircleIcon className="mr-1 h-3.5 w-3.5" />
+                              Disponible le {selectedDate ? new Date(selectedDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : 'jour sélectionné'}
                             </span>
                           </div>
                         </div>
                         
                         {/* Selection indicator */}
                         {selectedInstaller === installer.id && (
-                          <div className="ml-2 rounded-full bg-green-100 p-1 text-green-600">
+                          <div className="ml-2 rounded-full bg-blue-100 p-1.5 text-blue-600">
                             <CheckIcon className="h-5 w-5" />
                           </div>
                         )}
-                      </motion.button>
+                      </motion.div>
                     ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="mx-auto h-12 w-12 text-gray-400">
+                      <svg className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun installateur trouvé</h3>
+                    <p className="mt-1 text-sm text-gray-500">Essayez de modifier vos critères de recherche.</p>
+                    <div className="mt-3">
+                      <button
+                        onClick={() => {
+                          setSearchInstallerQuery("");
+                          setInstallerFilterSpecialty(null);
+                        }}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
+                      >
+                        Réinitialiser les filtres
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Installer detail modal */}
+                {showInstallerDetails && selectedInstaller && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden"
+                  >
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white">
+                      <div className="flex justify-between items-center">
+                        <h5 className="text-lg font-medium">Profil de l&apos;installateur</h5>
+                        <button 
+                          onClick={() => setShowInstallerDetails(false)} 
+                          className="rounded-full bg-white/20 p-1 hover:bg-white/30 transition-colors"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {(() => {
+                      const installer = installers.find(i => i.id === selectedInstaller);
+                      if (!installer) return null;
+                      
+                      return (
+                        <div className="p-6">
+                          <div className="flex flex-col sm:flex-row sm:items-center">
+                            <div className="flex-shrink-0 mb-4 sm:mb-0 sm:mr-6">
+                              <div className={`relative h-20 w-20 rounded-full overflow-hidden border-4 border-white ring-1 ring-gray-200 flex items-center justify-center ${installer.iconBgColor}`}>
+                                <UserIcon className={`h-10 w-10 ${installer.iconColor}`} />
+                                {installer.verified && (
+                                  <div className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-green-100 p-1 ring-2 ring-white">
+                                    <ShieldCheckIcon className="h-full w-full text-green-600" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex-1">
+                              <h4 className="text-xl font-bold text-gray-900">{installer.name}</h4>
+                              <div className="mt-1 flex items-center">
+                                <div className="flex items-center">
+                                  {[...Array(5)].map((_, i) => (
+                                    <StarIcon 
+                                      key={i} 
+                                      className={`h-4 w-4 ${
+                                        i < Math.floor(installer.rating) 
+                                          ? "text-amber-400 fill-current" 
+                                          : i < installer.rating
+                                          ? "text-amber-400 fill-current" // For partial stars, you might want a different icon
+                                          : "text-gray-300"
+                                      }`} 
+                                    />
+                                  ))}
+                                  <span className="ml-2 text-sm text-gray-600">{installer.rating} sur 5</span>
+                                </div>
+                                <span className="mx-2 text-gray-300">•</span>
+                                <span className="text-sm text-gray-600">{installer.installations} installations</span>
+                              </div>
+                              
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                  {installer.specialty}
+                                </span>
+                                {installer.verified && (
+                                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                                    <ShieldCheckIcon className="mr-1 h-3 w-3" />
+                                    Vérifié
+                                  </span>
+                                )}
+                                <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                                  <ClockIcon className="mr-1 h-3 w-3" />
+                                  Répond en {installer.responseTime}h
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg bg-gray-50 p-4">
+                            <div>
+                              <h6 className="text-sm font-medium text-gray-700">Certifications</h6>
+                              <div className="mt-2 space-y-1">
+                                {installer.certifications?.map((cert, i) => (
+                                  <div key={i} className="flex items-center text-sm">
+                                    <CheckIcon className="h-4 w-4 text-green-500 mr-2" />
+                                    <span>{cert}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <h6 className="text-sm font-medium text-gray-700">Expérience</h6>
+                              <div className="mt-2">
+                                <p className="text-sm text-gray-600">{installer.experience} ans d&apos;expérience</p>
+                                <p className="text-sm text-gray-600 mt-1">{installer.installations} installations réalisées</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-6 flex justify-end">
+                            <button
+                              onClick={() => setShowInstallerDetails(false)}
+                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                            >
+                              Fermer
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </motion.div>
+                )}
+                
+                {/* Installation notes - Enhanced */}
+                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                    <h5 className="text-sm font-medium text-gray-700 flex items-center">
+                      <svg className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Notes d&apos;installation
+                    </h5>
+                  </div>
+                  <div className="p-4">
+                    <textarea
+                      value={installationNotes}
+                      onChange={(e) => setInstallationNotes(e.target.value)}
+                      placeholder="Ajoutez des instructions spécifiques pour l'installateur..."
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      rows={3}
+                    />
+                    <p className="mt-2 text-xs text-gray-500">
+                      Ces notes seront communiquées à l&apos;installateur avec les détails de l&apos;intervention.
+                    </p>
+                  </div>
                 </div>
                 
-                {/* Installation notes */}
-                <div className="rounded-lg border border-gray-200 p-4">
-                  <h5 className="mb-2 text-sm font-medium text-gray-700">Notes d&apos;installation</h5>
-                  <textarea
-                    value={installationNotes}
-                    onChange={(e) => setInstallationNotes(e.target.value)}
-                    placeholder="Ajoutez des instructions spécifiques pour l'installateur..."
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
-                    rows={3}
-                  />
-                </div>
-                
-                {/* Selected installer summary */}
+                {/* Selected installer summary - Enhanced */}
                 {selectedInstaller && (
-                  <div className="rounded-lg bg-gray-50 p-4 border border-gray-200">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-lg bg-blue-50 p-4 border border-blue-200"
+                  >
                     <div className="flex items-start">
-                      <div className="mr-3 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                      <div className="mr-3 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                         <CheckIcon className="h-5 w-5" />
                       </div>
                       <div>
-                        <h6 className="text-sm font-medium text-gray-800">
+                        <h6 className="text-sm font-medium text-blue-800">
                           Installateur sélectionné: {installers.find(i => i.id === selectedInstaller)?.name}
                         </h6>
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-blue-700">
                           L&apos;installateur sera notifié après confirmation de cette intervention.
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </motion.div>
             )}
             
-            {/* Step 3: Product Selection (NEW) */}
+            {/* Step 3: Product Selection (NEW) with icons instead of images */}
             {currentStep === 3 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -1385,9 +2171,38 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                   <p className="mt-1 text-sm text-gray-500">Choisissez les équipements nécessaires pour cette installation</p>
                 </div>
                 
-                {/* Product selection cards */}
+                {/* Product search and filters */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={productSearchQuery}
+                      onChange={(e) => setProductSearchQuery(e.target.value)}
+                      className="block w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 py-2 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Rechercher un produit..."
+                    />
+                  </div>
+                  
+                  <div className="sm:w-56">
+                    <select
+                      value={productCategoryFilter || ""}
+                      onChange={(e) => setProductCategoryFilter(e.target.value || null)}
+                      className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">Toutes les catégories</option>
+                      {availableCategories.map((category, index) => (
+                        <option key={index} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Product selection cards with icons */}
                 <div className="space-y-4">
-                  {products.map(product => (
+                  {filteredProducts.map(product => (
                     <motion.div
                       key={product.id}
                       whileHover={{ scale: 1.01 }}
@@ -1395,25 +2210,21 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                       onClick={() => setSelectedProduct(product)}
                       className={`relative flex w-full rounded-xl border transition-all cursor-pointer ${
                         selectedProduct?.id === product.id
-                          ? "border-green-500 bg-green-50 shadow-md"
-                          : "border-gray-200 bg-white hover:border-green-200 hover:bg-green-50/30 hover:shadow-sm"
+                          ? "border-blue-500 bg-blue-50 shadow-md"
+                          : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm"
                       }`}
                     >
                       {/* Selected indicator */}
                       {selectedProduct?.id === product.id && (
-                        <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-green-500 shadow-sm flex items-center justify-center ring-2 ring-white">
+                        <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-blue-500 shadow-sm flex items-center justify-center ring-2 ring-white">
                           <CheckIcon className="h-4 w-4 text-white" />
                         </div>
                       )}
                       
-                      {/* Product image */}
+                      {/* Product icon */}
                       <div className="p-4 flex-shrink-0">
-                        <div className="h-20 w-20 rounded-lg bg-gray-100 p-1 flex items-center justify-center">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="max-h-full max-w-full object-contain"
-                          />
+                        <div className={`h-16 w-16 rounded-lg ${product.iconBgColor} p-3 flex items-center justify-center`}>
+                          {product.icon}
                         </div>
                       </div>
                       
@@ -1421,7 +2232,7 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                       <div className="flex-1 p-4 pl-0">
                         <div className="flex justify-between items-start mb-1">
                           <h5 className={`text-base font-medium ${
-                            selectedProduct?.id === product.id ? "text-green-700" : "text-gray-900"
+                            selectedProduct?.id === product.id ? "text-blue-700" : "text-gray-900"
                           }`}>
                             {product.name}
                           </h5>
@@ -1439,21 +2250,21 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                         </div>
                         
                         <p className="text-sm text-gray-500 mb-2">
-                          Catégorie: {product.category}
+                          {product.description || `Catégorie: ${product.category}`}
                         </p>
                         
                         {/* Product specs */}
                         <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
                           <span className="inline-flex items-center text-xs text-gray-500">
-                            <span className="inline-block h-2 w-2 rounded-full bg-blue-500 mr-1"></span>
+                            <BoltSolidIcon className="h-3 w-3 mr-1 text-blue-500" />
                             Classe énergétique: {product.energy}
                           </span>
                           <span className="inline-flex items-center text-xs text-gray-500">
-                            <span className="inline-block h-2 w-2 rounded-full bg-purple-500 mr-1"></span>
+                            <LightBulbIcon className="h-3 w-3 mr-1 text-amber-500" />
                             Puissance: {product.power}
                           </span>
                           <span className="inline-flex items-center text-xs text-gray-500">
-                            <span className="inline-block h-2 w-2 rounded-full bg-gray-500 mr-1"></span>
+                            <CubeIcon className="h-3 w-3 mr-1 text-purple-500" />
                             Dimensions: {product.dimensions}
                           </span>
                         </div>
@@ -1462,9 +2273,7 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                       {/* Price and rating */}
                       <div className="border-l border-gray-200 p-4 flex flex-col justify-between items-end">
                         <div className="flex items-center">
-                          <svg className="h-4 w-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
+                          <StarIcon className="h-4 w-4 text-amber-400 fill-current" />
                           <span className="ml-1 text-xs font-medium text-gray-600">{product.rating}</span>
                         </div>
                         <p className="text-lg font-bold text-gray-900">
@@ -1549,21 +2358,17 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                                 onClick={() => toggleAccessory(accessory)}
                                 className={`relative flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
                                   selectedAccessories.find(a => a.id === accessory.id)
-                                    ? "border-green-500 bg-green-50"
-                                    : "border-gray-200 hover:border-green-200 hover:bg-green-50/30"
+                                    ? "border-blue-500 bg-blue-50"
+                                    : "border-gray-200 hover:border-blue-200 hover:bg-blue-50/30"
                                 }`}
                               >
-                                <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-gray-100 p-1 mr-3 flex items-center justify-center">
-                                  <img
-                                    src={accessory.image}
-                                    alt={accessory.name}
-                                    className="max-h-full max-w-full object-contain"
-                                  />
+                                <div className={`h-12 w-12 flex-shrink-0 rounded-lg ${accessory.iconBgColor} p-2 mr-3 flex items-center justify-center`}>
+                                  {accessory.icon}
                                 </div>
                                 <div className="flex-1">
                                   <h6 className={`text-sm font-medium ${
                                     selectedAccessories.find(a => a.id === accessory.id)
-                                      ? "text-green-700"
+                                      ? "text-blue-700"
                                       : "text-gray-800"
                                   }`}>
                                     {accessory.name}
@@ -1578,7 +2383,7 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                                 {/* Checkbox */}
                                 <div className={`absolute top-2 right-2 h-5 w-5 rounded-full ${
                                   selectedAccessories.find(a => a.id === accessory.id)
-                                    ? "bg-green-500 text-white"
+                                    ? "bg-blue-500 text-white"
                                     : "bg-gray-200"
                                 } flex items-center justify-center transition-colors`}>
                                   {selectedAccessories.find(a => a.id === accessory.id) && (
@@ -1671,7 +2476,7 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                   <div className="divide-y divide-gray-100">
                     {/* Date and time */}
                     <div className="flex p-4 sm:p-6">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 mr-4">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
                         <CalendarIcon className="h-5 w-5" />
                       </div>
                       <div>
@@ -1684,34 +2489,35 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                     
                     {/* Installer */}
                     <div className="flex p-4 sm:p-6">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 mr-4">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
                         <UserGroupIcon className="h-5 w-5" />
                       </div>
                       <div>
                         <h6 className="text-sm font-medium text-gray-700">Installateur</h6>
                         <div className="flex items-center mt-1">
-                          <div className="h-8 w-8 rounded-full bg-gray-200 mr-2 overflow-hidden">
-                            <img 
-                              src={installers.find(inst => inst.id === selectedInstaller)?.image || '/api/placeholder/32/32'} 
-                              alt="Installateur" 
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-900">
-                              {selectedInstaller && installers.find(inst => inst.id === selectedInstaller)?.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {selectedInstaller && installers.find(inst => inst.id === selectedInstaller)?.specialty}
-                            </p>
-                          </div>
+                          {selectedInstaller && (() => {
+                            const installer = installers.find(i => i.id === selectedInstaller);
+                            if (!installer) return null;
+                            
+                            return (
+                              <div className="flex items-center">
+                                <div className={`h-8 w-8 rounded-full ${installer.iconBgColor} mr-2 flex items-center justify-center`}>
+                                  <UserIcon className={`h-4 w-4 ${installer.iconColor}`} />
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-900">{installer.name}</p>
+                                  <p className="text-xs text-gray-500">{installer.specialty}</p>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
                     
                     {/* Products */}
                     <div className="flex p-4 sm:p-6">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 mr-4">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
                         <ShoppingBagIcon className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
@@ -1721,12 +2527,8 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                         {selectedProduct && (
                           <div className="mt-2 rounded-lg border border-gray-200 p-3">
                             <div className="flex">
-                              <div className="h-14 w-14 rounded-md bg-gray-100 p-1 flex items-center justify-center mr-3 flex-shrink-0">
-                                <img 
-                                  src={selectedProduct.image} 
-                                  alt={selectedProduct.name} 
-                                  className="max-h-full max-w-full object-contain"
-                                />
+                              <div className={`h-14 w-14 rounded-md ${selectedProduct.iconBgColor} p-2 flex items-center justify-center mr-3 flex-shrink-0`}>
+                                {selectedProduct.icon}
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-start justify-between">
@@ -1751,12 +2553,8 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                             <div className="space-y-2">
                               {selectedAccessories.map(accessory => (
                                 <div key={accessory.id} className="flex items-center p-2 rounded-lg bg-gray-50">
-                                  <div className="h-8 w-8 rounded-md bg-gray-100 flex items-center justify-center mr-2 flex-shrink-0">
-                                    <img 
-                                      src={accessory.image} 
-                                      alt={accessory.name} 
-                                      className="max-h-full max-w-full object-contain"
-                                    />
+                                  <div className={`h-8 w-8 rounded-md ${accessory.iconBgColor} flex items-center justify-center mr-2 flex-shrink-0`}>
+                                    {accessory.icon}
                                   </div>
                                   <div className="flex-1 flex items-center justify-between">
                                     <span className="text-xs text-gray-800">{accessory.name}</span>
@@ -1778,12 +2576,12 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                     
                     {/* Address */}
                     <div className="flex p-4 sm:p-6">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 mr-4">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
                         <MapPinIcon className="h-5 w-5" />
                       </div>
                       <div>
                         <h6 className="text-sm font-medium text-gray-700">Adresse d&apos;installation</h6>
-                        <p className="text-sm text-gray-900 mt-1">123 Rue de Paris, 75001 Paris</p>
+                        <p className="text-sm text-gray-900 mt-1">{clientAddress}</p>
                         <p className="mt-1 text-xs text-blue-600 underline cursor-pointer">Voir sur la carte</p>
                       </div>
                     </div>
@@ -1831,7 +2629,7 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                   }
                 }}
                 disabled={isSubmitting}
-                className="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:w-auto"
+                className="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto"
               >
                 {currentStep > 1 ? "Retour" : "Annuler"}
               </button>
@@ -1862,13 +2660,13 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                   (currentStep === 2 && !selectedInstaller) ||
                   (currentStep === 3 && !selectedProduct)
                 }
-                className={`inline-flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:w-auto ${
+                className={`inline-flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto ${
                   (currentStep === 1 && (!selectedDate || !selectedTime)) ||
                   (currentStep === 2 && !selectedInstaller) ||
                   (currentStep === 3 && !selectedProduct) ||
                   isSubmitting
-                    ? "cursor-not-allowed bg-green-400"
-                    : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                    ? "cursor-not-allowed bg-blue-400"
+                    : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 }`}
               >
                 {isSubmitting ? (
