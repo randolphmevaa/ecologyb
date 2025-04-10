@@ -19,6 +19,7 @@ import {
   MapPinIcon
 } from "@heroicons/react/24/outline";
 import { Menu, Dialog } from "@headlessui/react";
+import EnhancedInstallationModal from "./components/EnhancedInstallationModal";
 
 // Define a union type for the available tabs
 type TabType = "info" | "documents" | "photo" | "chat" | "sav" | "reglement" | "devis";
@@ -1011,6 +1012,7 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
           </Dialog>
         )}
       </AnimatePresence>
+      <EnhancedInstallationModal/>
     </MotionConfig>
   );
 };
