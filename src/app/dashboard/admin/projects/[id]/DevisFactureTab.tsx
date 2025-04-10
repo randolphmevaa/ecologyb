@@ -3722,101 +3722,130 @@ const DevisEditor: React.FC<{
   };
 
   // Calculate totals including the deal premium if applicable
-  const totals = useMemo(() => {
-    const totalHT = tableItems.reduce((sum, item) => sum + item.totalHT, 0);
-    const totalTTC = tableItems.reduce((sum, item) => sum + item.totalTTC, 0);
-    
-    // Calculate Prime CEE if we have a deal
-    let primeCEE = 0;
-    if (hasDeal && dealId) {
-      // Find operations and calculate their kWh cumac value
-      const operations = tableItems.filter(item => item.id?.startsWith('op-'));
-      operations.forEach(op => {
-        const opRef = op.reference;
-        // Find the corresponding product to get kWh cumac
-        let kwhCumac = 0;
-        if ('productId' in op && op.productId) {
-          const product = products.find(p => p.id === op.productId);
-          if (product) {
-            kwhCumac = product.kwhCumac;
-          }
-        } else {
-          // Fallback to operation code
-          if (opRef === 'BAR-TH-101') kwhCumac = 510530;
-          else if (opRef === 'BAR-TH-104') kwhCumac = 628730;
-          else if (opRef === 'BAR-TH-112-Granulés') kwhCumac = 950440;
-          else if (opRef === 'BAR-TH-171') kwhCumac = 615400;
+const totals = useMemo(() => {
+  const totalHT = tableItems.reduce((sum, item) => sum + item.totalHT, 0);
+  const totalTTC = tableItems.reduce((sum, item) => sum + item.totalTTC, 0);
+  
+  // Get operations for reference
+  const operations = tableItems.filter(item => 
+    item.reference && ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
+  );
+  
+  // Calculate Prime CEE from deal or operation-specific inputs
+  let primeCEE = 0;
+  let dealPrimeCEE = 0;
+  
+  // First calculate the deal-based CEE if applicable
+  if (hasDeal && dealId) {
+    // Find operations and calculate their kWh cumac value
+    const dealOperations = tableItems.filter(item => item.id?.startsWith('op-'));
+    dealOperations.forEach(op => {
+      const opRef = op.reference;
+      // Find the corresponding product to get kWh cumac
+      let kwhCumac = 0;
+      if ('productId' in op && op.productId) {
+        const product = products.find(p => p.id === op.productId);
+        if (product) {
+          kwhCumac = product.kwhCumac;
         }
-        
-        // Calculate prime
-        primeCEE += kwhCumac * dealRatio;
-      });
-    }
+      } else {
+        // Fallback to operation code
+        if (opRef === 'BAR-TH-101') kwhCumac = 510530;
+        else if (opRef === 'BAR-TH-104') kwhCumac = 628730;
+        else if (opRef === 'BAR-TH-112-Granulés') kwhCumac = 950440;
+        else if (opRef === 'BAR-TH-171') kwhCumac = 615400;
+      }
+      
+      // Calculate prime based on deal
+      dealPrimeCEE += kwhCumac * dealRatio;
+    });
+  }
+  
+  // Now check for operation-specific CEE values
+  let calculatedPrimeCEE = 0;
+  
+  if (operations.length > 0) {
+    operations.forEach(op => {
+      const ceeKey = `primeCEE_${op.reference}`;
+      if (incentivesData[ceeKey]) {
+        const value = parseFloat(incentivesData[ceeKey] as string || '0') || 0;
+        calculatedPrimeCEE += value;
+      }
+    });
     
-    // Calculate MaPrimeRenov dynamically from operation-specific inputs
-    let calculatedPrimeRenov = 0;
-    const operations = tableItems.filter(item => 
-      item.reference && ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
-    );
-    
-    // If we have specific operations, look for their MPR values
-    if (operations.length > 0) {
-      operations.forEach(op => {
-        const mprKey = `primeMPR_${op.reference}`;
-        if (incentivesData[mprKey]) {
-          const value = parseFloat(incentivesData[mprKey] as string || '0') || 0;
-          calculatedPrimeRenov += value;
-        }
-      });
-    }
-    
-    // If no operation-specific values were found and we have a deal, use a default
-    if (calculatedPrimeRenov === 0 && hasDeal) {
-      calculatedPrimeRenov = 3000; // Only use default if no specific values were entered
-    }
-    
-    // Add incentives from the modal - Ensure all values are proper numbers
-    const additionalPrimeCEE = parseFloat(incentivesData.primeCEE || '0') || 0;
-    const remiseExceptionnelle = parseFloat(incentivesData.remiseExceptionnelle || '0') || 0;
-    
-    // Determine which MaPrimeRenov amount to use based on selection
-    let primeMPR = 0;
-    let primeRenovToUse = 0;
-    
-    if (incentivesData.primeMPR === 'Prime MPR deduite') {
-      primeRenovToUse = calculatedPrimeRenov; // Use the dynamic calculated value
+    // If operation-specific values exist, use them instead of deal calculated value
+    if (calculatedPrimeCEE > 0) {
+      primeCEE = calculatedPrimeCEE;
     } else {
-      primeMPR = parseFloat(incentivesData.primeMPR || '0') || 0;
-      // Don't use calculatedPrimeRenov when "Prime MPR non deduite" is selected
+      // Otherwise use the deal calculated value
+      primeCEE = dealPrimeCEE;
     }
+  } else {
+    // No operation-specific values, use deal calculation
+    primeCEE = dealPrimeCEE;
+  }
+  
+  // Calculate MaPrimeRenov dynamically from operation-specific inputs
+  let calculatedPrimeRenov = 0;
+  
+  // If we have specific operations, look for their MPR values
+  if (operations.length > 0) {
+    operations.forEach(op => {
+      const mprKey = `primeMPR_${op.reference}`;
+      if (incentivesData[mprKey]) {
+        const value = parseFloat(incentivesData[mprKey] as string || '0') || 0;
+        calculatedPrimeRenov += value;
+      }
+    });
     
-    const acompte = parseFloat(incentivesData.acompte || '0') || 0;
-    const racCharge = parseFloat(incentivesData.montantPriseEnChargeRAC || '0') || 0;
-    
-    // Calculate total discounts - be explicit about adding numbers
-    const totalDiscounts = primeCEE + primeRenovToUse + additionalPrimeCEE + 
-                          remiseExceptionnelle + primeMPR + acompte + racCharge;
-    
-    // Ensure totalTTC and totalDiscounts are valid numbers
-    const validTotalTTC = !isNaN(totalTTC) ? totalTTC : 0;
-    const validTotalDiscounts = !isNaN(totalDiscounts) ? totalDiscounts : 0;
-    
-    // Calculate remaining amount
-    const remaining = validTotalTTC - validTotalDiscounts;
-    
-    return { 
-      totalHT, 
-      totalTTC: validTotalTTC, 
-      primeCEE: parseFloat(primeCEE.toFixed(2)),
-      primeRenov: calculatedPrimeRenov, // Return the calculated value instead of the hard-coded one
-      additionalPrimeCEE,
-      remiseExceptionnelle,
-      primeMPR,
-      acompte,
-      racCharge,
-      remaining: remaining
-    };
-  }, [tableItems, hasDeal, dealId, dealRatio, incentivesData]);
+    // If no operation-specific values were found, use a default of 3000
+    if (calculatedPrimeRenov === 0) {
+      calculatedPrimeRenov = 3000; // Default when operations exist but no specific values
+    }
+  }
+  
+  // Add incentives from the modal - Ensure all values are proper numbers
+  const additionalPrimeCEE = parseFloat(incentivesData.primeCEE || '0') || 0;
+  const remiseExceptionnelle = parseFloat(incentivesData.remiseExceptionnelle || '0') || 0;
+  
+  // Determine which MaPrimeRenov amount to use based on selection
+  let primeMPR = 0;
+  let primeRenovToUse = 0;
+  
+  if (incentivesData.primeMPR === 'Prime MPR deduite' || (operations.length > 0 && incentivesData.primeMPR !== 'Prime MPR non deduite')) {
+    primeRenovToUse = calculatedPrimeRenov; // Use the dynamic calculated value
+  } else {
+    primeMPR = parseFloat(incentivesData.primeMPR || '0') || 0;
+    // Don't use calculatedPrimeRenov when "Prime MPR non deduite" is selected
+  }
+  
+  const acompte = parseFloat(incentivesData.acompte || '0') || 0;
+  const racCharge = parseFloat(incentivesData.montantPriseEnChargeRAC || '0') || 0;
+  
+  // Calculate total discounts - be explicit about adding numbers
+  const totalDiscounts = primeCEE + primeRenovToUse + additionalPrimeCEE + 
+                        remiseExceptionnelle + primeMPR + acompte + racCharge;
+  
+  // Ensure totalTTC and totalDiscounts are valid numbers
+  const validTotalTTC = !isNaN(totalTTC) ? totalTTC : 0;
+  const validTotalDiscounts = !isNaN(totalDiscounts) ? totalDiscounts : 0;
+  
+  // Calculate remaining amount
+  const remaining = validTotalTTC - validTotalDiscounts;
+  
+  return { 
+    totalHT, 
+    totalTTC: validTotalTTC, 
+    primeCEE: parseFloat(primeCEE.toFixed(2)),
+    primeRenov: calculatedPrimeRenov, // Return the calculated value
+    additionalPrimeCEE,
+    remiseExceptionnelle,
+    primeMPR,
+    acompte,
+    racCharge,
+    remaining: remaining
+  };
+}, [tableItems, hasDeal, dealId, dealRatio, incentivesData, products]);
   
   // Handle deal selection
   const handleDealSelect = (selectedDealId: string) => {
@@ -4878,21 +4907,43 @@ ${subContractorInfo}`;
                 <span className="font-bold text-lg">{totals.totalTTC.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
               </div>
               
-              {/* Prime DEAL_ID */}
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-gray-600">Prime {dealId}</span>
-                <span className="font-semibold text-green-600">-{totals.primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
-              </div>
-
-              {/* Only show MaPrimeRenov if primeMPR is "Prime MPR deduite" */}
-              {incentivesData.primeMPR === 'Prime MPR deduite' && totals.primeRenov > 0 && (
+              {/* Prime DEAL_ID - Only show if value is greater than 0 */}
+              {totals.primeCEE > 0 && (
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Estimation MaPrimeRenov&apos;</span>
-                  <span className="font-semibold text-green-600">-{totals.primeRenov.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                  <span className="text-gray-600">Prime {dealId}</span>
+                  <span className="font-semibold text-green-600">-{totals.primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
                 </div>
               )}
 
-              {/* Show additional incentives if they exist */}
+              {/* Show MaPrimeRenov if operations exist, primeMPR is not "Prime MPR non deduite", and value > 0 */}
+              {(() => {
+                // Get operations for MaPrimeRenov to avoid "Cannot find name 'operations'" error
+                const operations = tableItems.filter(item => 
+                  item.reference && ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
+                );
+                
+                const primeRenovValue = totals.primeRenov || 0;
+                
+                if (operations.length > 0 && incentivesData.primeMPR !== 'Prime MPR non deduite' && primeRenovValue > 0) {
+                  return (
+                    <div>
+                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span className="text-gray-600">Estimation MaPrimeRenov&apos;</span>
+                        <span className="font-semibold text-green-600">
+                          -{primeRenovValue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                        </span>
+                      </div>
+                      {/* Add the description below */}
+                      <div className="text-xs text-gray-500 ml-2 mb-2">
+                        Sous réserve de l&apos;accord de l&apos;ANAH (**)
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Show additional incentives if they exist and are greater than 0 */}
               {incentivesData.primeCEE && parseFloat(incentivesData.primeCEE) > 0 && (
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Prime C.E.E supplémentaire</span>
@@ -4906,8 +4957,6 @@ ${subContractorInfo}`;
                   <span className="font-semibold text-green-600">-{parseFloat(incentivesData.remiseExceptionnelle).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
                 </div>
               )}
-
-              {/* Remove the primeMPR line since it's represented by Estimation MaPrimeRenov' */}
 
               {incentivesData.montantPriseEnChargeRAC && parseFloat(incentivesData.montantPriseEnChargeRAC) > 0 && (
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">

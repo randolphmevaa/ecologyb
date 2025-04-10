@@ -326,7 +326,7 @@ const handleGenerateDevisPDF = () => {
     totals,
     dealId,
     additionalInfo,
-    sizingNotes,
+    // sizingNotes,
     financingData,
     incentivesData
   );

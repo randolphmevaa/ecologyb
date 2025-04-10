@@ -34,7 +34,7 @@ import {
   // triggerPrint
 } from './pdf-utils';
 
-import { SizingNote } from './types';
+// import { SizingNote } from './types';
 
 // Define proper interfaces to replace 'any' types
 // Update the TableItem interface to include id
@@ -252,87 +252,7 @@ const getProductsTable = (tableItems: TableItem[]) => `
   </div>
 `;
 
-// Generate the sizing notes HTML section
-const getSizingNotesSection = (sizingNotes: SizingNote[]) => {
-  if (sizingNotes.length === 0) return '';
-  
-  return `
-    <!-- Sizing Notes Section -->
-    <h3 class="section-title">Note de dimensionnement</h3>
-    ${sizingNotes.map(note => `
-      <div class="sizing-note-section">
-        <h4 class="sizing-note-title">Note de dimensionnement ${note.productType}</h4>
-        <div class="sizing-note-grid">
-          <div class="sizing-note-row">
-            <div class="sizing-note-label">Type de produit</div>
-            <div class="sizing-note-value">${note.productType}</div>
-          </div>
-          <div class="sizing-note-row">
-            <div class="sizing-note-label">Marque du produit</div>
-            <div class="sizing-note-value">${note.productBrand}</div>
-          </div>
-          <div class="sizing-note-row">
-            <div class="sizing-note-label">Référence du produit</div>
-            <div class="sizing-note-value">${note.productReference}</div>
-          </div>
-          <div class="sizing-note-row">
-            <div class="sizing-note-label">Volume</div>
-            <div class="sizing-note-value">${note.volume} m³</div>
-          </div>
-          <div class="sizing-note-row">
-            <div class="sizing-note-label">Déperdition</div>
-            <div class="sizing-note-value">${parseFloat(note.heatLoss).toLocaleString('fr-FR')} watts soit ${(parseFloat(note.heatLoss)/1000).toLocaleString('fr-FR')} kW</div>
-          </div>
-          <div class="sizing-note-row">
-            <div class="sizing-note-label">Dimensionnement</div>
-            <div class="sizing-note-value">${note.dimensioning} kW</div>
-          </div>
-          <div class="sizing-note-row">
-            <div class="sizing-note-label">Couverture</div>
-            <div class="sizing-note-value">${note.coverage}%</div>
-          </div>
-        </div>
-        <div class="sizing-note-details">
-          <h5 class="sizing-note-subtitle">Détails techniques</h5>
-          <div class="sizing-note-tech-grid">
-            <div class="sizing-note-tech-item">
-              <div class="sizing-note-tech-label">Type de logement</div>
-              <div class="sizing-note-tech-value">${note.buildingType}</div>
-            </div>
-            <div class="sizing-note-tech-item">
-              <div class="sizing-note-tech-label">Type de radiateur</div>
-              <div class="sizing-note-tech-value">${note.radiatorType}</div>
-            </div>
-            <div class="sizing-note-tech-item">
-              <div class="sizing-note-tech-label">Température de l'eau</div>
-              <div class="sizing-note-tech-value">${note.waterTemperature}</div>
-            </div>
-            <div class="sizing-note-tech-item">
-              <div class="sizing-note-tech-label">Surface chauffée</div>
-              <div class="sizing-note-tech-value">${note.heatedArea} m²</div>
-            </div>
-            <div class="sizing-note-tech-item">
-              <div class="sizing-note-tech-label">Hauteur sous plafond</div>
-              <div class="sizing-note-tech-value">${note.ceilingHeight} m</div>
-            </div>
-            <div class="sizing-note-tech-item">
-              <div class="sizing-note-tech-label">Température de base</div>
-              <div class="sizing-note-tech-value">${note.baseTemperature}°C</div>
-            </div>
-            <div class="sizing-note-tech-item">
-              <div class="sizing-note-tech-label">Température souhaitée</div>
-              <div class="sizing-note-tech-value">${note.desiredTemperature}°C</div>
-            </div>
-            <div class="sizing-note-tech-item">
-              <div class="sizing-note-tech-label">Altitude</div>
-              <div class="sizing-note-tech-value">${note.altitude} m</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `).join('')}
-  `;
-};
+
 
 // First, let's modify the getMaPrimeRenovConditions function to remove the "Termes et conditions" part
 const getMaPrimeRenovConditions = (primeRenovAmount: number | undefined): string => {
@@ -1154,7 +1074,7 @@ export const generateDevisPDF = (
   totals: FinancialTotals,
   dealId?: string,
   additionalInfo?: string,
-  sizingNotes: SizingNote[] = [],
+  // sizingNotes: SizingNote[] = [],
   financingData: FinancingData | null = null,
   incentivesData: IncentivesData | null = null,
   clientDetails = {
@@ -1256,7 +1176,7 @@ export const generateDevisPDF = (
             <div class="main-content">
               ${getCustomerAndQuoteInfo(clientName, quoteNumber, formattedDate, dealId, clientDetails)}
               ${getProductsTable(tableItems)}
-              ${getSizingNotesSection(sizingNotes)}
+
               ${additionalInfo ? getAdditionalInfo(additionalInfo) : ''}
               ${showMaPrimeRenovConditions && totals.primeRenov !== undefined ? getMaPrimeRenovConditions(totals.primeRenov) : ''}
               ${getTermes(dealId)} <!-- Always include the Termes et conditions section -->

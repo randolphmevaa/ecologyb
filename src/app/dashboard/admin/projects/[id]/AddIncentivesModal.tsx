@@ -1,6 +1,6 @@
 import { CurrencyDollarIcon, XMarkIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IncentivesData } from "./types";
 
 // Product and Service types
@@ -63,46 +63,115 @@ interface Service {
 
 type TableItem = Product | Service | Operation;
 
+// Define a new interface that includes all properties we need
+interface IncentivesDataWithKeys {
+  // Basic properties (these should match what's in IncentivesData)
+  activiteMaPrimeRenov: boolean;
+  primeCEE: string;
+  remiseExceptionnelle: string;
+  primeMPR: string;
+  montantPriseEnChargeRAC: string;
+  acompte: string;
+  
+  // Add an index signature that allows any string key with string|number|boolean value
+  [key: string]: string | number | boolean;
+}
+
+// Create an interface for totals
+interface IncentiveTotals {
+  primeCEE?: string | number ;
+  primeRenov?: string | number;
+  // Add any other properties that might be used in the component
+}
+
 // Add Incentives Modal Component
 interface AddIncentivesModalProps {
   onClose: () => void;
   onSave: (incentives: IncentivesData) => void;
   currentIncentives: IncentivesData;
   tableItems?: TableItem[]; // This should match your TableItem type
+  totals?: IncentiveTotals;
 }
+
+// Helper function to ensure string values for inputs
+const getStringValue = (value: string | number | boolean | undefined): string => {
+  // Handle boolean specifically since that's causing the error
+  if (typeof value === 'boolean') return '';
+  // Handle undefined
+  if (value === undefined) return '';
+  // Convert number to string if needed
+  return String(value);
+};
 
 const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({ 
   onClose, 
   onSave, 
   currentIncentives,
-  tableItems = []
+  tableItems = [],
+  totals
 }) => {
   // 1) Filter only the references you want.
   const operations = tableItems.filter(item => 
     item.reference && ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
   );
 
+  // Log totals values for debugging
+  useEffect(() => {
+    if (totals) {
+      console.log("Totals values:", {
+        primeCEE: totals.primeCEE,
+        primeRenov: totals.primeRenov
+      });
+    }
+  }, [totals]);
+
   // 2) Initialize the local state with any existing incentives
-  const [incentives, setIncentives] = useState<IncentivesData>(() => {
-    // Initial state calculation
-    const initialState = { ...currentIncentives };
+  const [incentives, setIncentives] = useState<IncentivesDataWithKeys>(() => {
+    // Cast currentIncentives to IncentivesDataWithKeys to allow string indexing
+    const currentWithKeys = currentIncentives as unknown as IncentivesDataWithKeys;
     
-    // Pre-populate operation-specific fields
-    operations.forEach((op) => {
-      const ceeKey = `primeCEE_${op.reference}`;
-      const mprKey = `primeMPR_${op.reference}`;
-      
-      // Only set if not already in currentIncentives
-      if (!initialState[ceeKey]) {
-        initialState[ceeKey] = currentIncentives.primeCEE || "0";
-      }
-      if (!initialState[mprKey]) {
-        initialState[mprKey] = currentIncentives.primeMPR || "0";
-      }
-    });
+    // Initial state calculation
+    const initialState: IncentivesDataWithKeys = { 
+      ...currentWithKeys,
+      // Always set activiteMaPrimeRenov to true by default
+      activiteMaPrimeRenov: true
+    };
+    
+    // Pre-populate operation-specific fields with values from totals
+    if (operations.length > 0 && totals) {
+      operations.forEach((op) => {
+        const ceeKey = `primeCEE_${op.reference}`;
+        const mprKey = `primeMPR_${op.reference}`;
+        
+        // For each operation, set identical values from totals
+        // Make sure we're getting the actual value from totals
+        initialState[ceeKey] = totals.primeCEE ? totals.primeCEE.toString() : "0";
+        initialState[mprKey] = totals.primeRenov ? totals.primeRenov.toString() : "3000";
+      });
+    }
     
     return initialState;
   });
+  
+  // 3) Use useEffect to update state if totals change after initial rendering
+  useEffect(() => {
+    if (operations.length > 0 && totals) {
+      setIncentives(prev => {
+        const updated = { ...prev };
+        
+        operations.forEach((op) => {
+          const ceeKey = `primeCEE_${op.reference}`;
+          const mprKey = `primeMPR_${op.reference}`;
+          
+          // Update with current totals values
+          updated[ceeKey] = totals.primeCEE ? totals.primeCEE.toString() : "0";
+          updated[mprKey] = totals.primeRenov ? totals.primeRenov.toString() : "3000";
+        });
+        
+        return updated;
+      });
+    }
+  }, [totals, operations]);
 
   // Handle regular input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -133,7 +202,8 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
   // Form submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(incentives);
+    // Convert back to original IncentivesData type when saving
+    onSave(incentives as unknown as IncentivesData);
     onClose();
   };
 
@@ -188,15 +258,15 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
                         Prime ma prime renov {op.reference}
                       </label>
                       <div className="relative">
-                        <input
-                          type="text"
-                          id={`primeMPR_${op.reference}`}
-                          name={`primeMPR_${op.reference}`}
-                          value={incentives[`primeMPR_${op.reference}`] as string || "0"}
-                          onChange={handleChange}
-                          className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                          placeholder="0,00"
-                        />
+                      <input
+                        type="text"
+                        id={`primeMPR_${op.reference}`}
+                        name={`primeMPR_${op.reference}`}
+                        value={getStringValue(incentives[`primeMPR_${op.reference}`]) || (totals?.primeRenov?.toString() || "3000")}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        placeholder="0,00"
+                      />
                         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                           <span className="text-gray-500">€</span>
                         </div>
@@ -216,7 +286,7 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
                           type="text"
                           id="remiseExceptionnelle"
                           name="remiseExceptionnelle"
-                          value={incentives.remiseExceptionnelle}
+                          value={incentives.remiseExceptionnelle || "0"}
                           onChange={handleChange}
                           className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                           placeholder="0,00"
@@ -236,15 +306,16 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
                         Prime C.E.E {op.reference}
                       </label>
                       <div className="relative">
-                        <input
-                          type="text"
-                          id={`primeCEE_${op.reference}`}
-                          name={`primeCEE_${op.reference}`}
-                          value={incentives[`primeCEE_${op.reference}`] as string || "0"}
-                          onChange={handleChange}
-                          className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                          placeholder="0,00"
-                        />
+
+                      <input
+                        type="text"
+                        id={`primeCEE_${op.reference}`}
+                        name={`primeCEE_${op.reference}`}
+                        value={getStringValue(incentives[`primeCEE_${op.reference}`]) || (totals?.primeCEE?.toString() || "0")}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        placeholder="0,00"
+                      />
                         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                           <span className="text-gray-500">€</span>
                         </div>
@@ -270,7 +341,7 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
                         type="text"
                         id="primeCEE"
                         name="primeCEE"
-                        value={incentives.primeCEE}
+                        value={incentives.primeCEE || "0"}
                         onChange={handleChange}
                         className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                         placeholder="0,00"
@@ -293,7 +364,7 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
                         type="text"
                         id="remiseExceptionnelle"
                         name="remiseExceptionnelle"
-                        value={incentives.remiseExceptionnelle}
+                        value={incentives.remiseExceptionnelle || "0"}
                         onChange={handleChange}
                         className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                         placeholder="0,00"
@@ -316,7 +387,7 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
                         type="text"
                         id="primeCEE_second"
                         name="primeCEE_second"
-                        value={incentives.primeCEE}
+                        value={incentives.primeCEE || "0"}
                         onChange={handleChange}
                         className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                         placeholder="0,00"
@@ -343,7 +414,7 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
                   <select
                     id="primeMPR"
                     name="primeMPR"
-                    value={incentives.primeMPR}
+                    value={incentives.primeMPR || "Prime MPR deduite"}
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   >
@@ -364,7 +435,7 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
                       type="text"
                       id="montantPriseEnChargeRAC"
                       name="montantPriseEnChargeRAC"
-                      value={incentives.montantPriseEnChargeRAC}
+                      value={incentives.montantPriseEnChargeRAC || "0"}
                       onChange={handleChange}
                       className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                       placeholder="0,00"
@@ -419,7 +490,7 @@ const AddIncentivesModal: React.FC<AddIncentivesModalProps> = ({
                       type="text"
                       id="acompte"
                       name="acompte"
-                      value={incentives.acompte}
+                      value={incentives.acompte || "0"}
                       onChange={handleChange}
                       className="w-full border border-gray-300 rounded-lg p-2.5 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                       placeholder="0,00"
