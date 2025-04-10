@@ -28,6 +28,11 @@ interface PDFGeneratorProps {
   indivisionData?: IndivisionData | null;
   incentivesData?: IncentivesData;
   customName?: string; // Add the customName prop
+  // Add new date fields
+  validUntilDate?: string;
+  preVisitDate?: string;
+  estimatedWorkDate?: string;
+  commitmentDate?: string;
 }
 
 const PDFGenerator: React.FC<PDFGeneratorProps> = ({ 
@@ -43,7 +48,11 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
   dpMairieData = null,
   indivisionData = null,
   incentivesData = null,
-  customName = "" // Add with default value
+  customName = "", // Add with default value
+  validUntilDate = "",
+  preVisitDate = "",
+  estimatedWorkDate = "",
+  commitmentDate = ""
 }) => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -316,8 +325,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
 
 // Modified handler function - doesn't pass filename directly
 const handleGenerateDevisPDF = () => {
-  
-  // Then call the generator without the filename parameter
+  // Then call the generator with all the date parameters
   generateDevisPDF(
     tableItems,
     quoteNumber,
@@ -328,7 +336,11 @@ const handleGenerateDevisPDF = () => {
     additionalInfo,
     // sizingNotes,
     financingData,
-    incentivesData
+    incentivesData,
+    validUntilDate,      // Add valid until date
+    preVisitDate,        // Add pre-visit date
+    estimatedWorkDate,   // Add estimated work date
+    commitmentDate       // Add commitment date
   );
   setDropdownVisible(false);
 };

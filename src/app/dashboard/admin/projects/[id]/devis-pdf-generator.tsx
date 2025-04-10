@@ -111,10 +111,15 @@ const getDealName = (dealId?: string): string => {
 };
 
 // Update the getCustomerAndQuoteInfo function to include DEVIS number and client name
+// Update the getCustomerAndQuoteInfo function to include additional dates
 const getCustomerAndQuoteInfo = (
   clientName: string, 
   quoteNumber: string, 
   quoteDate: string, 
+  validUntilDate?: string,
+  preVisitDate?: string,
+  estimatedWorkDate?: string,
+  commitmentDate?: string,
   dealId?: string,
   clientDetails?: {
     street?: string,
@@ -150,6 +155,34 @@ const getCustomerAndQuoteInfo = (
         <div class="info-label">Date</div>
         <div class="info-value">${formatDate(quoteDate)}</div>
       </div>
+      
+      ${validUntilDate ? `
+      <div class="info-row">
+        <div class="info-label">Valable jusqu'au</div>
+        <div class="info-value">${formatDate(validUntilDate)}</div>
+      </div>
+      ` : ''}
+
+      ${preVisitDate ? `
+      <div class="info-row">
+        <div class="info-label">Prévisite/Audit</div>
+        <div class="info-value">${formatDate(preVisitDate)}</div>
+      </div>
+      ` : ''}
+
+      ${estimatedWorkDate ? `
+      <div class="info-row">
+        <div class="info-label">Travaux prévus</div>
+        <div class="info-value">${formatDate(estimatedWorkDate)}</div>
+      </div>
+      ` : ''}
+
+      ${commitmentDate ? `
+      <div class="info-row">
+        <div class="info-label">Engagement</div>
+        <div class="info-value">${formatDate(commitmentDate)}</div>
+      </div>
+      ` : ''}
       
       ${clientDetails?.subcontractor ? `
       <div class="info-row">
@@ -1077,6 +1110,10 @@ export const generateDevisPDF = (
   // sizingNotes: SizingNote[] = [],
   financingData: FinancingData | null = null,
   incentivesData: IncentivesData | null = null,
+  validUntilDate?: string,
+  preVisitDate?: string,
+  estimatedWorkDate?: string,
+  commitmentDate?: string,
   clientDetails = {
     street: '13 ROUTE DU POINT GAGNARD',
     postalCode: '13014',
@@ -1174,7 +1211,17 @@ export const generateDevisPDF = (
           <!-- Main Content -->
           <div class="content" style="margin-top: 0mm;">
             <div class="main-content">
-              ${getCustomerAndQuoteInfo(clientName, quoteNumber, formattedDate, dealId, clientDetails)}
+              ${getCustomerAndQuoteInfo(
+                clientName, 
+                quoteNumber, 
+                formattedDate, 
+                validUntilDate,
+                preVisitDate,
+                estimatedWorkDate,
+                commitmentDate,
+                dealId, 
+                clientDetails
+              )}
               ${getProductsTable(tableItems)}
 
               ${additionalInfo ? getAdditionalInfo(additionalInfo) : ''}
