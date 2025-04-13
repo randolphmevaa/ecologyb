@@ -89,10 +89,10 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   // Check if we're in a touch device
-  const isTouchDevice = () => {
-    if (typeof window === 'undefined') return false;
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  };
+//   const isTouchDevice = () => {
+//     if (typeof window === 'undefined') return false;
+//     return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+//   };
 
   // Load saved state on initial render
   useEffect(() => {
