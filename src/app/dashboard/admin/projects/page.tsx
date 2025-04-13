@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-// import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Header } from "@/components/Header";
+import { useGlobalIFrame } from "@/contexts/GlobalIFrameContext";
 import {
   MagnifyingGlassIcon,
   XMarkIcon,
@@ -21,7 +21,10 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
-import { ChevronLeftIcon, SearchIcon } from "lucide-react";
+import { 
+  ChevronLeftIcon, 
+  SearchIcon
+} from "lucide-react";
 
 // Define status option type
 type StatusOption = {
@@ -258,6 +261,9 @@ const steps = [
 ];
 
 export default function ClientsPage() {
+  // Get the global iframe context
+  const { openIframe } = useGlobalIFrame();
+
   // Data and loading
   const [projects, setProjects] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -426,6 +432,37 @@ export default function ClientsPage() {
       setLoading(false);
     }
   };
+
+  // NEW: Add hint for double-click action
+  useEffect(() => {
+    // Show a tooltip on first visit
+    const hasSeenDoubleClickHint = localStorage.getItem('hasSeenDoubleClickHint');
+    if (!hasSeenDoubleClickHint && projects.length > 0) {
+      // Set tooltip visibility
+      setTimeout(() => {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-[#213f5b] text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center animate-bounce';
+        tooltip.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-[#4facfe]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Double-cliquez sur une carte pour ouvrir le projet</span>
+        `;
+        document.body.appendChild(tooltip);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+          tooltip.classList.add('opacity-0');
+          tooltip.style.transition = 'opacity 0.5s ease-out';
+          setTimeout(() => {
+            document.body.removeChild(tooltip);
+          }, 500);
+        }, 5000);
+        
+        localStorage.setItem('hasSeenDoubleClickHint', 'true');
+      }, 1000);
+    }
+  }, [projects.length]);
 
   useEffect(() => {
     fetchProjects();
@@ -981,18 +1018,25 @@ export default function ClientsPage() {
                       </div>
 
                       {/* Action button - enhanced with gradient */}
-                      <div className="mt-auto">
-                      <button
-                        onClick={() => setSelectedProject(project)}
-                        className="group inline-flex items-center justify-center w-full py-2 px-4 bg-gradient-to-r from-[#213f5b] to-[#1d6fa5] text-white rounded-lg transition-all hover:shadow-md text-sm relative overflow-hidden"
-                      >
-                        {/* Button shimmer effect */}
-                        <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                        
-                        <span>Voir le détail</span>
-                        <ChevronRightIcon className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-                      </button>
+                      <div className="mt-auto relative z-20">
+                        <button
+                          onClick={() => setSelectedProject(project)}
+                          className="group inline-flex items-center justify-center w-full py-2 px-4 bg-gradient-to-r from-[#213f5b] to-[#1d6fa5] text-white rounded-lg transition-all hover:shadow-md text-sm relative overflow-hidden"
+                        >
+                          {/* Button shimmer effect */}
+                          <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                          
+                          <span>Voir le détail</span>
+                          <ChevronRightIcon className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                        </button>
                       </div>
+                      
+                      {/* Double-click handler for opening iframe - Now uses the global iframe context */}
+                      <div 
+                        className="absolute inset-0 cursor-pointer" 
+                        onDoubleClick={() => openIframe(project._id, project.numero)}
+                        aria-label="Double-click to open window"
+                      ></div>
                     </motion.div>
                   );
                 })}
@@ -1054,223 +1098,221 @@ export default function ClientsPage() {
           </div>
         </main>
       </div>
+
       {/* Project Detail Slide-Over Panel */}
-      <AnimatePresence>
-        {selectedProject && (
+      {selectedProject && (
+        <motion.div 
+          className="fixed inset-0 z-40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {/* Backdrop */}
           <motion.div 
-            className="fixed inset-0 z-50"
+            className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => setSelectedProject(null)}
+          />
+          
+          {/* Slide-over panel */}
+          <motion.div 
+            className="absolute top-0 right-0 bottom-0 w-full max-w-md bg-white shadow-xl flex flex-col"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
           >
-            {/* Backdrop */}
-            <motion.div 
-              className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedProject(null)}
-            />
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-2xl font-bold text-[#213f5b]">Détails du projet</h2>
+              <button 
+                onClick={() => setSelectedProject(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             
-            {/* Slide-over panel */}
-            <motion.div 
-              className="absolute top-0 right-0 bottom-0 w-full max-w-md bg-white shadow-xl flex flex-col"
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            >
-              <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                <h2 className="text-2xl font-bold text-[#213f5b]">Détails du projet</h2>
-                <button 
-                  onClick={() => setSelectedProject(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <div className="flex-1 overflow-auto p-6">
-                {/* Project Header with Status - UPDATED */}
-                <div className="mb-8">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-500">#{selectedProject.numero}</span>
-                    
-                    {/* Status Badge - UPDATED */}
-                    {selectedProject.status && (
-                      <span 
-                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-                        style={{ 
-                          backgroundColor: getStatusDetails(selectedProject.status).bgColor,
-                          color: getStatusDetails(selectedProject.status).textColor,
-                          borderWidth: '1px',
-                          borderStyle: 'solid',
-                          borderColor: getStatusDetails(selectedProject.status).borderColor
-                        }}
-                      >
-                        {getStatusDetails(selectedProject.status).icon}
-                        {selectedProject.status}
-                      </span>
-                    )}
-                  </div>
+            <div className="flex-1 overflow-auto p-6">
+              {/* Project Header with Status - UPDATED */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-gray-500">#{selectedProject.numero}</span>
                   
-                  <div className="flex items-center space-x-2 mt-2">
+                  {/* Status Badge - UPDATED */}
+                  {selectedProject.status && (
                     <span 
-                      className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
                       style={{ 
-                        backgroundColor: getStatusInfo(selectedProject.etape).color,
-                        color: getStatusInfo(selectedProject.etape).textColor 
+                        backgroundColor: getStatusDetails(selectedProject.status).bgColor,
+                        color: getStatusDetails(selectedProject.status).textColor,
+                        borderWidth: '1px',
+                        borderStyle: 'solid',
+                        borderColor: getStatusDetails(selectedProject.status).borderColor
                       }}
                     >
-                      {getStatusInfo(selectedProject.etape).icon}
-                      {selectedProject.etape}
+                      {getStatusDetails(selectedProject.status).icon}
+                      {selectedProject.status}
                     </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-[#213f5b] mt-2">{selectedProject.typeDeLogement}</h3>
+                  )}
                 </div>
                 
-                {/* Project Details */}
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">Solution</h4>
-                    <p className="text-[#213f5b]">{selectedProject.solution}</p>
-                  </div>
-                  
-                  {/* Type de Travaux */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">Type de Travaux</h4>
-                    <p className="text-[#213f5b]">{selectedProject.typeTravaux || "Non spécifié"}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">Surface chauffée</h4>
-                    <p className="text-[#213f5b]">{selectedProject.surfaceChauffee} m²</p>
-                  </div>
-                  
-                  {/* Timeline using real data - enhanced styling */}
-                  <div className="mt-8">
-                    <h4 className="text-sm font-medium text-gray-500 mb-4">Progression du projet</h4>
-                    
-                    <div className="relative">
-                      <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-[#4facfe]/30 via-[#43e97b]/30 to-[#1d6fa5]/30"></div>
-                      
-                      <div className="space-y-6">
-                        {steps.map((step, index) => {
-                          const stepNumber = index + 1;
-                          let bgColor, icon;
-                          if (stepNumber < currentStep) {
-                            // Completed steps
-                            bgColor = "bg-gradient-to-r from-[#43e97b] to-[#38f9d7]";
-                            icon = (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            );
-                          } else if (stepNumber === currentStep) {
-                            // Current step
-                            bgColor = "bg-gradient-to-r from-[#4facfe] to-[#4bb8fe]";
-                            icon = (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            );
-                          } else {
-                            // Pending steps
-                            bgColor = "bg-gray-200";
-                            icon = <span className="text-xs font-medium text-gray-500">{stepNumber}</span>;
-                          }
-                          return (
-                            <div className="flex" key={index}>
-                              <div className={`flex-shrink-0 h-8 w-8 rounded-full ${bgColor} flex items-center justify-center relative z-10 shadow-sm`}>
-                                {icon}
-                              </div>
-                              <div className="ml-4">
-                                <h5 className={`text-sm font-medium ${stepNumber <= currentStep ? "text-[#213f5b]" : "text-gray-400"}`}>{step}</h5>
-                                {/* Optionally, add dates for each step if available */}
-                                {stepNumber === currentStep && (
-                                  <p className="text-xs text-[#4facfe] mt-1">En cours</p>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 border-t border-gray-100">
-                {/* Status section at bottom - NEW */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Status du dossier</h4>
-                  <div 
-                    className="p-3 rounded-lg flex items-center justify-between"
+                <div className="flex items-center space-x-2 mt-2">
+                  <span 
+                    className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
                     style={{ 
-                      backgroundColor: getStatusDetails(selectedProject.status || "En attente de paiement").bgColor,
-                      borderWidth: '1px',
-                      borderStyle: 'solid',
-                      borderColor: getStatusDetails(selectedProject.status || "En attente de paiement").borderColor
+                      backgroundColor: getStatusInfo(selectedProject.etape).color,
+                      color: getStatusInfo(selectedProject.etape).textColor 
                     }}
                   >
-                    <div className="flex items-center">
-                      {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
-                      <span 
-                        className="ml-2 font-medium"
-                        style={{ color: getStatusDetails(selectedProject.status || "En attente de paiement").textColor }}
-                      >
-                        {selectedProject.status || "En attente de paiement"}
-                      </span>
-                    </div>
+                    {getStatusInfo(selectedProject.etape).icon}
+                    {selectedProject.etape}
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-[#213f5b] mt-2">{selectedProject.typeDeLogement}</h3>
+              </div>
+              
+              {/* Project Details */}
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Solution</h4>
+                  <p className="text-[#213f5b]">{selectedProject.solution}</p>
+                </div>
+                
+                {/* Type de Travaux */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Type de Travaux</h4>
+                  <p className="text-[#213f5b]">{selectedProject.typeTravaux || "Non spécifié"}</p>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Surface chauffée</h4>
+                  <p className="text-[#213f5b]">{selectedProject.surfaceChauffee} m²</p>
+                </div>
+                
+                {/* Timeline using real data - enhanced styling */}
+                <div className="mt-8">
+                  <h4 className="text-sm font-medium text-gray-500 mb-4">Progression du projet</h4>
+                  
+                  <div className="relative">
+                    <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-[#4facfe]/30 via-[#43e97b]/30 to-[#1d6fa5]/30"></div>
                     
-                    <div 
-                      className="h-8 w-8 rounded-full flex items-center justify-center"
-                      style={{ 
-                        backgroundColor: `${getStatusDetails(selectedProject.status || "En attente de paiement").textColor}20`
-                      }}
-                    >
-                      {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
+                    <div className="space-y-6">
+                      {steps.map((step, index) => {
+                        const stepNumber = index + 1;
+                        let bgColor, icon;
+                        if (stepNumber < currentStep) {
+                          // Completed steps
+                          bgColor = "bg-gradient-to-r from-[#43e97b] to-[#38f9d7]";
+                          icon = (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          );
+                        } else if (stepNumber === currentStep) {
+                          // Current step
+                          bgColor = "bg-gradient-to-r from-[#4facfe] to-[#4bb8fe]";
+                          icon = (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          );
+                        } else {
+                          // Pending steps
+                          bgColor = "bg-gray-200";
+                          icon = <span className="text-xs font-medium text-gray-500">{stepNumber}</span>;
+                        }
+                        return (
+                          <div className="flex" key={index}>
+                            <div className={`flex-shrink-0 h-8 w-8 rounded-full ${bgColor} flex items-center justify-center relative z-10 shadow-sm`}>
+                              {icon}
+                            </div>
+                            <div className="ml-4">
+                              <h5 className={`text-sm font-medium ${stepNumber <= currentStep ? "text-[#213f5b]" : "text-gray-400"}`}>{step}</h5>
+                              {/* Optionally, add dates for each step if available */}
+                              {stepNumber === currentStep && (
+                                <p className="text-xs text-[#4facfe] mt-1">En cours</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
-                
-                {/* Changed to Link that redirects to the detailed project page */}
-                <Link href={`/dashboard/admin/projects/${selectedProject._id}`}>
-                  <motion.button
-                    className="w-full py-3 rounded-xl text-white font-medium relative overflow-hidden"
-                    style={{ background: "linear-gradient(135deg, #213f5b, #1d6fa5)" }}
-                    whileHover={{ opacity: 0.9 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {/* Button shimmer effect */}
-                    <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
-                    Voir tous les détails
-                  </motion.button>
-                </Link>
               </div>
-            </motion.div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-100">
+              {/* Status section at bottom - NEW */}
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-500 mb-2">Status du dossier</h4>
+                <div 
+                  className="p-3 rounded-lg flex items-center justify-between"
+                  style={{ 
+                    backgroundColor: getStatusDetails(selectedProject.status || "En attente de paiement").bgColor,
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: getStatusDetails(selectedProject.status || "En attente de paiement").borderColor
+                  }}
+                >
+                  <div className="flex items-center">
+                    {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
+                    <span 
+                      className="ml-2 font-medium"
+                      style={{ color: getStatusDetails(selectedProject.status || "En attente de paiement").textColor }}
+                    >
+                      {selectedProject.status || "En attente de paiement"}
+                    </span>
+                  </div>
+                  
+                  <div 
+                    className="h-8 w-8 rounded-full flex items-center justify-center"
+                    style={{ 
+                      backgroundColor: `${getStatusDetails(selectedProject.status || "En attente de paiement").textColor}20`
+                    }}
+                  >
+                    {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Button options */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Open in floating window */}
+                <button 
+                  onClick={() => {
+                    openIframe(selectedProject._id, selectedProject.numero);
+                    setSelectedProject(null); // Close the detail panel
+                  }}
+                  className="py-3 rounded-xl text-white font-medium relative overflow-hidden bg-gradient-to-r from-[#38c2de] to-[#1d6fa5] hover:opacity-90 transition-all"
+                >
+                  <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
+                  Ouvrir Fenêtre
+                </button>
+                
+                {/* Open in new tab */}
+                <a 
+                  href={`/dashboard/admin/projects/${selectedProject._id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <button
+                    className="w-full py-3 rounded-xl text-white font-medium relative overflow-hidden bg-gradient-to-r from-[#213f5b] to-[#1a324a] hover:opacity-90 transition-all"
+                  >
+                    <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
+                    Ouvrir Nouvel Onglet
+                  </button>
+                </a>
+              </div>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Add some CSS for animations */}
-      <style jsx global>{`
-        .shimmer {
-          animation: shimmer 2s infinite linear;
-          background-size: 1000px 100%;
-        }
-        
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
+        </motion.div>
+      )}
     </div>
   );
 }

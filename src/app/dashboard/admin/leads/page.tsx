@@ -5,6 +5,7 @@ import Link from "next/link";
 // import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Header } from "@/components/Header";
+import { useGlobalIFrame } from "@/contexts/GlobalIFrameContext"; // Added iframe context
 import {
   MagnifyingGlassIcon,
   XMarkIcon,
@@ -258,6 +259,9 @@ type RawDossierData = {
 };
 
 export default function ProjectsPage() {
+  // Get the global iframe context
+  const { openIframe } = useGlobalIFrame();
+
   // Data and loading
   const [projects, setProjects] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -440,6 +444,37 @@ export default function ProjectsPage() {
       setLoading(false);
     }
   };
+
+  // NEW: Add hint for double-click action
+  useEffect(() => {
+    // Show a tooltip on first visit
+    const hasSeenDoubleClickHint = localStorage.getItem('hasSeenDoubleClickHint_prospects');
+    if (!hasSeenDoubleClickHint && projects.length > 0) {
+      // Set tooltip visibility
+      setTimeout(() => {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-[#213f5b] text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center animate-bounce';
+        tooltip.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-[#4facfe]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Double-cliquez sur une carte pour ouvrir le projet</span>
+        `;
+        document.body.appendChild(tooltip);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+          tooltip.classList.add('opacity-0');
+          tooltip.style.transition = 'opacity 0.5s ease-out';
+          setTimeout(() => {
+            document.body.removeChild(tooltip);
+          }, 500);
+        }, 5000);
+        
+        localStorage.setItem('hasSeenDoubleClickHint_prospects', 'true');
+      }, 1000);
+    }
+  }, [projects.length]);
 
   useEffect(() => {
     fetchProjects();
@@ -998,18 +1033,25 @@ export default function ProjectsPage() {
                       </div>
 
                       {/* Action button - enhanced with gradient */}
-                      <div className="mt-auto">
-                      <button
-                        onClick={() => setSelectedProject(project)}
-                        className="group inline-flex items-center justify-center w-full py-2 px-4 bg-gradient-to-r from-[#213f5b] to-[#1d6fa5] text-white rounded-lg transition-all hover:shadow-md text-sm relative overflow-hidden"
-                      >
-                        {/* Button shimmer effect */}
-                        <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                        
-                        <span>Voir le détail</span>
-                        <ChevronRightIcon className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-                      </button>
+                      <div className="mt-auto relative z-20">
+                        <button
+                          onClick={() => setSelectedProject(project)}
+                          className="group inline-flex items-center justify-center w-full py-2 px-4 bg-gradient-to-r from-[#213f5b] to-[#1d6fa5] text-white rounded-lg transition-all hover:shadow-md text-sm relative overflow-hidden"
+                        >
+                          {/* Button shimmer effect */}
+                          <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                          
+                          <span>Voir le détail</span>
+                          <ChevronRightIcon className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                        </button>
                       </div>
+                      
+                      {/* Double-click handler for opening iframe - Added from ClientsPage */}
+                      <div 
+                        className="absolute inset-0 cursor-pointer" 
+                        onDoubleClick={() => openIframe(project._id, project.numero)}
+                        aria-label="Double-click to open window"
+                      ></div>
                     </motion.div>
                   );
                 })}
@@ -1253,18 +1295,35 @@ export default function ProjectsPage() {
                   </div>
                 </div>
                 
-                <Link href={`/dashboard/admin/projects/${selectedProject._id}`}>
-                  <motion.button
-                    className="w-full py-3 rounded-xl text-white font-medium relative overflow-hidden"
-                    style={{ background: "linear-gradient(135deg, #213f5b, #1d6fa5)" }}
-                    whileHover={{ opacity: 0.9 }}
-                    whileTap={{ scale: 0.98 }}
+                {/* Button options - UPDATED from ClientsPage */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Open in floating window */}
+                  <button 
+                    onClick={() => {
+                      openIframe(selectedProject._id, selectedProject.numero);
+                      setSelectedProject(null); // Close the detail panel
+                    }}
+                    className="py-3 rounded-xl text-white font-medium relative overflow-hidden bg-gradient-to-r from-[#38c2de] to-[#1d6fa5] hover:opacity-90 transition-all"
                   >
-                    {/* Button shimmer effect */}
                     <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
-                    Voir tous les détails
-                  </motion.button>
-                </Link>
+                    Ouvrir Fenêtre
+                  </button>
+                  
+                  {/* Open in new tab */}
+                  <a 
+                    href={`/dashboard/admin/projects/${selectedProject._id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <button
+                      className="w-full py-3 rounded-xl text-white font-medium relative overflow-hidden bg-gradient-to-r from-[#213f5b] to-[#1a324a] hover:opacity-90 transition-all"
+                    >
+                      <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
+                      Ouvrir Nouvel Onglet
+                    </button>
+                  </a>
+                </div>
               </div>
             </motion.div>
           </motion.div>
