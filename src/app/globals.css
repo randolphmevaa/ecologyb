@@ -93,3 +93,23 @@ h1, h2, h3, h4, h5, h6 {
   --whatsapp-text: #E9EDEF;
   --whatsapp-text-secondary: #8696A0;
 }
+
+
+/* A "global-iframe-overlay" that won't block clicks except on the iframe. */
+.global-iframe-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* Let it span the whole screen if you wish, or adjust as needed: */
+  width: 100vw;
+  height: 100vh;
+
+  z-index: 9999;       /* Ensure this is on top of other elements */
+  pointer-events: none; /* Pass clicks through to what's behind */
+}
+
+/* The actual iframe can still receive pointer events */
+.global-iframe-overlay iframe {
+  pointer-events: auto;
+}
+
