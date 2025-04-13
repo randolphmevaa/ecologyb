@@ -68,15 +68,30 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState("");
-//   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, left: 0, top: 0 });
+  
+  // Ref for storing drag/resize starting positions
+  const startPosRef = useRef({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    left: 0,
+    top: 0,
+  });
 
   // Detect if we're inside an iframe to prevent nested iframes
   const isInIframe = () => {
     try {
       return window.self !== window.top;
-    } catch  {
+    } catch {
       return true;
     }
+  };
+
+  // Check if we're in a touch device
+  const isTouchDevice = () => {
+    if (typeof window === 'undefined') return false;
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   };
 
   // Load saved state on initial render
@@ -111,6 +126,24 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [iframeWindow, iframeProjectId, iframeProjectNumber]);
 
+  // Add window resize handler to adjust iframe when window size changes
+  useEffect(() => {
+    const handleWindowResize = () => {
+      if (iframeWindow.isMaximized) {
+        setIframeWindow(prev => ({
+          ...prev,
+          size: {
+            width: window.innerWidth,
+            height: window.innerHeight
+          }
+        }));
+      }
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, [iframeWindow.isMaximized]);
+
   // Handle iframe window controls
   const openIframe = (projectId: string, projectNumber?: string) => {
     // Prevent opening iframe within iframe
@@ -139,27 +172,27 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const closeIframe = () => {
-    setIframeWindow({
-      ...iframeWindow,
+    setIframeWindow(prev => ({
+      ...prev,
       isVisible: false
-    });
+    }));
   };
 
   const maximizeIframe = () => {
     if (iframeWindow.isMaximized) {
       // Restore to previous size
-      setIframeWindow({
-        ...iframeWindow,
+      setIframeWindow(prev => ({
+        ...prev,
         isMaximized: false,
         isMinimized: false,
         size: previousSizeRef.current
-      });
+      }));
     } else {
       // Save current size before maximizing
       previousSizeRef.current = iframeWindow.size;
       // Maximize
-      setIframeWindow({
-        ...iframeWindow,
+      setIframeWindow(prev => ({
+        ...prev,
         isMaximized: true,
         isMinimized: false,
         position: { x: 0, y: 0 },
@@ -167,174 +200,179 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
           width: typeof window !== 'undefined' ? window.innerWidth : 1000, 
           height: typeof window !== 'undefined' ? window.innerHeight : 600 
         }
-      });
+      }));
     }
   };
 
   const minimizeIframe = () => {
-    setIframeWindow({
-      ...iframeWindow,
-      isMinimized: !iframeWindow.isMinimized
-    });
+    setIframeWindow(prev => ({
+      ...prev,
+      isMinimized: !prev.isMinimized
+    }));
   };
 
-  // Enhanced drag functionality
-  const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Enhanced drag functionality with touch support
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (iframeWindow.isMaximized) return;
     
     e.preventDefault();
     setIsDragging(true);
     
-    // Calculate offset based on mouse position within title bar
-    if (iframeRef.current) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const dragOffsetX = e.clientX - rect.left;
-      const dragOffsetY = e.clientY - rect.top;
-      
-      // Setup drag mousemove handler
-      const handleDragMove = (moveEvent: MouseEvent) => {
-        moveEvent.preventDefault();
-        const newX = moveEvent.clientX - dragOffsetX;
-        const newY = moveEvent.clientY - dragOffsetY;
-        
-        // Apply constraints to keep window in viewport
-        const maxX = window.innerWidth - 100; // Keep at least part of the window visible
-        const maxY = window.innerHeight - 50;
-        
-        setIframeWindow(prev => ({
-          ...prev,
-          position: {
-            x: Math.max(0, Math.min(newX, maxX)),
-            y: Math.max(0, Math.min(newY, maxY))
-          }
-        }));
-      };
-      
-      // Setup drag mouseup handler to clean up
-      const handleDragEnd = () => {
-        setIsDragging(false);
-        document.removeEventListener('mousemove', handleDragMove);
-        document.removeEventListener('mouseup', handleDragEnd);
-      };
-      
-      // Add global event listeners
-      document.addEventListener('mousemove', handleDragMove);
-      document.addEventListener('mouseup', handleDragEnd);
+    // Get the current iframe container
+    const container = iframeRef.current;
+    if (!container) return;
+    
+    // Record starting positions
+    const rect = container.getBoundingClientRect();
+    
+    let clientX, clientY;
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
     }
+    
+    // Calculate offset from the top-left corner of the title bar
+    const dragOffsetX = clientX - rect.left;
+    const dragOffsetY = clientY - rect.top;
+    
+    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+      if (!isDragging) return;
+      
+      let moveClientX, moveClientY;
+      if ('touches' in moveEvent) {
+        moveClientX = moveEvent.touches[0].clientX;
+        moveClientY = moveEvent.touches[0].clientY;
+      } else {
+        moveClientX = (moveEvent as MouseEvent).clientX;
+        moveClientY = (moveEvent as MouseEvent).clientY;
+      }
+      
+      // Calculate new position
+      const newX = moveClientX - dragOffsetX;
+      const newY = moveClientY - dragOffsetY;
+      
+      // Apply constraints
+      const maxX = window.innerWidth - 100;
+      const maxY = window.innerHeight - 50;
+      
+      setIframeWindow(prev => ({
+        ...prev,
+        position: {
+          x: Math.max(0, Math.min(newX, maxX)),
+          y: Math.max(0, Math.min(newY, maxY))
+        }
+      }));
+    };
+    
+    const handleEnd = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchend', handleEnd);
+    };
+    
+    // Add event listeners for both mouse and touch
+    document.addEventListener('mousemove', handleMove, { passive: false });
+    document.addEventListener('touchmove', handleMove, { passive: false });
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchend', handleEnd);
   };
 
-  // Enhanced resize functionality for all edges and corners
-  const handleResizeStart = (e: React.MouseEvent<HTMLDivElement>, direction: string) => {
+  // Enhanced resize functionality with touch support
+  const handleResizeStart = (
+    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, 
+    direction: string
+  ) => {
     if (iframeWindow.isMaximized) return;
     
     e.preventDefault();
     e.stopPropagation();
     
-    console.log(`Resize started: ${direction}`); // Debug logging
-    
     setIsResizing(true);
     setResizeDirection(direction);
     
-    // Record starting position and size
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = iframeWindow.size.width;
-    const startHeight = iframeWindow.size.height;
-    const startLeft = iframeWindow.position.x;
-    const startTop = iframeWindow.position.y;
+    // Get current iframe dimensions and position
+    const rect = iframeRef.current?.getBoundingClientRect();
+    if (!rect) return;
     
-    // Setup resize mousemove handler
-    const handleResizeMove = (moveEvent: MouseEvent) => {
-      moveEvent.preventDefault();
+    let clientX, clientY;
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    // Store starting values
+    startPosRef.current = {
+      x: clientX,
+      y: clientY,
+      width: iframeWindow.size.width,
+      height: iframeWindow.size.height,
+      left: iframeWindow.position.x,
+      top: iframeWindow.position.y
+    };
+    
+    const handleResizeMove = (moveEvent: MouseEvent | TouchEvent) => {
+      if (!isResizing) return;
       
-      // Debug logging for move event
-      console.log(`Resize moving: dx=${moveEvent.clientX - startX}, dy=${moveEvent.clientY - startY}`);
+      let moveClientX, moveClientY;
+      if ('touches' in moveEvent) {
+        moveClientX = moveEvent.touches[0].clientX;
+        moveClientY = moveEvent.touches[0].clientY;
+        // Prevent scrolling during resize on touch devices
+        moveEvent.preventDefault();
+      } else {
+        moveClientX = (moveEvent as MouseEvent).clientX;
+        moveClientY = (moveEvent as MouseEvent).clientY;
+      }
       
-      // Calculate new dimensions based on direction
+      // Calculate position changes
+      const dx = moveClientX - startPosRef.current.x;
+      const dy = moveClientY - startPosRef.current.y;
+      
+      // Apply resize based on direction
+      const { width: startWidth, height: startHeight, left: startLeft, top: startTop } = startPosRef.current;
       let newWidth = startWidth;
       let newHeight = startHeight;
       let newLeft = startLeft;
       let newTop = startTop;
       
-      const dx = moveEvent.clientX - startX;
-      const dy = moveEvent.clientY - startY;
-      
       // Handle resizing based on direction
-      switch(direction) {
-        // Corners
-        case "se": // Bottom right
-          newWidth = Math.max(400, startWidth + dx);
-          newHeight = Math.max(300, startHeight + dy);
-          break;
-        case "sw": // Bottom left
-          newWidth = Math.max(400, startWidth - dx);
-          newHeight = Math.max(300, startHeight + dy);
-          newLeft = startLeft + dx;
-          break;
-        case "ne": // Top right
-          newWidth = Math.max(400, startWidth + dx);
-          newHeight = Math.max(300, startHeight - dy);
-          newTop = startTop + dy;
-          break;
-        case "nw": // Top left
-          newWidth = Math.max(400, startWidth - dx);
-          newHeight = Math.max(300, startHeight - dy);
-          newLeft = startLeft + dx;
-          newTop = startTop + dy;
-          break;
-          
-        // Edges
-        case "e": // Right edge
-          newWidth = Math.max(400, startWidth + dx);
-          break;
-        case "w": // Left edge
-          newWidth = Math.max(400, startWidth - dx);
-          newLeft = startLeft + dx;
-          break;
-        case "s": // Bottom edge
-          newHeight = Math.max(300, startHeight + dy);
-          break;
-        case "n": // Top edge
-          newHeight = Math.max(300, startHeight - dy);
-          newTop = startTop + dy;
-          break;
-        default:
-          break;
+      if (direction.includes('e')) newWidth = Math.max(300, startWidth + dx);
+      if (direction.includes('w')) {
+        newWidth = Math.max(300, startWidth - dx);
+        newLeft = startLeft + dx;
+      }
+      if (direction.includes('s')) newHeight = Math.max(200, startHeight + dy);
+      if (direction.includes('n')) {
+        newHeight = Math.max(200, startHeight - dy);
+        newTop = startTop + dy;
       }
       
-      // Validate position values to make sure they're not negative
+      // Ensure window stays within viewport
+      const maxX = window.innerWidth - 50;
+      const maxY = window.innerHeight - 50;
+      
+      // Adjust if exceeding right or bottom edge
+      if (newLeft + newWidth > maxX) {
+        if (direction.includes('w')) newLeft = Math.max(0, maxX - newWidth);
+        else newWidth = Math.min(newWidth, maxX - newLeft);
+      }
+      
+      if (newTop + newHeight > maxY) {
+        if (direction.includes('n')) newTop = Math.max(0, maxY - newHeight);
+        else newHeight = Math.min(newHeight, maxY - newTop);
+      }
+      
+      // Ensure we don't go off the left or top edge
       newLeft = Math.max(0, newLeft);
       newTop = Math.max(0, newTop);
-      
-      // Only adjust width if we're actually resizing horizontally
-      if (direction.includes('e') || direction.includes('w')) {
-        // Ensure window doesn't exceed viewport
-        const maxX = window.innerWidth - 50;
-        if (newLeft + newWidth > maxX) {
-          if (direction.includes('w')) {
-            // For west resize, adjust left position
-            newLeft = Math.max(0, maxX - newWidth);
-          } else {
-            // For east resize, adjust width
-            newWidth = Math.min(newWidth, maxX - newLeft);
-          }
-        }
-      }
-      
-      // Only adjust height if we're actually resizing vertically
-      if (direction.includes('n') || direction.includes('s')) {
-        // Ensure window doesn't exceed viewport
-        const maxY = window.innerHeight - 50;
-        if (newTop + newHeight > maxY) {
-          if (direction.includes('n')) {
-            // For north resize, adjust top position
-            newTop = Math.max(0, maxY - newHeight);
-          } else {
-            // For south resize, adjust height
-            newHeight = Math.min(newHeight, maxY - newTop);
-          }
-        }
-      }
       
       // Update iframe window state
       setIframeWindow(prev => ({
@@ -344,18 +382,35 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }));
     };
     
-    // Setup resize mouseup handler
     const handleResizeEnd = () => {
-      console.log('Resize ended'); // Debug logging
       setIsResizing(false);
       setResizeDirection("");
       document.removeEventListener('mousemove', handleResizeMove);
+      document.removeEventListener('touchmove', handleResizeMove);
       document.removeEventListener('mouseup', handleResizeEnd);
+      document.removeEventListener('touchend', handleResizeEnd);
     };
     
-    // Add global event listeners
-    document.addEventListener('mousemove', handleResizeMove);
+    // Add event listeners for both mouse and touch
+    document.addEventListener('mousemove', handleResizeMove, { passive: false });
+    document.addEventListener('touchmove', handleResizeMove, { passive: false });
     document.addEventListener('mouseup', handleResizeEnd);
+    document.addEventListener('touchend', handleResizeEnd);
+  };
+
+  // Generate cursor class based on resize direction
+  const getCursorClass = () => {
+    if (isDragging) return 'cursor-grabbing';
+    if (isResizing) {
+      switch (resizeDirection) {
+        case 'n': case 's': return 'cursor-ns-resize';
+        case 'e': case 'w': return 'cursor-ew-resize';
+        case 'ne': case 'sw': return 'cursor-nesw-resize';
+        case 'nw': case 'se': return 'cursor-nwse-resize';
+        default: return '';
+      }
+    }
+    return '';
   };
 
   // Expose context values
@@ -396,9 +451,9 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
               } ${
                 iframeWindow.isMinimized ? 'h-12 overflow-hidden' : ''
               } ${
-                isDragging ? 'cursor-grabbing will-change-transform' : ''
+                getCursorClass()
               } ${
-                isResizing ? `cursor-${resizeDirection || 'nwse'}-resize will-change-[width,height,top,left]` : ''
+                isDragging || isResizing ? 'will-change-transform' : ''
               }`}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ 
@@ -437,10 +492,11 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 })
               }}
             >
-              {/* Improved Window Title Bar with controls */}
+              {/* Window Title Bar with controls */}
               <div 
                 className={`flex items-center justify-between p-3 bg-gradient-to-r from-[#213f5b] to-[#1d6fa5] text-white cursor-move relative ${iframeWindow.isMaximized ? '' : 'rounded-t-xl'} select-none`}
                 onMouseDown={handleDragStart}
+                onTouchStart={handleDragStart}
                 style={{ touchAction: 'none' }}
               >
                 {/* Decorative elements for title bar */}
@@ -498,9 +554,19 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
               {/* IFrame Content with loading indicator */}
               {!iframeWindow.isMinimized && (
                 <div className="relative flex-1 w-full h-full bg-gray-50">
-                  {/* Drag overlay - prevents losing drag when moving fast */}
-                  {isDragging && (
-                    <div className="absolute inset-0 z-20 bg-transparent cursor-grabbing" />
+                  {/* Show blocking overlay during drag/resize operations */}
+                  {(isDragging || isResizing) && (
+                    <div 
+                      className={`absolute inset-0 z-20 bg-transparent ${getCursorClass()}`} 
+                      onMouseUp={() => {
+                        setIsDragging(false);
+                        setIsResizing(false);
+                      }}
+                      onTouchEnd={() => {
+                        setIsDragging(false);
+                        setIsResizing(false);
+                      }}
+                    />
                   )}
                   
                   {/* Loading overlay */}
@@ -511,10 +577,13 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     </div>
                   </div>
                   
+                  {/* The iframe itself */}
                   <iframe 
                     src={`/dashboard/admin/projects/${iframeProjectId}`}
                     className="w-full h-full border-none"
                     title={`Détails du projet ${iframeProjectNumber || ''}`}
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"
+                    loading="lazy"
                     onLoad={(e) => {
                       // Hide the loader when iframe is loaded
                       const target = e.target as HTMLIFrameElement;
@@ -530,69 +599,65 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 </div>
               )}
               
-              {/* Resize handles with visual indicators for debugging */}
+              {/* Resize handles - only show when not maximized or minimized */}
               {!iframeWindow.isMaximized && !iframeWindow.isMinimized && (
                 <>
-                  {/* Corner resize indicators */}
-                  <div className="absolute top-0 left-0 w-3 h-3 border-t-4 border-l-4 border-[#4facfe]/40 rounded-tl-lg z-10 pointer-events-none" />
-                  <div className="absolute top-0 right-0 w-3 h-3 border-t-4 border-r-4 border-[#4facfe]/40 rounded-tr-lg z-10 pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 w-3 h-3 border-b-4 border-l-4 border-[#4facfe]/40 rounded-bl-lg z-10 pointer-events-none" />
-                  <div className="absolute bottom-0 right-0 w-3 h-3 border-b-4 border-r-4 border-[#4facfe]/40 rounded-br-lg z-10 pointer-events-none" />
-
-                  {/* Edge resize indicators */}
-                  <div className="absolute left-3 right-3 top-0 h-1 bg-[#4facfe]/20 z-10 pointer-events-none" />
-                  <div className="absolute left-3 right-3 bottom-0 h-1 bg-[#4facfe]/20 z-10 pointer-events-none" />
-                  <div className="absolute top-3 bottom-3 left-0 w-1 bg-[#4facfe]/20 z-10 pointer-events-none" />
-                  <div className="absolute top-3 bottom-3 right-0 w-1 bg-[#4facfe]/20 z-10 pointer-events-none" />
-
-                  {/* Corner handles - larger hit areas and higher z-index */}
+                  {/* Corner handles */}
                   <div 
-                    className="absolute top-0 left-0 w-16 h-16 cursor-nwse-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute top-0 left-0 w-16 h-16 cursor-nwse-resize z-30"
                     onMouseDown={(e) => handleResizeStart(e, "nw")}
+                    onTouchStart={(e) => handleResizeStart(e, "nw")}
                   />
                   <div 
-                    className="absolute top-0 right-0 w-16 h-16 cursor-nesw-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute top-0 right-0 w-16 h-16 cursor-nesw-resize z-30"
                     onMouseDown={(e) => handleResizeStart(e, "ne")}
+                    onTouchStart={(e) => handleResizeStart(e, "ne")}
                   />
                   <div 
-                    className="absolute bottom-0 left-0 w-16 h-16 cursor-nesw-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute bottom-0 left-0 w-16 h-16 cursor-nesw-resize z-30"
                     onMouseDown={(e) => handleResizeStart(e, "sw")}
+                    onTouchStart={(e) => handleResizeStart(e, "sw")}
                   />
                   <div 
-                    className="absolute bottom-0 right-0 w-20 h-20 cursor-nwse-resize z-30 group hover:bg-[#4facfe]/10"
+                    className="absolute bottom-0 right-0 w-20 h-20 cursor-nwse-resize z-30 group"
                     onMouseDown={(e) => handleResizeStart(e, "se")}
+                    onTouchStart={(e) => handleResizeStart(e, "se")}
                   >
                     {/* Visual indicator for resize handle */}
                     <div className="absolute bottom-2 right-2 w-8 h-8 flex items-end justify-end">
-                      <div className="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-[#4facfe] m-0.5"></div>
-                      <div className="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-[#4facfe] m-0.5"></div>
-                      <div className="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-[#4facfe] m-0.5"></div>
+                      <div className="w-1 h-1 rounded-full bg-gray-400 m-0.5"></div>
+                      <div className="w-1 h-1 rounded-full bg-gray-400 m-0.5"></div>
+                      <div className="w-1 h-1 rounded-full bg-gray-400 m-0.5"></div>
                     </div>
                     <div className="absolute bottom-2 right-2 w-8 h-8 flex items-end justify-end">
-                      <div className="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-[#4facfe] m-0.5"></div>
-                      <div className="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-[#4facfe] m-0.5"></div>
+                      <div className="w-1 h-1 rounded-full bg-gray-400 m-0.5"></div>
+                      <div className="w-1 h-1 rounded-full bg-gray-400 m-0.5"></div>
                     </div>
                     <div className="absolute bottom-2 right-2 w-8 h-8 flex items-end justify-end">
-                      <div className="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-[#4facfe] m-0.5"></div>
+                      <div className="w-1 h-1 rounded-full bg-gray-400 m-0.5"></div>
                     </div>
                   </div>
                   
-                  {/* Edge handles - larger hit areas and higher z-index */}
+                  {/* Edge handles */}
                   <div 
-                    className="absolute top-0 left-16 right-16 h-8 cursor-ns-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute top-0 left-16 right-16 h-8 cursor-ns-resize z-30"
                     onMouseDown={(e) => handleResizeStart(e, "n")}
+                    onTouchStart={(e) => handleResizeStart(e, "n")}
                   />
                   <div 
-                    className="absolute bottom-0 left-16 right-16 h-8 cursor-ns-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute bottom-0 left-16 right-16 h-8 cursor-ns-resize z-30"
                     onMouseDown={(e) => handleResizeStart(e, "s")}
+                    onTouchStart={(e) => handleResizeStart(e, "s")}
                   />
                   <div 
-                    className="absolute left-0 top-16 bottom-16 w-8 cursor-ew-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute left-0 top-16 bottom-16 w-8 cursor-ew-resize z-30"
                     onMouseDown={(e) => handleResizeStart(e, "w")}
+                    onTouchStart={(e) => handleResizeStart(e, "w")}
                   />
                   <div 
-                    className="absolute right-0 top-16 bottom-16 w-8 cursor-ew-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute right-0 top-16 bottom-16 w-8 cursor-ew-resize z-30"
                     onMouseDown={(e) => handleResizeStart(e, "e")}
+                    onTouchStart={(e) => handleResizeStart(e, "e")}
                   />
                 </>
               )}
@@ -603,82 +668,22 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       {/* CSS for animations and improved UI */}
       <style jsx global>{`
-        .shimmer {
-          animation: shimmer 2s infinite linear;
-          background-size: 1000px 100%;
-        }
-        
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-        
         .iframe-loader {
           transition: opacity 0.5s ease-out;
         }
         
         /* Fix iframe interaction during drag */
-        iframe {
-          pointer-events: auto;
-        }
-        
         .cursor-grabbing iframe,
         .cursor-nwse-resize iframe,
         .cursor-nesw-resize iframe,
         .cursor-ns-resize iframe,
-        .cursor-ew-resize iframe,
-        .cursor-n-resize iframe,
-        .cursor-s-resize iframe,
-        .cursor-e-resize iframe,
-        .cursor-w-resize iframe,
-        .cursor-ne-resize iframe,
-        .cursor-nw-resize iframe,
-        .cursor-se-resize iframe,
-        .cursor-sw-resize iframe {
+        .cursor-ew-resize iframe {
           pointer-events: none !important;
-        }
-        
-        /* Double-click hint animation */
-        @keyframes pulseHint {
-          0% {
-            box-shadow: 0 0 0 0 rgba(79, 172, 254, 0.4);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(79, 172, 254, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(79, 172, 254, 0);
-          }
-        }
-        
-        /* Drag window hint */
-        @keyframes dragHint {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
         }
         
         /* Hardware acceleration for smoother dragging */
         .will-change-transform {
           will-change: transform;
-        }
-        
-        .will-change-[width,height] {
-          will-change: width, height;
-        }
-        
-        .will-change-[width,height,top,left] {
-          will-change: width, height, top, left;
         }
       `}</style>
     </GlobalIFrameContext.Provider>
