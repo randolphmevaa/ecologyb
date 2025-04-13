@@ -3915,6 +3915,22 @@ const DevisEditor: React.FC<{
     
     return `DE${dateStr}-${counter}`;
   });
+  const [clientDetails, setClientDetails] = useState({
+    street: '13 ROUTE DU POINT GAGNARD',
+    postalCode: '13014',
+    city: 'MARSEILLE',
+    cadastralParcel: '000 / ZA / 0061',
+    phoneNumber: '+336122336',
+    zone: 'ZONE H3',
+    houseType: 'Maison individuelle',
+    houseAge: 'de + 15 ans',
+    precarity: 'Modeste',
+    heatingType: 'Bois',
+    dwellingType: 'Maison individuelle',
+    clientNumber: '76-750595907'
+    // No default subcontractor
+  });
+  
   const [quoteDate, setQuoteDate] = useState<string>(new Date().toISOString().substring(0, 10));
   // Generate an invoice number in the format "FA10042025-7"
   const [invoiceNumber, setInvoiceNumber] = useState<string>(() => {
@@ -4452,7 +4468,36 @@ ${subContractorInfo}`;
 
   // Add this function to handle saving a subcontractor
   const handleSaveSubcontractor = (subcontractor: Subcontractor) => {
+    // First, store the selected subcontractor
     setSelectedSubcontractor(subcontractor);
+    
+    // Then, map the subcontractor data to match what the devis generator expects
+    if (subcontractor) {
+      // Create the formatted subcontractor object that matches the clientDetails.subcontractor structure
+      const formattedSubcontractor = {
+        name: subcontractor.name,
+        address: subcontractor.address,
+        leader: subcontractor.director, // Map director → leader
+        siret: subcontractor.siret,
+        decennialNumber: subcontractor.insurance, // Map insurance → decennialNumber
+        qualifications: subcontractor.qualifications
+      };
+      
+      // Update the clientDetails with the subcontractor information
+      setClientDetails((prev: typeof clientDetails) => ({
+        ...prev,
+        subcontractor: formattedSubcontractor
+      }));
+    } else {
+      // If no subcontractor is selected (or it was removed),
+      // remove the subcontractor property from clientDetails
+      setClientDetails((prev: typeof clientDetails) => {
+        const newDetails = { ...prev };
+        // @ts-expect-error - Properly handle the dynamic property deletion
+        delete newDetails.subcontractor;
+        return newDetails;
+      });
+    }
   };
 
   // Add function to handle saving the additional information
@@ -5115,6 +5160,7 @@ ${subContractorInfo}`;
                   preVisitDate={preVisitDate}
                   estimatedWorkDate={estimatedWorkDate}
                   commitmentDate={commitmentDate}
+                  clientDetails={clientDetails}
                 />
               </div>
             </div>

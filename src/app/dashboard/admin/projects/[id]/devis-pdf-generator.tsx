@@ -1127,19 +1127,6 @@ export const generateDevisPDF = (
     heatingType: 'Bois',
     dwellingType: 'Maison individuelle',
     clientNumber: '76-750595907',
-    subcontractor: {
-      name: 'BATI VAMOS',
-      address: '20 ROUTE DU TREMBLAY 91480 VARENNES JARCY',
-      leader: 'VAMOS ALEXANDRU MIHAI',
-      siret: '83275406300028',
-      decennialNumber: 'F53728Y',
-      qualifications: [
-        'RGE QualiPac/65461', 
-        'RGE QualiBois/65461', 
-        'RGE QualiSol/65461', 
-        'RGE QualiPv/65461'
-      ]
-    }
   }
 ) => {
   // Check if operations exist in the tableItems

@@ -52,112 +52,59 @@ import {
   ClipboardDocumentCheckIcon,
   ClipboardDocumentListIcon,
 } from "@heroicons/react/24/outline";
+import EnhancedCalendar from "./components/EnhancedCalendar";
+import TimelineView from "./components/TimelineView";
 
 /** ---------------------
  *    TYPE DEFINITIONS
  *  --------------------- */
-type TaskPriority = "low" | "medium" | "high" | "urgent";
-type TaskStatus = "not_started" | "in_progress" | "completed";
-type TaskCategory = 
-  | "administrative" 
-  | "finance" 
-  | "hr" 
-  | "compliance" 
-  | "reporting"
-  | "legal"
-  | "meetings"
-  | "procurement"
-  | "onboarding"
-  | "auditing";
+import { 
+  Task, 
+  User, 
+  Project, 
+  TaskPriority, 
+  TaskStatus, 
+  TaskCategory 
+} from "./types";
 type ViewType = "kanban" | "list" | "calendar" | "timeline" | "gantt";
 type GroupBy = "status" | "priority" | "category" | "assignee" | "project" | "due_date" | "none";
 type SortBy = "priority" | "due_date" | "created_at" | "title" | "status";
 type SortDirection = "asc" | "desc";
 
-interface Checklist {
-  id: string;
-  title: string;
-  items: {
-    id: string;
-    text: string;
-    completed: boolean;
-  }[];
-}
+// interface Checklist {
+//   id: string;
+//   title: string;
+//   items: {
+//     id: string;
+//     text: string;
+//     completed: boolean;
+//   }[];
+// }
 
-interface Comment {
-  id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  attachments?: Attachment[];
-}
+// interface Comment {
+//   id: string;
+//   user_id: string;
+//   content: string;
+//   created_at: string;
+//   attachments?: Attachment[];
+// }
 
-interface Attachment {
-  id: string;
-  name: string;
-  type: string;
-  size: number; // in KB
-  url: string;
-  uploaded_at: string;
-  uploaded_by: string;
-}
+// interface Attachment {
+//   id: string;
+//   name: string;
+//   type: string;
+//   size: number; // in KB
+//   url: string;
+//   uploaded_at: string;
+//   uploaded_by: string;
+// }
 
-interface TaskEvent {
-  id: string;
-  title: string;
-  start_time: string;
-  end_time: string;
-}
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-  avatar_url?: string;
-  department?: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  client_name?: string;
-  color: string;
-  status: "active" | "completed" | "on_hold" | "planned";
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  category: TaskCategory;
-  created_at: string;
-  updated_at: string;
-  due_date: string | null;
-  start_date: string | null;
-  assignee_id: string | null;
-  creator_id: string;
-  project_id: string | null;
-  parent_task_id: string | null;
-  estimated_hours: number | null;
-  actual_hours: number | null;
-  completion_percentage: number;
-  tags: string[];
-  watchers: string[];
-  checklist?: Checklist[];
-  comments?: Comment[];
-  attachments?: Attachment[];
-  related_events?: TaskEvent[];
-  related_tasks?: string[];
-  location?: string;
-  is_recurring?: boolean;
-  recurrence_pattern?: string;
-  is_favorite?: boolean;
-  external_links?: { title: string; url: string }[];
-}
+// interface TaskEvent {
+//   id: string;
+//   title: string;
+//   start_time: string;
+//   end_time: string;
+// }
 
 const validTaskStatuses: TaskStatus[] = [
   "not_started", 
@@ -2490,24 +2437,31 @@ export default function TasksPage() {
                   )}
 
                   {viewType === 'calendar' && (
-                    <div className="p-6 flex justify-center items-center text-gray-500">
-                      <div className="text-center">
-                        <CalendarIcon className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                        <h3 className="text-lg font-medium mb-1">Vue calendrier</h3>
-                        <p>Cette vue n&apos;est pas encore disponible.</p>
-                      </div>
-                    </div>
+                    <EnhancedCalendar onTimeSlotSelect={function ( ): void {
+                        throw new Error("Function not implemented.");
+                      } }/>
                   )}
 
                   {viewType === 'timeline' && (
-                    <div className="p-6 flex justify-center items-center text-gray-500">
-                      <div className="text-center">
-                        <ClockIcon className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                        <h3 className="text-lg font-medium mb-1">Vue timeline</h3>
-                        <p>Cette vue n&apos;est pas encore disponible.</p>
-                      </div>
-                    </div>
+                    <TimelineView
+                      tasks={filteredTasks}
+                      users={users}
+                      projects={projects}
+                      selectedTask={selectedTask}
+                      setSelectedTask={setSelectedTask}
+                      setShowTaskModal={setShowTaskModal}
+                      filterPriority={filterPriority}
+                      filterStatus={filterStatus}
+                      filterAssignee={filterAssignee}
+                      filterProject={filterProject}
+                      filterCategory={filterCategory}
+                      getUserById={getUserById}
+                      getProjectById={getProjectById}
+                      formatDate={formatDate}
+                      getDueDateStatusClass={getDueDateStatusClass}
+                    />
                   )}
+
                 </>
               )}
             </div>

@@ -307,7 +307,7 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
               </motion.button>
 
               {/* NEW BUTTON: Placer en installation */}
-              <motion.button
+              {/* <motion.button
                 onClick={() => {
                   setIsInstallModalOpen(true);
                   resetInstallationForm();
@@ -323,7 +323,8 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
                   <WrenchScrewdriverIcon className="w-5 h-5" />
                 </span>
                 <span className="text-sm font-semibold tracking-wide">Placer en installation</span>
-              </motion.button>
+              </motion.button> */}
+              <EnhancedInstallationModal/>
 
               {/* Status dossier with dropdown */}
               <div className="relative" ref={statusDropdownRef}>
@@ -1012,7 +1013,7 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
           </Dialog>
         )}
       </AnimatePresence>
-      <EnhancedInstallationModal/>
+     
     </MotionConfig>
   );
 };

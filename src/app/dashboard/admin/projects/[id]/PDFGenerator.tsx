@@ -14,6 +14,27 @@ import { generateDevisPDF } from './devis-pdf-generator';
 import { generateSizingNotePDF } from './sizing-note-pdf-generator';
 import { IndivisionData } from './AddIndivisionModal';
 
+// Define a proper interface for ClientDetails matching the expected structure
+interface ClientDetails {
+  street: string;
+  postalCode: string;
+  city: string;
+  cadastralParcel: string;
+  phoneNumber: string;
+  zone: string;
+  houseType: string;
+  houseAge: string;
+  precarity: string;
+  heatingType: string;
+  dwellingType: string;
+  clientNumber: string;
+  // Add any additional properties that might be used
+  email?: string;
+  name?: string;
+  firstName?: string;
+}
+
+// Then update the PDFGeneratorProps interface
 interface PDFGeneratorProps {
   tableItems: TableItem[];
   quoteNumber: string;
@@ -33,7 +54,30 @@ interface PDFGeneratorProps {
   preVisitDate?: string;
   estimatedWorkDate?: string;
   commitmentDate?: string;
+  clientDetails: ClientDetails;
 }
+
+const pdfPreviewPaths: Record<string, string | null> = {
+  "attestation-fin": "/AFT.pdf",
+  "attestation-simplifiee": "/AS.pdf",
+  "attestation-indivision": "/ATTESTATION_INDIV.pdf",
+  "attestation-mise-service": "/Attestation_mise_en_service.pdf",
+  "cession-creance": "/Cession_RENOLIB.pdf",
+  "attestation-proprietaire-bailleur": "/ATTESTATION_PROP.pdf",
+  "dp-mairie": "/DPMairie.pdf",
+  "daact": "/DAACT.pdf",
+  "enedis": "/Enedis_.pdf",
+  "eco-ptz": "/ECO-PTZ.pdf",
+  "mandat-perception": "/Checklist_Effy.pdf",
+  "cgv": "/CGV.pdf",
+  "devis-sans-prix": null,
+  "courrier-rac": null,
+  "dossier-cee": null,
+  "devis": null, // No preview available yet
+  "sizing-note": null, // No preview available yet
+  // Default fallback for any other documents
+  "default": null
+};
 
 const PDFGenerator: React.FC<PDFGeneratorProps> = ({ 
   tableItems, 
@@ -48,13 +92,15 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
   dpMairieData = null,
   indivisionData = null,
   incentivesData = null,
-  customName = "", // Add with default value
+  // customName = "", // Add with default value
   validUntilDate = "",
   preVisitDate = "",
   estimatedWorkDate = "",
-  commitmentDate = ""
+  commitmentDate = "",
+  clientDetails
 }) => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [hoveredDocId, setHoveredDocId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -76,69 +122,69 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
   };
 
   // New function to generate custom filenames
-  const getCustomFileName = (documentType: string): string => {
-    let prefix: string;
+  // const getCustomFileName = (documentType: string): string => {
+  //   let prefix: string;
     
-    // Determine the appropriate prefix based on document type
-    switch (documentType) {
-      case "devis":
-        prefix = "Devis";
-        break;
-      case "facture":
-        prefix = "Facture";
-        break;
-      case "sizing-note":
-        prefix = "Note_Dimensionnement";
-        break;
-      case "attestation-fin":
-        prefix = "Attestation_Fin_Travaux";
-        break;
-      case "attestation-mise-service":
-        prefix = "Attestation_Mise_En_Service";
-        break;
-      case "attestation-simplifiee":
-        prefix = "Attestation_Simplifiee";
-        break;
-      case "attestation-indivision":
-        prefix = "Attestation_Indivision";
-        break;
-      case "proprietaire-bailleur":
-        prefix = "Attestation_Proprietaire_Bailleur";
-        break;
-      case "cession-creance":
-        prefix = "Cession_Creance_RENOLIB";
-        break;
-      case "dp-mairie":
-        prefix = "DP_Mairie";
-        break;
-      case "daact":
-        prefix = "DAACT";
-        break;
-      case "enedis":
-        prefix = "ENEDIS";
-        break;
-      case "eco-ptz":
-        prefix = "ECO_PTZ";
-        break;
-      case "mandat-perception":
-        prefix = "Mandat_Perception_EFFY";
-        break;
-      case "cgv":
-        prefix = "CGV";
-        break;
-      default:
-        prefix = documentType.replace(/\s+/g, '_');
-    }
+  //   // Determine the appropriate prefix based on document type
+  //   switch (documentType) {
+  //     case "devis":
+  //       prefix = "Devis";
+  //       break;
+  //     case "facture":
+  //       prefix = "Facture";
+  //       break;
+  //     case "sizing-note":
+  //       prefix = "Note_Dimensionnement";
+  //       break;
+  //     case "attestation-fin":
+  //       prefix = "Attestation_Fin_Travaux";
+  //       break;
+  //     case "attestation-mise-service":
+  //       prefix = "Attestation_Mise_En_Service";
+  //       break;
+  //     case "attestation-simplifiee":
+  //       prefix = "Attestation_Simplifiee";
+  //       break;
+  //     case "attestation-indivision":
+  //       prefix = "Attestation_Indivision";
+  //       break;
+  //     case "proprietaire-bailleur":
+  //       prefix = "Attestation_Proprietaire_Bailleur";
+  //       break;
+  //     case "cession-creance":
+  //       prefix = "Cession_Creance_RENOLIB";
+  //       break;
+  //     case "dp-mairie":
+  //       prefix = "DP_Mairie";
+  //       break;
+  //     case "daact":
+  //       prefix = "DAACT";
+  //       break;
+  //     case "enedis":
+  //       prefix = "ENEDIS";
+  //       break;
+  //     case "eco-ptz":
+  //       prefix = "ECO_PTZ";
+  //       break;
+  //     case "mandat-perception":
+  //       prefix = "Mandat_Perception_EFFY";
+  //       break;
+  //     case "cgv":
+  //       prefix = "CGV";
+  //       break;
+  //     default:
+  //       prefix = documentType.replace(/\s+/g, '_');
+  //   }
     
-    if (customName && customName.trim() !== "") {
-      // Sanitize the custom name for file use
-      const sanitizedName = customName.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '');
-      return `${prefix}_${sanitizedName}.pdf`;
-    }
+  //   if (customName && customName.trim() !== "") {
+  //     // Sanitize the custom name for file use
+  //     const sanitizedName = customName.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '');
+  //     return `${prefix}_${sanitizedName}.pdf`;
+  //   }
     
-    // Default to using the reference number
-    return `${prefix}_${quoteNumber}.pdf`;
-  };
+  //   // Default to using the reference number
+  //   return `${prefix}_${quoteNumber}.pdf`;
+  // };
 
   // // Common function to handle downloading PDFs with the custom filename
   // const downloadPDF = (pdfBytes: Uint8Array, documentType: string) => {
@@ -340,11 +386,11 @@ const handleGenerateDevisPDF = () => {
     validUntilDate,      // Add valid until date
     preVisitDate,        // Add pre-visit date
     estimatedWorkDate,   // Add estimated work date
-    commitmentDate       // Add commitment date
+    commitmentDate,
+    clientDetails
   );
   setDropdownVisible(false);
 };
-
 
   // Similarly, update the sizing note generation
 const handleGenerateSizingNotePDF = () => {
@@ -1422,53 +1468,285 @@ documentCategories.push(indivisionCategory);
 
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* Main button with enhanced styling */}
       <button
         onClick={toggleDropdown}
-        className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+        className="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
       >
         <DocumentTextIcon className="h-5 w-5" />
-        <span>Générer des documents PDF</span>
-        <ChevronDownIcon className="h-5 w-5 ml-1" />
+        <span className="font-medium">Générer des documents PDF</span>
+        <ChevronDownIcon className={`h-5 w-5 ml-1 transition-transform duration-300 ${dropdownVisible ? 'rotate-180' : ''}`} />
       </button>
-      
+  
+      {/* Enhanced dropdown with improved positioning and responsive behavior */}
       {dropdownVisible && (
-        <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg z-50 border border-gray-200 overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
-            <h3 className="font-medium text-gray-700">Documents disponibles</h3>
-            <button 
-              onClick={() => setDropdownVisible(false)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-          </div>
-          
-          <div className="p-2 max-h-80 overflow-y-auto">
-            <div className="space-y-0.5">
-              {allDocuments.map(item => (
-                <div 
-                  key={item.id} 
-                  className="px-2 py-2 hover:bg-blue-50 cursor-pointer rounded text-sm flex items-center gap-2 transition-colors"
-                  onClick={item.action}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </div>
-              ))}
+        <div
+          className={`
+            absolute 
+            bottom-full 
+            sm:left-0 
+            left-0 
+            right-0
+            sm:right-auto
+            mb-3 
+            z-50 
+            w-[98%]
+            mx-auto
+            sm:mx-0
+            max-h-[90vh] 
+            bg-white 
+            rounded-xl 
+            shadow-2xl 
+            border 
+            border-gray-100 
+            overflow-hidden 
+            flex 
+            md:flex-row
+            flex-col
+            transition-all 
+            duration-300 
+            ease-in-out
+            origin-top-left
+            ${hoveredDocId ? 'lg:w-[900px] md:w-[700px] animate-expand' : 'lg:w-[320px] md:w-[300px]'} 
+          `}
+          style={{
+            animation: 'fadeIn 0.2s ease-out',
+          }}
+          onMouseLeave={() => setHoveredDocId(null)}
+        >
+          {/* LEFT COLUMN: Categories and document list */}
+          <div className={`
+            flex 
+            flex-col 
+            md:w-80
+            w-full
+            md:max-w-none
+            md:border-r 
+            border-b
+            md:border-b-0
+            border-gray-200 
+            ${!hoveredDocId ? 'w-full' : ''}
+          `}>
+            {/* Header with glass morphism effect */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-50 to-indigo-50 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+              <h3 className="font-semibold text-gray-800">Documents disponibles</h3>
+              <button
+                onClick={() => setDropdownVisible(false)}
+                className="text-gray-500 hover:text-gray-800 rounded-full p-1 hover:bg-gray-200 transition-colors"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+  
+            {/* Scrollable documents without category headers */}
+            <div className="p-2 overflow-y-auto flex-1 max-h-[50vh] md:max-h-[70vh]">
+              <div className="space-y-1">
+                {/* Flatten all items from all categories into a single list */}
+                {documentCategories.flatMap(category => category.items).map((item) => (
+                  <div
+                    key={item.id}
+                    className={`px-3 py-2.5 cursor-pointer rounded-lg text-sm flex items-center gap-3 transition-all ${hoveredDocId === item.id ? 'bg-purple-100 text-purple-800' : 'hover:bg-gray-100 text-gray-700'}`}
+                    onMouseEnter={() => setHoveredDocId(item.id)}
+                    onClick={item.action}
+                  >
+                    <div className={`p-1.5 rounded-md ${hoveredDocId === item.id ? 'bg-purple-200' : 'bg-gray-100'}`}>
+                      {item.icon}
+                    </div>
+                    <span className="font-medium">{item.label}</span>
+                    
+                    {/* Preview indicator */}
+                    {hoveredDocId === item.id && (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 ml-auto text-purple-600">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
             
-            {/* Display custom filename preview if customName exists */}
-            {customName && (
-              <div className="mt-3 pt-3 border-t border-gray-200 px-2 py-2 text-xs text-gray-600">
-                <span className="font-medium">Nom personnalisé:</span> 
-                <div className="mt-1 bg-gray-100 p-1.5 rounded text-sm font-mono truncate">
-                  {getCustomFileName("devis")}
+            {/* Quick actions footer */}
+            <div className="border-t border-gray-200 p-3">
+              <div className="text-xs text-gray-500 mb-2">Actions rapides</div>
+              <div className="flex flex-wrap gap-2">
+                <button 
+                  className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 flex items-center gap-1 transition-colors"
+                  onClick={() => handleGenerateDevisPDF()}
+                >
+                  <DocumentIcon className="h-3.5 w-3.5" />
+                  <span>Générer devis</span>
+                </button>
+                <button 
+                  className="px-3 py-1.5 text-xs bg-purple-100 hover:bg-purple-200 rounded-md text-purple-700 flex items-center gap-1 transition-colors"
+                  onClick={() => generateCGVPDF()}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                  <span>CGV</span>
+                </button>
+                {!hoveredDocId && (
+                  <button 
+                    className="px-3 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 rounded-md text-blue-700 flex items-center gap-1 transition-colors md:hidden"
+                    onClick={() => setHoveredDocId(allDocuments[0]?.id || null)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Voir aperçu</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+  
+          {/* RIGHT COLUMN: Enhanced PDF Preview - Only shown when hovering on desktop, or clicking "Voir aperçu" on mobile */}
+          <div className={`
+            flex-1 
+            flex 
+            flex-col 
+            bg-gray-50 
+            relative 
+            ${hoveredDocId ? 'animate-slideIn md:w-auto' : 'md:hidden w-0 overflow-hidden'}
+            ${hoveredDocId ? 'block' : 'hidden md:flex'}
+            min-h-[250px]
+            md:min-h-0
+            transition-[width] duration-300 ease-in-out
+          `}>
+            {!hoveredDocId ? (
+              <div className="flex flex-col items-center justify-center h-full bg-gray-50 p-6">
+                <div className="text-center">
+                  <DocumentTextIcon className="h-20 w-20 mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Aperçu du document</h3>
+                  <p className="text-sm text-gray-500 max-w-xs mx-auto md:block hidden">
+                    Passez la souris sur un document dans la liste pour afficher l&apos;aperçu
+                  </p>
+                  <p className="text-sm text-gray-500 max-w-xs mx-auto md:hidden block">
+                    Sélectionnez un document pour voir son aperçu
+                  </p>
                 </div>
               </div>
+            ) : (
+              <>
+                {/* Preview header with responsive design */}
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+                  <h3 className="font-medium text-gray-700 flex items-center truncate max-w-[180px] md:max-w-none">
+                    <DocumentIcon className="h-4 w-4 mr-2 flex-shrink-0 text-gray-500" />
+                    <span className="truncate">{allDocuments.find(doc => doc.id === hoveredDocId)?.label || 'Aperçu du document'}</span>
+                  </h3>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hidden md:inline-block">Aperçu</span>
+                    <button 
+                      className="md:hidden px-2 py-1 bg-gray-100 rounded-md text-gray-500 flex items-center"
+                      onClick={() => setHoveredDocId(null)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                      </svg>
+                      <span className="text-xs ml-1">Retour</span>
+                    </button>
+                    <button 
+                      className="px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md font-medium flex items-center gap-1 transition-colors text-xs sm:text-sm"
+                      onClick={() => {
+                        const selectedDoc = allDocuments.find(doc => doc.id === hoveredDocId);
+                        if (selectedDoc && selectedDoc.action) {
+                          selectedDoc.action();
+                        }
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+                      </svg>
+                      <span>Générer</span>
+                    </button>
+                  </div>
+                </div>
+
+  
+                {/* PDF iframe with better styling and responsive design */}
+                <div className="relative flex-1 w-full overflow-hidden">
+                  <div className="absolute inset-0 shadow-inner">
+                    {pdfPreviewPaths[hoveredDocId] === null ? (
+                      // Custom "Under Construction" message when no preview is available
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-6">
+                        <div className="p-4 rounded-full bg-purple-100 mb-4">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-purple-600">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">Aperçu en Construction</h3>
+                        <p className="text-sm text-gray-600 text-center max-w-md mb-3">
+                          L&apos;aperçu de ce document sera disponible très prochainement avec une mise en page et un contenu optimisés.
+                        </p>
+                        <div className="text-xs px-3 py-1 bg-purple-50 text-purple-700 rounded-full">
+                          Disponible bientôt
+                        </div>
+                      </div>
+                    ) : (
+                      // Regular iframe when a preview is available
+                      <iframe
+                        title="PDF Preview"
+                        src={pdfPreviewPaths[hoveredDocId] || ""}
+                        className="w-full h-full border-0"
+                        style={{
+                          backgroundColor: '#f5f5f5',
+                        }}
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Loading overlay - conditionally shown while loading */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 pointer-events-none" 
+                      style={{ opacity: 0.8, animation: 'fadeOut 1s forwards 0.5s' }}>
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700 mb-3"></div>
+                      <p className="text-purple-700">Chargement...</p>
+                    </div>
+                  </div>
+                </div>
+  
+                {/* PDF info footer - simplified on mobile */}
+                <div className="bg-white border-t border-gray-200 px-3 py-2 flex items-center justify-between text-xs text-gray-600">
+                  <span className="hidden sm:inline">Format: PDF</span>
+                  <span className="truncate max-w-[160px] sm:max-w-none">
+                    {allDocuments.find(doc => doc.id === hoveredDocId)?.label || hoveredDocId}
+                  </span>
+                  <span className="text-gray-500 hidden sm:inline">Cliquez pour générer</span>
+                </div>
+              </>
             )}
           </div>
         </div>
       )}
+  
+      {/* Add CSS for animations */}
+            <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); width: 0; }
+            to { opacity: 1; transform: translateX(0); width: auto; }
+          }
+          @keyframes fadeOut {
+            from { opacity: 0.8; }
+            to { opacity: 0; }
+          }
+          @keyframes expand {
+            from { width: 320px; }
+            to { width: 900px; }
+          }
+          .animate-slideIn {
+            animation: slideIn 0.3s ease-out;
+          }
+          .animate-expand {
+            animation: expand 0.3s ease-in-out forwards;
+          }
+        `
+      }} />
     </div>
   );
 };

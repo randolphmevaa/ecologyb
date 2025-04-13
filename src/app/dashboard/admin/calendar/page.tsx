@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { useRef } from "react";
-import { ReactNode } from "react";
-import { DraggableBounds, DraggableData, DraggableEvent } from 'react-draggable';
+import React, { useState, useEffect } from "react";
+// import { useRef } from "react";
+// import { ReactNode } from "react";
+// import { DraggableBounds, DraggableData, DraggableEvent } from 'react-draggable';
 import { Header } from "@/components/Header";
-import Draggable from 'react-draggable';
+// import Draggable from 'react-draggable';
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -15,20 +15,20 @@ import {
   UserGroupIcon,
   BriefcaseIcon,
   PlusCircleIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  MagnifyingGlassIcon,
+  // ChevronLeftIcon,
+  // ChevronRightIcon,
+  // MagnifyingGlassIcon,
   CheckIcon,
   ArrowPathIcon,
-  ListBulletIcon,
+  // ListBulletIcon,
   ArrowTopRightOnSquareIcon,
   UserIcon,
   DocumentTextIcon,
-  ExclamationCircleIcon,
+  // ExclamationCircleIcon,
   XMarkIcon,
   ChatBubbleLeftRightIcon,
   BellAlertIcon,
-  ArrowLongRightIcon,
+  // ArrowLongRightIcon,
   InformationCircleIcon,
   CubeIcon,
   PencilIcon,
@@ -48,6 +48,7 @@ import {
   FolderIcon,
   ServerIcon,
 } from "@heroicons/react/24/outline";
+import EnhancedCalendar from "./components/EnhancedCalendar";
 
 /** ---------------------
  *    TYPE DEFINITIONS
@@ -81,7 +82,7 @@ type EventStatus =
   | "reopened";
 
 type EventPriority = "low" | "medium" | "high" | "urgent" | "critical";
-type ViewType = "month" | "week" | "day" | "agenda" | "kanban";
+// type ViewType = "month" | "week" | "day" | "agenda" | "kanban";
 
 interface EventParticipant {
   id: string;
@@ -198,33 +199,33 @@ interface User {
 // }
 
 // 2. Define a type for the resizing state
-interface ResizingState {
-  event: Event;
-  startY: number;
-  initialEndTime: Date;
-}
+// interface ResizingState {
+//   event: Event;
+//   startY: number;
+//   initialEndTime: Date;
+// }
 
-interface DraggableWrapperProps {
-  children: ReactNode;
-  /** Must match Draggable’s built-in union: string | false | DraggableBounds | undefined */
-  bounds?: string | false | DraggableBounds; // remove boolean/HTMLElement
-  axis?: "both" | "x" | "y" | "none";
-  grid?: [number, number];
-  onStop?: (e: DraggableEvent, data: DraggableData) => void;
-  [key: string]: unknown;
-}
+// interface DraggableWrapperProps {
+//   children: ReactNode;
+//   /** Must match Draggable’s built-in union: string | false | DraggableBounds | undefined */
+//   bounds?: string | false | DraggableBounds; // remove boolean/HTMLElement
+//   axis?: "both" | "x" | "y" | "none";
+//   grid?: [number, number];
+//   onStop?: (e: DraggableEvent, data: DraggableData) => void;
+//   [key: string]: unknown;
+// }
 
 /** ---------------------
  *     MAIN COMPONENT
  *  --------------------- */
 export default function AdminAgendaPage() {
-  const [resizing, setResizing] = useState<ResizingState | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  // const [resizing, setResizing] = useState<ResizingState | null>(null);
+  const [ , setEvents] = useState<Event[]>([]);
+  const [ , setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewType, setViewType] = useState<ViewType>("month");
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  // const [selectedDate, setSelectedDate] = useState(new Date());
+  // const [viewType, setViewType] = useState<ViewType>("month");
+  const [selectedEvent ] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showNewEventModal, setShowNewEventModal] = useState(false);
   const [newEvent, setNewEvent] = useState<Partial<Event>>({
@@ -239,66 +240,66 @@ export default function AdminAgendaPage() {
     location: { name: "", virtual: false },
     participants: [],
   });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState<EventCategory | "all">("all");
-  const [filterPriority, setFilterPriority] = useState<EventPriority | "all">("all");
-  const [filterStatus, setFilterStatus] = useState<EventStatus | "all">("all");
-  const [isLoading, setIsLoading] = useState(false);
+  // const [searchTerm, setSearchTerm] = useState("");
+  // const [filterCategory, setFilterCategory] = useState<EventCategory | "all">("all");
+  // const [filterPriority, setFilterPriority] = useState<EventPriority | "all">("all");
+  // const [filterStatus, setFilterStatus] = useState<EventStatus | "all">("all");
+  const [ , setIsLoading] = useState(false);
   const [, setUserInfo] = useState<{ _id: string; email: string } | null>(null);
   const [statsVisible, setStatsVisible] = useState(true);
 
   // Handlers for clicking on calendar cells
-  const handleDateCellClick = (date: Date) => {
-    // Set default times (e.g., 9:00 AM - 10:00 AM)
-    const startTime = new Date(date);
-    startTime.setHours(9, 0, 0);
+  // const handleDateCellClick = (date: Date) => {
+  //   // Set default times (e.g., 9:00 AM - 10:00 AM)
+  //   const startTime = new Date(date);
+  //   startTime.setHours(9, 0, 0);
     
-    const endTime = new Date(date);
-    endTime.setHours(10, 0, 0);
+  //   const endTime = new Date(date);
+  //   endTime.setHours(10, 0, 0);
     
-    // Initialize new event with these times
-    setNewEvent({
-      title: "",
-      description: "",
-      start_time: startTime.toISOString(),
-      end_time: endTime.toISOString(),
-      category: "sav",
-      status: "scheduled",
-      priority: "medium",
-      all_day: false,
-      location: { name: "", virtual: false },
-      participants: [],
-    });
+  //   // Initialize new event with these times
+  //   setNewEvent({
+  //     title: "",
+  //     description: "",
+  //     start_time: startTime.toISOString(),
+  //     end_time: endTime.toISOString(),
+  //     category: "sav",
+  //     status: "scheduled",
+  //     priority: "medium",
+  //     all_day: false,
+  //     location: { name: "", virtual: false },
+  //     participants: [],
+  //   });
     
-    // Open the new event modal
-    setShowNewEventModal(true);
-  };
+  //   // Open the new event modal
+  //   setShowNewEventModal(true);
+  // };
 
-  const handleTimeSlotClick = (date: Date, hour: number, minute: number) => {
-    // Set times based on the clicked slot
-    const startTime = new Date(date);
-    startTime.setHours(hour, minute);
+  // const handleTimeSlotClick = (date: Date, hour: number, minute: number) => {
+  //   // Set times based on the clicked slot
+  //   const startTime = new Date(date);
+  //   startTime.setHours(hour, minute);
     
-    const endTime = new Date(date);
-    endTime.setHours(hour + 1, minute); // Default 1 hour duration
+  //   const endTime = new Date(date);
+  //   endTime.setHours(hour + 1, minute); // Default 1 hour duration
     
-    // Initialize new event with these times
-    setNewEvent({
-      title: "",
-      description: "",
-      start_time: startTime.toISOString(),
-      end_time: endTime.toISOString(),
-      category: "sav",
-      status: "scheduled",
-      priority: "medium",
-      all_day: false,
-      location: { name: "", virtual: false },
-      participants: [],
-    });
+  //   // Initialize new event with these times
+  //   setNewEvent({
+  //     title: "",
+  //     description: "",
+  //     start_time: startTime.toISOString(),
+  //     end_time: endTime.toISOString(),
+  //     category: "sav",
+  //     status: "scheduled",
+  //     priority: "medium",
+  //     all_day: false,
+  //     location: { name: "", virtual: false },
+  //     participants: [],
+  //   });
     
-    // Open the new event modal
-    setShowNewEventModal(true);
-  };
+  //   // Open the new event modal
+  //   setShowNewEventModal(true);
+  // };
 
   // Sample statistics
   const statistics = {
@@ -315,37 +316,37 @@ export default function AdminAgendaPage() {
   };
 
   {/* Helper function to calculate current time position */}
-const getCurrentTimePosition = () => {
-  const now = new Date();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
+// const getCurrentTimePosition = () => {
+//   const now = new Date();
+//   const hours = now.getHours();
+//   const minutes = now.getMinutes();
   
-  // Convert to position in time slots array (2 slots per hour)
-  return Math.max(0, (hours - 7) * 2 + Math.floor(minutes / 30));
-};
+//   // Convert to position in time slots array (2 slots per hour)
+//   return Math.max(0, (hours - 7) * 2 + Math.floor(minutes / 30));
+// };
 
-const handleEventTimeDrag = (event: Event, date: Date, data: DraggableData): void => {
-  // Calculate new times based on the drag position
-  const minutesPerPixel = 0.5; // Adjust based on your time slot height (30px = 30 min)
-  const minutesShifted = Math.round(data.deltaY * minutesPerPixel);
+// const handleEventTimeDrag = (event: Event, date: Date, data: DraggableData): void => {
+//   // Calculate new times based on the drag position
+//   const minutesPerPixel = 0.5; // Adjust based on your time slot height (30px = 30 min)
+//   const minutesShifted = Math.round(data.deltaY * minutesPerPixel);
   
-  // Update start and end times
-  const newStart = new Date(event.start_time);
-  newStart.setMinutes(newStart.getMinutes() + minutesShifted);
+//   // Update start and end times
+//   const newStart = new Date(event.start_time);
+//   newStart.setMinutes(newStart.getMinutes() + minutesShifted);
   
-  const newEnd = new Date(event.end_time);
-  newEnd.setMinutes(newEnd.getMinutes() + minutesShifted);
+//   const newEnd = new Date(event.end_time);
+//   newEnd.setMinutes(newEnd.getMinutes() + minutesShifted);
   
-  // Create updated event
-  const updatedEvent = {
-    ...event,
-    start_time: newStart.toISOString(),
-    end_time: newEnd.toISOString()
-  };
+//   // Create updated event
+//   const updatedEvent = {
+//     ...event,
+//     start_time: newStart.toISOString(),
+//     end_time: newEnd.toISOString()
+//   };
   
-  // Update events array
-  setEvents(events.map(e => e.id === event.id ? updatedEvent : e));
-};
+//   // Update events array
+//   setEvents(events.map(e => e.id === event.id ? updatedEvent : e));
+// };
 
   // Sample admin staff data
   const sampleStaff: User[] = [
@@ -1505,294 +1506,294 @@ const handleEventTimeDrag = (event: Event, date: Date, data: DraggableData): voi
   }, []);
 
   // Generate dates for the current month or week view
-  const calendarDates = useMemo(() => {
-    const dates = [];
+  // const calendarDates = useMemo(() => {
+  //   const dates = [];
     
-    if (viewType === "month") {
-      const year = selectedDate.getFullYear();
-      const month = selectedDate.getMonth();
+  //   if (viewType === "month") {
+  //     const year = selectedDate.getFullYear();
+  //     const month = selectedDate.getMonth();
       
-      // Get the first day of the month
-      const firstDayOfMonth = new Date(year, month, 1);
-      // Get the last day of the month
-      const lastDayOfMonth = new Date(year, month + 1, 0);
+  //     // Get the first day of the month
+  //     const firstDayOfMonth = new Date(year, month, 1);
+  //     // Get the last day of the month
+  //     const lastDayOfMonth = new Date(year, month + 1, 0);
       
-      // Get the day of the week for the first day (0 = Sunday, 1 = Monday, etc.)
-      let firstDayOfWeek = firstDayOfMonth.getDay();
-      // Adjust for Monday as first day of week (0 = Monday, 6 = Sunday)
-      firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+  //     // Get the day of the week for the first day (0 = Sunday, 1 = Monday, etc.)
+  //     let firstDayOfWeek = firstDayOfMonth.getDay();
+  //     // Adjust for Monday as first day of week (0 = Monday, 6 = Sunday)
+  //     firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
       
-      // Add previous month days to fill the first week
-      for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-        const date = new Date(year, month, -i);
-        dates.push(date);
-      }
+  //     // Add previous month days to fill the first week
+  //     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+  //       const date = new Date(year, month, -i);
+  //       dates.push(date);
+  //     }
       
-      // Add all days of the current month
-      for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
-        const date = new Date(year, month, day);
-        dates.push(date);
-      }
+  //     // Add all days of the current month
+  //     for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
+  //       const date = new Date(year, month, day);
+  //       dates.push(date);
+  //     }
       
-      // Add next month days to fill the last week
-      const lastDay = lastDayOfMonth.getDay();
-      const daysToAdd = lastDay === 0 ? 0 : 7 - lastDay;
-      for (let i = 1; i <= daysToAdd; i++) {
-        const date = new Date(year, month + 1, i);
-        dates.push(date);
-      }
-    } else if (viewType === "week") {
-      // Find the Monday of the current week
-      const day = selectedDate.getDay();
-      const diff = selectedDate.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
-      const mondayOfWeek = new Date(selectedDate);
-      mondayOfWeek.setDate(diff);
+  //     // Add next month days to fill the last week
+  //     const lastDay = lastDayOfMonth.getDay();
+  //     const daysToAdd = lastDay === 0 ? 0 : 7 - lastDay;
+  //     for (let i = 1; i <= daysToAdd; i++) {
+  //       const date = new Date(year, month + 1, i);
+  //       dates.push(date);
+  //     }
+  //   } else if (viewType === "week") {
+  //     // Find the Monday of the current week
+  //     const day = selectedDate.getDay();
+  //     const diff = selectedDate.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+  //     const mondayOfWeek = new Date(selectedDate);
+  //     mondayOfWeek.setDate(diff);
       
-      // Add all 7 days of the week
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(mondayOfWeek);
-        date.setDate(mondayOfWeek.getDate() + i);
-        dates.push(date);
-      }
-    } else if (viewType === "day") {
-      // Just add the selected date
-      dates.push(new Date(selectedDate));
-    }
+  //     // Add all 7 days of the week
+  //     for (let i = 0; i < 7; i++) {
+  //       const date = new Date(mondayOfWeek);
+  //       date.setDate(mondayOfWeek.getDate() + i);
+  //       dates.push(date);
+  //     }
+  //   } else if (viewType === "day") {
+  //     // Just add the selected date
+  //     dates.push(new Date(selectedDate));
+  //   }
     
-    return dates;
-  }, [selectedDate, viewType]);
+  //   return dates;
+  // }, [selectedDate, viewType]);
 
-  // Filter events for the selected date range
-  const filteredEvents = useMemo(() => {
-    return events.filter(event => {
-      // Filter by search term
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = 
-          event.title.toLowerCase().includes(searchLower) ||
-          event.description.toLowerCase().includes(searchLower) ||
-          event.location.name.toLowerCase().includes(searchLower) ||
-          (event.location.address && event.location.address.toLowerCase().includes(searchLower)) ||
-          (event.client_name && event.client_name.toLowerCase().includes(searchLower)) ||
-          (event.reference_number && event.reference_number.toLowerCase().includes(searchLower)) ||
-          event.participants.some(p => 
-            p.name.toLowerCase().includes(searchLower) || 
-            p.email.toLowerCase().includes(searchLower)
-          );
+  // // Filter events for the selected date range
+  // const filteredEvents = useMemo(() => {
+  //   return events.filter(event => {
+  //     // Filter by search term
+  //     if (searchTerm) {
+  //       const searchLower = searchTerm.toLowerCase();
+  //       const matchesSearch = 
+  //         event.title.toLowerCase().includes(searchLower) ||
+  //         event.description.toLowerCase().includes(searchLower) ||
+  //         event.location.name.toLowerCase().includes(searchLower) ||
+  //         (event.location.address && event.location.address.toLowerCase().includes(searchLower)) ||
+  //         (event.client_name && event.client_name.toLowerCase().includes(searchLower)) ||
+  //         (event.reference_number && event.reference_number.toLowerCase().includes(searchLower)) ||
+  //         event.participants.some(p => 
+  //           p.name.toLowerCase().includes(searchLower) || 
+  //           p.email.toLowerCase().includes(searchLower)
+  //         );
         
-        if (!matchesSearch) return false;
-      }
+  //       if (!matchesSearch) return false;
+  //     }
       
-      // Filter by category
-      if (filterCategory !== "all" && event.category !== filterCategory) {
-        return false;
-      }
+  //     // Filter by category
+  //     if (filterCategory !== "all" && event.category !== filterCategory) {
+  //       return false;
+  //     }
       
-      // Filter by priority
-      if (filterPriority !== "all" && event.priority !== filterPriority) {
-        return false;
-      }
+  //     // Filter by priority
+  //     if (filterPriority !== "all" && event.priority !== filterPriority) {
+  //       return false;
+  //     }
       
-      // Filter by status
-      if (filterStatus !== "all" && event.status !== filterStatus) {
-        return false;
-      }
+  //     // Filter by status
+  //     if (filterStatus !== "all" && event.status !== filterStatus) {
+  //       return false;
+  //     }
       
-      return true;
-    });
-  }, [events, searchTerm, filterCategory, filterPriority, filterStatus]);
+  //     return true;
+  //   });
+  // }, [events, searchTerm, filterCategory, filterPriority, filterStatus]);
 
-  const handleEventDrop = (event: Event, targetDate: Date): void => {
-    // Calculate the new date based on where it was dropped
-    const currentEventDate = new Date(event.start_time);
-    const currentEventEnd = new Date(event.end_time);
-    const duration = currentEventEnd.getTime() - currentEventDate.getTime();
+  // const handleEventDrop = (event: Event, targetDate: Date): void => {
+  //   // Calculate the new date based on where it was dropped
+  //   const currentEventDate = new Date(event.start_time);
+  //   const currentEventEnd = new Date(event.end_time);
+  //   const duration = currentEventEnd.getTime() - currentEventDate.getTime();
     
-    // Create new start and end dates (keep the time, change the date)
-    const newStart = new Date(targetDate);
-    newStart.setHours(
-      currentEventDate.getHours(),
-      currentEventDate.getMinutes()
-    );
+  //   // Create new start and end dates (keep the time, change the date)
+  //   const newStart = new Date(targetDate);
+  //   newStart.setHours(
+  //     currentEventDate.getHours(),
+  //     currentEventDate.getMinutes()
+  //   );
     
-    const newEnd = new Date(newStart.getTime() + duration);
+  //   const newEnd = new Date(newStart.getTime() + duration);
     
-    // Update the event
-    const updatedEvent = {
-      ...event,
-      start_time: newStart.toISOString(),
-      end_time: newEnd.toISOString()
-    };
+  //   // Update the event
+  //   const updatedEvent = {
+  //     ...event,
+  //     start_time: newStart.toISOString(),
+  //     end_time: newEnd.toISOString()
+  //   };
     
-    // Update events array with the modified event
-    setEvents(events.map(e => e.id === event.id ? updatedEvent : e));
-  };
+  //   // Update events array with the modified event
+  //   setEvents(events.map(e => e.id === event.id ? updatedEvent : e));
+  // };
 
-  const DraggableWrapper: React.FC<DraggableWrapperProps> = ({ children, ...props }) => {
-    const nodeRef = useRef<HTMLDivElement>(null);
-    return (
-      <Draggable {...props} nodeRef={nodeRef as React.RefObject<HTMLElement>}>
-        <div ref={nodeRef}>
-          {children}
-        </div>
-      </Draggable>
-    );
-  };
+  // const DraggableWrapper: React.FC<DraggableWrapperProps> = ({ children, ...props }) => {
+  //   const nodeRef = useRef<HTMLDivElement>(null);
+  //   return (
+  //     <Draggable {...props} nodeRef={nodeRef as React.RefObject<HTMLElement>}>
+  //       <div ref={nodeRef}>
+  //         {children}
+  //       </div>
+  //     </Draggable>
+  //   );
+  // };
   
   // Get events for a specific date
-  const getEventsForDate = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
+  // const getEventsForDate = (date: Date) => {
+  //   const dateString = date.toISOString().split('T')[0];
     
-    return filteredEvents.filter(event => {
-      const eventStart = new Date(event.start_time);
-      const eventEnd = new Date(event.end_time);
+  //   return filteredEvents.filter(event => {
+  //     const eventStart = new Date(event.start_time);
+  //     const eventEnd = new Date(event.end_time);
       
-      // Check if the event is for this date
-      const eventStartDate = eventStart.toISOString().split('T')[0];
-      const eventEndDate = eventEnd.toISOString().split('T')[0];
+  //     // Check if the event is for this date
+  //     const eventStartDate = eventStart.toISOString().split('T')[0];
+  //     const eventEndDate = eventEnd.toISOString().split('T')[0];
       
-      if (event.all_day) {
-        // For all-day events, check if the date is between start and end date (inclusive)
-        return dateString >= eventStartDate && dateString <= eventEndDate;
-      } else {
-        // For time-specific events
-        if (viewType === "day") {
-          // In day view, show all events that overlap with this day
-          return dateString >= eventStartDate && dateString <= eventEndDate;
-        } else {
-          // In month or week view, show events on their start date
-          return dateString === eventStartDate;
-        }
-      }
-    });
-  };
+  //     if (event.all_day) {
+  //       // For all-day events, check if the date is between start and end date (inclusive)
+  //       return dateString >= eventStartDate && dateString <= eventEndDate;
+  //     } else {
+  //       // For time-specific events
+  //       if (viewType === "day") {
+  //         // In day view, show all events that overlap with this day
+  //         return dateString >= eventStartDate && dateString <= eventEndDate;
+  //       } else {
+  //         // In month or week view, show events on their start date
+  //         return dateString === eventStartDate;
+  //       }
+  //     }
+  //   });
+  // };
 
   // Get today's events
-  const todaysEvents = useMemo(() => {
-    const today = new Date();
-    const todayString = today.toISOString().split('T')[0];
+  // const todaysEvents = useMemo(() => {
+  //   const today = new Date();
+  //   const todayString = today.toISOString().split('T')[0];
     
-    return filteredEvents.filter(event => {
-      const eventStart = new Date(event.start_time);
-      const eventEnd = new Date(event.end_time);
+  //   return filteredEvents.filter(event => {
+  //     const eventStart = new Date(event.start_time);
+  //     const eventEnd = new Date(event.end_time);
       
-      const eventStartDate = eventStart.toISOString().split('T')[0];
-      const eventEndDate = eventEnd.toISOString().split('T')[0];
+  //     const eventStartDate = eventStart.toISOString().split('T')[0];
+  //     const eventEndDate = eventEnd.toISOString().split('T')[0];
       
-      if (event.all_day) {
-        // For all-day events, check if today is between start and end date (inclusive)
-        return todayString >= eventStartDate && todayString <= eventEndDate;
-      } else {
-        // For time-specific events, check if it's happening today
-        return todayString >= eventStartDate && todayString <= eventEndDate;
-      }
-    }).sort((a, b) => {
-      // Sort by priority first, then by time
-      const priorityOrder = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
-      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+  //     if (event.all_day) {
+  //       // For all-day events, check if today is between start and end date (inclusive)
+  //       return todayString >= eventStartDate && todayString <= eventEndDate;
+  //     } else {
+  //       // For time-specific events, check if it's happening today
+  //       return todayString >= eventStartDate && todayString <= eventEndDate;
+  //     }
+  //   }).sort((a, b) => {
+  //     // Sort by priority first, then by time
+  //     const priorityOrder = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
+  //     const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
       
-      if (priorityDiff !== 0) return priorityDiff;
-      return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
-    });
-  }, [filteredEvents]);
+  //     if (priorityDiff !== 0) return priorityDiff;
+  //     return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+  //   });
+  // }, [filteredEvents]);
 
   // Get upcoming events (next 7 days, excluding today)
-  const upcomingEvents = useMemo(() => {
-    const today = new Date();
-    const todayString = today.toISOString().split('T')[0];
+  // const upcomingEvents = useMemo(() => {
+  //   const today = new Date();
+  //   const todayString = today.toISOString().split('T')[0];
     
-    // Calculate date 7 days from now
-    const nextWeek = new Date(today);
-    nextWeek.setDate(today.getDate() + 7);
-    const nextWeekString = nextWeek.toISOString().split('T')[0];
+  //   // Calculate date 7 days from now
+  //   const nextWeek = new Date(today);
+  //   nextWeek.setDate(today.getDate() + 7);
+  //   const nextWeekString = nextWeek.toISOString().split('T')[0];
     
-    return filteredEvents
-      .filter(event => {
-        const eventStart = new Date(event.start_time);
-        const eventStartDate = eventStart.toISOString().split('T')[0];
+  //   return filteredEvents
+  //     .filter(event => {
+  //       const eventStart = new Date(event.start_time);
+  //       const eventStartDate = eventStart.toISOString().split('T')[0];
         
-        // Include events that start after today but before or on the next 7 days
-        return eventStartDate > todayString && eventStartDate <= nextWeekString;
-      })
-      .sort((a, b) => {
-        // Sort by date first
-        const dateComparison = new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
-        if (dateComparison !== 0) return dateComparison;
+  //       // Include events that start after today but before or on the next 7 days
+  //       return eventStartDate > todayString && eventStartDate <= nextWeekString;
+  //     })
+  //     .sort((a, b) => {
+  //       // Sort by date first
+  //       const dateComparison = new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+  //       if (dateComparison !== 0) return dateComparison;
         
-        // Then by priority
-        const priorityOrder = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      });
-  }, [filteredEvents]);
+  //       // Then by priority
+  //       const priorityOrder = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
+  //       return priorityOrder[a.priority] - priorityOrder[b.priority];
+  //     });
+  // }, [filteredEvents]);
 
   // Get upcoming tasks ordered by due date and priority
-  const upcomingTasks = useMemo(() => {
-    const today = new Date();
+  // const upcomingTasks = useMemo(() => {
+  //   const today = new Date();
     
-    return tasks
-      .filter(task => task.status !== "completed" && new Date(task.due_date) >= today)
-      .sort((a, b) => {
-        // First sort by due date
-        const dateComparison = new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-        if (dateComparison !== 0) return dateComparison;
+  //   return tasks
+  //     .filter(task => task.status !== "completed" && new Date(task.due_date) >= today)
+  //     .sort((a, b) => {
+  //       // First sort by due date
+  //       const dateComparison = new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+  //       if (dateComparison !== 0) return dateComparison;
         
-        // Then by priority (urgent > high > medium > low)
-        const priorityOrder = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      });
-  }, [tasks]);
+  //       // Then by priority (urgent > high > medium > low)
+  //       const priorityOrder = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
+  //       return priorityOrder[a.priority] - priorityOrder[b.priority];
+  //     });
+  // }, [tasks]);
 
   // Get overdue tasks
-  const overdueTasks = useMemo(() => {
-    const today = new Date();
+  // const overdueTasks = useMemo(() => {
+  //   const today = new Date();
     
-    return tasks
-      .filter(task => task.status !== "completed" && new Date(task.due_date) < today)
-      .sort((a, b) => {
-        // Sort by priority first (urgent > high > medium > low)
-        const priorityOrder = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
-        const priorityComparison = priorityOrder[a.priority] - priorityOrder[b.priority];
-        if (priorityComparison !== 0) return priorityComparison;
+  //   return tasks
+  //     .filter(task => task.status !== "completed" && new Date(task.due_date) < today)
+  //     .sort((a, b) => {
+  //       // Sort by priority first (urgent > high > medium > low)
+  //       const priorityOrder = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
+  //       const priorityComparison = priorityOrder[a.priority] - priorityOrder[b.priority];
+  //       if (priorityComparison !== 0) return priorityComparison;
         
-        // Then by due date (oldest first)
-        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-      });
-  }, [tasks]);
+  //       // Then by due date (oldest first)
+  //       return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+  //     });
+  // }, [tasks]);
 
   // Navigate to the previous month/week/day
-  const handlePrevious = () => {
-    const newDate = new Date(selectedDate);
+  // const handlePrevious = () => {
+  //   const newDate = new Date(selectedDate);
     
-    if (viewType === "month") {
-      newDate.setMonth(newDate.getMonth() - 1);
-    } else if (viewType === "week") {
-      newDate.setDate(newDate.getDate() - 7);
-    } else if (viewType === "day") {
-      newDate.setDate(newDate.getDate() - 1);
-    }
+  //   if (viewType === "month") {
+  //     newDate.setMonth(newDate.getMonth() - 1);
+  //   } else if (viewType === "week") {
+  //     newDate.setDate(newDate.getDate() - 7);
+  //   } else if (viewType === "day") {
+  //     newDate.setDate(newDate.getDate() - 1);
+  //   }
     
-    setSelectedDate(newDate);
-  };
+  //   setSelectedDate(newDate);
+  // };
 
-  // Navigate to the next month/week/day
-  const handleNext = () => {
-    const newDate = new Date(selectedDate);
+  // // Navigate to the next month/week/day
+  // const handleNext = () => {
+  //   const newDate = new Date(selectedDate);
     
-    if (viewType === "month") {
-      newDate.setMonth(newDate.getMonth() + 1);
-    } else if (viewType === "week") {
-      newDate.setDate(newDate.getDate() + 7);
-    } else if (viewType === "day") {
-      newDate.setDate(newDate.getDate() + 1);
-    }
+  //   if (viewType === "month") {
+  //     newDate.setMonth(newDate.getMonth() + 1);
+  //   } else if (viewType === "week") {
+  //     newDate.setDate(newDate.getDate() + 7);
+  //   } else if (viewType === "day") {
+  //     newDate.setDate(newDate.getDate() + 1);
+  //   }
     
-    setSelectedDate(newDate);
-  };
+  //   setSelectedDate(newDate);
+  // };
 
   // Go to today
-  const handleToday = () => {
-    setSelectedDate(new Date());
-  };
+  // const handleToday = () => {
+  //   setSelectedDate(new Date());
+  // };
 
   // Format date for display
   const formatDate = (date: Date, format: 'full' | 'short' | 'weekday' | 'day' = 'full'): string => {
@@ -1831,51 +1832,51 @@ const handleEventTimeDrag = (event: Event, date: Date, data: DraggableData): voi
   };
 
   // Get the month name for display
-  const getMonthName = (date: Date): string => {
-    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-  };
+  // const getMonthName = (date: Date): string => {
+  //   return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  // };
 
   // Get the week range for display
-  const getWeekRange = (date: Date): string => {
-    // Find the Monday of the current week
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
-    const monday = new Date(date);
-    monday.setDate(diff);
+  // const getWeekRange = (date: Date): string => {
+  //   // Find the Monday of the current week
+  //   const day = date.getDay();
+  //   const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+  //   const monday = new Date(date);
+  //   monday.setDate(diff);
     
-    // Find the Sunday of the current week
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
+  //   // Find the Sunday of the current week
+  //   const sunday = new Date(monday);
+  //   sunday.setDate(monday.getDate() + 6);
     
-    // Format the date range
-    const options: Intl.DateTimeFormatOptions = { day: 'numeric' };
+  //   // Format the date range
+  //   const options: Intl.DateTimeFormatOptions = { day: 'numeric' };
     
-    // If month is different, include it
-    if (monday.getMonth() !== sunday.getMonth()) {
-      return `${monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${sunday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-    }
+  //   // If month is different, include it
+  //   if (monday.getMonth() !== sunday.getMonth()) {
+  //     return `${monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${sunday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  //   }
     
-    // If year is different, include it
-    if (monday.getFullYear() !== sunday.getFullYear()) {
-      return `${monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })} - ${sunday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-    }
+  //   // If year is different, include it
+  //   if (monday.getFullYear() !== sunday.getFullYear()) {
+  //     return `${monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })} - ${sunday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  //   }
     
-    // Otherwise, just show the day range with month and year
-    return `${monday.toLocaleDateString('fr-FR', options)} - ${sunday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-  };
+  //   // Otherwise, just show the day range with month and year
+  //   return `${monday.toLocaleDateString('fr-FR', options)} - ${sunday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+  // };
 
   // Determine if a date is today
-  const isToday = (date: Date): boolean => {
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear();
-  };
+  // const isToday = (date: Date): boolean => {
+  //   const today = new Date();
+  //   return date.getDate() === today.getDate() &&
+  //     date.getMonth() === today.getMonth() &&
+  //     date.getFullYear() === today.getFullYear();
+  // };
 
   // Determine if a date is in the current month
-  const isCurrentMonth = (date: Date): boolean => {
-    return date.getMonth() === selectedDate.getMonth();
-  };
+  // const isCurrentMonth = (date: Date): boolean => {
+  //   return date.getMonth() === selectedDate.getMonth();
+  // };
 
   // Get color for an event category
   const getCategoryColor = (category: EventCategory): string => {
@@ -2037,59 +2038,59 @@ const handleEventTimeDrag = (event: Event, date: Date, data: DraggableData): voi
     }
   };
 
-  const startResizing = (event: Event, e: React.MouseEvent<HTMLDivElement>): void => {
-    e.preventDefault();
-    setResizing({
-      event,
-      startY: e.clientY,
-      initialEndTime: new Date(event.end_time)
-    });
+  // const startResizing = (event: Event, e: React.MouseEvent<HTMLDivElement>): void => {
+  //   e.preventDefault();
+  //   setResizing({
+  //     event,
+  //     startY: e.clientY,
+  //     initialEndTime: new Date(event.end_time)
+  //   });
     
-    // Add event listeners for mousemove and mouseup
-    document.addEventListener('mousemove', handleResize);
-    document.addEventListener('mouseup', stopResize);
-  };
+  //   // Add event listeners for mousemove and mouseup
+  //   document.addEventListener('mousemove', handleResize);
+  //   document.addEventListener('mouseup', stopResize);
+  // };
   
-  const handleResize = (e: MouseEvent): void => {
-    if (!resizing) return;
+  // const handleResize = (e: MouseEvent): void => {
+  //   if (!resizing) return;
     
-    // Calculate time difference based on mouse movement
-    const pixelsPerMinute = 1; // Adjust based on your calendar's scale
-    const diffY = e.clientY - resizing.startY;
-    const diffMinutes = Math.round(diffY / pixelsPerMinute);
+  //   // Calculate time difference based on mouse movement
+  //   const pixelsPerMinute = 1; // Adjust based on your calendar's scale
+  //   const diffY = e.clientY - resizing.startY;
+  //   const diffMinutes = Math.round(diffY / pixelsPerMinute);
     
-    // Create new end time
-    const newEndTime = new Date(resizing.initialEndTime);
-    newEndTime.setMinutes(newEndTime.getMinutes() + diffMinutes);
+  //   // Create new end time
+  //   const newEndTime = new Date(resizing.initialEndTime);
+  //   newEndTime.setMinutes(newEndTime.getMinutes() + diffMinutes);
     
-    // Don't allow end time to be before start time
-    const startTime = new Date(resizing.event.start_time);
-    if (newEndTime <= startTime) {
-      newEndTime.setMinutes(startTime.getMinutes() + 30); // Minimum 30 min
-    }
+  //   // Don't allow end time to be before start time
+  //   const startTime = new Date(resizing.event.start_time);
+  //   if (newEndTime <= startTime) {
+  //     newEndTime.setMinutes(startTime.getMinutes() + 30); // Minimum 30 min
+  //   }
     
-    // Update event temporarily (for visual feedback)
-    const updatedEvent = {
-      ...resizing.event,
-      end_time: newEndTime.toISOString()
-    };
+  //   // Update event temporarily (for visual feedback)
+  //   const updatedEvent = {
+  //     ...resizing.event,
+  //     end_time: newEndTime.toISOString()
+  //   };
     
-    // Update UI to show the resizing in real-time
-    setEvents(events.map(e => e.id === updatedEvent.id ? updatedEvent : e));
-  };
+  //   // Update UI to show the resizing in real-time
+  //   setEvents(events.map(e => e.id === updatedEvent.id ? updatedEvent : e));
+  // };
   
-  const stopResize = () => {
-    // Final update to event on mouseup
-    if (resizing) {
-      // You could call an API here to save the changes
-      // or just keep the state update we did during resize
-      setResizing(null);
-    }
+  // const stopResize = () => {
+  //   // Final update to event on mouseup
+  //   if (resizing) {
+  //     // You could call an API here to save the changes
+  //     // or just keep the state update we did during resize
+  //     setResizing(null);
+  //   }
     
-    // Remove event listeners
-    document.removeEventListener('mousemove', handleResize);
-    document.removeEventListener('mouseup', stopResize);
-  };
+  //   // Remove event listeners
+  //   document.removeEventListener('mousemove', handleResize);
+  //   document.removeEventListener('mouseup', stopResize);
+  // };
   
 
   // Get category icon
@@ -2130,69 +2131,69 @@ const handleEventTimeDrag = (event: Event, date: Date, data: DraggableData): voi
     }
   };
 
-  // Handle opening event details
-  const handleEventClick = (event: Event) => {
-    setSelectedEvent(event);
-    setShowEventModal(true);
-  };
+  // // Handle opening event details
+  // const handleEventClick = (event: Event) => {
+  //   setSelectedEvent(event);
+  //   setShowEventModal(true);
+  // };
 
-  // Truncate text with ellipsis
-  const truncateText = (text: string, maxLength: number): string => {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + '...';
-  };
+  // // Truncate text with ellipsis
+  // const truncateText = (text: string, maxLength: number): string => {
+  //   if (text.length <= maxLength) return text;
+  //   return text.slice(0, maxLength) + '...';
+  // };
 
-  // Generate time slots for day view
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let i = 7; i <= 19; i++) { // 7 AM to 7 PM
-      slots.push(`${i}:00`);
-      slots.push(`${i}:30`);
-    }
-    return slots;
-  };
+  // // Generate time slots for day view
+  // const generateTimeSlots = () => {
+  //   const slots = [];
+  //   for (let i = 7; i <= 19; i++) { // 7 AM to 7 PM
+  //     slots.push(`${i}:00`);
+  //     slots.push(`${i}:30`);
+  //   }
+  //   return slots;
+  // };
 
-  // Get events for a specific time slot in day view
-  const getEventsForTimeSlot = (date: Date, timeSlot: string) => {
-    const [hour, minute] = timeSlot.split(':').map(Number);
-    const slotStart = new Date(date);
-    slotStart.setHours(hour, minute, 0, 0);
-    const slotEnd = new Date(slotStart);
-    slotEnd.setMinutes(slotStart.getMinutes() + 30);
+  // // Get events for a specific time slot in day view
+  // const getEventsForTimeSlot = (date: Date, timeSlot: string) => {
+  //   const [hour, minute] = timeSlot.split(':').map(Number);
+  //   const slotStart = new Date(date);
+  //   slotStart.setHours(hour, minute, 0, 0);
+  //   const slotEnd = new Date(slotStart);
+  //   slotEnd.setMinutes(slotStart.getMinutes() + 30);
     
-    return filteredEvents.filter(event => {
-      if (event.all_day) return false; // All-day events are shown separately
+  //   return filteredEvents.filter(event => {
+  //     if (event.all_day) return false; // All-day events are shown separately
       
-      const eventStart = new Date(event.start_time);
-      const eventEnd = new Date(event.end_time);
+  //     const eventStart = new Date(event.start_time);
+  //     const eventEnd = new Date(event.end_time);
       
-      // Check if event overlaps with the time slot
-      return (eventStart < slotEnd && eventEnd > slotStart) &&
-             (eventStart.toDateString() === date.toDateString() || eventEnd.toDateString() === date.toDateString());
-    });
-  };
+  //     // Check if event overlaps with the time slot
+  //     return (eventStart < slotEnd && eventEnd > slotStart) &&
+  //            (eventStart.toDateString() === date.toDateString() || eventEnd.toDateString() === date.toDateString());
+  //   });
+  // };
 
   // Check if an event spans multiple days
-  const isMultiDayEvent = (event: Event): boolean => {
-    const eventStart = new Date(event.start_time);
-    const eventEnd = new Date(event.end_time);
+  // const isMultiDayEvent = (event: Event): boolean => {
+  //   const eventStart = new Date(event.start_time);
+  //   const eventEnd = new Date(event.end_time);
     
-    return eventStart.toDateString() !== eventEnd.toDateString();
-  };
+  //   return eventStart.toDateString() !== eventEnd.toDateString();
+  // };
 
   // Get all-day events for a date
-  const getAllDayEvents = (date: Date) => {
-    return filteredEvents.filter(event => {
-      if (!event.all_day && !isMultiDayEvent(event)) return false;
+  // const getAllDayEvents = (date: Date) => {
+  //   return filteredEvents.filter(event => {
+  //     if (!event.all_day && !isMultiDayEvent(event)) return false;
       
-      const eventStart = new Date(event.start_time);
-      const eventEnd = new Date(event.end_time);
+  //     const eventStart = new Date(event.start_time);
+  //     const eventEnd = new Date(event.end_time);
       
-      // For all-day events, check if the date is between start and end date (inclusive)
-      return date >= new Date(eventStart.setHours(0, 0, 0, 0)) && 
-             date <= new Date(eventEnd.setHours(23, 59, 59, 999));
-    });
-  };
+  //     // For all-day events, check if the date is between start and end date (inclusive)
+  //     return date >= new Date(eventStart.setHours(0, 0, 0, 0)) && 
+  //            date <= new Date(eventEnd.setHours(23, 59, 59, 999));
+  //   });
+  // };
 
   return (
     <div className="flex h-screen bg-white">
@@ -2223,67 +2224,16 @@ const handleEventTimeDrag = (event: Event, date: Date, data: DraggableData): voi
               </motion.div>
 
               <div className="flex items-center gap-3 flex-wrap">
-                {/* View Selector */}
-                <div className="bg-white rounded-lg shadow-sm p-1 flex">
-                  <button 
-                    className={`px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1.5 ${viewType === 'month' ? 'bg-[#213f5b] text-white' : 'hover:bg-gray-100'}`}
-                    onClick={() => setViewType('month')}
-                  >
-                    <CalendarIcon className="h-4 w-4" />
-                    <span className="hidden md:inline">Mois</span>
-                  </button>
-                  <button 
-                    className={`px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1.5 ${viewType === 'week' ? 'bg-[#213f5b] text-white' : 'hover:bg-gray-100'}`}
-                    onClick={() => setViewType('week')}
-                  >
-                    <ListBulletIcon className="h-4 w-4" />
-                    <span className="hidden md:inline">Semaine</span>
-                  </button>
-                  <button 
-                    className={`px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1.5 ${viewType === 'day' ? 'bg-[#213f5b] text-white' : 'hover:bg-gray-100'}`}
-                    onClick={() => setViewType('day')}
-                  >
-                    <ClockIcon className="h-4 w-4" />
-                    <span className="hidden md:inline">Jour</span>
-                  </button>
-                  <button 
-                    className={`px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1.5 ${viewType === 'agenda' ? 'bg-[#213f5b] text-white' : 'hover:bg-gray-100'}`}
-                    onClick={() => setViewType('agenda')}
-                  >
-                    <ListBulletIcon className="h-4 w-4" />
-                    <span className="hidden md:inline">Liste</span>
-                  </button>
-                </div>
 
-                <div className="flex items-center">
-                  <button 
-                    className="p-2 rounded-l bg-white border border-r-0 hover:bg-gray-50 text-gray-600"
-                    onClick={handlePrevious}
-                  >
-                    <ChevronLeftIcon className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className="px-3 py-1.5 bg-white border border-x-0 hover:bg-gray-50 text-sm font-medium"
-                    onClick={handleToday}
-                  >
-                    Aujourd&apos;hui
-                  </button>
-                  <button 
-                    className="p-2 rounded-r bg-white border border-l-0 hover:bg-gray-50 text-gray-600"
-                    onClick={handleNext}
-                  >
-                    <ChevronRightIcon className="h-5 w-5" />
-                  </button>
-                </div>
 
-                <motion.button
+                {/* <motion.button
                   whileHover={{ scale: 1.05 }}
                   className="px-4 py-2 bg-[#213f5b] text-white rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md transition-all"
                   onClick={() => setShowNewEventModal(true)}
                 >
                   <PlusCircleIcon className="h-5 w-5" />
                   Nouvelle intervention
-                </motion.button>
+                </motion.button> */}
               </div>
             </div>
 
@@ -2360,1072 +2310,9 @@ const handleEventTimeDrag = (event: Event, date: Date, data: DraggableData): voi
             )}
 
             {/* Main Content Area */}
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* Left Sidebar - Events and Tasks Summary */}
-              <div className="md:w-80 lg:w-96 space-y-6">
-                {/* Current Date Title */}
-                <div className="bg-white rounded-xl shadow-sm p-4">
-                  <h2 className="text-xl font-bold text-[#213f5b] text-center">
-                    {viewType === 'month' && getMonthName(selectedDate)}
-                    {viewType === 'week' && getWeekRange(selectedDate)}
-                    {viewType === 'day' && formatDate(selectedDate, 'full')}
-                    {viewType === 'agenda' && 'Interventions planifiées'}
-                  </h2>
-                </div>
-
-                {/* Search and Filter */}
-                <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Rechercher une intervention..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-[#213f5b] focus:border-[#213f5b] text-sm"
-                    />
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Type d&apos;intervention
-                      </label>
-                      <select
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value as EventCategory | "all")}
-                        className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-[#213f5b] focus:border-[#213f5b] text-sm"
-                      >
-                        <option value="all">Tous</option>
-                        <option value="sav">SAV</option>
-                        <option value="installation">Installation</option>
-                        <option value="maintenance">Maintenance</option>
-                        <option value="claim">Réclamation</option>
-                        <option value="intervention">Intervention</option>
-                        <option value="support">Support</option>
-                        <option value="quality_control">Contrôle Qualité</option>
-                        <option value="training">Formation</option>
-                        <option value="warranty">Garantie</option>
-                        <option value="system_update">Mise à jour</option>
-                        <option value="meeting_client">Réunion client</option>
-                        <option value="meeting_admin">Réunion interne</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Priorité
-                      </label>
-                      <select
-                        value={filterPriority}
-                        onChange={(e) => setFilterPriority(e.target.value as EventPriority | "all")}
-                        className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-[#213f5b] focus:border-[#213f5b] text-sm"
-                      >
-                        <option value="all">Toutes</option>
-                        <option value="critical">Critique</option>
-                        <option value="urgent">Urgente</option>
-                        <option value="high">Élevée</option>
-                        <option value="medium">Moyenne</option>
-                        <option value="low">Basse</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Statut
-                    </label>
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value as EventStatus | "all")}
-                      className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-[#213f5b] focus:border-[#213f5b] text-sm"
-                    >
-                      <option value="all">Tous</option>
-                      <option value="scheduled">Planifié</option>
-                      <option value="in_progress">En cours</option>
-                      <option value="completed">Terminé</option>
-                      <option value="pending">En attente</option>
-                      <option value="on_hold">En suspens</option>
-                      <option value="delayed">Retardé</option>
-                      <option value="cancelled">Annulé</option>
-                      <option value="reopened">Réouvert</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Today's Events */}
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="bg-[#213f5b] px-4 py-3 text-white flex justify-between items-center">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <CalendarIcon className="h-5 w-5" />
-                      Aujourd&apos;hui
-                    </h3>
-                    <span className="text-sm bg-white/20 rounded-full w-6 h-6 inline-flex items-center justify-center">
-                      {todaysEvents.length}
-                    </span>
-                  </div>
-                  <div className="p-2">
-                    {todaysEvents.length === 0 ? (
-                      <div className="text-center py-4 text-gray-500 text-sm">
-                        Aucune intervention aujourd&apos;hui
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-100">
-                        {todaysEvents.map((event) => (
-                          <div 
-                            key={event.id} 
-                            className="p-2 hover:bg-gray-50 rounded cursor-pointer"
-                            onClick={() => handleEventClick(event)}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={`p-2 rounded-full ${getCategoryColor(event.category).split(' ')[0]}`}>
-                                {getCategoryIcon(event.category)}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-sm font-medium text-gray-900 truncate flex items-start">
-                                  {event.reference_number && (
-                                    <span className="inline-block bg-gray-100 text-gray-800 text-xs rounded px-1.5 py-0.5 mr-1">
-                                      {event.reference_number}
-                                    </span>
-                                  )}
-                                  <span className="truncate">{event.title}</span>
-                                </div>
-                                <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                                  <ClockIcon className="h-3.5 w-3.5" />
-                                  {event.all_day ? (
-                                    "Toute la journée"
-                                  ) : (
-                                    `${formatTime(event.start_time)} - ${formatTime(event.end_time)}`
-                                  )}
-                                </div>
-                                {event.client_name && (
-                                  <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                                    <BriefcaseIcon className="h-3.5 w-3.5" />
-                                    {truncateText(event.client_name, 25)}
-                                  </div>
-                                )}
-                                {event.location?.name && (
-                                  <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                                    <MapPinIcon className="h-3.5 w-3.5" />
-                                    {truncateText(event.location.name, 25)}
-                                  </div>
-                                )}
-                              </div>
-                              <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(event.priority)}`}>
-                                {getPriorityLabel(event.priority)}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Upcoming Events */}
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="bg-blue-600 px-4 py-3 text-white flex justify-between items-center">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <ArrowLongRightIcon className="h-5 w-5" />
-                      À venir
-                    </h3>
-                    <span className="text-sm bg-white/20 rounded-full w-6 h-6 inline-flex items-center justify-center">
-                      {upcomingEvents.length}
-                    </span>
-                  </div>
-                  <div className="p-2 max-h-[300px] overflow-y-auto">
-                    {upcomingEvents.length === 0 ? (
-                      <div className="text-center py-4 text-gray-500 text-sm">
-                        Aucune intervention à venir
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-100">
-                        {upcomingEvents.slice(0, 5).map((event) => (
-                          <div 
-                            key={event.id} 
-                            className="p-2 hover:bg-gray-50 rounded cursor-pointer"
-                            onClick={() => handleEventClick(event)}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={`p-2 rounded-full ${getCategoryColor(event.category).split(' ')[0]}`}>
-                                {getCategoryIcon(event.category)}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-sm font-medium text-gray-900 truncate">
-                                  {truncateText(event.title, 30)}
-                                </div>
-                                <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                                  <CalendarIcon className="h-3.5 w-3.5" />
-                                  {formatDate(new Date(event.start_time), 'short')}
-                                  {!event.all_day && (
-                                    <span className="ml-1">
-                                      {formatTime(event.start_time)}
-                                    </span>
-                                  )}
-                                </div>
-                                {event.client_name && (
-                                  <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                                    <BriefcaseIcon className="h-3.5 w-3.5" />
-                                    {truncateText(event.client_name, 25)}
-                                  </div>
-                                )}
-                                <div className="flex items-center gap-1 mt-1">
-                                  <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(event.priority)}`}>
-                                    {getPriorityLabel(event.priority)}
-                                  </span>
-                                  <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                                    {getStatusLabel(event.status)}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        {upcomingEvents.length > 5 && (
-                          <div className="p-2 text-center">
-                            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                              Voir toutes les interventions ({upcomingEvents.length})
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Tasks */}
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="bg-amber-600 px-4 py-3 text-white flex justify-between items-center">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <CheckIcon className="h-5 w-5" />
-                      Tâches administratives
-                    </h3>
-                    <div className="flex gap-1">
-                      <span className="text-sm bg-white/20 rounded-full px-2 h-6 inline-flex items-center justify-center" title="En cours">
-                        {upcomingTasks.filter(t => t.status === "in_progress").length}
-                      </span>
-                      <span className="text-sm bg-red-500/80 rounded-full px-2 h-6 inline-flex items-center justify-center" title="En retard">
-                        {overdueTasks.length}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-2 max-h-[300px] overflow-y-auto">
-                    {overdueTasks.length > 0 && (
-                      <div className="mb-2">
-                        <h4 className="text-xs font-semibold text-red-600 px-2 py-1 bg-red-50 rounded-md flex items-center gap-1">
-                          <ExclamationCircleIcon className="h-4 w-4" />
-                          Tâches en retard
-                        </h4>
-                        <div className="divide-y divide-gray-100 mt-1">
-                          {overdueTasks.slice(0, 3).map((task) => (
-                            <div 
-                              key={task.id} 
-                              className="p-2 hover:bg-gray-50 rounded cursor-pointer"
-                            >
-                              <div className="flex items-start gap-2">
-                                <div className="pt-0.5">
-                                  <input 
-                                    type="checkbox" 
-                                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                                  />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-sm font-medium text-gray-900 truncate">
-                                    {task.title}
-                                  </div>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <div className="text-xs text-red-600 flex items-center gap-1">
-                                      <ClockIcon className="h-3.5 w-3.5" />
-                                      {formatDate(new Date(task.due_date), 'short')}
-                                    </div>
-                                    <div className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                                      {getPriorityLabel(task.priority)}
-                                    </div>
-                                  </div>
-                                  {/* Display assignee if available */}
-                                  {task.assignee && (
-                                    <div className="text-xs text-gray-500 mt-0.5">
-                                      Assigné à: {users.find(u => u.id === task.assignee)?.firstName || ''} {users.find(u => u.id === task.assignee)?.lastName || ''}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          {overdueTasks.length > 3 && (
-                            <div className="px-2 py-1 text-center text-xs text-red-600">
-                              +{overdueTasks.length - 3} autres tâches en retard
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-600 px-2 py-1 bg-gray-50 rounded-md">
-                        Tâches à venir
-                      </h4>
-                      <div className="divide-y divide-gray-100 mt-1">
-                        {upcomingTasks.length === 0 ? (
-                          <div className="text-center py-2 text-gray-500 text-xs">
-                            Aucune tâche à venir
-                          </div>
-                        ) : (
-                          upcomingTasks.slice(0, 5).map((task) => (
-                            <div 
-                              key={task.id} 
-                              className="p-2 hover:bg-gray-50 rounded cursor-pointer"
-                            >
-                              <div className="flex items-start gap-2">
-                                <div className="pt-0.5">
-                                  <input 
-                                    type="checkbox" 
-                                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                                  />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-sm font-medium text-gray-900 truncate">
-                                    {task.title}
-                                  </div>
-                                  <div className="flex items-center flex-wrap gap-2 mt-0.5">
-                                    <div className="text-xs text-gray-500 flex items-center gap-1">
-                                      <ClockIcon className="h-3.5 w-3.5" />
-                                      {formatDate(new Date(task.due_date), 'short')}
-                                    </div>
-                                    <div className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                                      {getPriorityLabel(task.priority)}
-                                    </div>
-                                    {task.status === "in_progress" && (
-                                      <div className="px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        En cours
-                                      </div>
-                                    )}
-                                  </div>
-                                  {/* Display tags */}
-                                  {task.tags && task.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                      {task.tags.slice(0, 2).map((tag, index) => (
-                                        <span 
-                                          key={index}
-                                          className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded"
-                                        >
-                                          {tag}
-                                        </span>
-                                      ))}
-                                      {task.tags.length > 2 && (
-                                        <span className="text-xs text-gray-500">
-                                          +{task.tags.length - 2}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                                {task.related_event && (
-                                  <button className="text-gray-400 hover:text-gray-600" title="Voir l'intervention associée">
-                                    <LinkIcon className="h-4 w-4" />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 px-4 py-2 flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      {upcomingTasks.length + overdueTasks.length} tâches au total
-                    </span>
-                    <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                      Gérer les tâches
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Main Calendar/Events Area */}
-              <div className="flex-1 bg-white rounded-xl shadow-sm overflow-hidden">
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-full">
-                    <div className="text-center">
-                      <ArrowPathIcon className="h-10 w-10 text-[#213f5b] animate-spin mx-auto mb-4" />
-                      <p className="text-gray-600">Chargement des interventions...</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Month View */}
-                    {viewType === 'month' && (
-                      <div className="h-full flex flex-col">
-                        {/* Weekday Headers */}
-                        <div className="grid grid-cols-7 border-b text-center py-2 bg-gray-50">
-                          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
-                            <div key={day} className="text-sm font-medium text-gray-600">
-                              {day}
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {/* Calendar Grid */}
-                        <div className="flex-1 grid grid-cols-7 grid-rows-6 auto-rows-fr calendar-grid">
-                          {calendarDates.map((date, index) => {
-                            const dayEvents = getEventsForDate(date);
-                            const isCurrentDay = isToday(date);
-                            const inCurrentMonth = isCurrentMonth(date);
-                            
-                            return (
-                              <div 
-                                key={index} 
-                                className={`border-b border-r min-h-[100px] p-1 ${
-                                  inCurrentMonth ? '' : 'bg-gray-50'
-                                } ${isCurrentDay ? 'bg-blue-50' : ''}`}
-                                onClick={() => handleDateCellClick(date)}
-                              >
-                                <div className="flex justify-between items-center p-1">
-                                  <span className={`w-6 h-6 flex items-center justify-center rounded-full text-sm ${
-                                    isCurrentDay 
-                                      ? 'bg-blue-600 text-white' 
-                                      : inCurrentMonth ? 'text-gray-900' : 'text-gray-400'
-                                  }`}>
-                                    {date.getDate()}
-                                  </span>
-                                  {dayEvents.length > 0 && (
-                                    <span className="text-xs text-gray-500">
-                                      {dayEvents.length} interv.
-                                    </span>
-                                  )}
-                                </div>
-                                
-                                {/* Display events (limited to first 3) */}
-                                <div className="mt-1 space-y-1 overflow-hidden max-h-[calc(100%-2rem)]">
-                                {dayEvents.slice(0, 3).map((event) => (
-                                  <DraggableWrapper
-                                    key={event.id}
-                                    bounds=".calendar-grid" // Add this className to your grid container
-                                    grid={[1, 1]} // For more precise positioning
-                                    onStop={() => handleEventDrop(event, date)}
-                                  >
-                                    <div 
-                                      className={`px-2 py-1 rounded text-xs truncate cursor-pointer ${getCategoryColor(event.category)}`}
-                                      onClick={(e) => {
-                                        e.stopPropagation(); // Prevent triggering slot click
-                                        handleEventClick(event);
-                                      }}
-                                    >
-                                      {event.all_day ? '● ' : `${formatTime(event.start_time)} `}
-                                      {event.reference_number ? `[${event.reference_number}] ` : ''}
-                                      {truncateText(event.title, 18)}
-                                    </div>
-                                  </DraggableWrapper>
-                                ))}
-                                  {dayEvents.length > 3 && (
-                                    <div className="px-2 py-0.5 text-xs text-gray-500 text-center">
-                                      +{dayEvents.length - 3} plus
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Week View */}
-                    {viewType === 'week' && (
-                      <div className="h-full flex flex-col">
-                        {/* Day Headers */}
-                        <div className="grid grid-cols-8 border-b">
-                          {/* Empty cell for time column */}
-                          <div className="p-2 text-center border-r bg-gray-50 w-20"></div>
-                          
-                          {/* Day headers */}
-                          {calendarDates.map((date, index) => (
-                            <div 
-                              key={index} 
-                              className={`p-2 text-center border-r ${isToday(date) ? 'bg-blue-50' : ''}`}
-                            >
-                              <div className="text-sm font-medium">
-                                {formatDate(date, 'weekday')}
-                              </div>
-                              <div className={`text-lg font-bold mx-auto w-10 h-10 flex items-center justify-center rounded-full ${
-                                isToday(date) ? 'bg-blue-600 text-white' : 'text-gray-900'
-                              }`}>
-                                {date.getDate()}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {/* All-day Events */}
-                        <div className="border-b py-1">
-                          <div className="grid grid-cols-8">
-                            {/* Label for all-day events */}
-                            <div className="px-2 pt-1 pb-2 text-xs font-medium text-gray-500 border-r bg-gray-50 w-20">
-                              Toute la journée
-                            </div>
-                            
-                            {/* All-day events by day */}
-                            <div className="col-span-7 grid grid-cols-7 gap-1">
-                              {calendarDates.map((date, dateIndex) => {
-                                const allDayEvents = getAllDayEvents(date);
-                                return (
-                                  <div key={dateIndex} className="min-h-[40px] border-r p-1">
-                                    {allDayEvents.slice(0, 2).map((event, eventIndex) => (
-                                      <div 
-                                        key={`${event.id}-${eventIndex}`} 
-                                        className={`px-2 py-1 mb-1 rounded text-xs truncate cursor-pointer ${getCategoryColor(event.category)}`}
-                                        onClick={() => handleEventClick(event)}
-                                      >
-                                        {truncateText(event.title, 15)}
-                                      </div>
-                                    ))}
-                                    {allDayEvents.length > 2 && (
-                                      <div className="text-xs text-center text-gray-500">
-                                        +{allDayEvents.length - 2}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Time-based Events */}
-                        <div className="flex-1 overflow-y-auto">
-                          <div className="relative">
-                            <div className="grid grid-cols-8">
-                              {/* Time labels in the first column */}
-                              <div className="w-20 flex-shrink-0 text-right pr-2 text-xs text-gray-500 bg-gray-50 border-r">
-                                {generateTimeSlots().map((slot, slotIndex) => (
-                                  <div 
-                                    key={slotIndex} 
-                                    className={`h-[30px] flex items-center justify-end pr-2 ${slotIndex % 2 === 0 ? 'font-medium border-t' : ''}`}
-                                  >
-                                    {slotIndex % 2 === 0 && slot}
-                                  </div>
-                                ))}
-                              </div>
-                              
-                              {/* Day columns with events */}
-                              <div className="col-span-7 grid grid-cols-7 divide-x relative">
-                                {/* Horizontal time grid lines that span all days */}
-                                <div className="absolute left-0 right-0 top-0 bottom-0 pointer-events-none">
-                                  {generateTimeSlots().map((slot, slotIndex) => (
-                                    <div 
-                                      key={slotIndex} 
-                                      className={`absolute left-0 right-0 border-t ${slotIndex % 2 === 0 ? 'border-gray-200' : 'border-gray-100'}`}
-                                      style={{ top: `${slotIndex * 30}px` }}
-                                    >
-                                      {/* Current time indicator */}
-                                      {isToday(selectedDate) && getCurrentTimePosition() === slotIndex && (
-                                        <div className="absolute left-0 right-0 border-t-2 border-red-500 z-20"></div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                                
-                                {calendarDates.map((date, dateIndex) => (
-                                  <div key={dateIndex} className="relative min-h-[800px]">
-                                    {/* Events */}
-                                    {filteredEvents
-                                      .filter(event => {
-                                        if (event.all_day) return false; // All-day events are shown separately
-                                        
-                                        const eventDate = new Date(event.start_time);
-                                        return (
-                                          eventDate.getDate() === date.getDate() &&
-                                          eventDate.getMonth() === date.getMonth() &&
-                                          eventDate.getFullYear() === date.getFullYear()
-                                        );
-                                      })
-                                      .map((event) => {
-                                        const startTime = new Date(event.start_time);
-                                        const endTime = new Date(event.end_time);
-                                        
-                                        // Calculate position and height
-                                        const startHours = startTime.getHours() + startTime.getMinutes() / 60;
-                                        const endHours = endTime.getHours() + endTime.getMinutes() / 60;
-                                        const durationHours = endHours - startHours;
-                                        
-                                        const top = Math.max(0, (startHours - 7) * 60); // 7 AM is our start time
-                                        const height = durationHours * 60;
-                                        
-                                        return (
-                                          <DraggableWrapper
-                                            key={event.id}
-                                            axis="y" // Only allow vertical dragging
-                                            grid={[1, 30]} // Snap to 30-pixel intervals (adjust to match your time slots)
-                                            bounds="parent"
-                                            onStop={(e, data) => handleEventTimeDrag(event, date, data)}
-                                          >
-                                          <div 
-                                            key={event.id} 
-                                            className={`absolute left-0 right-0 mx-1 rounded px-2 py-1 overflow-hidden cursor-pointer shadow-sm ${getCategoryColor(event.category)} z-10`}
-                                            style={{ 
-                                              top: `${top}px`, 
-                                              height: `${height}px`,
-                                              minHeight: '25px'
-                                            }}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleEventClick(event);
-                                            }}
-                                          >
-                                            <div className="text-xs font-medium truncate">
-                                              {event.reference_number && `[${event.reference_number}] `}
-                                              {event.title}
-                                            </div>
-                                            <div className="text-xs opacity-80 truncate">
-                                              {formatTime(event.start_time)} - {formatTime(event.end_time)}
-                                            </div>
-                                            {height > 50 && event.client_name && (
-                                              <div className="text-xs opacity-80 truncate mt-0.5">
-                                                {event.client_name}
-                                              </div>
-                                            )}
-                                            
-                                            {/* Resize handle */}
-                                            <div 
-                                              className="event-resize-handle"
-                                              onMouseDown={(e) => {
-                                                e.stopPropagation();
-                                                startResizing(event, e);
-                                              }}
-                                            />
-                                          </div>
-                                          </DraggableWrapper>
-                                        );
-                                      })}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Day View */}
-                    {viewType === 'day' && (
-                      <div className="h-full flex flex-col">
-                        {/* Day Header */}
-                        <div className="p-3 border-b bg-gray-50 flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className={`w-10 h-10 flex items-center justify-center rounded-full text-lg font-bold ${
-                              isToday(selectedDate) ? 'bg-blue-600 text-white' : 'text-gray-900'
-                            }`}>
-                              {selectedDate.getDate()}
-                            </span>
-                            <div>
-                              <div className="text-sm font-medium">
-                                {formatDate(selectedDate, 'weekday')}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {getEventsForDate(selectedDate).length} interventions
-                          </div>
-                        </div>
-                        
-                        {/* All-day Events */}
-                        <div className="border-b py-1">
-                          <div className="px-3 pt-2 pb-2">
-                            <h3 className="text-xs font-medium text-gray-500 mb-1">Toute la journée</h3>
-                            <div className="space-y-1">
-                              {getAllDayEvents(selectedDate).map((event) => (
-                                <div 
-                                  key={event.id} 
-                                  className={`px-3 py-1.5 rounded text-sm cursor-pointer ${getCategoryColor(event.category)}`}
-                                  onClick={() => handleEventClick(event)}
-                                >
-                                  <div className="font-medium flex items-center">
-                                    {getCategoryIcon(event.category)}
-                                    <span className="ml-2">{event.title}</span>
-                                  </div>
-                                  <div className="flex items-center gap-4 mt-1 text-xs">
-                                    {event.reference_number && (
-                                      <span className="flex items-center gap-1">
-                                        <FolderIcon className="h-3.5 w-3.5" />
-                                        {event.reference_number}
-                                      </span>
-                                    )}
-                                    {event.client_name && (
-                                      <span className="flex items-center gap-1">
-                                        <BriefcaseIcon className="h-3.5 w-3.5" />
-                                        {event.client_name}
-                                      </span>
-                                    )}
-                                    {event.location?.name && (
-                                      <span className="flex items-center gap-1">
-                                        <MapPinIcon className="h-3.5 w-3.5" />
-                                        {event.location.name}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                              {getAllDayEvents(selectedDate).length === 0 && (
-                                <div className="text-center text-sm text-gray-500 py-1">
-                                  Aucune intervention toute la journée
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Time-based Events */}
-                        <div className="flex-1 overflow-y-auto p-2">
-                          <div className="relative min-h-[800px]">
-                            {/* Time slots */}
-                            {generateTimeSlots().map((slot, index) => {
-                              const [hour, minute] = slot.split(':').map(Number);
-                              const events = getEventsForTimeSlot(selectedDate, slot);
-                              
-                              return (
-                                <div 
-                                  key={index} 
-                                  className={`flex border-t relative h-[30px] ${minute === 0 ? 'bg-gray-50' : ''}`}
-                                  onClick={() => handleTimeSlotClick(selectedDate, hour, minute)}
-                                >
-                                  {/* Time label */}
-                                  <div className="w-20 flex-shrink-0 text-right pr-2 text-xs text-gray-500">
-                                    {minute === 0 && `${hour}:00`}
-                                  </div>
-                                  
-                                  {/* Event container */}
-                                  <div className="flex-1 relative">
-                                    {events.map((event) => {
-                                      const startTime = new Date(event.start_time);
-                                      const endTime = new Date(event.end_time);
-                                      
-                                      // Calculate position and height
-                                      const eventStartHour = startTime.getHours();
-                                      const eventStartMinute = startTime.getMinutes();
-                                      const eventEndHour = endTime.getHours();
-                                      const eventEndMinute = endTime.getMinutes();
-                                      
-                                      // Only render if this is the starting time slot
-                                      if (eventStartHour === hour && Math.floor(eventStartMinute / 30) * 30 === minute) {
-                                        // Calculate duration in minutes
-                                        const durationMinutes = 
-                                          (eventEndHour - eventStartHour) * 60 + 
-                                          (eventEndMinute - eventStartMinute);
-                                        
-                                        // Convert to height (1 minute = 1px, approximately)
-                                        const height = Math.max(25, durationMinutes / 2); // minimum height of 25px
-                                        
-                                        return (
-                                          <div 
-                                            key={event.id} 
-                                            className={`absolute left-0 right-0 rounded px-2 py-1 overflow-hidden cursor-pointer ${getCategoryColor(event.category)}`}
-                                            style={{ 
-                                              height: `${height}px`, 
-                                              zIndex: 10
-                                            }}
-                                            onClick={() => handleEventClick(event)}
-                                          >
-                                            <div className="text-sm font-medium truncate flex items-center">
-                                              {getCategoryIcon(event.category)}
-                                              <span className="ml-1">{event.title}</span>
-                                            </div>
-                                            <div className="text-xs opacity-80 truncate">
-                                              {formatTime(event.start_time)} - {formatTime(event.end_time)}
-                                            </div>
-                                            {height > 50 && (
-                                              <div className="text-xs mt-1">
-                                                {event.reference_number && (
-                                                  <span className="inline-block bg-white/40 rounded px-1.5 py-0.5 mr-1">
-                                                    {event.reference_number}
-                                                  </span>
-                                                )}
-                                                {event.client_name && (
-                                                  <span className="inline-block bg-white/40 rounded px-1.5 py-0.5 mr-1">
-                                                    {event.client_name}
-                                                  </span>
-                                                )}
-                                              </div>
-                                            )}
-                                          </div>
-                                        );
-                                      }
-                                      return null;
-                                    })}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Agenda View (List View) */}
-                    {viewType === 'agenda' && (
-                      <div className="h-full flex flex-col">
-                        <div className="border-b bg-gray-50 py-2 px-4">
-                          <h3 className="text-lg font-semibold text-gray-800">Toutes les interventions planifiées</h3>
-                        </div>
-                        
-                        <div className="flex-1 overflow-y-auto p-3">
-                          {filteredEvents.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                              <CalendarIcon className="h-12 w-12 text-gray-300 mb-2" />
-                              <p>Aucune intervention ne correspond à vos critères</p>
-                            </div>
-                          ) : (
-                            <div className="space-y-6">
-                              {/* Group events by date */}
-                              {(() => {
-                                // Create a map of date -> events
-                                const eventsByDate = filteredEvents.reduce((acc, event) => {
-                                  const date = new Date(event.start_time).toLocaleDateString('fr-FR');
-                                  if (!acc[date]) acc[date] = [];
-                                  acc[date].push(event);
-                                  return acc;
-                                }, {} as Record<string, Event[]>);
-                                
-                                // Sort dates
-                                const sortedDates = Object.keys(eventsByDate).sort((a, b) => {
-                                  const dateA = new Date(a.split('/').reverse().join('-'));
-                                  const dateB = new Date(b.split('/').reverse().join('-'));
-                                  return dateA.getTime() - dateB.getTime();
-                                });
-                                
-                                return sortedDates.map(date => {
-                                  const events = eventsByDate[date];
-                                  const dateObj = new Date(date.split('/').reverse().join('-'));
-                                  
-                                  return (
-                                    <div key={date}>
-                                      <div className="sticky top-0 bg-white z-10 pb-2">
-                                        <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-1 mb-2">
-                                          <CalendarIcon className="h-4 w-4" />
-                                          {formatDate(dateObj, 'full')}
-                                          {isToday(dateObj) && (
-                                            <span className="ml-2 text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">
-                                              Aujourd&apos;hui
-                                            </span>
-                                          )}
-                                        </h4>
-                                      </div>
-                                      
-                                      <div className="space-y-3 pl-1">
-                                        {events
-                                          .sort((a, b) => {
-                                            // First sort by priority
-                                            const priorityOrder = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
-                                            const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
-                                            
-                                            if (priorityDiff !== 0) return priorityDiff;
-                                            
-                                            // Then by time
-                                            const timeA = new Date(a.start_time).getTime();
-                                            const timeB = new Date(b.start_time).getTime();
-                                            return timeA - timeB;
-                                          })
-                                          .map(event => (
-                                            <motion.div 
-                                              key={event.id} 
-                                              className="bg-white rounded-lg shadow-sm border hover:shadow transition-shadow cursor-pointer"
-                                              onClick={() => handleEventClick(event)}
-                                              whileHover={{ y: -2 }}
-                                            >
-                                              <div className="p-3">
-                                                <div className="flex justify-between items-start">
-                                                  <div className="flex items-start gap-3">
-                                                    <div className={`p-2 rounded-full ${getCategoryColor(event.category).split(' ')[0]}`}>
-                                                      {getCategoryIcon(event.category)}
-                                                    </div>
-                                                    <div>
-                                                      <div className="flex items-center gap-2">
-                                                        {event.reference_number && (
-                                                          <span className="text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">
-                                                            {event.reference_number}
-                                                          </span>
-                                                        )}
-                                                        <h5 className="text-base font-medium text-gray-900">
-                                                          {event.title}
-                                                        </h5>
-                                                      </div>
-                                                      <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                                                        <ClockIcon className="h-4 w-4" />
-                                                        {event.all_day ? (
-                                                          "Toute la journée"
-                                                        ) : (
-                                                          `${formatTime(event.start_time)} - ${formatTime(event.end_time)}`
-                                                        )}
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                  <div className="flex flex-col items-end gap-2">
-                                                    <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(event.priority)}`}>
-                                                      {getPriorityLabel(event.priority)}
-                                                    </div>
-                                                    <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                                                      {getStatusLabel(event.status)}
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                
-                                                <div className="grid grid-cols-2 gap-4 mt-3">
-                                                  <div>
-                                                    {event.client_name && (
-                                                      <div className="text-sm text-gray-600 flex items-center gap-1">
-                                                        <BriefcaseIcon className="h-4 w-4 text-gray-500" />
-                                                        <span>Client: {event.client_name}</span>
-                                                      </div>
-                                                    )}
-                                                    
-                                                    {event.location?.name && (
-                                                      <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                                                        <MapPinIcon className="h-4 w-4 text-gray-500" />
-                                                        <span>{event.location.name}</span>
-                                                        {event.location.virtual && (
-                                                          <span className="ml-1 text-xs bg-blue-100 px-1.5 py-0.5 rounded">
-                                                            Distanciel
-                                                          </span>
-                                                        )}
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                  
-                                                  <div>
-                                                    {event.intervention_type && (
-                                                      <div className="text-sm text-gray-600 flex items-center gap-1">
-                                                        {event.intervention_type === "onsite" ? (
-                                                          <>
-                                                            <TruckIcon className="h-4 w-4 text-gray-500" />
-                                                            <span>Intervention sur site</span>
-                                                          </>
-                                                        ) : event.intervention_type === "remote" ? (
-                                                          <>
-                                                            <ServerIcon className="h-4 w-4 text-gray-500" />
-                                                            <span>Intervention à distance</span>
-                                                          </>
-                                                        ) : (
-                                                          <>
-                                                            <PhoneIcon className="h-4 w-4 text-gray-500" />
-                                                            <span>Assistance téléphonique</span>
-                                                          </>
-                                                        )}
-                                                      </div>
-                                                    )}
-                                                    
-                                                    {event.sla_breach !== undefined && (
-                                                      <div className="text-sm flex items-center gap-1 mt-1">
-                                                        {event.sla_breach ? (
-                                                          <span className="text-red-600 flex items-center gap-1">
-                                                            <ExclamationCircleIcon className="h-4 w-4" />
-                                                            Risque de dépassement SLA
-                                                          </span>
-                                                        ) : (
-                                                          <span className="text-green-600 flex items-center gap-1">
-                                                            <CheckIcon className="h-4 w-4" />
-                                                            SLA respecté
-                                                          </span>
-                                                        )}
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                </div>
-                                                
-                                                {event.participants.length > 0 && (
-                                                  <div className="flex items-center gap-1 mt-3 pt-3 border-t">
-                                                    <div className="flex -space-x-2">
-                                                      {event.participants.slice(0, 3).map((participant) => (
-                                                        <div 
-                                                          key={participant.id} 
-                                                          className="relative"
-                                                          title={participant.name}
-                                                        >
-                                                          {participant.avatar_url ? (
-                                                            <img 
-                                                              src={participant.avatar_url} 
-                                                              alt={participant.name} 
-                                                              className="w-7 h-7 rounded-full border-2 border-white"
-                                                            />
-                                                          ) : (
-                                                            <div className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
-                                                              <UserIcon className="h-4 w-4 text-gray-500" />
-                                                            </div>
-                                                          )}
-                                                        </div>
-                                                      ))}
-                                                      {event.participants.length > 3 && (
-                                                        <div className="w-7 h-7 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-xs text-gray-600 font-medium">
-                                                          +{event.participants.length - 3}
-                                                        </div>
-                                                      )}
-                                                    </div>
-                                                    <span className="text-xs text-gray-500 ml-2">
-                                                      {event.participants.length} participant{event.participants.length > 1 ? 's' : ''}
-                                                    </span>
-                                                  </div>
-                                                )}
-                                                
-                                                {event.equipment && event.equipment.length > 0 && (
-                                                  <div className="mt-3 pt-3 border-t">
-                                                    <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                                                      <CubeIcon className="h-3.5 w-3.5" />
-                                                      Équipements concernés:
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2 mt-1">
-                                                      {event.equipment.map(eq => (
-                                                        <div 
-                                                          key={eq.id}
-                                                          className={`flex items-center gap-1 text-xs px-2 py-1 rounded border ${
-                                                            eq.status === 'operational' ? 'bg-green-50 text-green-800 border-green-200' :
-                                                            eq.status === 'maintenance_needed' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' :
-                                                            eq.status === 'failure' ? 'bg-red-50 text-red-800 border-red-200' :
-                                                            'bg-gray-50 text-gray-800 border-gray-200'
-                                                          }`}
-                                                        >
-                                                          <span className="truncate max-w-[150px]">{eq.name}</span>
-                                                        </div>
-                                                      ))}
-                                                    </div>
-                                                  </div>
-                                                )}
-                                                
-                                                {event.related_documents && event.related_documents.length > 0 && (
-                                                  <div className="mt-3 pt-3 border-t">
-                                                    <div className="text-xs text-gray-500 mb-1">Documents liés:</div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                      {event.related_documents.map(doc => (
-                                                        <div 
-                                                          key={doc.id}
-                                                          className="flex items-center gap-1 text-xs bg-gray-50 hover:bg-gray-100 px-2 py-1 rounded border cursor-pointer"
-                                                        >
-                                                          <DocumentTextIcon className="h-3.5 w-3.5 text-blue-500" />
-                                                          <span className="truncate max-w-[150px]">{doc.title}</span>
-                                                        </div>
-                                                      ))}
-                                                    </div>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </motion.div>
-                                          ))}
-                                      </div>
-                                    </div>
-                                  );
-                                });
-                              })()}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
+            <EnhancedCalendar onTimeSlotSelect={function ( ): void {
+              throw new Error("Function not implemented.");
+            } }/>
           </div>
         </main>
       </div>

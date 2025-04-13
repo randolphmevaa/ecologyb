@@ -295,14 +295,16 @@ export const getCommonStyles = () => `
 
 // Function to generate HTML for the company header with enhanced color support
 export const getCompanyHeader = () => `
-
   <!-- Logo and Certification Logo -->
   <div class="logo-container" style="display: flex; align-items: center; background: none; border: none; box-shadow: none;">
     <img src="/ecologyb.png" alt="ECOLOGY'B" style="max-height: 60px; max-width: 150px; object-fit: contain;" />
   </div>
 
   <div class="company-info" style="display: flex; justify-content: flex-end; align-items: center;">
-    <img src="/logos/qualipac.png" alt="RGE QualiPac" style="max-height: 60px; max-width: 150px; object-fit: contain;" />
+    <div style="display: flex; flex-direction: column; align-items: center;">
+      <img src="/logos/qualipac.png" alt="RGE QualiPac" style="max-height: 60px; max-width: 150px; object-fit: contain;" />
+      <span style="font-size: 8px; margin-top: 4px;">QPAC/74310</span>
+    </div>
   </div>
 
   <!-- Watermark -->
