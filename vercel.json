@@ -1,0 +1,13 @@
+{
+    "version": 2,
+    "routes": [
+      {
+        "src": "/(.*\\.pdf)",
+        "dest": "/$1",
+        "headers": {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": "inline"
+        }
+      }
+    ]
+  }

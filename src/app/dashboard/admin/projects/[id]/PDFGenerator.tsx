@@ -57,19 +57,20 @@ interface PDFGeneratorProps {
   clientDetails: ClientDetails;
 }
 
+// Update the pdfPreviewPaths object to use the PUBLIC_URL environment variable
 const pdfPreviewPaths: Record<string, string | null> = {
-  "attestation-fin": "/AFT.pdf",
-  "attestation-simplifiee": "/AS.pdf",
-  "attestation-indivision": "/ATTESTATION_INDIV.pdf",
-  "attestation-mise-service": "/Attestation_mise_en_service.pdf",
-  "cession-creance": "/Cession_RENOLIB.pdf",
-  "attestation-proprietaire-bailleur": "/ATTESTATION_PROP.pdf",
-  "dp-mairie": "/DPMairie.pdf",
-  "daact": "/DAACT.pdf",
-  "enedis": "/Enedis_.pdf",
-  "eco-ptz": "/ECO-PTZ.pdf",
-  "mandat-perception": "/Checklist_Effy.pdf",
-  "cgv": "/CGV.pdf",
+  "attestation-fin": `${process.env.PUBLIC_URL || ''}/AFT.pdf`,
+  "attestation-simplifiee": `${process.env.PUBLIC_URL || ''}/AS.pdf`,
+  "attestation-indivision": `${process.env.PUBLIC_URL || ''}/ATTESTATION_INDIV.pdf`,
+  "attestation-mise-service": `${process.env.PUBLIC_URL || ''}/Attestation_mise_en_service.pdf`,
+  "cession-creance": `${process.env.PUBLIC_URL || ''}/Cession_RENOLIB.pdf`,
+  "attestation-proprietaire-bailleur": `${process.env.PUBLIC_URL || ''}/ATTESTATION_PROP.pdf`,
+  "dp-mairie": `${process.env.PUBLIC_URL || ''}/DPMairie.pdf`,
+  "daact": `${process.env.PUBLIC_URL || ''}/DAACT.pdf`,
+  "enedis": `${process.env.PUBLIC_URL || ''}/Enedis_.pdf`,
+  "eco-ptz": `${process.env.PUBLIC_URL || ''}/ECO-PTZ.pdf`,
+  "mandat-perception": `${process.env.PUBLIC_URL || ''}/Checklist_Effy.pdf`,
+  "cgv": `${process.env.PUBLIC_URL || ''}/CGV.pdf`,
   "devis-sans-prix": null,
   "courrier-rac": null,
   "dossier-cee": null,
