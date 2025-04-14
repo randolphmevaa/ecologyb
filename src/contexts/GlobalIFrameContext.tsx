@@ -9,7 +9,7 @@ import {
 import { 
   MinimizeIcon, 
   MaximizeIcon,
-  X as CloseIcon 
+  // X as CloseIcon 
 } from "lucide-react";
 
 type IFrameWindowParams = {
