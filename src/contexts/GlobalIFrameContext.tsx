@@ -405,7 +405,7 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 <div className="absolute left-0 bottom-0 w-full h-px bg-white/10"></div>
 
                 <div className="flex items-center relative z-20">
-                  <div className="flex space-x-3 ml-2">
+                  <div className="flex space-x-3 ml-6">
                     <div
                       className="h-4 w-4 bg-red-500 rounded-full cursor-pointer hover:bg-red-400 flex items-center justify-center group"
                       onClick={closeIframe}
