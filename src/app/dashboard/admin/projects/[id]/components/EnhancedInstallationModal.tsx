@@ -1626,7 +1626,7 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
         <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 group-hover:bg-white/30">
           <WrenchScrewdriverIcon className="w-5 h-5" />
         </span>
-        <span className="text-sm font-semibold tracking-wide">Placer en installation</span>
+        <span className="text-sm font-semibold tracking-wide">Prendre rendez-vous avec le client</span>
       </button>
       
       {/* Enhanced Installation Modal */}
