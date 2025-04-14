@@ -384,7 +384,7 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
               }}
             >
               {/* TITLE BAR */}
-              <div
+                              <div
                 className={`
                   flex items-center justify-between p-3 
                   bg-gradient-to-r from-[#213f5b] to-[#1d6fa5] text-white 
@@ -392,31 +392,37 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
                   ${iframeWindow.isMaximized ? '' : 'rounded-t-xl'} 
                   cursor-move
                 `}
-                onMouseDown={handleDragStart}
+                onMouseDown={(e) => {
+                  // Check if the click target is a button or inside a button
+                  const isButton = (e.target as HTMLElement).closest('button') || 
+                                   (e.target as HTMLElement).closest('.rounded-full');
+                  if (isButton) return; // Don't start drag if clicking on a button
+                  handleDragStart(e);
+                }}
                 style={{ touchAction: 'none' }}
               >
                 <div className="absolute inset-0 bg-white/5"></div>
                 <div className="absolute left-0 bottom-0 w-full h-px bg-white/10"></div>
 
-                <div className="flex items-center relative z-10">
-                  <div className="flex space-x-2 ml-1">
+                <div className="flex items-center relative z-20">
+                  <div className="flex space-x-3 ml-2">
                     <div
-                      className="h-3.5 w-3.5 bg-red-500 rounded-full cursor-pointer hover:bg-red-400 flex items-center justify-center group"
+                      className="h-4 w-4 bg-red-500 rounded-full cursor-pointer hover:bg-red-400 flex items-center justify-center group"
                       onClick={closeIframe}
                     >
-                      <XMarkIcon className="h-2 w-2 text-red-800 opacity-0 group-hover:opacity-100" />
+                      <XMarkIcon className="h-3 w-3 text-red-800 opacity-0 group-hover:opacity-100" />
                     </div>
                     <div
-                      className="h-3.5 w-3.5 bg-yellow-500 rounded-full cursor-pointer hover:bg-yellow-400 flex items-center justify-center group"
+                      className="h-4 w-4 bg-yellow-500 rounded-full cursor-pointer hover:bg-yellow-400 flex items-center justify-center group"
                       onClick={minimizeIframe}
                     >
-                      <MinimizeIcon className="h-2 w-2 text-yellow-800 opacity-0 group-hover:opacity-100" />
+                      <MinimizeIcon className="h-3 w-3 text-yellow-800 opacity-0 group-hover:opacity-100" />
                     </div>
                     <div
-                      className="h-3.5 w-3.5 bg-green-500 rounded-full cursor-pointer hover:bg-green-400 flex items-center justify-center group"
+                      className="h-4 w-4 bg-green-500 rounded-full cursor-pointer hover:bg-green-400 flex items-center justify-center group"
                       onClick={maximizeIframe}
                     >
-                      <MaximizeIcon className="h-2 w-2 text-green-800 opacity-0 group-hover:opacity-100" />
+                      <MaximizeIcon className="h-3 w-3 text-green-800 opacity-0 group-hover:opacity-100" />
                     </div>
                   </div>
 
@@ -430,29 +436,8 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
                   </div>
                 </div>
 
-                <div className="flex space-x-1 relative z-10">
-                  <button
-                    onClick={minimizeIframe}
-                    className="p-1.5 hover:bg-white/10 rounded-md"
-                    title="Minimiser"
-                  >
-                    <MinimizeIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={maximizeIframe}
-                    className="p-1.5 hover:bg-white/10 rounded-md"
-                    title="Agrandir"
-                  >
-                    <MaximizeIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={closeIframe}
-                    className="p-1.5 hover:bg-white/10 hover:text-red-300 rounded-md"
-                    title="Fermer"
-                  >
-                    <CloseIcon className="h-4 w-4" />
-                  </button>
-                </div>
+                {/* Removing the duplicate control buttons in the top right */}
+                <div></div>
               </div>
 
               {/* CONTENT / IFRAME */}
@@ -490,46 +475,46 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
               {/* RESIZE HANDLES */}
               {!iframeWindow.isMaximized && !iframeWindow.isMinimized && (
                 <>
-                  {/* Corner hints (optional) */}
+                  {/* Corner hints - REDUCED SIZE */}
                   <div 
-                    className="absolute top-0 left-0 w-16 h-16 cursor-nwse-resize z-30 hover:bg-[#4facfe]/10" 
+                    className="absolute top-0 left-0 w-10 h-10 cursor-nwse-resize z-30 hover:bg-[#4facfe]/10" 
                     onMouseDown={(e) => handleResizeStart(e, "nw")}
                   />
                   <div 
-                    className="absolute top-0 right-0 w-16 h-16 cursor-nesw-resize z-30 hover:bg-[#4facfe]/10" 
+                    className="absolute top-0 right-0 w-10 h-10 cursor-nesw-resize z-30 hover:bg-[#4facfe]/10" 
                     onMouseDown={(e) => handleResizeStart(e, "ne")}
                   />
                   <div 
-                    className="absolute bottom-0 left-0 w-16 h-16 cursor-nesw-resize z-30 hover:bg-[#4facfe]/10" 
+                    className="absolute bottom-0 left-0 w-10 h-10 cursor-nesw-resize z-30 hover:bg-[#4facfe]/10" 
                     onMouseDown={(e) => handleResizeStart(e, "sw")}
                   />
                   <div 
-                    className="absolute bottom-0 right-0 w-20 h-20 cursor-nwse-resize z-30 group hover:bg-[#4facfe]/10" 
+                    className="absolute bottom-0 right-0 w-10 h-10 cursor-nwse-resize z-30 group hover:bg-[#4facfe]/10" 
                     onMouseDown={(e) => handleResizeStart(e, "se")}
                   >
-                    {/* Example dotted corner style */}
-                    <div className="absolute bottom-2 right-2 w-8 h-8 flex items-end justify-end">
+                    {/* Smaller resize indicator */}
+                    <div className="absolute bottom-2 right-2 w-5 h-5 flex items-end justify-end">
                       <div className="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-[#4facfe] m-0.5"></div>
                       <div className="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-[#4facfe] m-0.5"></div>
                       <div className="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-[#4facfe] m-0.5"></div>
                     </div>
                   </div>
 
-                  {/* Edges */}
+                  {/* Edges - REDUCED SIZE */}
                   <div 
-                    className="absolute top-0 left-16 right-16 h-8 cursor-ns-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute top-0 left-10 right-10 h-4 cursor-ns-resize z-30 hover:bg-[#4facfe]/10"
                     onMouseDown={(e) => handleResizeStart(e, "n")}
                   />
                   <div 
-                    className="absolute bottom-0 left-16 right-16 h-8 cursor-ns-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute bottom-0 left-10 right-10 h-4 cursor-ns-resize z-30 hover:bg-[#4facfe]/10"
                     onMouseDown={(e) => handleResizeStart(e, "s")}
                   />
                   <div 
-                    className="absolute left-0 top-16 bottom-16 w-8 cursor-ew-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute left-0 top-10 bottom-10 w-4 cursor-ew-resize z-30 hover:bg-[#4facfe]/10"
                     onMouseDown={(e) => handleResizeStart(e, "w")}
                   />
                   <div 
-                    className="absolute right-0 top-16 bottom-16 w-8 cursor-ew-resize z-30 hover:bg-[#4facfe]/10"
+                    className="absolute right-0 top-10 bottom-10 w-4 cursor-ew-resize z-30 hover:bg-[#4facfe]/10"
                     onMouseDown={(e) => handleResizeStart(e, "e")}
                   />
                 </>
