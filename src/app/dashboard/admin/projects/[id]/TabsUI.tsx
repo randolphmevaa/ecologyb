@@ -636,7 +636,7 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
                       </div>
                       <div>
                         <h3 className="text-xl font-bold text-white" id="modal-title">
-                          Placer un client en installation
+                        Prendre rendez-vous avec le client
                         </h3>
                         <p className="mt-1 text-emerald-100">
                           Sélectionnez une date, un horaire et un installateur pour ce client

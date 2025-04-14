@@ -72,7 +72,7 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   useEffect(() => {
-    // Don’t restore if we’re already inside an iframe
+    // Don't restore if we're already inside an iframe
     if (isInIframe()) return;
 
     const savedIframeState = localStorage.getItem('iframeState');
@@ -319,7 +319,7 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
     isInIframe,
   };
 
-  // Don’t render the floating window if we’re inside an iframe ourselves
+  // Don't render the floating window if we're inside an iframe ourselves
   const shouldRenderIframe = !isInIframe() && iframeWindow.isVisible && iframeProjectId;
 
   return (
@@ -328,8 +328,16 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       <AnimatePresence>
         {shouldRenderIframe && (
-          // Changed this from pointer-events-none → pointer-events-auto
-          <div className="fixed inset-0 z-50 pointer-events-auto">
+          <>
+            {/* Removed the invisible full-screen container that was closing the iframe */}
+            
+            {/* Main iframe container - sizing determines interactive area */}
+          <div className="fixed z-50 pointer-events-auto" style={{ 
+            top: iframeWindow.position.y, 
+            left: iframeWindow.position.x,
+            width: iframeWindow.isMaximized ? '100%' : `${iframeWindow.size.width}px`,
+            height: iframeWindow.isMaximized ? '100%' : `${iframeWindow.isMinimized ? 48 : iframeWindow.size.height}px`,
+          }}>
             {/* If window is maximized, we show a backdrop you can click to close */}
             {iframeWindow.isMaximized && (
               <div 
@@ -341,8 +349,8 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
             <motion.div
               ref={iframeRef}
               className={`
-                absolute bg-white rounded-xl flex flex-col overflow-hidden shadow-2xl pointer-events-auto 
-                ${iframeWindow.isMaximized ? 'inset-0 rounded-none' : ''} 
+                bg-white rounded-xl flex flex-col overflow-hidden shadow-2xl pointer-events-auto
+                ${iframeWindow.isMaximized ? 'rounded-none' : ''} 
                 ${iframeWindow.isMinimized ? 'h-12 overflow-hidden' : ''} 
                 ${isDragging ? 'cursor-grabbing' : ''} 
                 ${isResizing ? `cursor-${resizeDirection || 'nwse'}-resize` : ''}
@@ -361,8 +369,6 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
                   : iframeWindow.isMinimized 
                     ? 48 
                     : iframeWindow.size.height,
-                top: iframeWindow.isMaximized ? 0 : iframeWindow.position.y,
-                left: iframeWindow.isMaximized ? 0 : iframeWindow.position.x,
                 transition: {
                   type: isDragging || isResizing ? "tween" : "spring",
                   duration: isDragging || isResizing ? 0 : 0.3,
@@ -373,6 +379,8 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
               style={{
                 boxShadow:
                   '0 0 0 1px rgba(0,0,0,0.05), 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 10px 15px -5px rgba(0, 0, 0, 0.15), 0 0 50px 5px rgba(0, 0, 0, 0.1)',
+                width: '100%',
+                height: '100%'
               }}
             >
               {/* TITLE BAR */}
@@ -528,6 +536,7 @@ export const GlobalIFrameProvider: React.FC<{ children: React.ReactNode }> = ({ 
               )}
             </motion.div>
           </div>
+          </>
         )}
       </AnimatePresence>
 

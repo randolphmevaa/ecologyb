@@ -1652,10 +1652,12 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
               <button
                 onClick={() => !isSubmitting && setIsOpen(false)}
                 disabled={isSubmitting}
-                className="absolute right-4 top-4 rounded-full bg-white/20 p-1.5 text-white transition-colors hover:bg-white/30 focus:outline-none"
+                className="absolute right-4 top-4 rounded-full bg-white/20 p-1.5 text-white transition-colors 
+                          hover:bg-white/30 focus:outline-none cursor-pointer" // <-- add cursor-pointer here
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
+
               
               {/* Header content */}
               <div className="flex flex-col sm:flex-row sm:items-center mb-6">
@@ -1664,7 +1666,7 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white" id="modal-title">
-                    Placer un client en installation
+                    Prendre rendez-vous avec le client
                   </h3>
                   <p className="mt-1 text-emerald-100">
                     Planifiez l&apos;installation, sélectionnez les produits et l&apos;installateur

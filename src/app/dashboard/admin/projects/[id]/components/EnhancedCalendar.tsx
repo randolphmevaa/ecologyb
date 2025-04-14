@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import {
   XMarkIcon,
   ChevronLeftIcon,
@@ -11,8 +11,8 @@ import {
   // WrenchScrewdriverIcon,
   // ShoppingBagIcon,
   // ArrowLongRightIcon,
-  PlusCircleIcon,
-  MinusCircleIcon,
+  // PlusCircleIcon,
+  // MinusCircleIcon,
   // ArrowPathIcon,
   // StarIcon,
   // CubeIcon,
@@ -45,6 +45,7 @@ import {
   ChevronDoubleRightIcon,
   SunIcon
 } from "@heroicons/react/24/solid";
+import React from "react";
 
 // TypeScript interfaces for our data models
 interface TimeSlot {
@@ -273,16 +274,18 @@ const appointmentTypes = [
 //     onDelete: (appointmentId: string) => void;
 //   }
   
-  // Props for ResizableTimeSlot
-  interface ResizableTimeSlotProps {
-    slot: TimeSlot;
-    dateString: string;
-    isSelected: boolean;
-    onSelect: (dateString: string, time: string, slot: TimeSlot) => void;
-    onEdit: (slot: TimeSlot) => void;
-    onDelete: (slotId: string) => void;
-    onResize: (slotId: string, newDuration: number, dateString: string) => void;
-  }
+  // Update your interface to include the onDragToDay property
+interface ResizableTimeSlotProps {
+  slot: TimeSlot;
+  dateString: string;
+  isSelected: boolean;
+  onSelect: (dateString: string, time: string, slot: TimeSlot) => void;
+  onEdit: (slot: TimeSlot) => void;
+  onDelete: (slotId: string) => void;
+  onResize: (slotId: string, newDuration: number, dateString: string) => void;
+  onDrag?: (slotId: string, dateString: string, startTime: string, minutesOffset: number) => void;
+  onDragToDay?: (slotId: string, dateString: string, direction: number) => void;
+}
   
   // Props for NewSlotFormModal
   interface NewSlotFormModalProps {
@@ -466,7 +469,8 @@ const appointmentTypes = [
 //   );
 // };
 
-// TimeSlot component with resize handler
+// Fixed version of ResizableTimeSlot component to address the linting errors
+
 const ResizableTimeSlot: React.FC<ResizableTimeSlotProps> = ({ 
   slot,
   dateString,
@@ -474,10 +478,14 @@ const ResizableTimeSlot: React.FC<ResizableTimeSlotProps> = ({
   onSelect,
   onEdit,
   onDelete,
-  onResize
+  onResize,
+  onDrag,
+  onDragToDay
 }) => {
-  const [ , setIsResizing] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [currentHeight, setCurrentHeight] = useState(slot.duration);
+  const dragControls = useDragControls();
   
   // Calculate position in the grid
   const startHour = parseInt(slot.time.split(':')[0], 10);
@@ -492,11 +500,42 @@ const ResizableTimeSlot: React.FC<ResizableTimeSlotProps> = ({
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+        drag // Allow dragging in any direction
+        dragControls={dragControls}
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.2}
+        dragMomentum={false}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          dragControls.start(e);
+        }}
+        onDragStart={() => {
+          setIsDragging(true);
+        }}
+        onDragEnd={(e, info) => {
+          setIsDragging(false);
+          
+          if (Math.abs(info.offset.x) > 50) {
+            // Detect horizontal drag to another day (threshold: 50px)
+            const direction = info.offset.x > 0 ? 1 : -1; // 1 = right, -1 = left
+            if (onDragToDay) {
+              onDragToDay(slot.id, dateString, direction);
+            }
+          } else if (Math.abs(info.offset.y) > 5) {
+            // Vertical drag (time change)
+            if (onDrag) {
+              onDrag(slot.id, dateString, 'all-day', info.offset.y);
+            }
+          }
+        }}
         onClick={(e: React.MouseEvent) => {
+          if (!isDragging) {
             e.stopPropagation();
             onSelect(dateString, slot.time, slot);
-          }}
+          }
+        }}
         className={`absolute left-0 right-0 top-0 h-8 px-2 py-1 rounded-md shadow-md border z-20
+          ${isDragging ? "opacity-70 cursor-grabbing" : "cursor-grab"}
           ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-800 ring-2 ring-blue-500' : 
             (slot.color || "bg-indigo-100 border-indigo-300 text-indigo-800")}
         `}
@@ -543,15 +582,51 @@ const ResizableTimeSlot: React.FC<ResizableTimeSlotProps> = ({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      onClick={(e: React.MouseEvent) => {
+      drag // Allow dragging in any direction
+      dragControls={dragControls}
+      dragConstraints={{ top: 0, bottom: 600 }}
+      dragElastic={0.2}
+      dragMomentum={false}
+      onPointerDown={(e) => {
+        // Don't start drag if clicking on a button
+        if ((e.target as HTMLElement).tagName === 'BUTTON' || 
+            (e.target as HTMLElement).parentElement?.tagName === 'BUTTON') {
+          return;
+        }
         e.stopPropagation();
-        onSelect(dateString, slot.time, slot);
+        dragControls.start(e);
+      }}
+      onDragStart={() => {
+        setIsDragging(true);
+      }}
+      onDragEnd={(e, info) => {
+        setIsDragging(false);
+        
+        if (Math.abs(info.offset.x) > 50) {
+          // Detect horizontal drag to another day (threshold: 50px)
+          const direction = info.offset.x > 0 ? 1 : -1; // 1 = right, -1 = left
+          if (onDragToDay) {
+            onDragToDay(slot.id, dateString, direction);
+          }
+        } else if (Math.abs(info.offset.y) > 5) {
+          // Vertical drag (time change)
+          if (onDrag) {
+            onDrag(slot.id, dateString, slot.time, info.offset.y);
+          }
+        }
+      }}
+      onClick={(e: React.MouseEvent) => {
+        if (!isDragging && !isResizing) {
+          e.stopPropagation();
+          onSelect(dateString, slot.time, slot);
+        }
       }}
       style={{ 
         top: `${topPosition}px`,
         height: `${currentHeight}px`
       }}
-      className={`absolute left-1 right-1 rounded-md border shadow-md px-2 py-1.5 cursor-pointer
+      className={`absolute left-1 right-1 rounded-md border shadow-md px-2 py-1.5 ${
+        isDragging ? "opacity-70 z-30 cursor-grabbing" : "cursor-grab"}
         ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-800 z-10 ring-2 ring-blue-500/50' :
           (slot.color || "bg-green-50 border-green-200 text-green-700") + " hover:bg-opacity-80"}
       `}
@@ -645,143 +720,233 @@ const ResizableTimeSlot: React.FC<ResizableTimeSlotProps> = ({
   );
 };
 
+// Add this to your component - handles dragging between days
+// const handleSlotDragToDay = (slotId: string, currentDateString: string, direction: number): void => {
+//   // Get all week days
+//   const weekDays = generateWeekDays();
+  
+//   // Find the index of the current day
+//   const currentDayIndex = weekDays.findIndex(day => 
+//     day.toISOString().split('T')[0] === currentDateString
+//   );
+  
+//   // Calculate the new day index (make sure it stays within bounds)
+//   const newDayIndex = Math.max(0, Math.min(weekDays.length - 1, currentDayIndex + direction));
+  
+//   // Get the new date string
+//   const newDateString = weekDays[newDayIndex].toISOString().split('T')[0];
+  
+//   // If no change in date, do nothing
+//   if (newDateString === currentDateString) return;
+  
+//   // Find the slot in the current date
+//   const sourceSlot = slots.find(s => s.date === currentDateString);
+//   const timeSlot = sourceSlot?.timeSlots?.find(ts => ts.id === slotId);
+  
+//   if (!sourceSlot || !timeSlot) return;
+  
+//   // Check if the new date already exists in slots
+//   const targetDateExists = slots.some(s => s.date === newDateString);
+  
+//   if (targetDateExists) {
+//     // Move the slot to the target date
+//     setSlots(slots.map(dateSlot => {
+//       // Remove from source date
+//       if (dateSlot.date === currentDateString) {
+//         return {
+//           ...dateSlot,
+//           timeSlots: dateSlot.timeSlots?.filter(ts => ts.id !== slotId) || [],
+//           times: dateSlot.timeSlots?.filter(ts => ts.id !== slotId).map(ts => ts.time) || []
+//         };
+//       }
+      
+//       // Add to target date
+//       if (dateSlot.date === newDateString) {
+//         // Create a new ID for the slot in the new date
+//         const newSlotId = `slot-${dateSlot.id}-${dateSlot.timeSlots?.length || 0 + 1}`;
+        
+//         // Create a copy of the slot with the new ID
+//         const newTimeSlot = {
+//           ...timeSlot,
+//           id: newSlotId
+//         };
+        
+//         return {
+//           ...dateSlot,
+//           timeSlots: [...(dateSlot.timeSlots || []), newTimeSlot],
+//           times: [...(dateSlot.times || []), timeSlot.time]
+//         };
+//       }
+      
+//       return dateSlot;
+//     }));
+//   } else {
+//     // Create a new date entry with the slot
+//     const newSlotId = `slot-${slots.length + 1}-1`;
+    
+//     // Create a copy of the slot with the new ID
+//     const newTimeSlot = {
+//       ...timeSlot,
+//       id: newSlotId
+//     };
+    
+//     // Create a new date entry
+//     const newDateSlot: AvailableSlot = {
+//       id: slots.length + 1,
+//       date: newDateString,
+//       times: [timeSlot.time],
+//       timeSlots: [newTimeSlot]
+//     };
+    
+//     // Remove the slot from the source date and add the new date entry
+//     setSlots(slots.map(dateSlot => {
+//       if (dateSlot.date === currentDateString) {
+//         return {
+//           ...dateSlot,
+//           timeSlots: dateSlot.timeSlots?.filter(ts => ts.id !== slotId) || [],
+//           times: dateSlot.timeSlots?.filter(ts => ts.id !== slotId).map(ts => ts.time) || []
+//         };
+//       }
+//       return dateSlot;
+//     }).concat(newDateSlot));
+//   }
+  
+//   // Update UI to select the moved slot
+//   setSelectedDate(newDateString);
+//   setSelectedTime(timeSlot.time);
+//   setSelectedTimeSlot(null); // Clear, then it will be selected when the UI refreshes
+// };
+
+
 // New slot form modal
 const NewSlotFormModal: React.FC<NewSlotFormModalProps> = ({ isOpen, onClose, onSave, clickedDate, clickedTime }) => {
-    const [formData, setFormData] = useState<NewSlotFormData>({
-      title: "Installation",
-      startTime: clickedTime || "08:00",
-      duration: 120,
-      type: "installation",
-      installerCount: 2,
-      notes: "",
-      isAllDay: false // New field for all-day events
-    });
-  
-    useEffect(() => {
-      // Update start time when clicked time changes
-      if (clickedTime) {
-        setFormData(prev => ({ ...prev, startTime: clickedTime }));
-      }
-    }, [clickedTime]);
-  
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        
-        // Use type narrowing to safely access the 'checked' property
-        let inputValue: string | number | boolean = value;
-        
-        // Handle checkbox input
-        if (e.target instanceof HTMLInputElement && e.target.type === 'checkbox') {
-          inputValue = e.target.checked;
-        } 
-        // Handle number inputs
-        else if (name === "installerCount" || name === "duration") {
-          inputValue = parseInt(value);
-        }
-        
-        setFormData(prev => ({ ...prev, [name]: inputValue }));
-      };
-  
-    const handleTypeChange = (typeId: string) => {
-      const selectedType = appointmentTypes.find(type => type.id === typeId);
-      setFormData(prev => ({ 
-        ...prev, 
-        type: typeId, 
-        duration: prev.isAllDay ? 1440 : selectedType?.duration || 120,
-        title: selectedType?.name || "Rendez-vous"
-      }));
-    };
-    
-    // Handle all-day toggle
-    const handleAllDayToggle = (isAllDay: boolean) => {
-      setFormData(prev => ({ 
-        ...prev, 
-        isAllDay: isAllDay,
-        duration: isAllDay ? 1440 : appointmentTypes.find(type => type.id === prev.type)?.duration || 120,
-        startTime: isAllDay ? "00:00" : prev.startTime
-      }));
-    };
-  
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      if (clickedDate) {
-        onSave(clickedDate, formData);
-      } else {
-        // Fallback to current date if no date is provided
-        const currentDate = new Date().toISOString().split('T')[0];
-        onSave(currentDate, formData);
-      }
-      onClose();
-    };
-  
-    if (!isOpen) return null;
-  
-    return (
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-30 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="bg-white rounded-lg shadow-xl max-w-md w-full m-3"
-        >
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-white">Ajouter un créneau</h3>
-              <button onClick={onClose} className="text-white hover:text-gray-200">
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            </div>
-            {clickedDate && (
-              <p className="text-blue-100 text-sm mt-1">
-                {new Date(clickedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-              </p>
-            )}
-          </div>
-          
-          <form onSubmit={handleSubmit} className="p-4">
-            {/* All day toggle */}
-            <div className="mb-4">
-              <label className="flex items-center cursor-pointer">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    name="isAllDay"
-                    checked={formData.isAllDay}
-                    onChange={(e) => handleAllDayToggle(e.target.checked)}
-                    className="sr-only"
-                  />
-                  <div className="w-10 h-5 bg-gray-200 rounded-full shadow-inner"></div>
-                  <div className={`absolute w-5 h-5 rounded-full shadow transition ${formData.isAllDay ? 'transform translate-x-5 bg-blue-600' : 'bg-white'} top-0`}></div>
-                </div>
-                <div className="ml-3 text-sm font-medium text-gray-700">
-                  Journée entière
-                </div>
-              </label>
-            </div>
-            
-            {/* Appointment type selection */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Type de rendez-vous</label>
-              <div className="grid grid-cols-2 gap-2">
-                {appointmentTypes.map(type => (
-                  <button
-                    key={type.id}
-                    type="button"
-                    className={`py-2 px-3 rounded-md text-sm font-medium flex items-center ${
-                      formData.type === type.id ? 
-                      type.color + " ring-2 ring-offset-1 ring-blue-500" : 
-                      "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    onClick={() => handleTypeChange(type.id)}
-                  >
-                    <div className={`w-3 h-3 rounded-full ${type.color.replace('bg-', 'bg-').replace('text-', '')} mr-2`}></div>
-                    {type.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+  const [formData, setFormData] = useState<NewSlotFormData>({
+    title: "Installation",
+    startTime: clickedTime || "08:00",
+    duration: 120,
+    type: "installation",
+    installerCount: 2, // We'll keep this in the state but hide it from UI
+    notes: "",
+    isAllDay: false
+  });
 
-          {/* Title */}
+  useEffect(() => {
+    // Update start time when clicked time changes
+    if (clickedTime) {
+      setFormData(prev => ({ ...prev, startTime: clickedTime }));
+    }
+  }, [clickedTime]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      
+      // Use type narrowing to safely access the 'checked' property
+      let inputValue: string | number | boolean = value;
+      
+      // Handle checkbox input
+      if (e.target instanceof HTMLInputElement && e.target.type === 'checkbox') {
+        inputValue = e.target.checked;
+      } 
+      // Handle number inputs
+      else if (name === "installerCount" || name === "duration") {
+        inputValue = parseInt(value);
+      }
+      
+      setFormData(prev => ({ ...prev, [name]: inputValue }));
+    };
+
+  const handleTypeChange = (typeId: string) => {
+    const selectedType = appointmentTypes.find(type => type.id === typeId);
+    setFormData(prev => ({ 
+      ...prev, 
+      type: typeId, 
+      duration: prev.isAllDay ? 1440 : selectedType?.duration || 120,
+      title: selectedType?.name || "Rendez-vous"
+    }));
+  };
+  
+  // Handle all-day toggle
+  const handleAllDayToggle = (isAllDay: boolean) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      isAllDay: isAllDay,
+      duration: isAllDay ? 1440 : appointmentTypes.find(type => type.id === prev.type)?.duration || 120,
+      startTime: isAllDay ? "00:00" : prev.startTime
+    }));
+  };
+
+  // Calculate end time based on start time and duration
+  const calculateEndTime = () => {
+    if (formData.isAllDay) return "23:59";
+    
+    const [hours, minutes] = formData.startTime.split(':').map(Number);
+    const startDate = new Date();
+    startDate.setHours(hours, minutes, 0, 0);
+    
+    const endDate = new Date(startDate.getTime() + formData.duration * 60000);
+    return `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+  };
+  
+  // Calculate duration in minutes from start and end times
+  const calculateDurationFromTimes = (startTime: string, endTime: string) => {
+    // Parse times into Date objects
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    
+    const startDate = new Date();
+    startDate.setHours(startHours, startMinutes, 0, 0);
+    
+    const endDate = new Date();
+    endDate.setHours(endHours, endMinutes, 0, 0);
+    
+    // If end time is before start time, assume it's the next day
+    if (endDate < startDate) {
+      endDate.setDate(endDate.getDate() + 1);
+    }
+    
+    // Calculate duration in minutes
+    const durationMs = endDate.getTime() - startDate.getTime();
+    return Math.round(durationMs / 60000);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (clickedDate) {
+      onSave(clickedDate, formData);
+    } else {
+      // Fallback to current date if no date is provided
+      const currentDate = new Date().toISOString().split('T')[0];
+      onSave(currentDate, formData);
+    }
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-30 flex items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white rounded-lg shadow-xl max-w-md w-full m-3"
+      >
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 rounded-t-lg">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-white">Ajouter un créneau</h3>
+            <button onClick={onClose} className="text-white hover:text-gray-200">
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+          {clickedDate && (
+            <p className="text-blue-100 text-sm mt-1">
+              {new Date(clickedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+          )}
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-4">
+          {/* Title moved to the top */}
           <div className="mb-4">
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
             <input
@@ -794,9 +959,37 @@ const NewSlotFormModal: React.FC<NewSlotFormModalProps> = ({ isOpen, onClose, on
             />
           </div>
 
-          {/* Time and duration */}
-          <div className={`grid ${formData.isAllDay ? 'grid-cols-1' : 'grid-cols-2'} gap-4 mb-4`}>
-            {!formData.isAllDay && (
+          {/* Date selection */}
+          <div className="mb-4">
+            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Jour et Date</label>
+            <div className="bg-gray-100 px-3 py-2 rounded-md border border-gray-300 text-gray-700">
+              {clickedDate ? new Date(clickedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Date non sélectionnée'}
+            </div>
+          </div>
+          
+          {/* All day toggle */}
+          <div className="mb-4">
+            <label className="flex items-center cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  name="isAllDay"
+                  checked={formData.isAllDay}
+                  onChange={(e) => handleAllDayToggle(e.target.checked)}
+                  className="sr-only"
+                />
+                <div className="w-10 h-5 bg-gray-200 rounded-full shadow-inner"></div>
+                <div className={`absolute w-5 h-5 rounded-full shadow transition ${formData.isAllDay ? 'transform translate-x-5 bg-blue-600' : 'bg-white'} top-0`}></div>
+              </div>
+              <div className="ml-3 text-sm font-medium text-gray-700">
+                Journée entière
+              </div>
+            </label>
+          </div>
+
+          {/* Time fields (start and end) */}
+          {!formData.isAllDay && (
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">Heure de début</label>
                 <input
@@ -804,64 +997,68 @@ const NewSlotFormModal: React.FC<NewSlotFormModalProps> = ({ isOpen, onClose, on
                   id="startTime"
                   name="startTime"
                   value={formData.startTime}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const newStartTime = e.target.value;
+                    
+                    // Update the state
+                    setFormData(prev => {
+                      // Calculate new duration based on start and end times
+                      const newDuration = calculateDurationFromTimes(newStartTime, calculateEndTime());
+                      
+                      return {
+                        ...prev,
+                        startTime: newStartTime,
+                        duration: newDuration > 0 ? newDuration : prev.duration
+                      };
+                    });
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-            )}
-            <div>
-              <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-1">Durée</label>
-              <select
-                id="duration"
-                name="duration"
-                value={formData.duration}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                disabled={formData.isAllDay}
-              >
-                <option value="30">30 minutes</option>
-                <option value="60">1 heure</option>
-                <option value="90">1 heure 30</option>
-                <option value="120">2 heures</option>
-                <option value="180">3 heures</option>
-                <option value="240">4 heures</option>
-                <option value="300">5 heures</option>
-                <option value="360">6 heures</option>
-                <option value="480">8 heures</option>
-                <option value="720">12 heures</option>
-                <option value="1440">24 heures (toute la journée)</option>
-              </select>
+              <div>
+                <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">Heure de fin</label>
+                <input
+                  type="time"
+                  id="endTime"
+                  name="endTime"
+                  value={calculateEndTime()}
+                  onChange={(e) => {
+                    const endTime = e.target.value;
+                    
+                    // Calculate and update duration based on start and end times
+                    const newDuration = calculateDurationFromTimes(formData.startTime, endTime);
+                    if (newDuration > 0) {
+                      setFormData(prev => ({
+                        ...prev,
+                        duration: newDuration
+                      }));
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Installer count */}
+          )}
+          
+          {/* Appointment type selection */}
           <div className="mb-4">
-            <label htmlFor="installerCount" className="block text-sm font-medium text-gray-700 mb-1">Nombre d&apos;installateurs</label>
-            <div className="flex items-center">
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, installerCount: Math.max(1, prev.installerCount - 1) }))}
-                className="px-2 py-1 border border-gray-300 rounded-l-md bg-gray-50 text-gray-700"
-              >
-                <MinusCircleIcon className="w-5 h-5" />
-              </button>
-              <input
-                type="number"
-                id="installerCount"
-                name="installerCount"
-                min="1"
-                max="10"
-                value={formData.installerCount}
-                onChange={handleChange}
-                className="w-16 px-3 py-2 border-t border-b border-gray-300 text-center"
-              />
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, installerCount: Math.min(10, prev.installerCount + 1) }))}
-                className="px-2 py-1 border border-gray-300 rounded-r-md bg-gray-50 text-gray-700"
-              >
-                <PlusCircleIcon className="w-5 h-5" />
-              </button>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Type de rendez-vous</label>
+            <div className="grid grid-cols-2 gap-2">
+              {appointmentTypes.map(type => (
+                <button
+                  key={type.id}
+                  type="button"
+                  className={`py-2 px-3 rounded-md text-sm font-medium flex items-center ${
+                    formData.type === type.id ? 
+                    type.color + " ring-2 ring-offset-1 ring-blue-500" : 
+                    "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                  onClick={() => handleTypeChange(type.id)}
+                >
+                  <div className={`w-3 h-3 rounded-full ${type.color.replace('bg-', 'bg-').replace('text-', '')} mr-2`}></div>
+                  {type.name}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -946,7 +1143,13 @@ const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({onTimeSlotSelect}) =
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
+  const [isDraggingCreate, setIsDraggingCreate] = useState<boolean>(false);
+  const [dragStartPoint, setDragStartPoint] = useState<{ x: number, y: number } | null>(null);
   const [calendarView, setCalendarView] = useState<"jour" | "semaine" | "mois" | "schedule" | "liste">("schedule");
+  // Add this to your EnhancedCalendar component
+const dayViewContainerRef = useRef<HTMLDivElement>(null);
+// const weekViewContainerRef = useRef<HTMLDivElement>(null);
+// const scheduleViewContainerRef = useRef<HTMLDivElement>(null);
   // const [selectedAppointment, setSelectedAppointment] = useState<DraggableAppointment | null>(null);
   // const [appointments, setAppointments] = useState<DraggableAppointment[]>(presetAppointments);
   const [slots, setSlots] = useState<AvailableSlot[]>(availableSlots);
@@ -1304,6 +1507,222 @@ const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({onTimeSlotSelect}) =
     );
   };
 
+  const handleTimeSlotDrag = (
+    slotId: string, 
+    dateString: string, 
+    startTime: string,
+    minutesOffset: number
+  ): void => {
+    setSlots(slots.map(dateSlot => {
+      if (dateSlot.date === dateString && dateSlot.timeSlots) {
+        return {
+          ...dateSlot,
+          timeSlots: dateSlot.timeSlots.map(slot => {
+            if (slot.id === slotId) {
+              // For all-day events, keep them as all-day
+              if (slot.isAllDay || startTime === 'all-day') {
+                return slot;
+              }
+              
+              // Calculate new start time
+              const [hours, minutes] = slot.time.split(':').map(Number);
+              const startDate = new Date();
+              startDate.setHours(hours, minutes, 0, 0);
+              
+              // Convert pixel offset to minutes (assuming 1px = 1min)
+              const minutesDelta = Math.round(minutesOffset / 60 * 60);
+              startDate.setMinutes(startDate.getMinutes() + minutesDelta);
+              
+              // Ensure time is within bounds (8:00 - 19:00)
+              let newHours = startDate.getHours();
+              let newMinutes = startDate.getMinutes();
+              
+              // Snap to nearest 15 minute increment
+              newMinutes = Math.round(newMinutes / 15) * 15;
+              
+              // Handle boundary conditions
+              if (newHours < 8) {
+                newHours = 8;
+                newMinutes = 0;
+              } else if (newHours >= 19) {
+                newHours = 18;
+                newMinutes = 45;
+              } else if (newHours === 18 && newMinutes > 45) {
+                newMinutes = 45;
+              }
+              
+              // Format the new time
+              const newTime = `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
+              
+              return {
+                ...slot,
+                time: newTime
+              };
+            }
+            return slot;
+          })
+        };
+      }
+      return dateSlot;
+    }));
+  };
+
+  // Improved drag-to-create function that shows the modal
+const handleDragCreateSlot = (
+  e: React.MouseEvent, 
+  dateString: string, 
+  containerRef: React.RefObject<HTMLDivElement | null>
+) => {
+  // Prevent default to avoid selection
+  e.preventDefault();
+  
+  // Return if no container or if already dragging
+  if (!containerRef.current || isDraggingCreate) return;
+  
+  // Set dragging state to true
+  setIsDraggingCreate(true);
+  
+  // Get container rect
+  const containerRect = containerRef.current.getBoundingClientRect();
+  const startY = e.clientY - containerRect.top;
+  
+  // Save drag start point for distance calculation
+  setDragStartPoint({ x: e.clientX, y: e.clientY });
+  
+  // Calculate initial time from Y position
+  const startHour = Math.floor((startY - 8) / 60) + 8; // 8AM is our start time
+  const startMinute = Math.round(((startY - 8) % 60) / 15) * 15; // Round to nearest 15 min
+  
+  // Create visual element to show drag
+  const dragElement = document.createElement('div');
+  dragElement.style.position = 'absolute';
+  dragElement.style.left = '16px'; // Leave space for time column
+  dragElement.style.right = '4px';
+  dragElement.style.top = `${startY}px`;
+  dragElement.style.height = '30px'; // Minimum height
+  dragElement.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+  dragElement.style.border = '1px dashed rgb(59, 130, 246)';
+  dragElement.style.borderRadius = '4px';
+  dragElement.style.zIndex = '40';
+  dragElement.style.pointerEvents = 'none';
+  containerRef.current.appendChild(dragElement);
+  
+  // Create time label
+  const timeLabel = document.createElement('div');
+  timeLabel.style.position = 'absolute';
+  timeLabel.style.right = '8px';
+  timeLabel.style.top = '4px';
+  timeLabel.style.padding = '2px 6px';
+  timeLabel.style.backgroundColor = 'rgba(59, 130, 246, 0.8)';
+  timeLabel.style.color = 'white';
+  timeLabel.style.borderRadius = '4px';
+  timeLabel.style.fontSize = '10px';
+  timeLabel.style.fontWeight = 'bold';
+  timeLabel.textContent = `${startHour}:${startMinute.toString().padStart(2, '0')}`;
+  dragElement.appendChild(timeLabel);
+  
+  // Mouse move handler
+  const handleMouseMove = (moveEvent: MouseEvent) => {
+    const currentY = moveEvent.clientY - containerRect.top;
+    
+    // Determine start and end points
+    const topY = Math.min(startY, currentY);
+    const bottomY = Math.max(startY, currentY);
+    const height = bottomY - topY;
+    
+    // Update visual element
+    dragElement.style.top = `${topY}px`;
+    dragElement.style.height = `${Math.max(30, height)}px`;
+    
+    // Calculate and show new time range
+    const startTimeHour = Math.floor((topY - 8) / 60) + 8;
+    const startTimeMinute = Math.round(((topY - 8) % 60) / 15) * 15;
+    
+    const endTimeHour = Math.floor((bottomY - 8) / 60) + 8;
+    const endTimeMinute = Math.round(((bottomY - 8) % 60) / 15) * 15;
+    
+    const formattedStartTime = `${startTimeHour.toString().padStart(2, '0')}:${startTimeMinute.toString().padStart(2, '0')}`;
+    const formattedEndTime = `${endTimeHour.toString().padStart(2, '0')}:${endTimeMinute.toString().padStart(2, '0')}`;
+    
+    timeLabel.textContent = `${formattedStartTime} - ${formattedEndTime}`;
+  };
+  
+  // Mouse up handler
+  const handleMouseUp = (upEvent: MouseEvent) => {
+    // Remove event listeners
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    
+    // Remove drag element
+    if (containerRef.current && containerRef.current.contains(dragElement)) {
+      containerRef.current.removeChild(dragElement);
+    }
+    
+    // Calculate drag distance
+    const dragDistance = dragStartPoint ? 
+      Math.sqrt(Math.pow(upEvent.clientX - dragStartPoint.x, 2) + 
+                Math.pow(upEvent.clientY - dragStartPoint.y, 2)) : 0;
+    
+    // Only create a slot if dragged more than 15px
+    if (dragDistance > 15) {
+      const endY = upEvent.clientY - containerRect.top;
+      
+      // Get times
+      const minY = Math.min(startY, endY);
+      // const maxY = Math.max(startY, endY);
+      
+      // Calculate start time (snap to 15 min)
+      const startHour = Math.floor((minY - 8) / 60) + 8;
+      const startMinute = Math.round(((minY - 8) % 60) / 15) * 15;
+      
+      // Ensure within bounds
+      const boundedStartHour = Math.max(8, Math.min(18, startHour));
+      const boundedStartMinute = startHour === 18 ? Math.min(45, startMinute) : startMinute;
+      
+      const slotStartTime = `${boundedStartHour.toString().padStart(2, '0')}:${boundedStartMinute.toString().padStart(2, '0')}`;
+      
+      // Calculate duration in minutes
+      // const durationMinutes = Math.round((maxY - minY) / 60 * 60); // Convert pixels to minutes
+      
+      // Set up the data for the new slot
+      setClickedDateTime({ date: dateString, time: slotStartTime });
+      
+      // Always open the form when a slot is created by dragging
+      setShowNewSlotForm(true);
+    }
+    
+    // Reset drag state
+    setIsDraggingCreate(false);
+    setDragStartPoint(null);
+  };
+  
+  // Add event listeners
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+};
+
+  // Create refs for each day in week view
+function createWeekDayRefs() {
+  // Create an object to store refs for each day
+  const refs: {[key: string]: React.RefObject<HTMLDivElement | null>} = {};
+  
+  // Generate week days
+  const weekDays = generateWeekDays();
+  
+  // Create a ref for each day
+  weekDays.forEach((date ) => {
+    const dateString = date.toISOString().split('T')[0];
+    refs[dateString] = React.createRef<HTMLDivElement | null>();
+  });
+  
+  return refs;
+}
+
+// Add this to your component
+const weekDayRefs = useRef(createWeekDayRefs());
+
+
+
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
       {/* Calendar Toolbar */}
@@ -1613,13 +2032,19 @@ const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({onTimeSlotSelect}) =
               
               {/* Advanced time grid with draggable appointments */}
               <div 
+                ref={dayViewContainerRef}
                 className="relative flex-1 min-h-[600px] overflow-y-auto"
                 onClick={(e) => {
-                  // Only trigger if clicking directly on the grid, not on appointments
                   if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('grid-hour')) {
                     const rect = e.currentTarget.getBoundingClientRect();
                     const time = calculateTimeFromPosition(e.clientY, rect.top);
                     handleGridClick(selectedDate, time);
+                  }
+                }}
+                onMouseDown={(e) => {
+                  // Only trigger if directly clicking on the background grid
+                  if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('grid-hour')) {
+                    handleDragCreateSlot(e, selectedDate, dayViewContainerRef);
                   }
                 }}
               >
@@ -1686,6 +2111,7 @@ const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({onTimeSlotSelect}) =
                                 }
                               }}
                               onResize={handleTimeSlotResize}
+                              onDrag={handleTimeSlotDrag}
                             />
                           );
                         })}
@@ -1748,6 +2174,7 @@ const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({onTimeSlotSelect}) =
                               }
                             }}
                             onResize={handleTimeSlotResize}
+                            onDrag={handleTimeSlotDrag}
                           />
                         );
                       })}
@@ -1832,244 +2259,171 @@ const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({onTimeSlotSelect}) =
                 
                 {/* Day columns */}
                 <div className="flex flex-1 relative">
-                  {generateWeekDays().map((date, dayIdx) => {
-                    const dateString = date.toISOString().split('T')[0];
-                    const isToday = new Date().toDateString() === date.toDateString();
-                    
-                    return (
-                      <div
-                        key={`week-col-${dayIdx}`}
-                        className={`flex-1 relative border-r border-gray-100 min-w-[100px] ${isToday ? "bg-blue-50/20" : ""}`}
-                        onClick={(e) => {
-                          // Calculate the clicked time
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const time = calculateTimeFromPosition(e.clientY, rect.top);
-                          handleGridClick(dateString, time);
-                        }}
-                      >
-                        {/* All-day section */}
-                        <div className="h-8 border-b border-gray-200 bg-gray-50/50 relative">
-                          {/* All-day slots */}
-                          {getTimeSlots(dateString)
-                            .filter(slot => slot.isAllDay)
-                            .filter(slot => !filter || slot.type === filter)
-                            .map((slot, idx) => {
-                              const isSelected = selectedDate === dateString && selectedTime === slot.time && selectedTimeSlot?.id === slot.id;
-                              
-                              return (
-                                <motion.div
-                                  key={`week-all-day-${dayIdx}-${idx}`}
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedDate(dateString);
-                                    setSelectedTime(slot.time);
-                                    setSelectedTimeSlot(slot);
-                                  }}
-                                  className={`absolute left-0 right-0 top-0 h-8 px-2 py-1 border shadow-sm rounded-sm
-                                    ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-800 z-10 ring-1 ring-blue-500' :
-                                      (slot.color || "bg-indigo-100 border-indigo-300 text-indigo-800")}
-                                  `}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center">
-                                      <SunIcon className="h-3 w-3 mr-1" />
-                                      <div className="font-medium text-xs truncate">{slot.title}</div>
-                                    </div>
-                                    
-                                    {isSelected && (
-                                      <div className="absolute right-1 top-1 flex space-x-1">
-                                        <button 
-                                          className="p-0.5 hover:bg-white/20 rounded"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            alert(`Modifier: ${slot.title}`);
-                                          }}
-                                        >
-                                          <PencilIcon className="h-2.5 w-2.5" />
-                                        </button>
-                                        <button 
-                                          className="p-0.5 hover:bg-white/20 rounded"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (confirm('Supprimer ce créneau ?')) {
-                                              setSlots(slots.map(s => {
-                                                if (s.date === dateString) {
-                                                  return {
-                                                    ...s,
-                                                    timeSlots: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slot.id) : [],
-                                                    times: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slot.id).map(ts => ts.time) : []
-                                                  };
-                                                }
-                                                return s;
-                                              }));
-                                              setSelectedTime(null);
-                                              setSelectedTimeSlot(null);
-                                            }
-                                          }}
-                                        >
-                                          <TrashIcon className="h-2.5 w-2.5" />
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                        </div>
-                        
-                        {/* Hour grid */}
-                        {hourMarkers.map((_, hourIdx) => (
-                          <div
-                            key={`grid-${dayIdx}-${hourIdx}`}
-                            className="h-[60px] border-b border-gray-100"
-                          ></div>
-                        ))}
-                        
-                        {/* Current time indicator for today */}
-                        {isToday && (
-                          <div 
-                            className="absolute left-0 right-0 h-0.5 bg-red-500 z-10"
-                            style={{ top: "180px" }} // Example position
-                          >
-                            <div className="absolute -left-1 -top-1.5 h-3 w-3 rounded-full bg-red-500"></div>
-                          </div>
-                        )}
-                        
-                        {/* Appointment slots for this day */}
-                        {getTimeSlots(dateString)
-                          .filter(slot => !slot.isAllDay) // Skip all-day events
-                          .filter(slot => !filter || slot.type === filter)
-                          .map((slot, slotIdx) => {
-                            const isSelected = selectedDate === dateString && selectedTime === slot.time && selectedTimeSlot?.id === slot.id;
-                            const hour = parseInt(slot.time.split(':')[0], 10);
-                            const minute = parseInt(slot.time.split(':')[1], 10);
-                            const topPosition = (hour - 8) * 60 + minute;
-                            const heightPosition = slot.duration;
-                            
-                            return (
-                              <motion.div
-                                key={`week-slot-${dayIdx}-${slotIdx}`}
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedDate(dateString);
-                                  setSelectedTime(slot.time);
-                                  setSelectedTimeSlot(slot);
-                                }}
-                                style={{ 
-                                  top: `${topPosition + 8}px`, // Add 8px for all-day section
-                                  height: `${heightPosition}px`
-                                }}
-                                className={`absolute left-0.5 right-0.5 px-2 py-1 rounded shadow-sm border ${
-                                  isSelected 
-                                    ? "bg-blue-100 border-blue-300 text-blue-800 z-20 ring-1 ring-blue-500"
-                                    : (slot.color || "bg-green-50 border-green-200 text-green-700") + " hover:bg-opacity-80"
-                                }`}
-                              >
-                                <div className="text-xs font-medium truncate">
-                                  {slot.title || "Installation"}
-                                </div>
-                                <div className="text-xs opacity-70 truncate">
-                                  {slot.time}
-                                </div>
-                                
-                                {isSelected && (
-  <div className="absolute top-0.5 right-0.5 flex space-x-1">
-    <button 
-      className="p-0.5 hover:bg-white/20 rounded"
+                {generateWeekDays().map((date, dayIdx) => {
+  const dateString = date.toISOString().split('T')[0];
+  const isToday = new Date().toDateString() === date.toDateString();
+  
+  return (
+    <div
+      key={`week-col-${dayIdx}`}
+      ref={weekDayRefs.current[dateString]}
+      className={`flex-1 relative border-r border-gray-100 min-w-[100px] ${isToday ? "bg-blue-50/20" : ""}`}
       onClick={(e) => {
-        e.stopPropagation();
-        // Implement edit functionality
-        alert(`Modifier: ${slot.title}`);
+        if (!isDraggingCreate) {
+          // Calculate the clicked time
+          const rect = e.currentTarget.getBoundingClientRect();
+          const time = calculateTimeFromPosition(e.clientY, rect.top);
+          handleGridClick(dateString, time);
+        }
       }}
-    >
-      <PencilIcon className="h-2.5 w-2.5" />
-    </button>
-    <button 
-      className="p-0.5 hover:bg-white/20 rounded"
-      onClick={(e) => {
-        e.stopPropagation();
-        if (confirm('Supprimer ce créneau ?')) {
-          // Remove this time slot
-          setSlots(slots.map(s => {
-            if (s.date === dateString) {
-              return {
-                ...s,
-                timeSlots: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slot.id) : [],
-                times: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slot.id).map(ts => ts.time) : []
-              };
-            }
-            return s;
-          }));
-          setSelectedTime(null);
-          setSelectedTimeSlot(null);
+      onMouseDown={(e) => {
+        // Only trigger if directly clicking on the background
+        if (e.target === e.currentTarget || 
+            (e.target as HTMLElement).classList.contains('grid-hour')) {
+          handleDragCreateSlot(e, dateString, weekDayRefs.current[dateString]);
         }
       }}
     >
-      <TrashIcon className="h-2.5 w-2.5" />
-    </button>
-  </div>
-)}
-
-{isSelected && (
-  <div className="absolute bottom-0 left-0 right-0 h-4 bg-blue-200/40 flex items-center justify-center">
-    <span className="text-[10px] font-medium text-blue-700">Sélectionné</span>
-  </div>
-)}
-
-{/* Resize handle */}
-<div 
-  className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize flex items-center justify-center"
-  onMouseDown={(e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const startY = e.clientY;
-    const initialHeight = heightPosition;
-    
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const deltaY = moveEvent.clientY - startY;
-      const newHeight = Math.max(30, Math.min(720, initialHeight + deltaY));
+      {/* All-day section */}
+      <div className="h-8 border-b border-gray-200 bg-gray-50/50 relative">
+        {/* All-day slots */}
+        {getTimeSlots(dateString)
+          .filter(slot => slot.isAllDay)
+          .filter(slot => !filter || slot.type === filter)
+          .map((slot, idx) => {
+            const isSelected = selectedDate === dateString && selectedTime === slot.time && selectedTimeSlot?.id === slot.id;
+            
+            return (
+              <motion.div
+                key={`week-all-day-${dayIdx}-${idx}`}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedDate(dateString);
+                  setSelectedTime(slot.time);
+                  setSelectedTimeSlot(slot);
+                }}
+                className={`absolute left-0 right-0 top-0 h-8 px-2 py-1 border shadow-sm rounded-sm
+                  ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-800 z-10 ring-1 ring-blue-500' :
+                    (slot.color || "bg-indigo-100 border-indigo-300 text-indigo-800")}
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <SunIcon className="h-3 w-3 mr-1" />
+                    <div className="font-medium text-xs truncate">{slot.title}</div>
+                  </div>
+                  
+                  {isSelected && (
+                    <div className="absolute right-1 top-1 flex space-x-1">
+                      <button 
+                        className="p-0.5 hover:bg-white/20 rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          alert(`Modifier: ${slot.title}`);
+                        }}
+                      >
+                        <PencilIcon className="h-2.5 w-2.5" />
+                      </button>
+                      <button 
+                        className="p-0.5 hover:bg-white/20 rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm('Supprimer ce créneau ?')) {
+                            setSlots(slots.map(s => {
+                              if (s.date === dateString) {
+                                return {
+                                  ...s,
+                                  timeSlots: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slot.id) : [],
+                                  times: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slot.id).map(ts => ts.time) : []
+                                };
+                              }
+                              return s;
+                            }));
+                            setSelectedTime(null);
+                            setSelectedTimeSlot(null);
+                          }
+                        }}
+                      >
+                        <TrashIcon className="h-2.5 w-2.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+      </div>
       
-      // Update visual height instantly
-      const element = e.currentTarget.parentElement;
-      if (element) {
-        element.style.height = `${newHeight}px`;
-      }
-    };
-    
-    const handleMouseUp = (upEvent: MouseEvent) => {
-      const deltaY = upEvent.clientY - startY;
-      const newHeight = Math.max(30, Math.min(720, initialHeight + deltaY));
+      {/* Hour grid */}
+      {hourMarkers.map((_, hourIdx) => (
+        <div
+          key={`grid-${dayIdx}-${hourIdx}`}
+          className="h-[60px] border-b border-gray-100 grid-hour"
+        ></div>
+      ))}
       
-      // Calculate new duration in minutes
-      const newDuration = Math.round(newHeight);
+      {/* Current time indicator for today */}
+      {isToday && (
+        <div 
+          className="absolute left-0 right-0 h-0.5 bg-red-500 z-10"
+          style={{ top: "180px" }} // Example position
+        >
+          <div className="absolute -left-1 -top-1.5 h-3 w-3 rounded-full bg-red-500"></div>
+        </div>
+      )}
       
-      // Update slot duration
-      handleTimeSlotResize(slot.id, newDuration, dateString);
-      
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }}
->
-  <div className="h-1 w-10 bg-current opacity-30 rounded-full hover:opacity-70" />
-</div>
-                              </motion.div>
-                            );
-                          })}
-                      </div>
-                    );
-                  })}
+      {/* Regular time slots - use the ResizableTimeSlot component */}
+      {getTimeSlots(dateString)
+        .filter(slot => !slot.isAllDay) // Skip all-day events
+        .filter(slot => !filter || slot.type === filter)
+        .map((slot, slotIdx) => {
+          const isSelected = selectedDate === dateString && selectedTime === slot.time && selectedTimeSlot?.id === slot.id;
+          
+          return (
+            <ResizableTimeSlot
+              key={`week-slot-${dayIdx}-${slotIdx}`}
+              slot={slot}
+              dateString={dateString}
+              isSelected={isSelected}
+              onSelect={(dateString, time, slot) => {
+                setSelectedDate(dateString);
+                setSelectedTime(time);
+                setSelectedTimeSlot(slot);
+                onTimeSlotSelect(dateString, time);
+              }}
+              onEdit={(slot) => {
+                // Implement edit functionality
+                alert(`Modifier: ${slot.title}`);
+              }}
+              onDelete={(slotId) => {
+                if (confirm('Supprimer ce créneau ?')) {
+                  // Remove this time slot
+                  setSlots(slots.map(s => {
+                    if (s.date === dateString) {
+                      return {
+                        ...s,
+                        timeSlots: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slotId) : [],
+                        times: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slotId).map(ts => ts.time) : []
+                      };
+                    }
+                    return s;
+                  }));
+                  setSelectedTime(null);
+                  setSelectedTimeSlot(null);
+                }
+              }}
+              onResize={handleTimeSlotResize}
+              onDrag={handleTimeSlotDrag}
+            />
+          );
+        })}
+    </div>
+  );
+})}
                   
                   {/* Add appointment button (fixed at the bottom right) */}
                   <motion.button
@@ -2309,115 +2663,171 @@ const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({onTimeSlotSelect}) =
                   
                   {/* Day columns with grid lines */}
                   <div className="flex-1 flex">
-                    {generateWeekDays().map((date, dayIdx) => {
-                      const dateString = date.toISOString().split('T')[0];
-                      const isToday = new Date().toDateString() === date.toDateString();
-                      
-                      return (
-                        <div 
-                          key={`day-col-${dayIdx}`}
-                          className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${isToday ? "bg-blue-50/30" : ""}`}
-                          onClick={(e) => {
-                            // Calculate the clicked time
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const time = calculateTimeFromPosition(e.clientY, rect.top);
-                            handleGridClick(dateString, time);
-                          }}
-                        >
-                          {/* All-day section */}
-                          <div className="h-8 border-b border-gray-200 bg-gray-50/50 relative">
-                            {/* All-day slots */}
-                            {getTimeSlots(dateString)
-                              .filter(slot => slot.isAllDay)
-                              .filter(slot => !filter || slot.type === filter)
-                              .map((slot, idx) => {
-                                const isSelected = selectedDate === dateString && selectedTime === slot.time && selectedTimeSlot?.id === slot.id;
-                                
-                                return (
-                                  <motion.div
-                                    key={`schedule-all-day-${dayIdx}-${idx}`}
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedDate(dateString);
-                                      setSelectedTime(slot.time);
-                                      setSelectedTimeSlot(slot);
-                                    }}
-                                    className={`absolute left-0 right-0 top-0 h-8 px-2 py-1 border shadow-sm rounded-none
-                                      ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-800 z-10 ring-1 ring-blue-500' :
-                                        (slot.color || "bg-indigo-100 border-indigo-300 text-indigo-800")}
-                                    `}
-                                  >
-                                    <div className="flex items-center">
-                                      <SunIcon className="h-3 w-3 mr-1" />
-                                      <div className="font-medium text-xs truncate">{slot.title}</div>
-                                    </div>
-                                  </motion.div>
-                                );
-                              })}
-                          </div>
-                          
-                          {/* Horizontal time grid lines */}
-                          {hourMarkers.map((_, idx) => (
-                            <div 
-                              key={`grid-${dayIdx}-${idx}`}
-                              className="h-[60px] border-b border-gray-100"
-                            ></div>
-                          ))}
-                          
-                          {/* Time slots */}
-                          {getTimeSlots(dateString)
-                            .filter(slot => !slot.isAllDay) // Skip all-day events
-                            .filter(slot => !filter || slot.type === filter)
-                            .map((slot, slotIdx) => {
-                              const isSelected = selectedDate === dateString && selectedTime === slot.time && selectedTimeSlot?.id === slot.id;
-                              // const startHour = parseInt(slot.time.split(':')[0], 10);
-                              // const startMinute = parseInt(slot.time.split(':')[1], 10);
-                              // const topPosition = (startHour - 8) * 60 + startMinute; // 8AM is our start
-                              
-                              return (
-                                <ResizableTimeSlot
-                                  key={`schedule-slot-${dayIdx}-${slotIdx}`}
-                                  slot={slot}
-                                  dateString={dateString}
-                                  isSelected={isSelected}
-                                  onSelect={(dateString, time, slot) => {
-                                    setSelectedDate(dateString);
-                                    setSelectedTime(time);
-                                    setSelectedTimeSlot(slot);
-                                    onTimeSlotSelect(dateString, time);
-                                  }}
-                                  onEdit={(slot) => {
-                                    // Implement edit functionality
-                                    alert(`Modifier: ${slot.title}`);
-                                  }}
-                                  onDelete={(slotId) => {
-                                    if (confirm('Supprimer ce créneau ?')) {
-                                      // Remove this time slot
-                                      setSlots(slots.map(s => {
-                                        if (s.date === dateString) {
-                                          return {
-                                            ...s,
-                                            timeSlots: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slotId) : [],
-                                      times: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slotId).map(ts => ts.time) : []
-                                          };
-                                        }
-                                        return s;
-                                      }));
-                                      setSelectedTime(null);
-                                      setSelectedTimeSlot(null);
-                                    }
-                                  }}
-                                  onResize={handleTimeSlotResize}
-                                />
-                              );
-                            })}
-                        </div>
-                      );
-                    })}
+                  {generateWeekDays().map((date, dayIdx) => {
+  const dateString = date.toISOString().split('T')[0];
+  const isToday = new Date().toDateString() === date.toDateString();
+  
+  return (
+    <div
+      key={`week-col-${dayIdx}`}
+      ref={weekDayRefs.current[dateString]}
+      className={`flex-1 relative border-r border-gray-100 min-w-[100px] ${isToday ? "bg-blue-50/20" : ""}`}
+      onClick={(e) => {
+        if (!isDraggingCreate) {
+          // Calculate the clicked time
+          const rect = e.currentTarget.getBoundingClientRect();
+          const time = calculateTimeFromPosition(e.clientY, rect.top);
+          handleGridClick(dateString, time);
+        }
+      }}
+      onMouseDown={(e) => {
+        // Only trigger if directly clicking on the background
+        if (e.target === e.currentTarget || 
+            (e.target as HTMLElement).classList.contains('grid-hour')) {
+          handleDragCreateSlot(e, dateString, weekDayRefs.current[dateString]);
+        }
+      }}
+    >
+      {/* All-day section */}
+      <div className="h-8 border-b border-gray-200 bg-gray-50/50 relative">
+        {/* All-day slots */}
+        {getTimeSlots(dateString)
+          .filter(slot => slot.isAllDay)
+          .filter(slot => !filter || slot.type === filter)
+          .map((slot, idx) => {
+            const isSelected = selectedDate === dateString && selectedTime === slot.time && selectedTimeSlot?.id === slot.id;
+            
+            return (
+              <motion.div
+                key={`week-all-day-${dayIdx}-${idx}`}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedDate(dateString);
+                  setSelectedTime(slot.time);
+                  setSelectedTimeSlot(slot);
+                }}
+                className={`absolute left-0 right-0 top-0 h-8 px-2 py-1 border shadow-sm rounded-sm
+                  ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-800 z-10 ring-1 ring-blue-500' :
+                    (slot.color || "bg-indigo-100 border-indigo-300 text-indigo-800")}
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <SunIcon className="h-3 w-3 mr-1" />
+                    <div className="font-medium text-xs truncate">{slot.title}</div>
+                  </div>
+                  
+                  {isSelected && (
+                    <div className="absolute right-1 top-1 flex space-x-1">
+                      <button 
+                        className="p-0.5 hover:bg-white/20 rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          alert(`Modifier: ${slot.title}`);
+                        }}
+                      >
+                        <PencilIcon className="h-2.5 w-2.5" />
+                      </button>
+                      <button 
+                        className="p-0.5 hover:bg-white/20 rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm('Supprimer ce créneau ?')) {
+                            setSlots(slots.map(s => {
+                              if (s.date === dateString) {
+                                return {
+                                  ...s,
+                                  timeSlots: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slot.id) : [],
+                                  times: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slot.id).map(ts => ts.time) : []
+                                };
+                              }
+                              return s;
+                            }));
+                            setSelectedTime(null);
+                            setSelectedTimeSlot(null);
+                          }
+                        }}
+                      >
+                        <TrashIcon className="h-2.5 w-2.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+      </div>
+      
+      {/* Hour grid */}
+      {hourMarkers.map((_, hourIdx) => (
+        <div
+          key={`grid-${dayIdx}-${hourIdx}`}
+          className="h-[60px] border-b border-gray-100 grid-hour"
+        ></div>
+      ))}
+      
+      {/* Current time indicator for today */}
+      {isToday && (
+        <div 
+          className="absolute left-0 right-0 h-0.5 bg-red-500 z-10"
+          style={{ top: "180px" }} // Example position
+        >
+          <div className="absolute -left-1 -top-1.5 h-3 w-3 rounded-full bg-red-500"></div>
+        </div>
+      )}
+      
+      {/* Regular time slots - use the ResizableTimeSlot component */}
+      {getTimeSlots(dateString)
+        .filter(slot => !slot.isAllDay) // Skip all-day events
+        .filter(slot => !filter || slot.type === filter)
+        .map((slot, slotIdx) => {
+          const isSelected = selectedDate === dateString && selectedTime === slot.time && selectedTimeSlot?.id === slot.id;
+          
+          return (
+            <ResizableTimeSlot
+              key={`week-slot-${dayIdx}-${slotIdx}`}
+              slot={slot}
+              dateString={dateString}
+              isSelected={isSelected}
+              onSelect={(dateString, time, slot) => {
+                setSelectedDate(dateString);
+                setSelectedTime(time);
+                setSelectedTimeSlot(slot);
+                onTimeSlotSelect(dateString, time);
+              }}
+              onEdit={(slot) => {
+                // Implement edit functionality
+                alert(`Modifier: ${slot.title}`);
+              }}
+              onDelete={(slotId) => {
+                if (confirm('Supprimer ce créneau ?')) {
+                  // Remove this time slot
+                  setSlots(slots.map(s => {
+                    if (s.date === dateString) {
+                      return {
+                        ...s,
+                        timeSlots: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slotId) : [],
+                        times: s.timeSlots ? s.timeSlots.filter(ts => ts.id !== slotId).map(ts => ts.time) : []
+                      };
+                    }
+                    return s;
+                  }));
+                  setSelectedTime(null);
+                  setSelectedTimeSlot(null);
+                }
+              }}
+              onResize={handleTimeSlotResize}
+              onDrag={handleTimeSlotDrag}
+            />
+          );
+        })}
+    </div>
+  );
+})}
                   </div>
                 </div>
                 
