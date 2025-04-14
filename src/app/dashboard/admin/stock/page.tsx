@@ -11,6 +11,7 @@ import {
   CubeIcon, ShoppingCartIcon, TruckIcon, EyeIcon, PencilIcon,
   UsersIcon 
 } from "@heroicons/react/24/outline";
+import { Header } from "@/components/Header";
 
 // Define Product interface
 interface Product {
@@ -1810,12 +1811,7 @@ const StockManagementDashboard = () => {
     <div className="flex h-screen bg-gradient-to-b from-[#f8fafc] to-[#f0f7ff]">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header would go here */}
-        <div className="bg-white border-b border-[#eaeaea] p-4 shadow-sm">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 className="text-xl font-bold text-[#213f5b]">Gestion des Stocks</h1>
-            {/* Other header elements */}
-          </div>
-        </div>
+        <Header />
         
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
