@@ -31,7 +31,7 @@ export default function Home() {
   // --- SLIDER SETUP FOR LEFT PANEL ---
   const slides = [
     {
-      image: "/Group 73.png",
+      image: "/Group 72.png",
       // title: "Votre Nouveau Slide",
       // description: "Description de votre nouveau slide.",
     },

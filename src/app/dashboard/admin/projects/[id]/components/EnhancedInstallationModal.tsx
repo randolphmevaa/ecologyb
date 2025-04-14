@@ -36,7 +36,7 @@ import {
   CheckCircleIcon,
   // TruckIcon,
   // FireIcon,
-  LightBulbIcon,
+  // LightBulbIcon,
   // BoltIcon as BoltSolidIcon,
   // CalendarDaysIcon,
   // Cog8ToothIcon,
@@ -140,7 +140,7 @@ interface Product {
   orderInfo?: {
     isOrderItem: boolean;
     orderId?: string;
-    statusCommande?: 'en attente' | 'confirmé' | 'en préparation' | 'expédié' | 'installé';
+    statusCommande?: 'en attente' | 'confirmé' | 'en préparation' | 'expédié' | 'installé' | 'en attente fournisseur';
     dateCommande?: string;
     datePreparation?: string;
     dateLivraison?: string;
@@ -906,6 +906,248 @@ const products: Product[] = [
     power: "",
     dimensions: "",
     compatible: false
+  },
+  
+  // NEW OUT-OF-STOCK PRODUCTS
+  {
+    id: "P011",
+    reference: "VENTI-DOUBLE-FLUX",
+    description: "Système de ventilation double flux haute efficacité avec récupération de chaleur",
+    libelle: "VMC Double Flux Premium",
+    quantite: 1,
+    prixTTC: 3200,
+    categorie: "MONO GESTE",
+    tva: "5.5",
+    marque: "AirPur",
+    unite: "Unité",
+    operation: OPERATIONS.BAR_TH_171,
+    imageUrl: "https://images.unsplash.com/photo-1631545806770-7ef06ee21cd3?q=80&w=1974&auto=format&fit=crop",
+    details: {
+      efficaciteEnergetique: "A+",
+      puissanceElectrique: "45W",
+      debitAir: "300m³/h",
+      rendementEchangeur: "92%",
+      kwhCumac: "38000"
+    },
+    stock: {
+      stockTotal: 10,
+      stockDisponible: 0,
+      stockReserve: 10,
+      stockMinimum: 4,
+      stockAlerte: 2,
+      emplacement: "Entrepôt C - Zone 2",
+      dateDerniereReception: "2025-02-15",
+      codeBarres: "VMC-DF-P011"
+    },
+    isDevisItem: true,
+    orderInfo: {
+      isOrderItem: true,
+      orderId: "CMD-2025-054",
+      statusCommande: "en attente",
+      dateCommande: "2025-04-10",
+      datePreparation: "",
+      dateLivraison: ""
+    },
+    name: "",
+    category: "",
+    price: 0,
+    rating: 0,
+    icon: undefined,
+    iconColor: "",
+    iconBgColor: "",
+    energy: "",
+    power: "",
+    dimensions: "",
+    compatible: false
+  },
+  {
+    id: "P012",
+    reference: "ISOLANT-FIBRE-BOIS",
+    description: "Panneaux isolants en fibre de bois écologique haute densité",
+    libelle: "Panneaux isolants naturels",
+    quantite: 1,
+    prixTTC: 2400,
+    categorie: "ISOLATION",
+    tva: "5.5",
+    marque: "NaturIso",
+    unite: "Lot",
+    operation: OPERATIONS.BAR_TH_101,
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=2070&auto=format&fit=crop",
+    details: {
+      resistance: "R=5.25 m².K/W",
+      epaisseur: "180mm",
+      surfaceCouverture: "8m²",
+      lambdaThermique: "0.038 W/m.K",
+      kwhCumac: "25000"
+    },
+    stock: {
+      stockTotal: 18,
+      stockDisponible: 0,
+      stockReserve: 18,
+      stockMinimum: 10,
+      stockAlerte: 5,
+      emplacement: "Entrepôt B - Allée 8",
+      dateDerniereReception: "2025-01-25",
+      codeBarres: "ISO-FB-P012"
+    },
+    isDevisItem: true,
+    name: "",
+    category: "",
+    price: 0,
+    rating: 0,
+    icon: undefined,
+    iconColor: "",
+    iconBgColor: "",
+    energy: "",
+    power: "",
+    dimensions: "",
+    compatible: false
+  },
+  {
+    id: "P013",
+    reference: "BALLON-TAMPON-SOLAIRE",
+    description: "Ballon tampon solaire 800L avec échangeur thermique intégré",
+    libelle: "Ballon tampon 800L",
+    quantite: 1,
+    prixTTC: 3800,
+    categorie: "PANNEAUX PHOTOVOLTAIQUE",
+    tva: "5.5",
+    marque: "SolarPlus",
+    unite: "Unité",
+    operation: OPERATIONS.BAR_TH_143,
+    imageUrl: "https://images.unsplash.com/photo-1611921561607-13afed0ee386?q=80&w=1974&auto=format&fit=crop",
+    details: {
+      capaciteStockage: "800L",
+      isolationThermique: "100mm",
+      echangeursThermiques: "2",
+      classeEnergetique: "A",
+      kwhCumac: "40000"
+    },
+    stock: {
+      stockTotal: 6,
+      stockDisponible: 0,
+      stockReserve: 6,
+      stockMinimum: 3,
+      stockAlerte: 2,
+      emplacement: "Entrepôt C - Zone Spéciale",
+      dateDerniereReception: "2025-03-02",
+      codeBarres: "BAL-SOL-P013"
+    },
+    isDevisItem: true,
+    orderInfo: {
+      isOrderItem: true,
+      orderId: "CMD-2025-048",
+      statusCommande: "confirmé",
+      dateCommande: "2025-04-07",
+      datePreparation: "2025-04-20",
+      dateLivraison: "2025-04-27"
+    },
+    name: "",
+    category: "",
+    price: 0,
+    rating: 0,
+    icon: undefined,
+    iconColor: "",
+    iconBgColor: "",
+    energy: "",
+    power: "",
+    dimensions: "",
+    compatible: false
+  },
+  {
+    id: "P014",
+    reference: "BATTERIE-STOCKAGE-10KWH",
+    description: "Batterie de stockage d'énergie lithium-ion 10kWh pour système photovoltaïque",
+    libelle: "Batterie stockage 10kWh",
+    quantite: 1,
+    prixTTC: 7500,
+    categorie: "BATTERIE",
+    tva: "20",
+    marque: "PowerStore",
+    unite: "Unité",
+    operation: "",
+    imageUrl: "https://images.unsplash.com/photo-1593866223856-5c966e9eff86?q=80&w=2070&auto=format&fit=crop",
+    details: {
+      capacite: "10kWh",
+      typeCellules: "Lithium-ion LFP",
+      puissanceMax: "5kW",
+      dureeVie: "6000 cycles",
+      garantie: "10 ans"
+    },
+    stock: {
+      stockTotal: 8,
+      stockDisponible: 0,
+      stockReserve: 8,
+      stockMinimum: 4,
+      stockAlerte: 2,
+      emplacement: "Entrepôt C - Zone Sécurisée",
+      dateDerniereReception: "2025-02-10",
+      codeBarres: "BAT-10K-P014"
+    },
+    isDevisItem: true,
+    name: "",
+    category: "",
+    price: 0,
+    rating: 0,
+    icon: undefined,
+    iconColor: "",
+    iconBgColor: "",
+    energy: "",
+    power: "",
+    dimensions: "",
+    compatible: false
+  },
+  {
+    id: "P015",
+    reference: "KIT-PHOTOV-COMPLET-6KW",
+    description: "Kit photovoltaïque complet 6kW avec micro-onduleurs et système de monitoring",
+    libelle: "Kit photovoltaïque 6kW",
+    quantite: 1,
+    prixTTC: 12500,
+    categorie: "PANNEAUX PHOTOVOLTAIQUE",
+    tva: "10",
+    marque: "SunPower",
+    unite: "Kit",
+    operation: "",
+    imageUrl: "https://images.unsplash.com/photo-1613665813427-4c5a2e4989f5?q=80&w=2069&auto=format&fit=crop",
+    details: {
+      puissanceCreste: "6kWc",
+      nbPanneaux: "15",
+      puissancePanneau: "400Wc",
+      typeOnduleur: "Micro-onduleurs",
+      garantiePanneaux: "25 ans",
+      rendementSystème: "97%"
+    },
+    stock: {
+      stockTotal: 5,
+      stockDisponible: 0,
+      stockReserve: 5,
+      stockMinimum: 2,
+      stockAlerte: 1,
+      emplacement: "Entrepôt D - Zone PV",
+      dateDerniereReception: "2025-01-20",
+      codeBarres: "PV-6KW-P015"
+    },
+    isDevisItem: true,
+    orderInfo: {
+      isOrderItem: true,
+      orderId: "CMD-2025-056",
+      statusCommande: "en attente fournisseur",
+      dateCommande: "2025-04-11",
+      datePreparation: "",
+      dateLivraison: ""
+    },
+    name: "",
+    category: "",
+    price: 0,
+    rating: 0,
+    icon: undefined,
+    iconColor: "",
+    iconBgColor: "",
+    energy: "",
+    power: "",
+    dimensions: "",
+    compatible: false
   }
 ];
 
@@ -975,6 +1217,14 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(initialStep);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  // Add these state variables inside your EnhancedInstallationModal component
+// near the other useState declarations (after the imports and before the return statement)
+
+// For out-of-stock products modal
+const [showOutOfStockProducts, setShowOutOfStockProducts] = useState<boolean>(false);
+const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
+
+// You may need to enhance the filteredProducts logic to account for in-stock/out-of-stock:
 
   // Calendar state
   // const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2025, 3)); // April 2025
@@ -1003,7 +1253,7 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   // Updated state variables
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [selectedAccessories, setSelectedAccessories] = useState<Product[]>([]);
-  const [showPacAccessories, setShowPacAccessories] = useState<boolean>(false);
+  const [ , setShowPacAccessories] = useState<boolean>(false);
   const [orderReserved, setOrderReserved] = useState<boolean>(false);
   const [productSearchQuery, setProductSearchQuery] = useState<string>('');
   const [productCategoryFilter, setProductCategoryFilter] = useState<string | null>(null);
@@ -1018,28 +1268,29 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   }, [products]);
 
   // Filter products based on search and category
-  const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      // Skip accessories when not in accessory mode
-      if (!showPacAccessories && product.categorie === "ACCESSOIRE") {
-        return false;
-      }
+  // const filteredProducts = useMemo(() => {
+  //   return products.filter(product => {
+  //     // Skip accessories when not in accessory mode
+  //     if (!showPacAccessories && product.categorie === "ACCESSOIRE") {
+  //       return false;
+  //     }
       
-      // Show only accessories when in accessory mode
-      if (showPacAccessories && product.categorie !== "ACCESSOIRE") {
-        return false;
-      }
+  //     // Show only accessories when in accessory mode
+  //     if (showPacAccessories && product.categorie !== "ACCESSOIRE") {
+  //       return false;
+  //     }
       
-      const matchesSearch = !productSearchQuery || 
-        product.reference.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
-        product.libelle.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
-        (product.description ?? "").toLowerCase().includes(productSearchQuery.toLowerCase());
+  //     const matchesSearch = !productSearchQuery || 
+  //       product.reference.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+  //       product.libelle.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+  //       (product.description ?? "").toLowerCase().includes(productSearchQuery.toLowerCase());
       
-      const matchesCategory = !productCategoryFilter || product.categorie === productCategoryFilter;
+  //     const matchesCategory = !productCategoryFilter || product.categorie === productCategoryFilter;
       
-      return matchesSearch && matchesCategory;
-    });
-  }, [products, productSearchQuery, productCategoryFilter, showPacAccessories]);
+  //     return matchesSearch && matchesCategory;
+  //   });
+  // }, [products, productSearchQuery, productCategoryFilter, showPacAccessories]);
+  
 
   // Handler for product submission
   const handleProductSubmit = () => {
@@ -1058,12 +1309,12 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   };
 
   // Update accessory quantity
-  const updateAccessoryQuantity = (accessoryId: string, newQuantity: number) => {
-    setAccessoryQuantities({
-      ...accessoryQuantities,
-      [accessoryId]: newQuantity
-    });
-  };
+  // const updateAccessoryQuantity = (accessoryId: string, newQuantity: number) => {
+  //   setAccessoryQuantities({
+  //     ...accessoryQuantities,
+  //     [accessoryId]: newQuantity
+  //   });
+  // };
 
   // Get quantity for a product
   const getProductQuantity = (productId: string): number => {
@@ -1893,6 +2144,11 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                     <p className="mt-1 text-sm text-gray-500">Choisissez un ou plusieurs équipements nécessaires pour cette installation</p>
                   </div>
                   
+                  {/* Add state variables */}
+                  {/* For reference - add these to the top of your component:
+                  const [showOutOfStockProducts, setShowOutOfStockProducts] = useState<boolean>(false);
+                  const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>(''); */}
+                  
                   {/* Enhanced Product search and filters */}
                   <div className="flex flex-col sm:flex-row gap-3">
                     <div className="relative flex-1">
@@ -1931,369 +2187,227 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                         ))}
                       </select>
                     </div>
+                    
+                    {/* Button to add out-of-stock products */}
+                    <button
+                      onClick={() => setShowOutOfStockProducts(true)}
+                      className="inline-flex items-center justify-center px-4 py-2.5 border border-blue-300 text-sm font-medium rounded-lg text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                    >
+                      <PlusIcon className="h-4 w-4 mr-2" />
+                      Ajouter un produit à la commande
+                    </button>
                   </div>
-                  
+
                   {/* Product selection cards with multi-select */}
                   <div className="space-y-4">
-                    {showPacAccessories ? (
-                      // Display accessories when in accessory mode
-                      <>
-                        <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                          <h5 className="text-sm font-medium text-gray-700">
-                            {selectedAccessories.length > 0 
-                              ? `${selectedAccessories.length} accessoire(s) sélectionné(s)` 
-                              : "Sélectionnez les accessoires nécessaires"}
-                          </h5>
-                          {selectedAccessories.length > 0 && (
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedAccessories([]);
-                              }}
-                              className="text-xs text-blue-600 hover:text-blue-800"
-                            >
-                              Effacer la sélection
-                            </button>
-                          )}
-                        </div>
+                    <div className="flex justify-between items-center pb-2 border-b border-gray-200">
+                      <h5 className="text-sm font-medium text-gray-700">
+                        {selectedProducts.length > 0 
+                          ? `${selectedProducts.length} produit(s) sélectionné(s)` 
+                          : "Sélectionnez un ou plusieurs produits"}
+                      </h5>
+                      {selectedProducts.length > 0 && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProducts([]);
+                            setProductQuantities({});
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          Effacer la sélection
+                        </button>
+                      )}
+                    </div>
                         
-                        {filteredProducts.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center p-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-                            <WrenchScrewdriverIcon className="h-12 w-12 text-gray-400 mb-2" />
-                            <p className="text-gray-500 text-center">Aucun accessoire disponible</p>
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {filteredProducts.map((accessory) => (
-                              <div
-                                key={accessory.id}
-                                className={`relative flex items-center p-3 rounded-lg border transition-all ${
-                                  selectedAccessories.some(a => a.id === accessory.id)
-                                    ? "border-blue-500 bg-blue-50 shadow-md"
-                                    : "border-gray-200 hover:border-blue-200 hover:bg-blue-50/30 cursor-pointer"
-                                }`}
-                              >
-                                {/* Accessory icon */}
+                    {/* Show only products WITH STOCK in the grid */}
+                    {(() => {
+                      // Modified to only show products with stock
+                      const displayProducts = products.filter(product => {
+                        // Only show products that have stock
+                        const hasStock = product.stock && product.stock.stockDisponible > 0;
+                        
+                        const matchesSearch = !productSearchQuery || 
+                          product.reference.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                          product.libelle.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                          (product.description ?? "").toLowerCase().includes(productSearchQuery.toLowerCase());
+                        
+                        const matchesCategory = !productCategoryFilter || product.categorie === productCategoryFilter;
+                        
+                        return hasStock && matchesSearch && matchesCategory;
+                      });
+                          
+                      return displayProducts.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center p-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+                          <IoDocumentOutline className="h-12 w-12 text-gray-400 mb-2" />
+                          <p className="text-gray-500 text-center">Aucun produit en stock ne correspond à votre recherche</p>
+                          <p className="text-gray-500 text-center mt-2">Utilisez le bouton &quot;Ajouter un produit à la commande&quot; pour voir les produits hors stock</p>
+                        </div>
+                      ) : (
+                        // Grid layout for products
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {displayProducts.map((product) => (
+                            <motion.div
+                              key={product.id}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className={`relative flex flex-col rounded-xl border transition-all h-full ${
+                                selectedProducts.some(p => p.id === product.id)
+                                  ? "border-blue-500 bg-blue-50 shadow-md"
+                                  : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm"
+                              }`}
+                            >
+                              {/* Product header - icon and title */}
+                              <div className="flex items-start p-4">
                                 <div 
-                                  className="h-10 w-10 flex-shrink-0 rounded-lg bg-blue-100 p-2 mr-3 flex items-center justify-center cursor-pointer"
+                                  className={`h-12 w-12 rounded-lg ${
+                                    selectedProducts.some(p => p.id === product.id)
+                                      ? "bg-blue-200"
+                                      : "bg-blue-100" 
+                                  } p-2 flex items-center justify-center relative mr-3 cursor-pointer`}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (selectedAccessories.some(a => a.id === accessory.id)) {
-                                      setSelectedAccessories(selectedAccessories.filter(a => a.id !== accessory.id));
+                                    if (selectedProducts.some(p => p.id === product.id)) {
+                                      setSelectedProducts(selectedProducts.filter(p => p.id !== product.id));
                                     } else {
-                                      setSelectedAccessories([...selectedAccessories, accessory]);
+                                      setSelectedProducts([...selectedProducts, product]);
                                     }
                                   }}
                                 >
-                                  <WrenchScrewdriverIcon className="h-5 w-5 text-blue-600" />
+                                  {/* Show appropriate icon based on product category */}
+                                  {product.categorie === "ACCESSOIRE" ? (
+                                    <WrenchScrewdriverIcon className="h-6 w-6 text-blue-600" />
+                                  ) : (
+                                    <CubeIcon className="h-6 w-6 text-blue-600" />
+                                  )}
+                                  
+                                  {/* Selection checkmark */}
+                                  {selectedProducts.some(p => p.id === product.id) && (
+                                    <div className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-blue-500 shadow-sm flex items-center justify-center ring-1 ring-white">
+                                      <CheckIcon className="h-3 w-3 text-white" />
+                                    </div>
+                                  )}
                                 </div>
                                 
-                                {/* Accessory details */}
                                 <div 
                                   className="flex-1 cursor-pointer"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (selectedAccessories.some(a => a.id === accessory.id)) {
-                                      setSelectedAccessories(selectedAccessories.filter(a => a.id !== accessory.id));
+                                    if (selectedProducts.some(p => p.id === product.id)) {
+                                      setSelectedProducts(selectedProducts.filter(p => p.id !== product.id));
                                     } else {
-                                      setSelectedAccessories([...selectedAccessories, accessory]);
+                                      setSelectedProducts([...selectedProducts, product]);
                                     }
                                   }}
                                 >
-                                  <h6 className={`text-sm font-medium ${
-                                    selectedAccessories.some(a => a.id === accessory.id)
-                                      ? "text-blue-700"
-                                      : "text-gray-800"
-                                  }`}>
-                                    {accessory.libelle || accessory.reference}
-                                  </h6>
-                                  <p className="text-xs text-gray-500">
-                                    {accessory.description ? accessory.description.substring(0, 50) : accessory.reference}
-                                  </p>
-                                  <div className="mt-1 text-xs text-gray-500">
-                                    Stock: {accessory.stock ? accessory.stock.stockDisponible : 0}
+                                  <h5 className={`text-base font-medium ${
+                                    selectedProducts.some(p => p.id === product.id) ? "text-blue-700" : "text-gray-900"
+                                  } line-clamp-1`}>
+                                    {product.libelle || product.reference}
+                                  </h5>
+                                  
+                                  <div className="flex items-center mt-1">
+                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                      product.stock && product.stock.stockDisponible > 10
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-amber-100 text-amber-800"
+                                    }`}>
+                                      {product.stock ? product.stock.stockDisponible : 0} en stock
+                                    </span>
                                   </div>
                                 </div>
+                              </div>
+                              
+                              {/* Product body */}
+                              <div 
+                                className="px-4 pb-2 flex-1 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (selectedProducts.some(p => p.id === product.id)) {
+                                    setSelectedProducts(selectedProducts.filter(p => p.id !== product.id));
+                                  } else {
+                                    setSelectedProducts([...selectedProducts, product]);
+                                  }
+                                }}
+                              >
+                                <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+                                  {product.description || `Référence: ${product.reference}`}
+                                </p>
                                 
-                                {/* Selection and quantity controls */}
-                                <div className="flex flex-col items-end space-y-2">
-                                  {/* Selection checkbox */}
-                                  <div 
-                                    className={`h-5 w-5 rounded-full ${
-                                      selectedAccessories.some(a => a.id === accessory.id)
-                                        ? "bg-blue-500 text-white"
-                                        : "bg-gray-200"
-                                    } flex items-center justify-center cursor-pointer`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (selectedAccessories.some(a => a.id === accessory.id)) {
-                                        setSelectedAccessories(selectedAccessories.filter(a => a.id !== accessory.id));
-                                      } else {
-                                        setSelectedAccessories([...selectedAccessories, accessory]);
-                                      }
-                                    }}
-                                  >
-                                    {selectedAccessories.some(a => a.id === accessory.id) && (
-                                      <CheckIcon className="h-3 w-3" />
-                                    )}
-                                  </div>
-                                  
-                                  {/* Quantity control */}
-                                  {selectedAccessories.some(a => a.id === accessory.id) && (
-                                    <div className="flex items-center mt-2">
-                                      <div className="flex items-center h-7 rounded-md border border-gray-300 bg-white">
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            const currentQty = getAccessoryQuantity(accessory.id);
-                                            if (currentQty > 1) {
-                                              updateAccessoryQuantity(accessory.id, currentQty - 1);
-                                            }
-                                          }}
-                                          className="flex items-center justify-center w-6 text-gray-500 hover:text-gray-700"
-                                        >
-                                          <MinusCircleIcon className="h-4 w-4" />
-                                        </button>
-                                        <span className="w-8 text-center text-xs font-medium">
-                                          {getAccessoryQuantity(accessory.id)}
-                                        </span>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            const currentQty = getAccessoryQuantity(accessory.id);
-                                            const maxQty = accessory.stock ? accessory.stock.stockDisponible : 99;
-                                            if (currentQty < maxQty) {
-                                              updateAccessoryQuantity(accessory.id, currentQty + 1);
-                                            }
-                                          }}
-                                          className="flex items-center justify-center w-6 text-gray-500 hover:text-gray-700"
-                                        >
-                                          <PlusCircleIcon className="h-4 w-4" />
-                                        </button>
-                                      </div>
-                                    </div>
+                                {/* Product specs */}
+                                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                  <span className="inline-flex items-center text-xs text-gray-500">
+                                    <TagIcon className="h-3 w-3 mr-1 text-blue-500" />
+                                    {product.categorie}
+                                  </span>
+                                  <span className="inline-flex items-center text-xs text-gray-500">
+                                    <BuildingOfficeIcon className="h-3 w-3 mr-1 text-amber-500" />
+                                    {product.marque}
+                                  </span>
+                                  {product.operation && (
+                                    <span className="inline-flex items-center text-xs text-gray-500">
+                                      <DocumentTextIcon className="h-3 w-3 mr-1 text-purple-500" />
+                                      {product.operation.split(':')[0]}
+                                    </span>
                                   )}
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      // Display regular products when not in accessory mode
-                      <>
-                        <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                          <h5 className="text-sm font-medium text-gray-700">
-                            {selectedProducts.length > 0 
-                              ? `${selectedProducts.length} produit(s) sélectionné(s)` 
-                              : "Sélectionnez un ou plusieurs produits"}
-                          </h5>
-                          {selectedProducts.length > 0 && (
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedProducts([]);
-                                setProductQuantities({});
-                              }}
-                              className="text-xs text-blue-600 hover:text-blue-800"
-                            >
-                              Effacer la sélection
-                            </button>
-                          )}
-                        </div>
-                        
-                        {filteredProducts.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center p-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-                            <IoDocumentOutline className="h-12 w-12 text-gray-400 mb-2" />
-                            <p className="text-gray-500 text-center">Aucun produit ne correspond à votre recherche</p>
-                          </div>
-                        ) : (
-                          <>
-                            {filteredProducts.map((product) => (
-                              <motion.div
-                                key={product.id}
-                                whileHover={{ scale: 1.01 }}
-                                whileTap={{ scale: 0.99 }}
-                                className={`relative flex w-full rounded-xl border transition-all ${
-                                  selectedProducts.some(p => p.id === product.id)
-                                    ? "border-blue-500 bg-blue-50 shadow-md"
-                                    : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm"
-                                }`}
-                              >
-                                {/* Product icon and selection area */}
-                                <div 
-                                  className="p-4 flex-shrink-0 cursor-pointer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (selectedProducts.some(p => p.id === product.id)) {
-                                      setSelectedProducts(selectedProducts.filter(p => p.id !== product.id));
-                                    } else {
-                                      setSelectedProducts([...selectedProducts, product]);
-                                    }
-                                  }}
-                                >
-                                  <div className={`h-16 w-16 rounded-lg ${
-                                    selectedProducts.some(p => p.id === product.id)
-                                      ? "bg-blue-200"
-                                      : "bg-blue-100" 
-                                  } p-3 flex items-center justify-center relative`}>
-                                    <CubeIcon className="h-8 w-8 text-blue-600" />
-                                    
-                                    {/* Selection checkmark */}
-                                    {selectedProducts.some(p => p.id === product.id) && (
-                                      <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-blue-500 shadow-sm flex items-center justify-center ring-2 ring-white">
-                                        <CheckIcon className="h-4 w-4 text-white" />
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {/* Product details */}
-                                <div 
-                                  className="flex-1 p-4 pl-0 cursor-pointer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (selectedProducts.some(p => p.id === product.id)) {
-                                      setSelectedProducts(selectedProducts.filter(p => p.id !== product.id));
-                                    } else {
-                                      setSelectedProducts([...selectedProducts, product]);
-                                    }
-                                  }}
-                                >
-                                  <div className="flex justify-between items-start mb-1">
-                                    <h5 className={`text-base font-medium ${
-                                      selectedProducts.some(p => p.id === product.id) ? "text-blue-700" : "text-gray-900"
-                                    }`}>
-                                      {product.libelle || product.reference}
-                                    </h5>
-                                    <div className="flex items-center ml-2">
-                                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                        product.stock && product.stock.stockDisponible > 10
-                                          ? "bg-green-100 text-green-800"
-                                          : product.stock && product.stock.stockDisponible > 0
-                                          ? "bg-amber-100 text-amber-800"
-                                          : "bg-red-100 text-red-800"
-                                      }`}>
-                                        {product.stock ? product.stock.stockDisponible : 0} en stock
-                                      </span>
-                                    </div>
-                                  </div>
-                                  
-                                  <p className="text-sm text-gray-500 mb-2">
-                                    {product.description || `Référence: ${product.reference}`}
-                                  </p>
-                                  
-                                  {/* Product specs */}
-                                  <div className="flex flex-wrap gap-x-3 gap-y-1">
-                                    <span className="inline-flex items-center text-xs text-gray-500">
-                                      <TagIcon className="h-3 w-3 mr-1 text-blue-500" />
-                                      {product.categorie}
-                                    </span>
-                                    <span className="inline-flex items-center text-xs text-gray-500">
-                                      <BuildingOfficeIcon className="h-3 w-3 mr-1 text-amber-500" />
-                                      {product.marque}
-                                    </span>
-                                    {product.operation && (
-                                      <span className="inline-flex items-center text-xs text-gray-500">
-                                        <DocumentTextIcon className="h-3 w-3 mr-1 text-purple-500" />
-                                        {product.operation.split(':')[0]}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {/* Quantity section - Always visible but only enabled when selected */}
-                                <div className="border-l border-gray-200 p-4 flex items-center justify-center min-w-[120px]">
-                                  {selectedProducts.some(p => p.id === product.id) ? (
-                                    <div className="flex flex-col items-center">
-                                      <span className="text-xs text-gray-500 mb-1">Quantité</span>
-                                      <div className="flex items-center h-9 rounded-md border border-gray-300 bg-white">
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            const currentQty = getProductQuantity(product.id);
-                                            if (currentQty > 1) {
-                                              updateProductQuantity(product.id, currentQty - 1);
-                                            }
-                                          }}
-                                          className="flex items-center justify-center w-8 text-gray-500 hover:text-gray-700"
-                                        >
-                                          <MinusCircleIcon className="h-5 w-5" />
-                                        </button>
-                                        <span className="w-10 text-center text-sm font-medium">
-                                          {getProductQuantity(product.id)}
-                                        </span>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            const currentQty = getProductQuantity(product.id);
-                                            const maxQty = product.stock ? product.stock.stockDisponible : 99;
-                                            if (currentQty < maxQty) {
-                                              updateProductQuantity(product.id, currentQty + 1);
-                                            }
-                                          }}
-                                          className="flex items-center justify-center w-8 text-gray-500 hover:text-gray-700"
-                                        >
-                                          <PlusCircleIcon className="h-5 w-5" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ) : (
+                              
+                              {/* Product footer - with quantity control and without prices */}
+                              <div className="border-t border-gray-200 p-3 flex items-center justify-end mt-auto">
+                                {selectedProducts.some(p => p.id === product.id) ? (
+                                  <div className="flex items-center h-8 rounded-md border border-gray-300 bg-white">
                                     <button
                                       type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setSelectedProducts([...selectedProducts, product]);
+                                        const currentQty = getProductQuantity(product.id);
+                                        if (currentQty > 1) {
+                                          updateProductQuantity(product.id, currentQty - 1);
+                                        }
                                       }}
-                                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                      className="flex items-center justify-center w-8 text-gray-500 hover:text-gray-700"
                                     >
-                                      <PlusIcon className="h-4 w-4 mr-1" />
-                                      Ajouter
+                                      <MinusCircleIcon className="h-4 w-4" />
                                     </button>
-                                  )}
-                                </div>
-                              </motion.div>
-                            ))}
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  
-                  {/* PAC Accessories Question - Moved to the bottom */}
-                  <div className="sticky bottom-0 bg-white pt-4 pb-2 z-10">
-                    <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
-                      <div className="flex items-start">
-                        <div className="mr-3 h-10 w-10 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                          <LightBulbIcon className="h-5 w-5" />
+                                    <span className="w-8 text-center text-sm font-medium">
+                                      {getProductQuantity(product.id)}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const currentQty = getProductQuantity(product.id);
+                                        // Allow any quantity (up to 99) for all products, regardless of stock status
+                                        const maxQty = 99;
+                                        if (currentQty < maxQty) {
+                                          updateProductQuantity(product.id, currentQty + 1);
+                                        }
+                                      }}
+                                      className="flex items-center justify-center w-8 text-gray-500 hover:text-gray-700"
+                                    >
+                                      <PlusCircleIcon className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProducts([...selectedProducts, product]);
+                                    }}
+                                    className="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                  >
+                                    <PlusIcon className="h-4 w-4 mr-1" />
+                                    Ajouter
+                                  </button>
+                                )}
+                              </div>
+                            </motion.div>
+                          ))}
                         </div>
-                        <div className="flex-grow space-y-2">
-                          <h5 className="text-sm font-medium text-blue-800">Voulez-vous ajouter des accessoires PAC?</h5>
-                          <div className="flex space-x-3">
-                            <button 
-                              onClick={() => setShowPacAccessories(true)}
-                              className={`px-4 py-2 rounded-md text-sm font-medium ${showPacAccessories 
-                                ? 'bg-blue-600 text-white shadow-md' 
-                                : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'}`}
-                            >
-                              Oui
-                            </button>
-                            <button 
-                              onClick={() => setShowPacAccessories(false)}
-                              className={`px-4 py-2 rounded-md text-sm font-medium ${!showPacAccessories 
-                                ? 'bg-blue-600 text-white shadow-md' 
-                                : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'}`}
-                            >
-                              Non
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
                   </div>
                   
                   {/* Selection Summary - Fixed at bottom */}
@@ -2321,9 +2435,9 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                         {!orderReserved ? (
                           <button
                             onClick={handleProductSubmit}
-                            disabled={selectedProducts.length === 0 || selectedProducts.some(p => !p.stock || p.stock.stockDisponible === 0)}
+                            disabled={selectedProducts.length === 0}
                             className={`flex items-center justify-center py-2 px-4 rounded-lg ${
-                              selectedProducts.length === 0 || selectedProducts.some(p => !p.stock || p.stock.stockDisponible === 0) 
+                              selectedProducts.length === 0
                                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                 : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
                             } text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors`}
@@ -2340,297 +2454,446 @@ const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
                       </div>
                     </motion.div>
                   )}
-                  
-                  {/* No products selected state */}
-                  {selectedProducts.length === 0 && !showPacAccessories && (
-                    <div className="rounded-lg bg-amber-50 p-4 text-amber-800 border border-amber-100">
-                      <div className="flex">
-                        <InformationCircleIcon className="h-5 w-5 flex-shrink-0 mr-3 text-amber-500" />
-                        <p className="text-sm">
-                          Veuillez sélectionner au moins un produit principal pour l&apos;installation. Vous pouvez choisir plusieurs produits si nécessaire.
-                        </p>
+
+                  {/* Enhanced modal for out-of-stock products */}
+                  {showOutOfStockProducts && (
+                    <Dialog
+                      as="div"
+                      className="fixed inset-0 z-[100] overflow-y-auto"
+                      open={showOutOfStockProducts}
+                      onClose={() => setShowOutOfStockProducts(false)}
+                    >
+                      <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:p-0">
+                        <div className="fixed inset-0 bg-gray-900/20 transition-opacity" />
+                        
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="relative inline-block transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl"
+                        >
+                          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-4 sm:px-6">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 rounded-full bg-white/20 p-2 mr-3">
+                                  <PlusIcon className="h-5 w-5 text-white" />
+                                </div>
+                                <h3 className="text-lg font-medium text-white">
+                                  Ajouter un produit à la commande
+                                </h3>
+                              </div>
+                              <button
+                                type="button"
+                                className="rounded-md bg-white/20 p-1.5 text-white hover:bg-white/30"
+                                onClick={() => setShowOutOfStockProducts(false)}
+                              >
+                                <XMarkIcon className="h-5 w-5" />
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[70vh] overflow-y-auto">
+                            {/* Improved message about special order products */}
+                            <div className="flex items-center bg-blue-50 p-3 rounded-lg mb-3">
+                              <div className="h-8 w-8 flex-shrink-0 rounded-full bg-blue-100 p-1 flex items-center justify-center mr-3">
+                                <InformationCircleIcon className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-blue-800">
+                                  Commande spéciale
+                                </p>
+                                <p className="text-sm text-blue-700 mt-0.5">
+                                  Ces produits seront commandés directement auprès du fournisseur pour votre installation.
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                              <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={outOfStockSearchQuery}
+                                  onChange={(e) => setOutOfStockSearchQuery(e.target.value)}
+                                  className="block w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 py-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
+                                  placeholder="Rechercher par référence, nom ou description..."
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="mt-4">
+                              {(() => {
+                                // Show only out-of-stock products that aren't already selected
+                                const outOfStockProducts = products.filter(p => 
+                                  (!p.stock || p.stock.stockDisponible === 0) &&
+                                  !selectedProducts.some(sp => sp.id === p.id) &&
+                                  (outOfStockSearchQuery === "" || 
+                                  p.reference.toLowerCase().includes(outOfStockSearchQuery.toLowerCase()) ||
+                                  p.libelle.toLowerCase().includes(outOfStockSearchQuery.toLowerCase()) ||
+                                  (p.description || "").toLowerCase().includes(outOfStockSearchQuery.toLowerCase()))
+                                );
+                                
+                                // Add some sample products for demo purposes if there are none out of stock
+                                let displayProducts = outOfStockProducts;
+                                if (displayProducts.length === 0 && !outOfStockSearchQuery) {
+                                  // Add P006 from sample data which is out of stock
+                                  const sampleOutOfStock = products.find(p => p.id === "P006");
+                                  if (sampleOutOfStock && !selectedProducts.some(sp => sp.id === sampleOutOfStock.id)) {
+                                    displayProducts = [sampleOutOfStock];
+                                  }
+                                }
+                                
+                                return displayProducts.length === 0 ? (
+                                  <div className="flex flex-col items-center justify-center p-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+                                    <DocumentTextIcon className="h-12 w-12 text-gray-400 mb-2" />
+                                    <p className="text-gray-500 text-center">Aucun produit hors stock ne correspond à votre recherche</p>
+                                  </div>
+                                ) : (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {displayProducts.map((product) => (
+                                      <button 
+                                        key={product.id}
+                                        className="text-left flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                                        onClick={() => {
+                                          setSelectedProducts([...selectedProducts, product]);
+                                          setShowOutOfStockProducts(false);
+                                        }}
+                                      >
+                                        <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-blue-100 p-2 flex items-center justify-center mr-3">
+                                          {product.categorie === "ACCESSOIRE" ? (
+                                            <WrenchScrewdriverIcon className="h-6 w-6 text-blue-600" />
+                                          ) : (
+                                            <CubeIcon className="h-6 w-6 text-blue-600" />
+                                          )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
+                                            {product.libelle || product.reference}
+                                          </h4>
+                                          <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
+                                            {product.description || `Référence: ${product.reference}`}
+                                          </p>
+                                          <div className="flex items-center mt-1">
+                                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+                                              Sur commande
+                                            </span>
+                                            <span className="inline-flex items-center ml-2 text-xs text-gray-500">
+                                              <TagIcon className="h-3 w-3 mr-1" />
+                                              {product.categorie}
+                                            </span>
+                                            {product.marque && (
+                                              <span className="inline-flex items-center ml-2 text-xs text-gray-500">
+                                                <BuildingOfficeIcon className="h-3 w-3 mr-1" />
+                                                {product.marque}
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                        <div className="ml-4 inline-flex items-center justify-center p-2 border border-transparent rounded-full text-blue-600 hover:bg-blue-100">
+                                          <PlusIcon className="h-5 w-5" />
+                                        </div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-50 px-4 py-3 flex flex-row-reverse sm:px-6">
+                            <button
+                              type="button"
+                              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                              onClick={() => setShowOutOfStockProducts(false)}
+                            >
+                              Fermer
+                            </button>
+                          </div>
+                        </motion.div>
                       </div>
-                    </div>
+                    </Dialog>
                   )}
                 </motion.div>
               )}
               
               {/* Step 4: Improved Final Confirmation */}
-{currentStep === 4 && (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="space-y-6"
-  >
-    <div>
-      <h4 className="text-lg font-medium text-gray-900">Confirmez les détails de l&apos;installation</h4>
-      <p className="mt-1 text-sm text-gray-500">Vérifiez toutes les informations avant de finaliser</p>
-    </div>
-    
-    {/* Confirmation summary card */}
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 text-white">
-        <h5 className="text-base font-medium">Récapitulatif de l&apos;installation</h5>
-      </div>
-      
-      {/* Summary content */}
-      <div className="divide-y divide-gray-100">
-        {/* Date and time section */}
-        <div className="p-5 flex items-start">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
-            <CalendarIcon className="h-5 w-5" />
-          </div>
-          <div>
-            <h6 className="text-sm font-medium text-gray-700">Date et heure d&apos;installation</h6>
-            <p className="text-sm text-gray-900 mt-1">
-              {selectedDate && new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {selectedTime}
-            </p>
-            <div className="flex items-center mt-2">
-              <ClockIcon className="h-4 w-4 text-blue-500 mr-1" />
-              <span className="text-xs text-blue-600">Durée estimée: 2 heures</span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Installer section with enhanced UI */}
-        <div className="p-5 flex items-start">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
-            <UserGroupIcon className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <h6 className="text-sm font-medium text-gray-700">Installateur</h6>
-            {selectedInstaller && (() => {
-              const installer = installers.find(i => i.id === selectedInstaller);
-              if (!installer) return null;
-              
-              return (
-                <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex items-center">
-                    <div className={`h-12 w-12 rounded-full ${installer.iconBgColor} mr-3 flex items-center justify-center border-2 border-white shadow-sm`}>
-                      <UserIcon className={`h-6 w-6 ${installer.iconColor}`} />
+              {currentStep === 4 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-6"
+                >
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900">Confirmez les détails de l&apos;installation</h4>
+                    <p className="mt-1 text-sm text-gray-500">Vérifiez toutes les informations avant de finaliser</p>
+                  </div>
+                  
+                  {/* Confirmation summary card */}
+                  <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 text-white">
+                      <h5 className="text-base font-medium">Récapitulatif de l&apos;installation</h5>
                     </div>
-                    <div>
-                      <p className="text-base font-medium text-gray-800">{installer.name}</p>
-                      <div className="flex items-center mt-1">
-                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 mr-2">
-                          {installer.specialty}
-                        </span>
-                        <div className="flex items-center">
-                          <StarIcon className="h-3.5 w-3.5 text-amber-400 fill-current" />
-                          <span className="ml-1 text-xs font-medium text-gray-600">{installer.rating}</span>
+                    
+                    {/* Summary content */}
+                    <div className="divide-y divide-gray-100">
+                      {/* Date and time section */}
+                      <div className="p-5 flex items-start">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
+                          <CalendarIcon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h6 className="text-sm font-medium text-gray-700">Date et heure d&apos;installation</h6>
+                          <p className="text-sm text-gray-900 mt-1">
+                            {selectedDate && new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {selectedTime}
+                          </p>
+                          <div className="flex items-center mt-2">
+                            <ClockIcon className="h-4 w-4 text-blue-500 mr-1" />
+                            <span className="text-xs text-blue-600">Durée estimée: 2 heures</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Installer section with enhanced UI */}
+                      <div className="p-5 flex items-start">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
+                          <UserGroupIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h6 className="text-sm font-medium text-gray-700">Installateur</h6>
+                          {selectedInstaller && (() => {
+                            const installer = installers.find(i => i.id === selectedInstaller);
+                            if (!installer) return null;
+                            
+                            return (
+                              <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="flex items-center">
+                                  <div className={`h-12 w-12 rounded-full ${installer.iconBgColor} mr-3 flex items-center justify-center border-2 border-white shadow-sm`}>
+                                    <UserIcon className={`h-6 w-6 ${installer.iconColor}`} />
+                                  </div>
+                                  <div>
+                                    <p className="text-base font-medium text-gray-800">{installer.name}</p>
+                                    <div className="flex items-center mt-1">
+                                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 mr-2">
+                                        {installer.specialty}
+                                      </span>
+                                      <div className="flex items-center">
+                                        <StarIcon className="h-3.5 w-3.5 text-amber-400 fill-current" />
+                                        <span className="ml-1 text-xs font-medium text-gray-600">{installer.rating}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-2 pt-2 border-t border-gray-200 flex items-center text-xs text-gray-500">
+                                  <ClockIcon className="h-3.5 w-3.5 mr-1" />
+                                  <span>Réponse moyenne en {installer.responseTime}h</span>
+                                  <span className="mx-1.5">•</span>
+                                  <CheckCircleIcon className="h-3.5 w-3.5 text-green-500 mr-1" />
+                                  <span>{installer.installations} installations</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                      
+                      {/* Products section with improved layout */}
+                      <div className="p-5">
+                        <div className="flex items-center mb-3">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
+                            <ShoppingBagIcon className="h-5 w-5" />
+                          </div>
+                          <h6 className="text-sm font-medium text-gray-700">Produits à installer</h6>
+                        </div>
+                        
+                        {/* Main products with quantities */}
+                        {selectedProducts.length > 0 && (
+                          <div className="space-y-3 ml-14">
+                            {selectedProducts.map(product => (
+                              <div key={product.id} className="rounded-lg border border-gray-200 p-3 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
+                                <div className="flex items-start">
+                                  <div className="h-12 w-12 rounded-md bg-blue-100 p-2 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <CubeIcon className="h-6 w-6 text-blue-600" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-start justify-between">
+                                      <div>
+                                        <p className="text-sm font-medium text-gray-800">{product.libelle || product.reference}</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">{product.reference}</p>
+                                      </div>
+                                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Qté: {getProductQuantity(product.id)}
+                                      </div>
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                                        <TagIcon className="h-3 w-3 mr-1" />
+                                        {product.categorie}
+                                      </span>
+                                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                                        <BuildingOfficeIcon className="h-3 w-3 mr-1" />
+                                        {product.marque}
+                                      </span>
+                                      {product.operation && (
+                                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 truncate max-w-[180px]">
+                                          <DocumentTextIcon className="h-3 w-3 mr-1 flex-shrink-0" />
+                                          {product.operation.split(':')[0]}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Accessories with better visual hierarchy */}
+                        {selectedAccessories.length > 0 && (
+                          <div className="mt-4 ml-14">
+                            <div className="flex items-center mb-2">
+                              <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500 mr-2" />
+                              <h6 className="text-xs font-medium uppercase text-gray-500">Accessoires</h6>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {selectedAccessories.map(accessory => (
+                                <div key={accessory.id} className="flex items-center p-2 rounded-lg bg-gray-50 border border-gray-200">
+                                  <div className="h-8 w-8 rounded-md bg-blue-100 flex items-center justify-center mr-2 flex-shrink-0">
+                                    <WrenchScrewdriverIcon className="h-4 w-4 text-blue-600" />
+                                  </div>
+                                  <div className="flex-1 flex items-center justify-between">
+                                    <div>
+                                      <span className="text-xs font-medium text-gray-800">{accessory.libelle || accessory.reference}</span>
+                                      <div className="text-xs text-gray-500">Qté: {getAccessoryQuantity(accessory.id)}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Summary totals */}
+                        <div className="mt-5 pt-3 border-t border-gray-200 flex justify-between items-center ml-14">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-700">Total des produits</span>
+                            <span className="text-xs text-gray-500">
+                              {selectedProducts.length + selectedAccessories.length} article(s), {Object.values(productQuantities).reduce((sum, qty) => sum + qty, 0) + Object.values(accessoryQuantities).reduce((sum, qty) => sum + qty, 0)} unité(s)
+                            </span>
+                          </div>
+                          <div className="rounded-full bg-blue-100 px-3 py-1">
+                            <CheckCircleIcon className="h-4 w-4 text-blue-600" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Address section with map link */}
+                      <div className="p-5 flex items-start">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
+                          <MapPinIcon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h6 className="text-sm font-medium text-gray-700">Adresse d&apos;installation</h6>
+                          <p className="text-sm text-gray-900 mt-1">{clientAddress}</p>
+                          <button className="mt-2 inline-flex items-center text-xs text-blue-600 hover:text-blue-800">
+                            <MapPinIcon className="h-3.5 w-3.5 mr-1" />
+                            Voir sur la carte
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Notes section if any */}
+                      {installationNotes && (
+                        <div className="p-5">
+                          <div className="flex items-center mb-2">
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
+                              <DocumentTextIcon className="h-5 w-5" />
+                            </div>
+                            <h6 className="text-sm font-medium text-gray-700">Notes d&apos;installation</h6>
+                          </div>
+                          <div className="ml-14 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                            <p className="whitespace-pre-line text-sm text-gray-700">{installationNotes}</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Attached files section if any */}
+                      {attachedFiles.length > 0 && (
+                        <div className="p-5">
+                          <div className="flex items-center mb-2">
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
+                              <DocumentTextIcon className="h-5 w-5" />
+                            </div>
+                            <h6 className="text-sm font-medium text-gray-700">Pièces jointes</h6>
+                          </div>
+                          <div className="ml-14">
+                            <ul className="space-y-2">
+                              {attachedFiles.map((file, index) => (
+                                <li key={index} className="flex items-center p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                  <DocumentTextIcon className="h-5 w-5 text-gray-500 mr-2" />
+                                  <span className="text-sm text-gray-800 flex-1">{file.name}</span>
+                                  <span className="text-xs text-gray-500">{Math.round(file.size / 1024)} KB</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Enhanced confirmation notice */}
+                  <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 text-blue-800 shadow-sm">
+                    <div className="flex">
+                      <InformationCircleIcon className="h-6 w-6 flex-shrink-0 mr-3 text-blue-500" />
+                      <div>
+                        <p className="text-sm font-semibold text-blue-800">Prêt à confirmer l&apos;installation</p>
+                        <p className="mt-1 text-sm text-blue-700">
+                          Une fois confirmée, cette installation sera programmée et le statut du dossier passera automatiquement à &quot;En cours&quot;. Un email de confirmation sera envoyé au client et à l&apos;installateur.
+                        </p>
+                        
+                        <div className="mt-3 flex items-center text-xs text-blue-700">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-2">
+                            <CheckIcon className="h-3 w-3" />
+                          </div>
+                          <span>Le client sera notifié par email</span>
+                          
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-600 mx-2 ml-4">
+                            <CheckIcon className="h-3 w-3" />
+                          </div>
+                          <span>L&apos;installateur recevra les détails de l&apos;intervention</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="mt-2 pt-2 border-t border-gray-200 flex items-center text-xs text-gray-500">
-                    <ClockIcon className="h-3.5 w-3.5 mr-1" />
-                    <span>Réponse moyenne en {installer.responseTime}h</span>
-                    <span className="mx-1.5">•</span>
-                    <CheckCircleIcon className="h-3.5 w-3.5 text-green-500 mr-1" />
-                    <span>{installer.installations} installations</span>
+                  {/* Large confirmation button for mobile-friendly experience */}
+                  <div className="mt-6 sm:hidden">
+                    <button
+                      type="button"
+                      onClick={handleInstallSubmit}
+                      disabled={isSubmitting}
+                      className="w-full flex items-center justify-center py-3 px-4 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium shadow-md hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <ArrowPathIcon className="mr-2 h-5 w-5 animate-spin" />
+                          Traitement...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircleIcon className="mr-2 h-5 w-5" />
+                          Confirmer l&apos;installation
+                        </>
+                      )}
+                    </button>
                   </div>
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-        
-        {/* Products section with improved layout */}
-        <div className="p-5">
-          <div className="flex items-center mb-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
-              <ShoppingBagIcon className="h-5 w-5" />
-            </div>
-            <h6 className="text-sm font-medium text-gray-700">Produits à installer</h6>
-          </div>
-          
-          {/* Main products with quantities */}
-          {selectedProducts.length > 0 && (
-            <div className="space-y-3 ml-14">
-              {selectedProducts.map(product => (
-                <div key={product.id} className="rounded-lg border border-gray-200 p-3 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
-                  <div className="flex items-start">
-                    <div className="h-12 w-12 rounded-md bg-blue-100 p-2 flex items-center justify-center mr-3 flex-shrink-0">
-                      <CubeIcon className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">{product.libelle || product.reference}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{product.reference}</p>
-                        </div>
-                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Qté: {getProductQuantity(product.id)}
-                        </div>
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
-                          <TagIcon className="h-3 w-3 mr-1" />
-                          {product.categorie}
-                        </span>
-                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
-                          <BuildingOfficeIcon className="h-3 w-3 mr-1" />
-                          {product.marque}
-                        </span>
-                        {product.operation && (
-                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 truncate max-w-[180px]">
-                            <DocumentTextIcon className="h-3 w-3 mr-1 flex-shrink-0" />
-                            {product.operation.split(':')[0]}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Accessories with better visual hierarchy */}
-          {selectedAccessories.length > 0 && (
-            <div className="mt-4 ml-14">
-              <div className="flex items-center mb-2">
-                <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500 mr-2" />
-                <h6 className="text-xs font-medium uppercase text-gray-500">Accessoires</h6>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {selectedAccessories.map(accessory => (
-                  <div key={accessory.id} className="flex items-center p-2 rounded-lg bg-gray-50 border border-gray-200">
-                    <div className="h-8 w-8 rounded-md bg-blue-100 flex items-center justify-center mr-2 flex-shrink-0">
-                      <WrenchScrewdriverIcon className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1 flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-medium text-gray-800">{accessory.libelle || accessory.reference}</span>
-                        <div className="text-xs text-gray-500">Qté: {getAccessoryQuantity(accessory.id)}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Summary totals */}
-          <div className="mt-5 pt-3 border-t border-gray-200 flex justify-between items-center ml-14">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-gray-700">Total des produits</span>
-              <span className="text-xs text-gray-500">
-                {selectedProducts.length + selectedAccessories.length} article(s), {Object.values(productQuantities).reduce((sum, qty) => sum + qty, 0) + Object.values(accessoryQuantities).reduce((sum, qty) => sum + qty, 0)} unité(s)
-              </span>
-            </div>
-            <div className="rounded-full bg-blue-100 px-3 py-1">
-              <CheckCircleIcon className="h-4 w-4 text-blue-600" />
-            </div>
-          </div>
-        </div>
-        
-        {/* Address section with map link */}
-        <div className="p-5 flex items-start">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
-            <MapPinIcon className="h-5 w-5" />
-          </div>
-          <div>
-            <h6 className="text-sm font-medium text-gray-700">Adresse d&apos;installation</h6>
-            <p className="text-sm text-gray-900 mt-1">{clientAddress}</p>
-            <button className="mt-2 inline-flex items-center text-xs text-blue-600 hover:text-blue-800">
-              <MapPinIcon className="h-3.5 w-3.5 mr-1" />
-              Voir sur la carte
-            </button>
-          </div>
-        </div>
-        
-        {/* Notes section if any */}
-        {installationNotes && (
-          <div className="p-5">
-            <div className="flex items-center mb-2">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
-                <DocumentTextIcon className="h-5 w-5" />
-              </div>
-              <h6 className="text-sm font-medium text-gray-700">Notes d&apos;installation</h6>
-            </div>
-            <div className="ml-14 rounded-lg border border-gray-200 bg-gray-50 p-3">
-              <p className="whitespace-pre-line text-sm text-gray-700">{installationNotes}</p>
-            </div>
-          </div>
-        )}
-        
-        {/* Attached files section if any */}
-        {attachedFiles.length > 0 && (
-          <div className="p-5">
-            <div className="flex items-center mb-2">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-4">
-                <DocumentTextIcon className="h-5 w-5" />
-              </div>
-              <h6 className="text-sm font-medium text-gray-700">Pièces jointes</h6>
-            </div>
-            <div className="ml-14">
-              <ul className="space-y-2">
-                {attachedFiles.map((file, index) => (
-                  <li key={index} className="flex items-center p-2 bg-gray-50 rounded-lg border border-gray-200">
-                    <DocumentTextIcon className="h-5 w-5 text-gray-500 mr-2" />
-                    <span className="text-sm text-gray-800 flex-1">{file.name}</span>
-                    <span className="text-xs text-gray-500">{Math.round(file.size / 1024)} KB</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-    
-    {/* Enhanced confirmation notice */}
-    <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 text-blue-800 shadow-sm">
-      <div className="flex">
-        <InformationCircleIcon className="h-6 w-6 flex-shrink-0 mr-3 text-blue-500" />
-        <div>
-          <p className="text-sm font-semibold text-blue-800">Prêt à confirmer l&apos;installation</p>
-          <p className="mt-1 text-sm text-blue-700">
-            Une fois confirmée, cette installation sera programmée et le statut du dossier passera automatiquement à &quot;En cours&quot;. Un email de confirmation sera envoyé au client et à l&apos;installateur.
-          </p>
-          
-          <div className="mt-3 flex items-center text-xs text-blue-700">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-2">
-              <CheckIcon className="h-3 w-3" />
-            </div>
-            <span>Le client sera notifié par email</span>
-            
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-600 mx-2 ml-4">
-              <CheckIcon className="h-3 w-3" />
-            </div>
-            <span>L&apos;installateur recevra les détails de l&apos;intervention</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    {/* Large confirmation button for mobile-friendly experience */}
-    <div className="mt-6 sm:hidden">
-      <button
-        type="button"
-        onClick={handleInstallSubmit}
-        disabled={isSubmitting}
-        className="w-full flex items-center justify-center py-3 px-4 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium shadow-md hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-      >
-        {isSubmitting ? (
-          <>
-            <ArrowPathIcon className="mr-2 h-5 w-5 animate-spin" />
-            Traitement...
-          </>
-        ) : (
-          <>
-            <CheckCircleIcon className="mr-2 h-5 w-5" />
-            Confirmer l&apos;installation
-          </>
-        )}
-      </button>
-    </div>
-  </motion.div>
-)}
+                </motion.div>
+              )}
 </div>
 {/* Modal footer with actions */}
 <div className="rounded-b-2xl bg-gray-50 px-6 py-4 border-t border-gray-100">

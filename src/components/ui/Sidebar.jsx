@@ -204,15 +204,15 @@ export function Sidebar({ role }) {
       { name: "Service Après-Vente", href: "/dashboard/admin/support", icon: LifebuoyIcon },
       // { name: "Documents / Bibliothèque", href: "/dashboard/admin/documents", icon: DocumentIcon },
       { name: "Tout les rôles", href: "/dashboard/admin/administration", icon: UserGroupIcon },
-      {
-        name: "PBX",
-        icon: BiPhone,
-        children: [
-          { name: "Mes lignes", href: "/dashboard/admin/mes-lignes", icon: SlEarphonesAlt },
-          { name: "Mes numéros", href: "/dashboard/admin/mes-numeros", icon: PiPhoneList },
-          { name: "Poste de travail", href: "/dashboard/admin/poste-de-travail", icon: BiPhoneCall },
-        ],
-      },
+      // {
+      //   name: "PBX",
+      //   icon: BiPhone,
+      //   children: [
+      //     { name: "Mes lignes", href: "/dashboard/admin/mes-lignes", icon: SlEarphonesAlt },
+      //     { name: "Mes numéros", href: "/dashboard/admin/mes-numeros", icon: PiPhoneList },
+      //     { name: "Poste de travail", href: "/dashboard/admin/poste-de-travail", icon: BiPhoneCall },
+      //   ],
+      // },
       {
         name: "Applications",
         icon: IoIosApps,
@@ -221,12 +221,12 @@ export function Sidebar({ role }) {
           { name: "Gmail", href: "/dashboard/admin/gmail", iconType: "image", iconSrc: "/gmail.png"},
           { name: "Drive", href: "/dashboard/admin/drive", iconType: "image", iconSrc: "/drive.png"},
           { name: "Facebook Ads", href: "/dashboard/admin/fb", iconType: "image", iconSrc: "/fb.png"},
-          { name: "Dext", href: "/dashboard/admin/dext", iconType: "image", iconSrc: "/dext.png"},
-          { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", iconType: "image", iconSrc: "/Group 9.svg" },
-          { name: "Effy Pro", href: "/dashboard/admin/effy-pro", iconType: "image", iconSrc: "/effy.png" },
-          { name: "Qualigaz", href: "/dashboard/admin/qualigaz", iconType: "image", iconSrc: "/qualigaz.png" },
+          // { name: "Dext", href: "/dashboard/admin/dext", iconType: "image", iconSrc: "/dext.png"},
+          // { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", iconType: "image", iconSrc: "/Group 9.svg" },
+          // { name: "Effy Pro", href: "/dashboard/admin/effy-pro", iconType: "image", iconSrc: "/effy.png" },
+          // { name: "Qualigaz", href: "/dashboard/admin/qualigaz", iconType: "image", iconSrc: "/qualigaz.png" },
           { name: "Fidealis", href: "/dashboard/admin/fidealis", iconType: "image", iconSrc: "/fidealis.png" },
-          { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", iconType: "image", iconSrc: "/anah.png" },
+          // { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", iconType: "image", iconSrc: "/anah.png" },
         ],
       },
       

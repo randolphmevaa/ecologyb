@@ -1309,18 +1309,16 @@ export default function ProjectsPage() {
                     Ouvrir Fenêtre
                   </button>
                   
-                  {/* Open in new tab */}
-                  <a 
+                  {/* Voir tous les details */}
+                  <a
                     href={`/dashboard/admin/projects/${selectedProject._id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="block"
                   >
                     <button
                       className="w-full py-3 rounded-xl text-white font-medium relative overflow-hidden bg-gradient-to-r from-[#213f5b] to-[#1a324a] hover:opacity-90 transition-all"
                     >
                       <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
-                      Ouvrir Nouvel Onglet
+                      Voir tous les details
                     </button>
                   </a>
                 </div>
