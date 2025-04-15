@@ -52,13 +52,21 @@ interface ModalProps {
   children: ReactNode;
 }
 
-// Modal for demo purposes - in a real implementation, you would use your Dialog component
-const Modal = ({ isOpen, children }: ModalProps) => {
+// Make sure the Modal component is properly using the onClose prop:
+const Modal = ({ isOpen, onClose, children }: ModalProps) => {
   if (!isOpen) return null;
   
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <div 
+        className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0"
+        onClick={(e) => {
+          // Only close if clicking the backdrop, not the modal content
+          if (e.target === e.currentTarget) {
+            onClose?.();
+          }
+        }}
+      >
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" />
         <span className="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
         {children}
@@ -188,151 +196,6 @@ interface ProductQuantityMap {
   [productId: string]: number;
 }
 
-// interface QuantityInputProps {
-//   quantity: number;
-//   onChange: (newQuantity: number) => void;
-//   min?: number;
-//   max?: number;
-//   small?: boolean;
-// }
-
-// Quantity input component
-// const QuantityInput = ({ quantity, onChange, min = 1, max = 99, small = false }: QuantityInputProps) => {
-//   return (
-//     <div className={`flex items-center ${small ? 'h-7' : 'h-9'} rounded-md border border-gray-300 bg-white`}>
-//       <button
-//         type="button"
-//         onClick={() => onChange(Math.max(min, quantity - 1))}
-//         disabled={quantity <= min}
-//         className={`flex items-center justify-center ${small ? 'w-6' : 'w-8'} text-gray-500 hover:text-gray-700 disabled:opacity-50`}
-//       >
-//         <MinusCircleIcon className={`${small ? 'h-4 w-4' : 'h-5 w-5'}`} />
-//       </button>
-//       <input
-//         type="number"
-//         value={quantity}
-//         min={min}
-//         max={max}
-//         onChange={(e) => onChange(Math.max(min, Math.min(max, parseInt(e.target.value) || min)))}
-//         className={`w-10 border-0 text-center ${small ? 'text-xs' : 'text-sm'} focus:outline-none focus:ring-0`}
-//       />
-//       <button
-//         type="button"
-//         onClick={() => onChange(Math.min(max, quantity + 1))}
-//         disabled={quantity >= max}
-//         className={`flex items-center justify-center ${small ? 'w-6' : 'w-8'} text-gray-500 hover:text-gray-700 disabled:opacity-50`}
-//       >
-//         <PlusCircleIcon className={`${small ? 'h-4 w-4' : 'h-5 w-5'}`} />
-//       </button>
-//     </div>
-//   );
-// };
-
-// Available installation slots for the agenda
-// const availableSlots: AvailableSlot[] = [
-//   { 
-//     id: 1, 
-//     date: "2025-04-15", 
-//     times: ["08:00", "11:00", "14:00", "16:00"],
-//     timeSlots: [
-//       { id: "slot-1-1", time: "08:00", duration: 120, available: true, installerCount: 3 },
-//       { id: "slot-1-2", time: "11:00", duration: 120, available: true, installerCount: 1 },
-//       { id: "slot-1-3", time: "14:00", duration: 120, available: true, installerCount: 2 },
-//       { id: "slot-1-4", time: "16:00", duration: 120, available: true, installerCount: 3 }
-//     ]
-//   },
-//   { 
-//     id: 2, 
-//     date: "2025-04-16", 
-//     times: ["09:00", "13:00", "15:00"],
-//     timeSlots: [
-//       { id: "slot-2-1", time: "09:00", duration: 120, available: true, installerCount: 2 },
-//       { id: "slot-2-2", time: "13:00", duration: 120, available: true, installerCount: 4 },
-//       { id: "slot-2-3", time: "15:00", duration: 120, available: true, installerCount: 1 }
-//     ]
-//   },
-//   { 
-//     id: 3, 
-//     date: "2025-04-17", 
-//     times: ["08:30", "10:30", "14:30", "16:30"],
-//     timeSlots: [
-//       { id: "slot-3-1", time: "08:30", duration: 120, available: true, installerCount: 5 },
-//       { id: "slot-3-2", time: "10:30", duration: 120, available: true, installerCount: 3 },
-//       { id: "slot-3-3", time: "14:30", duration: 120, available: true, installerCount: 2 },
-//       { id: "slot-3-4", time: "16:30", duration: 120, available: true, installerCount: 1 }
-//     ]
-//   },
-//   { 
-//     id: 4, 
-//     date: "2025-04-18", 
-//     times: ["08:00", "12:00", "15:00"],
-//     timeSlots: [
-//       { id: "slot-4-1", time: "08:00", duration: 120, available: true, installerCount: 4 },
-//       { id: "slot-4-2", time: "12:00", duration: 120, available: true, installerCount: 3 },
-//       { id: "slot-4-3", time: "15:00", duration: 120, available: true, installerCount: 2 }
-//     ]
-//   },
-//   { 
-//     id: 5, 
-//     date: "2025-04-19", 
-//     times: ["10:00", "14:00"],
-//     timeSlots: [
-//       { id: "slot-5-1", time: "10:00", duration: 120, available: true, installerCount: 3 },
-//       { id: "slot-5-2", time: "14:00", duration: 120, available: true, installerCount: 2 }
-//     ]
-//   },
-//   { 
-//     id: 6, 
-//     date: "2025-04-22", 
-//     times: ["09:00", "13:30", "16:00"],
-//     timeSlots: [
-//       { id: "slot-6-1", time: "09:00", duration: 120, available: true, installerCount: 1 },
-//       { id: "slot-6-2", time: "13:30", duration: 120, available: true, installerCount: 3 },
-//       { id: "slot-6-3", time: "16:00", duration: 120, available: true, installerCount: 2 }
-//     ]
-//   },
-//   { 
-//     id: 7, 
-//     date: "2025-04-23", 
-//     times: ["08:00", "10:30", "14:00", "15:30"],
-//     timeSlots: [
-//       { id: "slot-7-1", time: "08:00", duration: 120, available: true, installerCount: 4 },
-//       { id: "slot-7-2", time: "10:30", duration: 120, available: true, installerCount: 2 },
-//       { id: "slot-7-3", time: "14:00", duration: 120, available: true, installerCount: 3 },
-//       { id: "slot-7-4", time: "15:30", duration: 120, available: true, installerCount: 1 }
-//     ]
-//   },
-//   { 
-//     id: 8, 
-//     date: "2025-04-24", 
-//     times: ["09:30", "13:00", "16:30"],
-//     timeSlots: [
-//       { id: "slot-8-1", time: "09:30", duration: 120, available: true, installerCount: 2 },
-//       { id: "slot-8-2", time: "13:00", duration: 120, available: true, installerCount: 5 },
-//       { id: "slot-8-3", time: "16:30", duration: 120, available: true, installerCount: 1 }
-//     ]
-//   },
-//   { 
-//     id: 9, 
-//     date: "2025-04-25", 
-//     times: ["08:30", "11:30", "14:30"],
-//     timeSlots: [
-//       { id: "slot-9-1", time: "08:30", duration: 120, available: true, installerCount: 3 },
-//       { id: "slot-9-2", time: "11:30", duration: 120, available: true, installerCount: 2 },
-//       { id: "slot-9-3", time: "14:30", duration: 120, available: true, installerCount: 1 }
-//     ]
-//   },
-//   { 
-//     id: 10, 
-//     date: "2025-04-26", 
-//     times: ["10:00", "14:00"],
-//     timeSlots: [
-//       { id: "slot-10-1", time: "10:00", duration: 120, available: true, installerCount: 4 },
-//       { id: "slot-10-2", time: "14:00", duration: 120, available: true, installerCount: 1 }
-//     ]
-//   }
-// ];
-
 // Example installers for the dropdown
 const installers: Installer[] = [
   { 
@@ -406,16 +269,6 @@ const installers: Installer[] = [
     responseTime: 5
   },
 ];
-
-// Sample brands
-// const SAMPLE_BRANDS = [
-//   { id: "B001", name: "EcoTherm" },
-//   { id: "B002", name: "Clim+" },
-//   { id: "B003", name: "BoisEco" },
-//   { id: "B004", name: "AquaTherm" },
-//   { id: "B005", name: "SolarPlus" },
-//   { id: "B006", name: "BiomasseTech" }
-// ];
 
 // Operation constants
 const OPERATIONS = {
@@ -1862,15 +1715,13 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
         <span className="text-sm font-semibold tracking-wide">Prendre rendez-vous avec le client</span>
       </button>
       
-      {/* Enhanced Installation Modal */}
-      <Dialog
-        as="div"
-        className="fixed inset-0 z-50 overflow-y-auto"
-        open={isOpen}
-        onClose={() => {
-          if (!isSubmitting) setIsOpen(false);
-        }}
-      >
+        {/* Enhanced Installation Modal */}
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-50 overflow-y-auto"
+          open={isOpen}
+          onClose={() => setIsOpen(false)}
+        >
         <Modal isOpen={isOpen} onClose={() => !isSubmitting && setIsOpen(false)}>
           <motion.div
             variants={modalVariants}
@@ -1883,14 +1734,17 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
             <div className="relative overflow-hidden rounded-t-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 pt-6">
               {/* Close button */}
               <button
-                onClick={() => !isSubmitting && setIsOpen(false)}
-                disabled={isSubmitting}
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent default behavior
+                  e.stopPropagation(); // Prevent event bubbling
+                  console.log("Close button clicked"); // Debug log
+                  setIsOpen(false); // Force close regardless of isSubmitting
+                }}
                 className="absolute right-4 top-4 rounded-full bg-white/20 p-1.5 text-white transition-colors 
-                          hover:bg-white/30 focus:outline-none cursor-pointer"
+                          hover:bg-white/30 focus:outline-none cursor-pointer z-50"
               >
-                <XMarkIcon className="h-5 w-5" />
+                <XMarkIcon className="h-5 w-5 pointer-events-none" />
               </button>
-
               
               {/* Header content */}
               <div className="flex flex-col sm:flex-row sm:items-center mb-6">

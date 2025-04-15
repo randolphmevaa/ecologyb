@@ -12,13 +12,13 @@ import {
   XMarkIcon,
   UserCircleIcon,
   ClockIcon,
-  CalendarIcon,
-  WrenchScrewdriverIcon,
-  CheckIcon,
-  UserGroupIcon,
-  MapPinIcon
+  // CalendarIcon,
+  // WrenchScrewdriverIcon,
+  // CheckIcon,
+  // UserGroupIcon,
+  // MapPinIcon
 } from "@heroicons/react/24/outline";
-import { Menu, Dialog } from "@headlessui/react";
+import { Menu } from "@headlessui/react";
 import EnhancedInstallationModal from "./components/EnhancedInstallationModal";
 
 // Define a union type for the available tabs
@@ -54,24 +54,6 @@ const statusOptions = [
   { id: "canceled", value: "Annulé", color: "bg-red-100 text-red-800 border-red-200", apiValue: "ANNULE" }
 ];
 
-// Available installation slots for the agenda
-const availableSlots = [
-  { id: 1, date: "2025-04-15", times: ["08:00", "11:00", "14:00", "16:00"] },
-  { id: 2, date: "2025-04-16", times: ["09:00", "13:00", "15:00"] },
-  { id: 3, date: "2025-04-17", times: ["08:30", "10:30", "14:30", "16:30"] },
-  { id: 4, date: "2025-04-18", times: ["08:00", "12:00", "15:00"] },
-  { id: 5, date: "2025-04-19", times: ["10:00", "14:00"] },
-];
-
-// Example installers for the dropdown
-const installers = [
-  { id: 1, name: "Thomas Martin", rating: 4.9, specialty: "Chauffage", available: true },
-  { id: 2, name: "Sophie Dubois", rating: 4.8, specialty: "Électricité", available: true },
-  { id: 3, name: "Paul Lefebvre", rating: 4.7, specialty: "Plomberie", available: false },
-  { id: 4, name: "Camille Leroy", rating: 4.9, specialty: "Polyvalent", available: true },
-  { id: 5, name: "Antoine Mercier", rating: 4.6, specialty: "Chauffage", available: true },
-];
-
 // Get color for a specific status
 const getStatusColor = (status: string) => {
   const option = statusOptions.find(opt => opt.value === status);
@@ -88,19 +70,10 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
-  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(dossierStatus);
-  
-  // Installation modal state
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [selectedInstaller, setSelectedInstaller] = useState<number | null>(null);
-  const [installationNotes, setInstallationNotes] = useState<string>("");
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Update local status when prop changes
   useEffect(() => {
@@ -144,40 +117,6 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
     } finally {
       setIsUpdating(false);
     }
-  };
-
-  // Function to handle installation submission
-  const handleInstallSubmit = async () => {
-    if (!selectedDate || !selectedTime || !selectedInstaller) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-      // This would be replaced by your actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update status to "En cours" after successful installation scheduling
-      onStatusChange("En cours");
-      setCurrentStatus("En cours");
-      updateStatusViaApi("En cours");
-      
-      // Close the modal after successful submission
-      setIsInstallModalOpen(false);
-      resetInstallationForm();
-    } catch (error) {
-      console.error('Error scheduling installation:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  // Reset installation form values
-  const resetInstallationForm = () => {
-    setSelectedDate(null);
-    setSelectedTime(null);
-    setSelectedInstaller(null);
-    setInstallationNotes("");
-    setCurrentStep(1);
   };
 
   // Close dropdowns when clicking outside
@@ -230,27 +169,7 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
     hidden: { opacity: 0, x: -20 },
     visible: { opacity: 1, x: 0 }
   };
-  
-  // Modal animation variants
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.9, y: 20 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
-      y: 0,
-      transition: { 
-        type: "spring", 
-        stiffness: 400, 
-        damping: 25 
-      }
-    },
-    exit: { 
-      opacity: 0, 
-      scale: 0.9, 
-      y: 20,
-      transition: { duration: 0.2, ease: "easeOut" }
-    }
-  };
+
 
   return (
     <MotionConfig transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
@@ -306,24 +225,7 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
                 <span className="text-sm font-semibold tracking-wide">Informations client</span>
               </motion.button>
 
-              {/* NEW BUTTON: Placer en installation */}
-              {/* <motion.button
-                onClick={() => {
-                  setIsInstallModalOpen(true);
-                  resetInstallationForm();
-                }}
-                whileHover={{ 
-                  scale: 1.03, 
-                  boxShadow: "0 10px 25px -5px rgba(16, 185, 129, 0.4)"
-                }}
-                whileTap={{ scale: 0.97 }}
-                className="group flex items-center space-x-3 px-6 py-3.5 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/20"
-              >
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 group-hover:bg-white/30">
-                  <WrenchScrewdriverIcon className="w-5 h-5" />
-                </span>
-                <span className="text-sm font-semibold tracking-wide">Placer en installation</span>
-              </motion.button> */}
+              {/* NEW BUTTON: Prendre rendez-vous avec le client */}
               <EnhancedInstallationModal/>
 
               {/* Status dossier with dropdown */}
@@ -592,427 +494,6 @@ const PremiumTabs: FC<PremiumTabsProps> = ({
           <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white to-transparent opacity-5"></div>
         </div>
       </div>
-
-      {/* INSTALLATION MODAL */}
-      <AnimatePresence>
-        {isInstallModalOpen && (
-          <Dialog
-            as="div"
-            className="fixed inset-0 z-50 overflow-y-auto"
-            open={isInstallModalOpen}
-            onClose={() => {
-              if (!isSubmitting) setIsInstallModalOpen(false);
-            }}
-          >
-              <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" aria-hidden="true" />
-
-              <span className="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
-              
-                              <motion.div
-                  variants={modalVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="relative inline-block w-full max-w-4xl transform rounded-2xl bg-white text-left align-middle shadow-xl transition-all sm:align-middle sm:max-w-4xl"
-                >
-                  {/* Modal header with gradient background */}
-                  <div className="relative overflow-hidden rounded-t-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 pt-6">
-                    {/* Close button */}
-                    <button
-                      onClick={() => {
-                        if (!isSubmitting) setIsInstallModalOpen(false);
-                      }}
-                      disabled={isSubmitting}
-                      className="absolute right-4 top-4 rounded-full bg-white/20 p-1.5 text-white transition-colors hover:bg-white/30 focus:outline-none"
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </button>
-                    
-                    {/* Header content */}
-                    <div className="flex flex-col sm:flex-row sm:items-center mb-6">
-                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-white/20 sm:mb-0 sm:mr-5">
-                        <WrenchScrewdriverIcon className="h-8 w-8 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-white" id="modal-title">
-                        Prendre rendez-vous avec le client
-                        </h3>
-                        <p className="mt-1 text-emerald-100">
-                          Sélectionnez une date, un horaire et un installateur pour ce client
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* Step indicators - Moved down and improved */}
-                    <div className="py-4 flex justify-center bg-gradient-to-r from-green-700/40 to-emerald-700/40 rounded-lg mb-2">
-                      <div className="flex w-full max-w-md items-center justify-between px-4">
-                        {[1, 2, 3].map((step) => (
-                          <div key={step} className="flex flex-col items-center">
-                            <div 
-                              className={`flex h-10 w-10 items-center justify-center rounded-full border-2 shadow-md ${
-                                currentStep === step
-                                  ? "border-white bg-white text-green-600"
-                                  : currentStep > step
-                                  ? "border-white bg-green-700 text-white"
-                                  : "border-white/40 bg-transparent text-white/60"
-                              }`}
-                            >
-                              {currentStep > step ? (
-                                <CheckIcon className="h-5 w-5" />
-                              ) : (
-                                <span className="text-sm font-medium">{step}</span>
-                              )}
-                            </div>
-                            <span className={`mt-2 text-xs font-medium ${
-                              currentStep >= step ? "text-white" : "text-white/60"
-                            }`}>
-                              {step === 1 ? "Agenda" : step === 2 ? "Installateur" : "Confirmation"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Decorative elements */}
-                    <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500 opacity-20 blur-3xl"></div>
-                    <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-green-400 opacity-20 blur-3xl"></div>
-                  </div>
-
-                  {/* Modal body with steps */}
-                  <div className="p-6 sm:p-8">
-                    {/* Step 1: Agenda */}
-                    {currentStep === 1 && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="space-y-6"
-                      >
-                        <div>
-                          <h4 className="text-lg font-medium text-gray-900">Sélectionnez une date et un horaire</h4>
-                          <p className="mt-1 text-sm text-gray-500">Consultez l&apos;agenda des disponibilités pour planifier l&apos;installation</p>
-                        </div>
-                        
-                        {/* Calendar view */}
-                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
-                          <div className="mb-4 flex items-center justify-between">
-                            <h5 className="flex items-center text-sm font-medium text-gray-700">
-                              <CalendarIcon className="mr-2 h-5 w-5 text-gray-500" />
-                              Avril 2025
-                            </h5>
-                            <div className="flex space-x-2">
-                              <button className="rounded-lg border border-gray-300 bg-white p-1.5 text-gray-500 hover:bg-gray-50">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                              </button>
-                              <button className="rounded-lg border border-gray-300 bg-white p-1.5 text-gray-500 hover:bg-gray-50">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                          
-                          {/* Calendar grid */}
-                          <div className="grid grid-cols-7 gap-2">
-                            {/* Week days */}
-                            {["L", "M", "M", "J", "V", "S", "D"].map((day, i) => (
-                              <div key={i} className="text-center text-xs font-medium text-gray-500">
-                                {day}
-                              </div>
-                            ))}
-                            
-                            {/* Empty cells for previous month */}
-                            {Array.from({ length: 1 }).map((_, i) => (
-                              <div key={`empty-${i}`} className="h-10 rounded-lg border border-transparent p-1 text-center text-sm text-gray-400">
-                                {31 + i}
-                              </div>
-                            ))}
-                            
-                            {/* Days in current month */}
-                            {Array.from({ length: 30 }).map((_, i) => {
-                              const dayNumber = i + 1;
-                              const dateString = `2025-04-${dayNumber.toString().padStart(2, '0')}`;
-                              const hasSlots = availableSlots.some(slot => slot.date === dateString);
-                              const isSelected = selectedDate === dateString;
-                              
-                              return (
-                                <button
-                                  key={`day-${i}`}
-                                  onClick={() => {
-                                    if (hasSlots) {
-                                      setSelectedDate(dateString);
-                                      setSelectedTime(null);
-                                    }
-                                  }}
-                                  disabled={!hasSlots}
-                                  className={`flex h-10 items-center justify-center rounded-lg border p-1 text-center text-sm transition-colors ${
-                                    isSelected
-                                      ? "border-green-500 bg-green-50 text-green-700 ring-1 ring-green-500"
-                                      : hasSlots
-                                      ? "cursor-pointer border-green-200 bg-green-50/50 text-green-800 hover:border-green-300 hover:bg-green-50"
-                                      : "cursor-not-allowed border-gray-200 text-gray-400"
-                                  }`}
-                                >
-                                  {dayNumber}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        
-                        {/* Time slots */}
-                        {selectedDate && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mt-4 rounded-xl border border-gray-200 p-5"
-                          >
-                            <h5 className="mb-3 text-sm font-medium text-gray-700">Horaires disponibles pour le {new Date(selectedDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</h5>
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                              {availableSlots
-                                .find(slot => slot.date === selectedDate)
-                                ?.times.map((time, index) => (
-                                  <button
-                                    key={index}
-                                    onClick={() => setSelectedTime(time)}
-                                    className={`rounded-lg border px-4 py-2 text-center text-sm font-medium transition-colors ${
-                                      selectedTime === time
-                                        ? "border-green-500 bg-green-50 text-green-700"
-                                        : "border-gray-200 bg-white text-gray-700 hover:border-green-200 hover:bg-green-50/50"
-                                    }`}
-                                  >
-                                    {time}
-                                  </button>
-                                ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    )}
-                    
-                    {/* Step 2: Installer Selection */}
-                    {currentStep === 2 && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="space-y-6"
-                      >
-                        <div>
-                          <h4 className="text-lg font-medium text-gray-900">Sélectionnez un installateur</h4>
-                          <p className="mt-1 text-sm text-gray-500">Choisissez un professionnel pour réaliser cette installation</p>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          {installers
-                            .filter(installer => installer.available)
-                            .map(installer => (
-                              <motion.button
-                                key={installer.id}
-                                whileHover={{ scale: 1.01 }}
-                                whileTap={{ scale: 0.99 }}
-                                onClick={() => setSelectedInstaller(installer.id)}
-                                className={`flex w-full items-center rounded-xl border p-4 transition-colors ${
-                                  selectedInstaller === installer.id
-                                    ? "border-green-500 bg-green-50"
-                                    : "border-gray-200 bg-white hover:border-green-200 hover:bg-green-50/30"
-                                }`}
-                              >
-                                <div className={`mr-4 flex h-12 w-12 items-center justify-center rounded-full ${
-                                  selectedInstaller === installer.id ? "bg-green-100" : "bg-gray-100"
-                                }`}>
-                                  <UserGroupIcon className={`h-6 w-6 ${
-                                    selectedInstaller === installer.id ? "text-green-600" : "text-gray-500"
-                                  }`} />
-                                </div>
-                                <div className="flex-1 text-left">
-                                  <div className="flex items-center">
-                                    <h5 className={`text-base font-medium ${
-                                      selectedInstaller === installer.id ? "text-green-700" : "text-gray-900"
-                                    }`}>
-                                      {installer.name}
-                                    </h5>
-                                    <div className="ml-2 flex items-center">
-                                      <svg className="h-4 w-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                      </svg>
-                                      <span className="ml-1 text-xs font-medium text-gray-600">{installer.rating}</span>
-                                    </div>
-                                  </div>
-                                  <div className="mt-1 flex items-center">
-                                    <span className="text-xs text-gray-500">Spécialité: {installer.specialty}</span>
-                                    <span className="mx-2 text-gray-300">•</span>
-                                    <span className="text-xs font-medium text-green-600">Disponible</span>
-                                  </div>
-                                </div>
-                                
-                                {selectedInstaller === installer.id && (
-                                  <div className="ml-2 rounded-full bg-green-100 p-1 text-green-600">
-                                    <CheckIcon className="h-5 w-5" />
-                                  </div>
-                                )}
-                              </motion.button>
-                            ))}
-                        </div>
-                        
-                        <div className="rounded-lg border border-gray-200 p-4">
-                          <h5 className="mb-2 text-sm font-medium text-gray-700">Notes d&apos;installation</h5>
-                          <textarea
-                            value={installationNotes}
-                            onChange={(e) => setInstallationNotes(e.target.value)}
-                            placeholder="Ajoutez des instructions spécifiques pour l'installateur..."
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
-                            rows={3}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                    
-                    {/* Step 3: Confirmation */}
-                    {currentStep === 3 && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="space-y-6"
-                      >
-                        <div>
-                          <h4 className="text-lg font-medium text-gray-900">Confirmez les détails de l&apos;installation</h4>
-                          <p className="mt-1 text-sm text-gray-500">Vérifiez les informations avant de finaliser</p>
-                        </div>
-                        
-                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
-                          <div className="space-y-4">
-                            <div className="flex items-start space-x-3">
-                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                                <CalendarIcon className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <h5 className="text-sm font-medium text-gray-700">Date et heure</h5>
-                                <p className="text-sm text-gray-900">
-                                  {selectedDate && new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {selectedTime}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-start space-x-3">
-                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                                <UserGroupIcon className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <h5 className="text-sm font-medium text-gray-700">Installateur</h5>
-                                <p className="text-sm text-gray-900">
-                                  {selectedInstaller && installers.find(inst => inst.id === selectedInstaller)?.name}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {selectedInstaller && installers.find(inst => inst.id === selectedInstaller)?.specialty}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-start space-x-3">
-                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                                <MapPinIcon className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <h5 className="text-sm font-medium text-gray-700">Adresse d&apos;installation</h5>
-                                <p className="text-sm text-gray-900">123 Rue de Paris, 75001 Paris</p>
-                                <p className="mt-1 text-xs text-blue-600 underline">Voir sur la carte</p>
-                              </div>
-                            </div>
-                            
-                            {installationNotes && (
-                              <div className="rounded-lg border border-gray-200 bg-white p-3">
-                                <h5 className="text-xs font-medium uppercase text-gray-500">Notes</h5>
-                                <p className="mt-1 whitespace-pre-line text-sm text-gray-700">{installationNotes}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800">
-                          <div className="flex">
-                            <svg className="mr-3 h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                            </svg>
-                            <p>
-                              Une fois confirmée, cette installation sera programmée et le statut du dossier passera automatiquement à &quot;En cours&quot;. Un email de confirmation sera envoyé au client.
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-
-                  {/* Modal footer with actions */}
-                  <div className="rounded-b-2xl bg-gray-50 px-6 py-4">
-                    <div className="flex flex-col-reverse sm:flex-row sm:justify-between">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (currentStep > 1) {
-                            setCurrentStep(currentStep - 1);
-                          } else {
-                            setIsInstallModalOpen(false);
-                          }
-                        }}
-                        disabled={isSubmitting}
-                        className="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:w-auto"
-                      >
-                        {currentStep > 1 ? "Retour" : "Annuler"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (currentStep === 1) {
-                            if (selectedDate && selectedTime) {
-                              setCurrentStep(2);
-                            }
-                          } else if (currentStep === 2) {
-                            if (selectedInstaller) {
-                              setCurrentStep(3);
-                            }
-                          } else {
-                            handleInstallSubmit();
-                          }
-                        }}
-                        disabled={
-                          isSubmitting ||
-                          (currentStep === 1 && (!selectedDate || !selectedTime)) ||
-                          (currentStep === 2 && !selectedInstaller)
-                        }
-                        className={`inline-flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:w-auto ${
-                          (currentStep === 1 && (!selectedDate || !selectedTime)) ||
-                          (currentStep === 2 && !selectedInstaller) ||
-                          isSubmitting
-                            ? "cursor-not-allowed bg-green-400"
-                            : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                        }`}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <svg className="mr-3 -ml-1 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Traitement...
-                          </>
-                        ) : currentStep < 3 ? (
-                          "Continuer"
-                        ) : (
-                          "Confirmer l'installation"
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-            </div>
-          </Dialog>
-        )}
-      </AnimatePresence>
      
     </MotionConfig>
   );
