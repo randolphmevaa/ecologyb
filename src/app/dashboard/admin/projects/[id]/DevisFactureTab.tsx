@@ -1959,14 +1959,14 @@ const ActionMenu: React.FC<{
       icon: <CurrencyDollarIcon className="h-5 w-5 text-gray-500" />
     },
     {
-      id: "deleteQuote",
-      label: "Supprimer le devis",
-      icon: <TrashIcon className="h-5 w-5 text-red-500" />
-    },
-    {
       id: "addOperation",
       label: "Ajouter une opération",
       icon: <PlusIcon className="h-5 w-5 text-gray-500" />
+    },
+    {
+      id: "deleteQuote",
+      label: "Supprimer le devis",
+      icon: <TrashIcon className="h-5 w-5 text-red-500" />
     }
   ];
   

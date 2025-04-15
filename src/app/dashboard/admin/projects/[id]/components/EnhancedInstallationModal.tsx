@@ -1,4 +1,4 @@
-import { useState, ReactNode, useMemo } from "react";
+import { useState, ReactNode, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { IoDocumentOutline } from "react-icons/io5";
 import {
@@ -43,6 +43,7 @@ import {
 } from "@heroicons/react/24/solid";
 import EnhancedCalendar from "./EnhancedCalendar";
 import { Dialog } from "@headlessui/react";
+import React from "react";
 
 // TypeScript interfaces for component props
 interface ModalProps {
@@ -1206,17 +1207,20 @@ interface EnhancedInstallationModalProps {
   initialStep?: number;
   onComplete?: (data: InstallationData) => void;
   clientAddress?: string;
+  isOpen?: boolean; // Add this
+  onClose?: () => void; // Add this
 }
 
 const EnhancedInstallationModal: React.FC<EnhancedInstallationModalProps> = ({
   initialStep = 1,
   onComplete,
-  clientAddress = "123 Rue de Paris, 75001 Paris"
+  clientAddress = "123 Rue de Paris, 75001 Paris",
 }) => {
   // Modal state
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(initialStep);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showCartModal, setShowCartModal] = useState<boolean>(false);
   // Add these state variables inside your EnhancedInstallationModal component
 // near the other useState declarations (after the imports and before the return statement)
 
@@ -1612,9 +1616,238 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
     }
   };
 
-  function setIsInstallModalOpen(value: boolean) {
-    setIsOpen(value);
-  }
+  // function setIsInstallModalOpen(value: boolean) {
+  //   setIsOpen(value);
+  // }
+
+  // Cart review modal
+  const CartReviewModal = React.memo(() => {
+    // Local state for quantity management to prevent the modal from reloading
+    const [localQuantities, setLocalQuantities] = useState<ProductQuantityMap>({});
+    const [localProducts, setLocalProducts] = useState<Product[]>([]);
+    
+    // Initialize local state when the modal opens
+    useEffect(() => {
+      if (showCartModal) {
+        setLocalQuantities({...productQuantities});
+        setLocalProducts([...selectedProducts]);
+      }
+    }, [showCartModal]);
+    
+    // Local handlers to update quantities without triggering parent rerender
+    const handleIncrementQuantity = (productId: string) => {
+      setLocalQuantities(prev => {
+        const currentQty = prev[productId] || 1;
+        const maxQty = 99;
+        if (currentQty < maxQty) {
+          return { ...prev, [productId]: currentQty + 1 };
+        }
+        return prev;
+      });
+    };
+    
+    const handleDecrementQuantity = (productId: string) => {
+      setLocalQuantities(prev => {
+        const currentQty = prev[productId] || 1;
+        if (currentQty > 1) {
+          return { ...prev, [productId]: currentQty - 1 };
+        }
+        return prev;
+      });
+    };
+    
+    const handleRemoveProduct = (productId: string) => {
+      setLocalProducts(prev => prev.filter(p => p.id !== productId));
+    };
+    
+    // Apply changes to parent state when closing the modal
+    const handleSaveChanges = () => {
+      setProductQuantities(localQuantities);
+      setSelectedProducts(localProducts);
+      handleProductSubmit();
+      setShowCartModal(false);
+    };
+    
+    // Get local quantity for a product
+    const getLocalQuantity = (productId: string): number => {
+      return localQuantities[productId] || 1;
+    };
+    
+    // Calculate total units
+    const totalUnits = localProducts.reduce((total, product) => 
+      total + getLocalQuantity(product.id), 0
+    );
+    
+    return (
+      <Dialog
+        as="div"
+        className="fixed inset-0 z-[100] overflow-y-auto"
+        open={showCartModal}
+        onClose={() => setShowCartModal(false)}
+      >
+        <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:p-0">
+          <div className="fixed inset-0 bg-gray-900/20 transition-opacity" />
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative inline-block transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl"
+          >
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-4 sm:px-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 rounded-full bg-white/20 p-2 mr-3">
+                    <ShoppingBagIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-medium text-white">
+                    Mon panier
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  className="rounded-md bg-white/20 p-1.5 text-white hover:bg-white/30"
+                  onClick={() => setShowCartModal(false)}
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[70vh] overflow-y-auto">
+              {localProducts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+                  <ShoppingBagIcon className="h-12 w-12 text-gray-400 mb-2" />
+                  <p className="text-gray-500 text-center">Votre panier est vide</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                      <h5 className="text-sm font-medium text-gray-700">
+                        {localProducts.length} produit{localProducts.length > 1 ? 's' : ''} sélectionné{localProducts.length > 1 ? 's' : ''}
+                      </h5>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {localProducts.map(product => (
+                        <div key={product.id} className="p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-start">
+                            <div className="h-12 w-12 rounded-md bg-blue-100 p-2 flex items-center justify-center mr-3 flex-shrink-0">
+                              {product.categorie === "ACCESSOIRE" ? (
+                                <WrenchScrewdriverIcon className="h-6 w-6 text-blue-600" />
+                              ) : (
+                                <CubeIcon className="h-6 w-6 text-blue-600" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-sm font-medium text-gray-800">{product.libelle || product.reference}</p>
+                                  <p className="text-xs text-gray-500 mt-0.5">{product.reference}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-2 flex items-center justify-between">
+                                <div className="flex flex-wrap gap-2">
+                                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                                    <TagIcon className="h-3 w-3 mr-1" />
+                                    {product.categorie}
+                                  </span>
+                                  {product.stock && product.stock.stockDisponible > 0 ? (
+                                    <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                                      {product.stock.stockDisponible} en stock
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+                                      Sur commande
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                <div className="flex items-center space-x-2">
+                                  <div className="flex items-center h-8 rounded-md border border-gray-300 bg-white">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDecrementQuantity(product.id);
+                                      }}
+                                      className="flex items-center justify-center w-8 text-gray-500 hover:text-gray-700"
+                                    >
+                                      <MinusCircleIcon className="h-4 w-4" />
+                                    </button>
+                                    <span className="w-8 text-center text-sm font-medium">
+                                      {getLocalQuantity(product.id)}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleIncrementQuantity(product.id);
+                                      }}
+                                      className="flex items-center justify-center w-8 text-gray-500 hover:text-gray-700"
+                                    >
+                                      <PlusCircleIcon className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                  
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveProduct(product.id);
+                                    }}
+                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                  >
+                                    <XMarkIcon className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Summary without prices */}
+                  <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Récapitulatif</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        {totalUnits} unité{totalUnits > 1 ? 's' : ''} au total
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-gray-50 px-4 py-3 flex justify-between sm:px-6">
+              <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => setShowCartModal(false)}
+              >
+                Continuer mes achats
+              </button>
+              
+              <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={handleSaveChanges}
+                disabled={localProducts.length === 0}
+              >
+                Valider ma sélection
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </Dialog>
+    );
+  });
+
+  // Add this line to fix the display name error
+  CartReviewModal.displayName = 'CartReviewModal';
 
   return (
     <div>
@@ -1635,7 +1868,7 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
         className="fixed inset-0 z-50 overflow-y-auto"
         open={isOpen}
         onClose={() => {
-          if (!isSubmitting) setIsInstallModalOpen(false);
+          if (!isSubmitting) setIsOpen(false);
         }}
       >
         <Modal isOpen={isOpen} onClose={() => !isSubmitting && setIsOpen(false)}>
@@ -1653,7 +1886,7 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
                 onClick={() => !isSubmitting && setIsOpen(false)}
                 disabled={isSubmitting}
                 className="absolute right-4 top-4 rounded-full bg-white/20 p-1.5 text-white transition-colors 
-                          hover:bg-white/30 focus:outline-none cursor-pointer" // <-- add cursor-pointer here
+                          hover:bg-white/30 focus:outline-none cursor-pointer"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -2433,26 +2666,42 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
                           </div>
                         </div>
                         
-                        {/* Order reservation button */}
-                        {!orderReserved ? (
+                        {/* Order reservation buttons - MODIFIED to include the "Voir mon panier" button */}
+                        <div className="flex space-x-2">
+                          {/* Add this button */}
                           <button
-                            onClick={handleProductSubmit}
+                            onClick={() => setShowCartModal(true)}
                             disabled={selectedProducts.length === 0}
-                            className={`flex items-center justify-center py-2 px-4 rounded-lg ${
+                            className={`flex items-center justify-center py-2 px-4 rounded-lg border ${
                               selectedProducts.length === 0
-                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
-                            } text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors`}
+                                ? "border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "border-blue-300 bg-white text-blue-600 hover:bg-blue-50"
+                            } text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors`}
                           >
-                            <span className="mr-2">Valider la sélection</span>
-                            <ArrowLongRightIcon className="h-5 w-5" />
+                            <span>Voir mon panier</span>
                           </button>
-                        ) : (
-                          <div className="flex items-center text-green-600">
-                            <CheckCircleIcon className="h-5 w-5 mr-1" />
-                            <span className="font-medium text-sm">Sélection validée</span>
-                          </div>
-                        )}
+                          
+                          {/* Existing button */}
+                          {!orderReserved ? (
+                            <button
+                              onClick={handleProductSubmit}
+                              disabled={selectedProducts.length === 0}
+                              className={`flex items-center justify-center py-2 px-4 rounded-lg ${
+                                selectedProducts.length === 0
+                                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                  : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
+                              } text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors`}
+                            >
+                              <span className="mr-2">Valider la sélection</span>
+                              <ArrowLongRightIcon className="h-5 w-5" />
+                            </button>
+                          ) : (
+                            <div className="flex items-center text-green-600">
+                              <CheckCircleIcon className="h-5 w-5 mr-1" />
+                              <span className="font-medium text-sm">Sélection validée</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -2969,6 +3218,8 @@ const [outOfStockSearchQuery, setOutOfStockSearchQuery] = useState<string>('');
 </div>
 </motion.div>
 </Modal>
+{/* Render the cart review modal */}
+<CartReviewModal />
 </Dialog>
 </div>
 );

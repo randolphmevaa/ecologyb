@@ -158,13 +158,14 @@ export function Sidebar({ role }) {
           // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
           { name: "Prospects", href: "/dashboard/admin/leads", icon: UserCircleIcon},
           { name: "Clients", href: "/dashboard/admin/projects", icon: UserCircleIcon },
-          { name: "Contrôle", href: "/dashboard/admin/controle", icon: GoTools },
+          
           
           // { name: "Opportunités", href: "/dashboard/admin/opportunities", icon: BriefcaseIcon },
           // { name: "Projets", href: "/dashboard/admin/projects", icon: FolderIcon },
         ],
       },
       { name: "Gérer Statuts", href: "/dashboard/admin/status", icon: TagIcon },
+      { name: "Contrôle", href: "/dashboard/admin/controle", icon: GoTools },
       { name: "Chat", href: "/dashboard/admin/emails", icon: EnvelopeIcon, badge: 24 },
       { name: "Agenda", href: "/dashboard/admin/calendar", icon: CalendarIcon },
       // { name: "Catalogue", href: "/dashboard/admin/products-services", icon: BookOpenIcon },

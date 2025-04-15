@@ -31,6 +31,8 @@ interface SousTraitant {
   ville: string;
   active: boolean;
   sousTraitant: boolean;
+
+  logo: string;
   
   // New fields
   nomDirigeant: string;
@@ -100,6 +102,8 @@ interface SousTraitantForm {
   active: boolean;
   sousTraitant: boolean;
   
+  logo: string;
+
   // New fields
   nomDirigeant: string;
   prenomDirigeant: string;
@@ -169,7 +173,7 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     ville: "Paris",
     active: true,
     sousTraitant: true,
-    
+
     // New fields with sample data
     nomDirigeant: "Dupont",
     prenomDirigeant: "Jean",
@@ -182,47 +186,48 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     numeroTVA: "FR12345678901",
     numeroRepertoireMetiers: "RM-75001-2020",
     signatureTampon: "",
-    
+
     // Certifications
     qualibat: true,
     qualibatNumeroQualification: "1234-QB", // <--- sample
     dateDebutQualibat: "2022-01-01",
     dateFinQualibat: "2024-12-31",
-    
+
     qualisol: true,
     qualisolNumeroQualification: "SOL-9876", // <--- sample
     dateDebutQualisol: "2022-03-15",
     dateFinQualisol: "2025-03-14",
-    
+
     qualipac: true,
     qualipacNumeroQualification: "PAC-4567", // <--- sample
     dateDebutQualipac: "2021-11-20",
     dateFinQualipac: "2024-11-19",
-    
+
     qualibois: false,
     qualiboisNumeroQualification: "",
     dateDebutQualibois: "",
     dateFinQualibois: "",
-    
+
     opqibi: false,
     opqibiNumeroQualification: "",
     dateDebutOpqibi: "",
     dateFinOpqibi: "",
-    
+
     ventilation: true,
     ventilationNumeroQualification: "VENT-3333", // <--- sample
     dateDebutVentilation: "2023-01-01",
     dateFinVentilation: "2025-12-31",
-    
+
     rgeEtude: false,
     rgeEtudeNumeroQualification: "",
     dateDebutRGEEtude: "",
     dateFinRGEEtude: "",
-    
+
     qualiPv: false,
     qualiPvNumeroQualification: "",
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
+    logo: "/001_001-nike-logos-swoosh-black.jpg"
   },
   {
     id: "ST002",
@@ -235,7 +240,7 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     ville: "Lyon",
     active: true,
     sousTraitant: true,
-    
+
     // New fields with sample data
     nomDirigeant: "Martin",
     prenomDirigeant: "Sophie",
@@ -248,47 +253,48 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     numeroTVA: "FR98765432109",
     numeroRepertoireMetiers: "RM-69002-2019",
     signatureTampon: "",
-    
+
     // Certifications
     qualibat: true,
     qualibatNumeroQualification: "1234-QB", // <--- sample
     dateDebutQualibat: "2022-01-01",
     dateFinQualibat: "2024-12-31",
-    
+
     qualisol: true,
     qualisolNumeroQualification: "SOL-9876", // <--- sample
     dateDebutQualisol: "2022-03-15",
     dateFinQualisol: "2025-03-14",
-    
+
     qualipac: true,
     qualipacNumeroQualification: "PAC-4567", // <--- sample
     dateDebutQualipac: "2021-11-20",
     dateFinQualipac: "2024-11-19",
-    
+
     qualibois: false,
     qualiboisNumeroQualification: "",
     dateDebutQualibois: "",
     dateFinQualibois: "",
-    
+
     opqibi: false,
     opqibiNumeroQualification: "",
     dateDebutOpqibi: "",
     dateFinOpqibi: "",
-    
+
     ventilation: true,
     ventilationNumeroQualification: "VENT-3333", // <--- sample
     dateDebutVentilation: "2023-01-01",
     dateFinVentilation: "2025-12-31",
-    
+
     rgeEtude: false,
     rgeEtudeNumeroQualification: "",
     dateDebutRGEEtude: "",
     dateFinRGEEtude: "",
-    
+
     qualiPv: false,
     qualiPvNumeroQualification: "",
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
+    logo: ""
   },
   {
     id: "ST003",
@@ -301,7 +307,7 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     ville: "Bordeaux",
     active: false,
     sousTraitant: true,
-    
+
     // New fields with sample data
     nomDirigeant: "Leroy",
     prenomDirigeant: "Marc",
@@ -314,47 +320,48 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     numeroTVA: "FR45678901234",
     numeroRepertoireMetiers: "RM-33000-2018",
     signatureTampon: "",
-    
+
     // Certifications
     qualibat: true,
     qualibatNumeroQualification: "1234-QB", // <--- sample
     dateDebutQualibat: "2022-01-01",
     dateFinQualibat: "2024-12-31",
-    
+
     qualisol: true,
     qualisolNumeroQualification: "SOL-9876", // <--- sample
     dateDebutQualisol: "2022-03-15",
     dateFinQualisol: "2025-03-14",
-    
+
     qualipac: true,
     qualipacNumeroQualification: "PAC-4567", // <--- sample
     dateDebutQualipac: "2021-11-20",
     dateFinQualipac: "2024-11-19",
-    
+
     qualibois: false,
     qualiboisNumeroQualification: "",
     dateDebutQualibois: "",
     dateFinQualibois: "",
-    
+
     opqibi: false,
     opqibiNumeroQualification: "",
     dateDebutOpqibi: "",
     dateFinOpqibi: "",
-    
+
     ventilation: true,
     ventilationNumeroQualification: "VENT-3333", // <--- sample
     dateDebutVentilation: "2023-01-01",
     dateFinVentilation: "2025-12-31",
-    
+
     rgeEtude: false,
     rgeEtudeNumeroQualification: "",
     dateDebutRGEEtude: "",
     dateFinRGEEtude: "",
-    
+
     qualiPv: false,
     qualiPvNumeroQualification: "",
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
+    logo: ""
   },
   {
     id: "ST004",
@@ -367,7 +374,7 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     ville: "Toulouse",
     active: true,
     sousTraitant: true,
-    
+
     // New fields with sample data
     nomDirigeant: "Bernard",
     prenomDirigeant: "Thomas",
@@ -380,47 +387,48 @@ const SAMPLE_SOUS_TRAITANTS: SousTraitant[] = [
     numeroTVA: "FR78901234567",
     numeroRepertoireMetiers: "RM-31000-2019",
     signatureTampon: "",
-    
+
     // Certifications
     qualibat: true,
     qualibatNumeroQualification: "1234-QB", // <--- sample
     dateDebutQualibat: "2022-01-01",
     dateFinQualibat: "2024-12-31",
-    
+
     qualisol: true,
     qualisolNumeroQualification: "SOL-9876", // <--- sample
     dateDebutQualisol: "2022-03-15",
     dateFinQualisol: "2025-03-14",
-    
+
     qualipac: true,
     qualipacNumeroQualification: "PAC-4567", // <--- sample
     dateDebutQualipac: "2021-11-20",
     dateFinQualipac: "2024-11-19",
-    
+
     qualibois: false,
     qualiboisNumeroQualification: "",
     dateDebutQualibois: "",
     dateFinQualibois: "",
-    
+
     opqibi: false,
     opqibiNumeroQualification: "",
     dateDebutOpqibi: "",
     dateFinOpqibi: "",
-    
+
     ventilation: true,
     ventilationNumeroQualification: "VENT-3333", // <--- sample
     dateDebutVentilation: "2023-01-01",
     dateFinVentilation: "2025-12-31",
-    
+
     rgeEtude: false,
     rgeEtudeNumeroQualification: "",
     dateDebutRGEEtude: "",
     dateFinRGEEtude: "",
-    
+
     qualiPv: false,
     qualiPvNumeroQualification: "",
     dateDebutQualiPv: "",
     dateFinQualiPv: "",
+    logo: ""
   },
 ];
 
@@ -438,6 +446,7 @@ export default function SousTraitantPage() {
   const [sousTraitantForm, setSousTraitantForm] = useState<SousTraitantForm>({
     id: "",
     raisonSociale: "",
+    logo: "",
     typeSociete: "",
     telephone: "",
     adresse: "",
@@ -530,6 +539,7 @@ export default function SousTraitantPage() {
       typeSociete: "",
       telephone: "",
       adresse: "",
+      logo: "",
       codePostal: "",
       ville: "",
       active: true,
@@ -630,11 +640,13 @@ export default function SousTraitantPage() {
   // Handle file upload for signature et tampon
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      const fieldName = e.target.name;
+      
       // In a real app, you'd handle the file upload to server here
       // For now, we'll just store the file name
       setSousTraitantForm({
         ...sousTraitantForm,
-        signatureTampon: e.target.files[0].name
+        [fieldName]: e.target.files[0].name
       });
     }
   };
@@ -885,9 +897,33 @@ export default function SousTraitantPage() {
                           <div className="p-5 border-b border-[#eaeaea] bg-gradient-to-r from-white to-[#f8fafc]">
                             <div className="flex justify-between items-start mb-2">
                               <div className="flex items-start gap-3">
-                                <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
-                                  <BuildingStorefrontIcon className="h-6 w-6 text-[#213f5b]" />
-                                </div>
+                                {/* Replace the icon with the company logo if available */}
+                                {sousTraitant.logo ? (
+                                  <div className="h-10 w-10 rounded-lg overflow-hidden bg-white border border-[#eaeaea] flex items-center justify-center">
+                                    <img 
+                                      src={sousTraitant.logo} 
+                                      alt={`${sousTraitant.raisonSociale} Logo`} 
+                                      className="max-h-10 max-w-10 object-contain"
+                                      onError={(e) => {
+                                        // If image fails to load, show the default icon
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        // Create and append the icon as fallback
+                                        const parent = target.parentElement;
+                                        if (parent) {
+                                          const icon = document.createElement('div');
+                                          icon.className = "p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg";
+                                          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>`;
+                                          parent.appendChild(icon);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
+                                    <BuildingStorefrontIcon className="h-6 w-6 text-[#213f5b]" />
+                                  </div>
+                                )}
                                 <div>
                                   <h3 className="font-bold text-[#213f5b] line-clamp-1">{sousTraitant.raisonSociale}</h3>
                                   <p className="text-xs opacity-75">{sousTraitant.typeSociete}</p>
@@ -919,29 +955,94 @@ export default function SousTraitantPage() {
                                 <span className="text-sm font-medium text-[#213f5b]">{sousTraitant.adresse}, {sousTraitant.codePostal} {sousTraitant.ville}</span>
                               </div>
                             </div>
-                            
-                            {/* Display certifications summary */}
-                            <div className="mt-4 border-t pt-4 border-dashed border-gray-200">
-                              <p className="text-xs font-medium text-[#213f5b] mb-2">Certifications:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {sousTraitant.qualibat && (
-                                  <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">Qualibat</span>
-                                )}
-                                {sousTraitant.qualisol && (
-                                  <span className="px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded text-xs">Qualisol</span>
-                                )}
-                                {sousTraitant.qualipac && (
-                                  <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded text-xs">Qualipac</span>
-                                )}
-                                {sousTraitant.qualibois && (
-                                  <span className="px-2 py-0.5 bg-orange-50 text-orange-700 rounded text-xs">Qualibois</span>
-                                )}
-                                {sousTraitant.ventilation && (
-                                  <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded text-xs">Ventilation</span>
-                                )}
-                                {/* More certifications can be displayed here */}
-                              </div>
-                            </div>
+
+{/* Display certifications summary */}
+<div className="mt-4 border-t pt-4 border-dashed border-gray-200">
+  <p className="text-xs font-medium text-[#213f5b] mb-2">Certifications:</p>
+  <div className="flex flex-wrap gap-2">
+    {sousTraitant.qualibat && (
+      <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
+        <img 
+          src="/logos/qualibat.png" 
+          alt="Qualibat" 
+          className="h-4 w-4 object-contain" 
+        />
+        <span className="text-xs">{sousTraitant.qualibatNumeroQualification || "Qualibat"}</span>
+      </div>
+    )}
+    
+    {sousTraitant.qualisol && (
+      <div className="flex items-center gap-1 px-2 py-1 bg-yellow-50 text-yellow-700 rounded">
+        <img 
+          src="/logos/qualisol.png" 
+          alt="Qualisol" 
+          className="h-4 w-4 object-contain" 
+        />
+        <span className="text-xs">{sousTraitant.qualisolNumeroQualification || "Qualisol"}</span>
+      </div>
+    )}
+    
+    {sousTraitant.qualipac && (
+      <div className="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded">
+        <img 
+          src="/logos/qualipac.png" 
+          alt="Qualipac" 
+          className="h-4 w-4 object-contain" 
+        />
+        <span className="text-xs">{sousTraitant.qualipacNumeroQualification || "Qualipac"}</span>
+      </div>
+    )}
+    
+    {sousTraitant.qualibois && (
+      <div className="flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-700 rounded">
+        <img 
+          src="/logos/qualibois.png" 
+          alt="Qualibois" 
+          className="h-4 w-4 object-contain" 
+        />
+        <span className="text-xs">{sousTraitant.qualiboisNumeroQualification || "Qualibois"}</span>
+      </div>
+    )}
+    
+    {sousTraitant.ventilation && (
+      <div className="flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 rounded">
+        <img 
+          src="/logos/ventilation.png" 
+          alt="Ventilation" 
+          className="h-4 w-4 object-contain" 
+        />
+        <span className="text-xs">{sousTraitant.ventilationNumeroQualification || "Ventilation"}</span>
+      </div>
+    )}
+    
+    {/* You can add the rest of the certifications here following the same pattern */}
+    
+    {/* Show a count of additional certifications if there are more than 3 */}
+    {[
+      sousTraitant.qualibat,
+      sousTraitant.qualisol,
+      sousTraitant.qualipac,
+      sousTraitant.qualibois,
+      sousTraitant.opqibi,
+      sousTraitant.ventilation,
+      sousTraitant.rgeEtude,
+      sousTraitant.qualiPv
+    ].filter(Boolean).length > 3 && (
+      <div className="px-2 py-1 bg-gray-100 text-gray-700 rounded">
+        <span className="text-xs">+{[
+          sousTraitant.qualibat,
+          sousTraitant.qualisol,
+          sousTraitant.qualipac,
+          sousTraitant.qualibois,
+          sousTraitant.opqibi,
+          sousTraitant.ventilation,
+          sousTraitant.rgeEtude,
+          sousTraitant.qualiPv
+        ].filter(Boolean).length - 3}</span>
+      </div>
+    )}
+  </div>
+</div>
                             
                             <div className="flex justify-end gap-2 mt-4">
                               <button 
@@ -1045,6 +1146,48 @@ export default function SousTraitantPage() {
                       
                       <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4 md:col-span-2 border-t mt-4 pt-4">
+                            <label className="block text-sm font-medium text-[#213f5b] mb-1">Logo de l&apos;entreprise</label>
+                            <div className="flex items-center gap-4">
+                              {sousTraitantForm.logo ? (
+                                <div className="relative h-24 w-24 border border-[#bfddf9] rounded-lg overflow-hidden bg-[#f0f7ff] flex items-center justify-center">
+                                  <img 
+                                    src={sousTraitantForm.logo} 
+                                    alt="Logo preview" 
+                                    className="max-h-20 max-w-20 object-contain"
+                                    onError={(e) => {
+                                      // If image fails to load, show a placeholder
+                                      (e.target as HTMLImageElement).src = "/placeholder-logo.png";
+                                    }} 
+                                  />
+                                  <button
+                                    onClick={() => setSousTraitantForm({...sousTraitantForm, logo: ""})}
+                                    className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm hover:bg-red-50 transition-colors"
+                                  >
+                                    <XMarkIcon className="h-4 w-4 text-red-500" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="h-24 w-24 border border-dashed border-[#bfddf9] rounded-lg bg-[#f0f7ff] flex items-center justify-center">
+                                  <span className="text-xs text-[#213f5b] opacity-50">Aucun logo</span>
+                                </div>
+                              )}
+                              <div>
+                                <input
+                                  id="logo"
+                                  name="logo"
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleFileChange}
+                                  className="hidden"
+                                />
+                                <label htmlFor="logo" className="cursor-pointer flex items-center justify-center px-4 py-2 bg-[#f0f7ff] text-[#213f5b] rounded-lg border border-[#bfddf9] hover:bg-[#bfddf9] transition-colors">
+                                  <span className="text-sm">Choisir un logo</span>
+                                </label>
+                                <p className="text-xs text-[#213f5b] opacity-75 mt-1">Format recommandé: PNG ou JPG</p>
+                              </div>
+                            </div>
+                          </div>
                           <div className="space-y-2 md:col-span-2">
                             <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="raisonSociale">Raison sociale *</label>
                             <input

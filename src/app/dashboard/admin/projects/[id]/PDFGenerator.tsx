@@ -1204,10 +1204,10 @@ const generateECOPTZPDF = async () => {
   }
 };
 
-// Function to generate Mandat de perception de fond EFFY PDF
+// Function to generate Checklist EFFY PDF
 const generateMandatPerceptionEffyPDF = async () => {
   try {
-    console.log("Generating Mandat de perception de fond EFFY PDF");
+    console.log("Generating Checklist EFFY PDF");
     
     // Fetch the PDF template from public directory
     const formUrl = `${process.env.PUBLIC_URL || ''}/Checklist_Effy.pdf`;
@@ -1369,8 +1369,8 @@ const generateDocument = (documentType: string) => {
       // Generate CGV document
       generateCGVPDF();
       break;
-    case 'Mandat de perception de fond EFFY':
-      // Generate Mandat de perception de fond EFFY document
+    case 'Checklist EFFY':
+      // Generate Checklist EFFY document
       generateMandatPerceptionEffyPDF();
       break;
     default:
@@ -1410,7 +1410,7 @@ const generateDocument = (documentType: string) => {
       items: [
         { id: "cession-creance", label: "Cession de créance de RENOLIB", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Cession de créance de RENOLIB") },
         { id: "eco-ptz", label: "ECO-PTZ", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("eco-ptz") },
-        { id: "mandat-perception", label: "Mandat de perception de fond EFFY", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Mandat de perception de fond EFFY") },
+        { id: "mandat-perception", label: "Checklist EFFY", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Checklist EFFY") },
         { id: "cgv", label: "Conditions générales de vente", icon: <DocumentCheckIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Conditions générales de vente") }
       ]
     }

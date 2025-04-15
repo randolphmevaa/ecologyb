@@ -34,6 +34,8 @@ interface MandataireMPR {
   telephone: string;
   typeMandat: string;
   active: boolean;
+  // Add logo field
+  logo: string;
 }
 
 // Interface for the form state
@@ -53,6 +55,9 @@ interface MandataireMPRForm {
   telephone: string;
   typeMandat: string;
   active: boolean;
+  // Add logo field
+  logo: string;
+  logoFile: File | null;
 }
 
 // Sample data for mandataires
@@ -72,7 +77,8 @@ const SAMPLE_MANDATAIRES: MandataireMPR[] = [
     prenom: "Jean",
     telephone: "01 23 45 67 89",
     typeMandat: "Administratif et Financier",
-    active: true
+    active: true,
+    logo: "/logos/eco-energie-conseil.png"
   },
   {
     id: "M002",
@@ -89,7 +95,8 @@ const SAMPLE_MANDATAIRES: MandataireMPR[] = [
     prenom: "Sophie",
     telephone: "04 78 12 34 56",
     typeMandat: "Financier",
-    active: true
+    active: true,
+    logo: "/logos/stp-logo.png"
   },
   {
     id: "M003",
@@ -106,7 +113,8 @@ const SAMPLE_MANDATAIRES: MandataireMPR[] = [
     prenom: "Pierre",
     telephone: "05 56 78 90 12",
     typeMandat: "Administratif",
-    active: false
+    active: false,
+    logo: "/logos/expertclimat.png"
   }
 ];
 
@@ -135,14 +143,17 @@ export default function MandataireMPRPage() {
     prenom: "",
     telephone: "",
     typeMandat: "",
-    active: true
+    active: true,
+    logo: "",
+    logoFile: null
   });
 
   // Edit handler
   const handleEditMandataire = (mandataire: MandataireMPR) => {
     setSelectedMandataire(mandataire);
     setMandataireForm({
-      ...mandataire
+      ...mandataire,
+      logoFile: null // Reset logoFile since we don't store it in the main data
     });
     setViewMode("form");
   };
@@ -170,16 +181,18 @@ export default function MandataireMPRPage() {
       prenom: "",
       telephone: "",
       typeMandat: "",
-      active: true
+      active: true,
+      logo: "",
+      logoFile: null
     });
     setViewMode("form");
   };
 
   // Save handler
   const handleSaveMandataire = () => {
-    const mandataireToSave: MandataireMPR = {
-      ...mandataireForm
-    };
+    // Use object destructuring to exclude logoFile from mandataireToSave
+    const {  ...mandataireData } = mandataireForm;
+    const mandataireToSave: MandataireMPR = mandataireData;
 
     if (selectedMandataire) {
       // Update existing mandataire
@@ -204,11 +217,23 @@ export default function MandataireMPRPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setMandataireForm({
-        ...mandataireForm,
-        signatureFile: file,
-        signatureFileName: file.name
-      });
+      const fieldName = e.target.name;
+      
+      if (fieldName === "logoFile") {
+        // For logo uploads
+        setMandataireForm({
+          ...mandataireForm,
+          logo: file.name,
+          logoFile: file
+        });
+      } else {
+        // For signature uploads
+        setMandataireForm({
+          ...mandataireForm,
+          signatureFileName: file.name,
+          signatureFile: file
+        });
+      }
     }
   };
 
@@ -360,9 +385,33 @@ export default function MandataireMPRPage() {
                         <div className="p-5 border-b border-[#eaeaea] bg-gradient-to-r from-white to-[#f8fafc]">
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-start gap-3">
-                              <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
-                                <UserIcon className="h-6 w-6 text-[#213f5b]" />
-                              </div>
+                              {/* Replace the icon with the company logo if available */}
+                              {mandataire.logo ? (
+                                <div className="h-10 w-10 rounded-lg overflow-hidden bg-white border border-[#eaeaea] flex items-center justify-center">
+                                  <img 
+                                    src={mandataire.logo} 
+                                    alt={`${mandataire.raisonSociale} Logo`} 
+                                    className="max-h-10 max-w-10 object-contain"
+                                    onError={(e) => {
+                                      // If image fails to load, show the default icon
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                      // Create and append the icon as fallback
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        const icon = document.createElement('div');
+                                        icon.className = "p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg";
+                                        icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#213f5b]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>`;
+                                        parent.appendChild(icon);
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="p-2 bg-[#bfddf9] bg-opacity-50 rounded-lg group-hover:bg-opacity-100 transition-colors">
+                                  <UserIcon className="h-6 w-6 text-[#213f5b]" />
+                                </div>
+                              )}
                               <div>
                                 <h3 className="font-bold text-[#213f5b] line-clamp-1">{mandataire.raisonSociale}</h3>
                                 <p className="text-xs opacity-75">{mandataire.civilite} {mandataire.prenom} {mandataire.nom}</p>
@@ -446,6 +495,51 @@ export default function MandataireMPRPage() {
                   </div>
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Logo Upload */}
+                      <div className="space-y-4 md:col-span-2 mb-6">
+                        <label className="block text-sm font-medium text-[#213f5b] mb-1">Logo de l&apos;entreprise</label>
+                        <div className="flex items-center gap-4">
+                          {mandataireForm.logo ? (
+                            <div className="relative h-24 w-24 border border-[#bfddf9] rounded-lg overflow-hidden bg-[#f0f7ff] flex items-center justify-center">
+                              <img 
+                                src={mandataireForm.logo} 
+                                alt="Logo preview" 
+                                className="max-h-20 max-w-20 object-contain"
+                                onError={(e) => {
+                                  // If image fails to load, show a placeholder
+                                  (e.target as HTMLImageElement).src = "/placeholder-logo.png";
+                                }} 
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setMandataireForm({...mandataireForm, logo: "", logoFile: null})}
+                                className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm hover:bg-red-50 transition-colors"
+                              >
+                                <XMarkIcon className="h-4 w-4 text-red-500" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="h-24 w-24 border border-dashed border-[#bfddf9] rounded-lg bg-[#f0f7ff] flex items-center justify-center">
+                              <span className="text-xs text-[#213f5b] opacity-50">Aucun logo</span>
+                            </div>
+                          )}
+                          <div>
+                            <input
+                              id="logoFile"
+                              name="logoFile"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileChange}
+                              className="hidden"
+                            />
+                            <label htmlFor="logoFile" className="cursor-pointer flex items-center justify-center px-4 py-2 bg-[#f0f7ff] text-[#213f5b] rounded-lg border border-[#bfddf9] hover:bg-[#bfddf9] transition-colors">
+                              <span className="text-sm">Choisir un logo</span>
+                            </label>
+                            <p className="text-xs text-[#213f5b] opacity-75 mt-1">Format recommandé: PNG ou JPG</p>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Raison sociale */}
                       <div className="space-y-2 md:col-span-2">
                         <label className="block text-sm font-medium text-[#213f5b] mb-1" htmlFor="raisonSociale">
@@ -631,6 +725,7 @@ export default function MandataireMPRPage() {
                             <span className="text-sm text-[#213f5b]">Choisir le fichier</span>
                             <input
                               id="signatureFile"
+                              name="signatureFile"
                               type="file"
                               accept="image/png,image/jpeg,application/pdf"
                               onChange={handleFileChange}
