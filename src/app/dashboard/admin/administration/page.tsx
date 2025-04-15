@@ -70,7 +70,7 @@ const rolesConfig: Record<RoleKey, {
     color: "#d2fcb2", 
     gradient: "from-green-500 to-green-600",
     icon: Cog6ToothIcon,
-    logo: "https://cdn-icons-png.flaticon.com/512/4108/4108061.png" // Logo for Régie
+    logo: "/001_001-nike-logos-swoosh-black.jpg" // Logo for Régie
   },
   "Technician / Installer": { 
     color: "#89c4f7", 
