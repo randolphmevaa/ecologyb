@@ -319,7 +319,7 @@ const getTermes = (dealId?: string): string => {
   `;
 };
 
-// Updated getFinancialSummary function with signature section
+// Fixed getFinancialSummary function to ensure MaPrimeRenov shows in PDF
 const getFinancialSummary = (
   totals: FinancialTotals, 
   dealId?: string, 
@@ -366,29 +366,29 @@ const getFinancialSummary = (
         </div>
   `;
 
-  // Add deal-related primes if available
-  if (dealId && totals.primeCEE) {
+  // Add deal-related prime CEE if available
+  if (dealId && totals.primeCEE && totals.primeCEE > 0) {
     html += `
         <div class="finance-row primes">
           <div class="finance-label">Prime ${dealName}</div>
           <div class="finance-value">-${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totals.primeCEE)}</div>
         </div>
     `;
-    
-    // Only show Estimation MaPrimeRenov when operations exist AND Prime MPR is set to "Prime MPR deduite"
-    const showMaPrimeRenov = hasOperations && 
-    incentivesData && 
-    incentivesData.primeMPR === "Prime MPR deduite" && 
-    totals.primeRenov !== undefined;
-
-    if (showMaPrimeRenov && totals.primeRenov !== undefined) {
+  }
+  
+  // Directly match the DevisEditor logic for MaPrimeRenov display
+  // Force simpler check focusing on the presence of primeRenov value
+  const primeRenovValue = totals.primeRenov ?? 0;
+  if (primeRenovValue > 0 && hasOperations && incentivesData?.primeMPR !== "Prime MPR non deduite") {
     html += `
-    <div class="finance-row primes">
-    <div class="finance-label">Estimation MaPrimeRenov'</div>
-    <div class="finance-value">-${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totals.primeRenov)}</div>
-    </div>
+      <div class="finance-row primes">
+        <div class="finance-label">Estimation MaPrimeRenov'</div>
+        <div class="finance-value">-${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(primeRenovValue)}</div>
+      </div>
+      <div class="finance-note">
+        <div class="finance-note-text">Sous réserve de l'accord de l'ANAH (**)</div>
+      </div>
     `;
-    }
   }
 
   // Add user-defined incentives if available
@@ -444,11 +444,15 @@ const getFinancialSummary = (
     }
   }
 
-  // Add final total
+  // Modified final total - positioning the amount at the bottom right of the finance-label
   html += `
       <div class="final-total">
-        <div class="finance-label">Reste à payer</div>
-        <div class="finance-value">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totals.remaining)}</div>
+        <div class="finance-label" style="position: relative; width: 100%;">
+          Reste à payer
+          <div style="position: absolute; bottom: 0; right: 0; font-weight: 700; color: var(--navy);">
+            ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totals.remaining)}
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -529,6 +533,52 @@ const getTermsAndConditions = (quoteNumber: string, formattedDate: string) => `
 
 // Add styling for financing section in getDevisStyles function
 const getDevisStyles = () => `
+/* Enhanced Background Pattern Styles */
+.page {
+  position: relative;
+  background-color: white;
+  overflow: hidden; /* Ensure pattern stays within page boundaries */
+}
+
+/* Main repeating pattern - diagonal arrangement */
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/ecologyb.png');
+  background-repeat: repeat;
+  background-size: 200px auto;
+  opacity: 0.035;
+  transform: rotate(18deg) scale(1.2);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Corner decorative elements */
+.page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 160px;
+  height: 160px;
+  background-image: url('/ecologyb.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.08;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Content positioning */
+.content {
+  position: relative;
+  z-index: 1;
+}
+
 /* Updated Financial Summary Styling */
 .finance-wrapper {
   display: flex;
@@ -1096,9 +1146,6 @@ const getFinancingSection = (financingData: FinancingData) => {
   `;
 };
 
-// Modify the generateDevisPDF function in devis-pdf-generator.tsx
-// Replace the last part of the function with this:
-
 export const generateDevisPDF = (
   tableItems: TableItem[],
   quoteNumber: string,
@@ -1129,11 +1176,22 @@ export const generateDevisPDF = (
     clientNumber: '76-750595907',
   }
 ) => {
-  // Check if operations exist in the tableItems
+  // Check if operations exist in the tableItems - using a more consistent method
   const hasOperations = tableItems.some(item => 
-    item.id?.startsWith('op-') || // Check by ID if available
-    item.reference?.startsWith('BAR-TH-') // Check by operation reference code pattern
+    (item.id && item.id.startsWith('op-')) || 
+    (item.reference && (
+      item.reference.startsWith('BAR-TH-') || 
+      ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
+    ))
   );
+
+  // Ensure these values are properly passed to the getFinancialSummary function
+  console.log("PDF Generator Debug:", {
+    hasOperations,
+    dealId,
+    hasPrimeRenov: totals.primeRenov !== undefined && totals.primeRenov > 0,
+    primeMPRValue: incentivesData?.primeMPR
+  });
 
   // Check if we should show MaPrimeRenov conditions
   const showMaPrimeRenovConditions = hasOperations && 
@@ -1143,6 +1201,22 @@ export const generateDevisPDF = (
   
   // Format date
   const formattedDate = formatDate(quoteDate);
+
+  // Add finance note styles
+  const additionalStyles = `
+    /* MaPrimeRenov note styling */
+    .finance-note {
+      padding: 0 4mm 2mm 4mm;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .finance-note-text {
+      font-size: 8px;
+      color: #666;
+      font-style: italic;
+      margin-top: -1mm;
+    }
+  `;
   
   // Generate HTML content
   const htmlContent = `
@@ -1153,6 +1227,7 @@ export const generateDevisPDF = (
         <style>
           ${getCommonStyles()}
           ${getDevisStyles()}
+          ${additionalStyles}
           
           /* Add print-specific styles */
           @media print {
@@ -1193,6 +1268,9 @@ export const generateDevisPDF = (
         
         <!-- Page 1 -->
         <div class="page">
+          <div class="gradient-overlay"></div>
+          <div class="vignette"></div>
+          <div class="bottom-left-decoration"></div>
           ${getCompanyHeader()}
           
           <!-- Main Content -->
@@ -1224,6 +1302,9 @@ export const generateDevisPDF = (
         
         <!-- Page 2 -->
         <div class="page">
+          <div class="gradient-overlay"></div>
+          <div class="vignette"></div>
+          <div class="bottom-left-decoration"></div>
           ${getCompanyHeader()}
           
           <!-- Main Content -->

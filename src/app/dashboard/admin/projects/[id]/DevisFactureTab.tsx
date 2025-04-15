@@ -5918,7 +5918,7 @@ const handleUpdateCustomName = (documentId: string, customName: string) => {
         setTimeout(() => {
           const mockDocuments: Document[] = [
             {
-              id: "1",
+              id: "DE15032025-1",
               type: "devis",
               reference: "DE15032025-1",
               clientId: contactId,
@@ -5932,7 +5932,7 @@ const handleUpdateCustomName = (documentId: string, customName: string) => {
               fileUrl: ""
             },
             {
-              id: "2",
+              id: "DE18032025-2",
               type: "devis",
               reference: "DE18032025-2",
               clientId: contactId,
@@ -5945,7 +5945,7 @@ const handleUpdateCustomName = (documentId: string, customName: string) => {
               fileUrl: ""
             },
             {
-              id: "3",
+              id: "FA20032025-1",
               type: "facture",
               reference: "FA20032025-1",
               clientId: contactId,
@@ -5959,7 +5959,7 @@ const handleUpdateCustomName = (documentId: string, customName: string) => {
               fileUrl: ""
             },
             {
-              id: "4",
+              id: "DE22032025-3",
               type: "devis",
               reference: "DE22032025-3",
               clientId: contactId,

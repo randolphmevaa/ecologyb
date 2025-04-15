@@ -113,3 +113,30 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: auto;
 }
 
+/* Updated Final Total Styling */
+.final-total {
+  background-color: var(--extra-light-blue);
+  padding: 3mm 4mm;
+}
+
+.final-total .finance-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  padding-bottom: 5mm; /* Add padding to make room for the positioned price */
+  position: relative;
+  width: 100%;
+}
+
+/* Add this to your getDevisStyles function */
+.finance-note {
+  padding: 0 4mm 2mm 4mm;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.finance-note-text {
+  font-size: 8px;
+  color: #666;
+  font-style: italic;
+  margin-top: -1mm;
+}
