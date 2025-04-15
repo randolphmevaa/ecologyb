@@ -6157,7 +6157,7 @@ const handleUpdateCustomName = (documentId: string, customName: string) => {
             className="px-4 py-2 bg-white text-blue-700 rounded-lg shadow-md hover:bg-blue-50 transition-colors flex items-center gap-2"
           >
             <PlusIcon className="h-5 w-5" />
-            <span>Nouveau document</span>
+            <span>Nouveau devis</span>
           </button>
         </div>
       </motion.div>
