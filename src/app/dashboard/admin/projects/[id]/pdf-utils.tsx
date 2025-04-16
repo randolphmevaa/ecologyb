@@ -306,9 +306,6 @@ export const getCompanyHeader = () => `
       <span style="font-size: 8px; margin-top: 4px;">QPAC/74310</span>
     </div>
   </div>
-
-  <!-- Watermark -->
-  <div class="watermark" style="-webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">ECOLOGY'B</div>
 `;
 
 // Function to generate HTML for the company footer with enhanced color support

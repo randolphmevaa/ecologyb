@@ -21,9 +21,6 @@ export const getCustomFilename = () => {
   return customFilename;
 };
 
-// Then modify the openPrintWindow function or create a wrapper
-// If you don't have direct access to modify openPrintWindow, create this wrapper function:
-
 // import { openPrintWindow as originalOpenPrintWindow } from './pdf-utils';
 import { 
   formatDate, 
@@ -81,20 +78,6 @@ interface FinancingData {
   totalAmountDue: string;
   sellerName: string;
 }
-
-// Also modify the openPrintWindow function to return a new tab instead of a print window
-// const openPrintWindow = (defaultTitle: string) => {
-//   // Use custom filename if available, otherwise use the default
-//   const title = customFilename || defaultTitle;
-  
-//   // Open a new tab instead of using the original function
-//   const newTab = window.open('', '_blank');
-  
-//   // Reset custom filename after use to avoid affecting future generations
-//   customFilename = "";
-  
-//   return newTab;
-// };
 
 // Add a function to get the deal name from the deal ID
 const getDealName = (dealId?: string): string => {
@@ -284,8 +267,6 @@ const getProductsTable = (tableItems: TableItem[]) => `
     </table>
   </div>
 `;
-
-
 
 // First, let's modify the getMaPrimeRenovConditions function to remove the "Termes et conditions" part
 const getMaPrimeRenovConditions = (primeRenovAmount: number | undefined): string => {
@@ -531,7 +512,7 @@ const getTermsAndConditions = (quoteNumber: string, formattedDate: string) => `
   </div>
 `;
 
-// Add styling for financing section in getDevisStyles function
+// Improved getDevisStyles function with enhanced background pattern
 const getDevisStyles = () => `
 /* Enhanced Background Pattern Styles */
 .page {
@@ -540,35 +521,66 @@ const getDevisStyles = () => `
   overflow: hidden; /* Ensure pattern stays within page boundaries */
 }
 
-/* Main repeating pattern - diagonal arrangement */
+/* Main background - perfectly centered logo with minimal rotation */
 .page::before {
   content: '';
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 100%; /* Kept at exact page size */
+  height: 100%; /* Kept at exact page size */
+  background-image: url('/ecologyb.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain; /* Use contain to ensure the full logo is visible */
+  opacity: 0.09; /* Reduced opacity as requested */
+  transform: translate(-50%, -50%) rotate(0deg); /* Almost no rotation, just 1 degree */
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Secondary logo - reduced opacity to match main logo */
+.page .secondary-logo {
+  position: absolute;
+  bottom: 50px;
+  right: 50px;
+  width: 150px;
+  height: 150px;
+  background-image: url('/ecologyb.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.12; /* Reduced to match main logo */
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Make sure to add this div to your HTML structure for the secondary logo */
+
+/* REMOVED bottom-left decoration since we now have a giant main logo */
+.page .bottom-left-decoration {
+  content: none; /* Removing this element since we have one giant logo now */
+}
+
+/* Lighter gradient overlay to make logo more visible */
+.page .gradient-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('/ecologyb.png');
-  background-repeat: repeat;
-  background-size: 200px auto;
-  opacity: 0.035;
-  transform: rotate(18deg) scale(1.2);
+  background: linear-gradient(145deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.6) 100%);
   z-index: 0;
   pointer-events: none;
 }
 
-/* Corner decorative elements */
-.page::after {
-  content: '';
+/* New: Add a subtle vignette effect */
+.page .vignette {
   position: absolute;
   top: 0;
+  left: 0;
   right: 0;
-  width: 160px;
-  height: 160px;
-  background-image: url('/ecologyb.png');
-  background-repeat: no-repeat;
-  background-size: contain;
-  opacity: 0.08;
+  bottom: 0;
+  box-shadow: inset 0 0 100px rgba(0,0,0,0.03);
   z-index: 0;
   pointer-events: none;
 }
@@ -579,6 +591,7 @@ const getDevisStyles = () => `
   z-index: 1;
 }
 
+/* The rest of your existing styles follow below */
 /* Updated Financial Summary Styling */
 .finance-wrapper {
   display: flex;
