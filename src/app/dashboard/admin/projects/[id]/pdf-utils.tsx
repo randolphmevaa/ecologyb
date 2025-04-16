@@ -26,14 +26,28 @@ export const companyInfo = {
     navyBlue: "#213f5b"
   };
   
-  // Format a date for PDF display
-  export const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+  // Format a date for PDF display with fallback to current date
+export const formatDate = (dateString: string): string => {
+  // Try to create a date from the provided string
+  const date = new Date(dateString);
+  
+  // Check if the date is valid
+  if (isNaN(date.getTime())) {
+    // If invalid, use current date as fallback
+    return new Date().toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
-  };
+  }
+  
+  // If valid, use the provided date
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
   
 // Modify the print-specific styles in getCommonStyles to preserve colors
 export const getCommonStyles = () => `

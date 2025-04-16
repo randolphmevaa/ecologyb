@@ -1,6 +1,5 @@
-// Devis PDF Generator Module
-// Add these lines at the beginning of your devis-pdf-generator.tsx file
-// (after the imports but before any other code)
+// Optimized Devis PDF Generator Module
+// Improved for perfect A4 printing and professional layout
 
 // Store custom filename
 let customFilename = "";
@@ -21,20 +20,15 @@ export const getCustomFilename = () => {
   return customFilename;
 };
 
-// import { openPrintWindow as originalOpenPrintWindow } from './pdf-utils';
+// Import utilities from pdf-utils
 import { 
   formatDate, 
   getCommonStyles, 
   getCompanyHeader, 
   getCompanyFooter,
-  // openPrintWindow,
-  // triggerPrint
 } from './pdf-utils';
 
-// import { SizingNote } from './types';
-
 // Define proper interfaces to replace 'any' types
-// Update the TableItem interface to include id
 interface TableItem {
   reference: string;
   name: string;
@@ -42,10 +36,9 @@ interface TableItem {
   unitPriceHT: number;
   tva: number;
   totalHT: number;
-  id?: string; // Add optional id property
+  id?: string;
 }
 
-// Add IncentivesData interface
 interface IncentivesData {
   primeCEE: string;
   remiseExceptionnelle: string;
@@ -63,7 +56,6 @@ interface FinancialTotals {
   remaining: number;
 }
 
-// Add FinancingData interface to existing interfaces
 interface FinancingData {
   bankName: string;
   fixedRate: string;
@@ -79,7 +71,7 @@ interface FinancingData {
   sellerName: string;
 }
 
-// Add a function to get the deal name from the deal ID
+// Function to get the deal name from the deal ID
 const getDealName = (dealId?: string): string => {
   if (!dealId) return '';
   
@@ -90,11 +82,12 @@ const getDealName = (dealId?: string): string => {
     // Add more deals here as needed
   };
   
-  return dealMap[dealId] || dealId; // Return the mapped name or the ID if no mapping exists
+  return dealMap[dealId] || dealId;
 };
 
-// Update the getCustomerAndQuoteInfo function to include DEVIS number and client name
-// Update the getCustomerAndQuoteInfo function to include additional dates
+// ===== IMPROVED LAYOUT COMPONENTS =====
+
+// Update the getCustomerAndQuoteInfo function with improved spacing and typography
 const getCustomerAndQuoteInfo = (
   clientName: string, 
   quoteNumber: string, 
@@ -227,10 +220,10 @@ const getCustomerAndQuoteInfo = (
     </div>
   </div>`;
 
-// Generate the products table HTML
+  
+// Generate the products table HTML with improved typography and spacing and pagination
 const getProductsTable = (tableItems: TableItem[]) => `
   <!-- Products Table -->
-
   <div class="table-wrapper">
     <table>
       <thead>
@@ -264,11 +257,17 @@ const getProductsTable = (tableItems: TableItem[]) => `
           </tr>
         `}).join('')}
       </tbody>
+      <tfoot>
+        <!-- Empty footer to ensure proper table pagination -->
+        <tr style="height: 0; visibility: hidden;">
+          <td colspan="7"></td>
+        </tr>
+      </tfoot>
     </table>
   </div>
 `;
 
-// First, let's modify the getMaPrimeRenovConditions function to remove the "Termes et conditions" part
+// Improved MaPrimeRenov Conditions function with better typography
 const getMaPrimeRenovConditions = (primeRenovAmount: number | undefined): string => {
   if (primeRenovAmount === undefined || primeRenovAmount === 0) return '';
   
@@ -276,7 +275,7 @@ const getMaPrimeRenovConditions = (primeRenovAmount: number | undefined): string
   
   return `
     <!-- MaPrimeRenov Conditions -->
-    <div class="additional-section" style="margin-top: 8mm; background-color: #f0f8ff; border-left: 3px solid #1e40af;">
+    <div class="additional-section prime-renov-section" style="margin-top: 8mm; background-color: #f0f8ff; border-left: 3px solid #1e40af;">
       <h3 class="additional-title">Conditions particulières relatives à l'aide MaPrimeRénov'</h3>
       <div class="additional-content">
         <p>(**) Conditions particulières relatives à l'aide ANAH / MaPrimeRénov Cette offre est cumulable avec l'aide MaPrimeRénov', accordée uniquement après analyse du dossier, d'un montant estimatif de ${formattedAmount}. Dans le cas où l'aide notifiée au client est inférieure au montant de l'aide prévisionnelle, l'usager n'est pas lié par le devis et l'entreprise s'engage à proposer un devis rectificatif. Le client conserve alors un droit de rétractation d'une durée de quatorze jours à partir de la date de présentation du devis rectificatif. L'aide MaPrimeRénov' est conditionnelle et soumise à la conformité des pièces justificatives et informations déclarées par le bénéficiaire. En cas de fausse déclaration, de manoeuvre frauduleuse ou de changement du projet de travaux subventionné, le bénéficiaire s'expose au retrait et reversement de tout ou partie de la prime. Les services de l'Anah pourront faire procéder à tout contrôle des engagements et sanctionner le bénéficiaire et son mandataire éventuel des manquements constatés. Prime versée par l'ANAH d'un montant prévisionnel de ${formattedAmount} dans le cadre du dispositif MaPrimeRénov'</p>
@@ -285,13 +284,13 @@ const getMaPrimeRenovConditions = (primeRenovAmount: number | undefined): string
   `;
 };
 
-// Now, let's create a new function for "Termes et conditions"
+// Improved Termes et conditions function with better spacing
 const getTermes = (dealId?: string): string => {
   const dealName = getDealName(dealId);
   
   return `
     <!-- Termes et Conditions CEE -->
-    <div class="additional-section" style="margin-top: 8mm; background-color: #f9f9f9; border-left: 3px solid #6B7280;">
+    <div class="additional-section terms-section" style="margin-top: 8mm; background-color: #f9f9f9; border-left: 3px solid #6B7280;">
       <h3 class="additional-title">Termes et conditions</h3>
       <div class="additional-content">
         <p>Montant final versé par ${dealName} en votre nom et pour votre compte dans le cadre du mandat que vous avez signé et du dispositif des Certificats d'Économies d'Énergie. Cette déduction est conditionnée à la réception, dans les délais de validité de votre demande de Prime ${dealName}, d'un dossier conforme et validé par ${dealName}, et des travaux contrôlés conformes en l'absence duquel vous devrez nous régler directement ce montant.</p>
@@ -300,7 +299,7 @@ const getTermes = (dealId?: string): string => {
   `;
 };
 
-// Fixed getFinancialSummary function to ensure MaPrimeRenov shows in PDF
+// Improved Financial Summary with better alignment and typography
 const getFinancialSummary = (
   totals: FinancialTotals, 
   dealId?: string, 
@@ -358,7 +357,6 @@ const getFinancialSummary = (
   }
   
   // Directly match the DevisEditor logic for MaPrimeRenov display
-  // Force simpler check focusing on the presence of primeRenov value
   const primeRenovValue = totals.primeRenov ?? 0;
   if (primeRenovValue > 0 && hasOperations && incentivesData?.primeMPR !== "Prime MPR non deduite") {
     html += `
@@ -425,7 +423,7 @@ const getFinancialSummary = (
     }
   }
 
-  // Modified final total - positioning the amount at the bottom right of the finance-label
+  // Modified final total with improved positioning
   html += `
       <div class="final-total">
         <div class="finance-label" style="position: relative; width: 100%;">
@@ -442,7 +440,7 @@ const getFinancialSummary = (
   return html;
 };
 
-// Generate the additional information HTML section
+// Generate the additional information HTML section with improved typography
 const getAdditionalInfo = (additionalInfo: string) => {
   if (!additionalInfo) return '';
   
@@ -455,634 +453,7 @@ const getAdditionalInfo = (additionalInfo: string) => {
   `;
 };
 
-// Generate the terms and conditions HTML for page 2
-const getTermsAndConditions = (quoteNumber: string, formattedDate: string) => `
-  <div class="document-title">
-    <div class="small-label">Annexe au devis</div>
-    <h1 class="title">CONDITIONS GÉNÉRALES DE VENTE</h1>
-    <div class="subtitle">Devis N° <strong>${quoteNumber}</strong> | Date: <strong>${formattedDate}</strong></div>
-  </div>
-  
-  <!-- Terms and Conditions -->
-  <div class="terms-content">
-    <h4>Article 1 - Acceptation des conditions générales de vente</h4>
-    <p>Les présentes conditions générales de vente sont applicables à toutes commandes passées par le Client auprès de notre société. Toute commande implique l'acceptation sans réserve par le Client de ces conditions générales de vente.</p>
-
-    <h4>Article 2 - Commandes</h4>
-    <p>Toute commande doit faire l'objet d'un devis signé par le Client, accompagné d'un acompte de 30% du montant total TTC. Les commandes ne sont définitives qu'après acceptation écrite de notre société.</p>
-
-    <h4>Article 3 - Prix et paiement</h4>
-    <p>Les prix sont exprimés en euros, HT et TTC. Le solde du prix est payable à la livraison ou à la fin des travaux. Tout retard de paiement entraînera l'application de pénalités de retard au taux légal en vigueur.</p>
-
-    <h4>Article 4 - Délais d'exécution</h4>
-    <p>Les délais d'exécution sont donnés à titre indicatif. Aucune pénalité de retard ne pourra être appliquée à notre société en cas de retard dans la livraison ou l'exécution des travaux, sauf convention expresse entre les parties.</p>
-
-    <h4>Article 5 - Garanties</h4>
-    <p>Les travaux réalisés par notre société sont garantis conformément à la législation en vigueur. Pour mettre en œuvre la garantie, le Client doit impérativement signaler par écrit à notre société les défauts qu'il constate.</p>
-
-    <h4>Article 6 - Droit de rétractation</h4>
-    <p>Conformément aux dispositions légales en vigueur, le Client dispose d'un délai de 14 jours à compter de la conclusion du contrat pour exercer son droit de rétractation, sans avoir à justifier de motifs ni à payer de pénalités.</p>
-
-    <h4>Article 7 - Litiges</h4>
-    <p>En cas de litige, les parties s'efforceront de régler leur différend à l'amiable. À défaut d'accord amiable, le tribunal compétent sera celui du lieu du siège social de notre société.</p>
-    
-    <h4>Article 8 - Installation et mise en service</h4>
-    <p>L'installation et la mise en service des équipements sont effectuées par notre société ou par un sous-traitant agréé. Le Client s'engage à mettre à disposition un espace adapté et conforme aux normes en vigueur pour l'installation des équipements.</p>
-    
-    <h4>Article 9 - Responsabilité</h4>
-    <p>Notre société ne pourra être tenue responsable des dommages indirects ou immatériels subis par le Client, tels que pertes d'exploitation, pertes de production, manque à gagner, etc. En tout état de cause, la responsabilité de notre société est limitée au montant HT payé par le Client pour la commande concernée.</p>
-    
-    <h4>Article 10 - Aides et subventions</h4>
-    <p>Les éventuelles aides, subventions ou crédits d'impôts mentionnés dans notre offre le sont à titre indicatif, sans garantie d'obtention. Notre société ne saurait être tenue responsable en cas de refus d'octroi ou de modification des conditions d'attribution par les organismes concernés.</p>
-    
-    <h4>Article 11 - Réserve de propriété</h4>
-    <p>Notre société conserve la propriété des biens vendus jusqu'au paiement intégral du prix par le Client. Le transfert de propriété des produits au Client n'est réalisé qu'après paiement complet du prix par ce dernier, et ce quelle que soit la date de livraison ou d'installation desdits produits.</p>
-    
-    <h4>Article 12 - Force majeure</h4>
-    <p>La responsabilité de notre société ne pourra pas être mise en œuvre si la non-exécution ou le retard dans l'exécution de l'une de ses obligations décrites dans les présentes conditions générales de vente découle d'un cas de force majeure. À ce titre, la force majeure s'entend de tout événement extérieur, imprévisible et irrésistible au sens de l'article 1148 du Code civil.</p>
-    
-    <h4>Article 13 - Protection des données personnelles</h4>
-    <p>Les données personnelles collectées auprès des Clients sont destinées exclusivement à l'usage de notre société. Ces informations sont nécessaires au traitement des commandes et à l'établissement des factures. Conformément à la loi "Informatique et Libertés" et au RGPD, le Client dispose d'un droit d'accès, de rectification et d'opposition aux données personnelles le concernant.</p>
-    
-    <h4>Article 14 - Modifications des conditions générales de vente</h4>
-    <p>Notre société se réserve la faculté de modifier ses conditions générales de vente à tout moment. Les conditions générales de vente applicables sont celles en vigueur à la date de la commande passée par le Client.</p>
-    
-    <h4>Article 15 - Droit applicable</h4>
-    <p>Les présentes conditions générales de vente et les opérations qui en découlent sont régies par le droit français. Tout litige relatif à l'interprétation ou à l'exécution des présentes conditions générales de vente sera de la compétence exclusive des tribunaux français.</p>
-  </div>
-`;
-
-// Improved getDevisStyles function with enhanced background pattern
-const getDevisStyles = () => `
-/* Enhanced Background Pattern Styles */
-.page {
-  position: relative;
-  background-color: white;
-  overflow: hidden; /* Ensure pattern stays within page boundaries */
-}
-
-/* Main background - perfectly centered logo with minimal rotation */
-.page::before {
-  content: '';
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  width: 100%; /* Kept at exact page size */
-  height: 100%; /* Kept at exact page size */
-  background-image: url('/ecologyb.png');
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: contain; /* Use contain to ensure the full logo is visible */
-  opacity: 0.09; /* Reduced opacity as requested */
-  transform: translate(-50%, -50%) rotate(0deg); /* Almost no rotation, just 1 degree */
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Secondary logo - reduced opacity to match main logo */
-.page .secondary-logo {
-  position: absolute;
-  bottom: 50px;
-  right: 50px;
-  width: 150px;
-  height: 150px;
-  background-image: url('/ecologyb.png');
-  background-repeat: no-repeat;
-  background-size: contain;
-  opacity: 0.12; /* Reduced to match main logo */
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Make sure to add this div to your HTML structure for the secondary logo */
-
-/* REMOVED bottom-left decoration since we now have a giant main logo */
-.page .bottom-left-decoration {
-  content: none; /* Removing this element since we have one giant logo now */
-}
-
-/* Lighter gradient overlay to make logo more visible */
-.page .gradient-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(145deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.6) 100%);
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* New: Add a subtle vignette effect */
-.page .vignette {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  box-shadow: inset 0 0 100px rgba(0,0,0,0.03);
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Content positioning */
-.content {
-  position: relative;
-  z-index: 1;
-}
-
-/* The rest of your existing styles follow below */
-/* Updated Financial Summary Styling */
-.finance-wrapper {
-  display: flex;
-  justify-content: space-between; /* Changed from flex-end to space-between */
-  align-items: flex-start;
-  margin-bottom: 12mm;
-  width: 100%;
-}
-
-/* New styles for signature and payment method section */
-.signature-payment-section {
-  width: 50%; /* Take up half of the available space */
-  padding-right: 10mm;
-}
-
-.signature-area {
-  margin-bottom: 8mm;
-  border-radius: 2mm;
-  padding: 4mm;
-  background-color: #f9f9f9;
-  border: 1px solid #e5e7eb;
-}
-
-.signature-instruction {
-  font-size: 11px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 10mm;
-  text-align: center;
-}
-
-.signature-line {
-  height: 0.5mm;
-  background-color: #e5e7eb;
-  margin-bottom: 5mm;
-}
-
-.signature-date-line {
-  font-size: 10px;
-  color: #333;
-}
-
-.payment-method {
-  border-radius: 2mm;
-  padding: 4mm;
-  background-color: #f9f9f9;
-  border: 1px solid #e5e7eb;
-}
-
-.payment-method-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 3mm;
-}
-
-.payment-method-options {
-  font-size: 10px;
-  color: #555;
-}
-
-/* Update finance summary to take less width */
-.finance-summary {
-  width: 45%; /* Take less than half the space */
-  border-radius: 2mm;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  background-color: white;
-}
-
-  .info-grid {
-    display: flex;
-    gap: 5mm;
-    margin-bottom: 5mm;
-    margin-top: 5mm;
-  }
-  
-  .info-box {
-    flex: 1;
-    border-radius: 2mm;
-    padding: 4mm;
-    position: relative;
-  }
-  
-  .client-box {
-    background-color: var(--extra-light-blue);
-    border-left: 3px solid var(--light-blue);
-  }
-  
-  .details-box {
-    background-color: var(--extra-light-green);
-    border-left: 3px solid var(--light-green);
-  }
-  
-  .box-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 4mm;
-    padding-bottom: 2mm;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-  }
-  
-  .info-row {
-    display: grid;
-    grid-template-columns: 90px 1fr;
-    gap: 2mm;
-    margin-bottom: 2.5mm;
-    align-items: center;
-  }
-  
-  .info-label {
-    font-size: 10px;
-    color: #666;
-    font-weight: 600;
-  }
-  
-  .info-value {
-    font-size: 11px;
-    color: #333;
-  }
-  
-  /* Table Styling */
-  .section-title {
-    position: relative;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 4mm;
-    padding-bottom: 2mm;
-    border-bottom: 1px solid var(--light-blue);
-  }
-  
-  .section-title::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -1px;
-    width: 30mm;
-    height: 2px;
-    background-color: var(--navy);
-  }
-  
-  .table-wrapper {
-    margin-bottom: 12mm;
-    border-radius: 2mm;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  thead {
-    background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%);
-    color: white;
-  }
-  
-  th {
-    text-align: left;
-    padding: 3mm 4mm;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-  
-  td {
-    padding: 3mm 4mm;
-    font-size: 10px;
-    border-bottom: 1px solid #f0f0f0;
-    vertical-align: top;
-  }
-  
-  tr:last-child td {
-    border-bottom: none;
-  }
-  
-  tr:nth-child(even) {
-    background-color: #f9fafc;
-  }
-  
-  .item-name {
-    font-weight: 600;
-    color: var(--navy);
-    font-size: 11px;
-    margin-bottom: 1mm;
-  }
-  
-  .item-desc {
-    font-size: 9px;
-    color: #666;
-    line-height: 1.5;
-  }
-  
-  /* Sizing Note Styling */
-  .sizing-note-section {
-    margin-bottom: 12mm;
-    background-color: var(--extra-light-blue);
-    padding: 4mm;
-    border-radius: 2mm;
-    border-left: 3px solid var(--light-blue);
-  }
-  
-  .sizing-note-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 4mm;
-    padding-bottom: 2mm;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-  }
-  
-  .sizing-note-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3mm;
-    margin-bottom: 4mm;
-  }
-  
-  .sizing-note-row {
-    display: flex;
-    align-items: center;
-  }
-  
-  .sizing-note-label {
-    font-size: 10px;
-    color: #666;
-    font-weight: 600;
-    width: 100px;
-    flex-shrink: 0;
-  }
-  
-  .sizing-note-value {
-    font-size: 11px;
-    color: #333;
-    font-weight: 500;
-  }
-  
-  .sizing-note-details {
-    background-color: rgba(255,255,255,0.5);
-    padding: 3mm;
-    border-radius: 1mm;
-  }
-  
-  .sizing-note-subtitle {
-    font-size: 12px;
-    color: var(--navy);
-    margin-bottom: 3mm;
-    font-weight: 500;
-  }
-  
-  .sizing-note-tech-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 2mm;
-  }
-  
-  .sizing-note-tech-item {
-    margin-bottom: 1.5mm;
-  }
-  
-  .sizing-note-tech-label {
-    font-size: 9px;
-    color: #666;
-    margin-bottom: 0.5mm;
-  }
-  
-  .sizing-note-tech-value {
-    font-size: 10px;
-    color: #333;
-    font-weight: 500;
-  }
-  
-  /* Financial Summary Styling */
-  .finance-wrapper {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 12mm;
-  }
-  
-  .finance-summary {
-    width: 75mm;
-    border-radius: 2mm;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    background-color: white;
-  }
-  
-  .finance-header {
-    background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%);
-    color: white;
-    padding: 3mm 4mm;
-    font-size: 13px;
-    font-weight: 600;
-  }
-  
-  .finance-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 2.5mm 4mm;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  
-  .finance-row:last-child {
-    border-bottom: none;
-  }
-  
-  .finance-label {
-    font-size: 10px;
-    font-weight: 500;
-    color: #555;
-  }
-  
-  .finance-value {
-    font-size: 11px;
-    font-weight: 600;
-    color: #333;
-  }
-  
-  .primes .finance-label, .primes .finance-value {
-    color: #047857;
-  }
-  
-  .final-total {
-    background-color: var(--extra-light-blue);
-    padding: 3mm 4mm;
-  }
-  
-  .final-total .finance-label, .final-total .finance-value {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--navy);
-  }
-  
-  /* Additional Info */
-  .additional-section {
-    margin-bottom: 12mm;
-    padding: 4mm;
-    background-color: #f9fafc;
-    border-radius: 2mm;
-    border-left: 3px solid var(--navy);
-  }
-  
-  .additional-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 3mm;
-    padding-bottom: 2mm;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-  }
-  
-  .additional-content {
-    font-size: 10px;
-    color: #555;
-    line-height: 1.6;
-  }
-  
-  /* Financing Section */
-  .financing-section {
-    margin-bottom: 12mm;
-    padding: 4mm;
-    background-color: #fff8e6;
-    border-radius: 2mm;
-    border-left: 3px solid #f59e0b;
-  }
-  
-  .financing-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 3mm;
-    padding-bottom: 2mm;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-  }
-  
-  .financing-subtitle {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-top: 3mm;
-    margin-bottom: 2mm;
-  }
-  
-  .financing-content {
-    font-size: 10px;
-    color: #555;
-    line-height: 1.6;
-  }
-  
-  .financing-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2mm;
-    margin-top: 3mm;
-  }
-  
-  .financing-row {
-    display: flex;
-    align-items: center;
-  }
-  
-  .financing-label {
-    font-size: 10px;
-    color: #666;
-    font-weight: 500;
-    width: 70px;
-    flex-shrink: 0;
-  }
-  
-  .financing-value {
-    font-size: 11px;
-    color: #333;
-    font-weight: 600;
-  }
-  
-  /* Signature Section */
-  .signature-section {
-    display: flex;
-    gap: 8mm;
-    margin-bottom: 8mm;
-  }
-  
-  .signature-box {
-    flex: 1;
-    padding: 4mm;
-    border-radius: 2mm;
-    position: relative;
-  }
-  
-  .signature-company {
-    background-color: var(--extra-light-blue);
-    border: 1px solid var(--light-blue);
-  }
-  
-  .signature-client {
-    background-color: var(--extra-light-green);
-    border: 1px solid var(--light-green);
-  }
-  
-  .signature-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 8mm;
-  }
-  
-  .signature-line {
-    display: block;
-    width: 100%;
-    height: 1px;
-    background-color: #ddd;
-    margin-bottom: 3mm;
-  }
-  
-  .signature-date {
-    font-size: 9px;
-    color: #666;
-  }
-  
-  .signature-note {
-    position: absolute;
-    bottom: 2mm;
-    left: 4mm;
-    font-size: 8px;
-    color: #888;
-    font-style: italic;
-  }
-  
-  /* Terms and Conditions */
-  .terms-content {
-    font-size: 9px;
-    color: #444;
-    line-height: 1.6;
-  }
-  
-  .terms-content h4 {
-    color: var(--navy);
-    font-size: 11px;
-    font-weight: 600;
-    margin: 4mm 0 1.5mm;
-  }
-  
-  .terms-content p {
-    margin-bottom: 2.5mm;
-  }
-`;
-
-// Generate the financing information HTML section
+// Generate the financing information HTML section with improved spacing
 const getFinancingSection = (financingData: FinancingData) => {
   // Helper function to get frequency label
   const getFrequencyLabel = (frequencyId: string) => {
@@ -1159,6 +530,566 @@ const getFinancingSection = (financingData: FinancingData) => {
   `;
 };
 
+// ===== IMPROVED STYLES =====
+
+// Improved getDevisStyles function with enhanced background pattern and print styles
+const getDevisStyles = () => `
+/* Enhanced A4 Print Optimization */
+@page {
+  size: A4;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 210mm;
+  background: #fff;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+/* Enhanced Background Pattern Styles */
+.page {
+  position: relative;
+  width: 210mm;
+  min-height: 297mm; /* Changed from fixed height to min-height to allow content to flow */
+  margin: 0 auto;
+  background-color: white;
+  overflow: visible; /* Changed from hidden to visible to prevent content cutoff */
+  page-break-after: always;
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* Main background - perfectly centered logo with minimal rotation */
+.page::before {
+  content: '';
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 140mm;
+  height: 140mm;
+  background-image: url('/ecologyb.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+  opacity: 0.08;
+  transform: translate(-50%, -50%) rotate(0deg);
+  z-index: 0;
+  pointer-events: none;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* Lighter gradient overlay to make logo more visible */
+.page .gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(145deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.6) 100%);
+  z-index: 0;
+  pointer-events: none;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* Content positioning */
+.content {
+  position: relative;
+  z-index: 1;
+  padding: 10mm 15mm 35mm 15mm; /* Increased bottom padding to 35mm to make room for footer */
+  box-sizing: border-box;
+  min-height: 220mm; /* Ensure there's enough space between content and footer */
+}
+
+/* Client and Quote Info Grid */
+.info-grid {
+  display: flex;
+  gap: 5mm;
+  margin-bottom: 6mm;
+  margin-top: 5mm;
+}
+
+.info-box {
+  flex: 1;
+  border-radius: 2mm;
+  padding: 4mm;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.client-box {
+  background-color: var(--extra-light-blue);
+  border-left: 3px solid var(--light-blue);
+}
+
+.details-box {
+  background-color: var(--extra-light-green);
+  border-left: 3px solid var(--light-green);
+}
+
+.box-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 3mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 2mm;
+  margin-bottom: 2mm;
+  align-items: center;
+}
+
+.info-label {
+  font-size: 9px;
+  color: #555;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 10px;
+  color: #333;
+}
+
+/* Table Styling */
+.section-title {
+  position: relative;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 4mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid var(--light-blue);
+}
+
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 30mm;
+  height: 2px;
+  background-color: var(--navy);
+}
+
+.table-wrapper {
+  margin-bottom: 10mm;
+  border-radius: 2mm;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  /* Removed overflow: hidden to allow tables to break across pages */
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  page-break-inside: auto; /* Allow table to break across pages */
+}
+
+/* Make sure table headers repeat on each page */
+thead {
+  background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%);
+  color: white;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  display: table-header-group; /* Force headers to appear on each page */
+}
+
+tfoot {
+  display: table-footer-group; /* Force footer to appear on each page */
+}
+
+/* Make sure a row doesn't break across pages if possible */
+tr {
+  page-break-inside: avoid;
+  page-break-after: auto;
+}
+
+th {
+  text-align: left;
+  padding: 3mm 3mm;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+td {
+  padding: 2.5mm 3mm;
+  font-size: 9px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:nth-child(even) {
+  background-color: #f9fafc;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.item-desc {
+  font-size: 9px;
+  color: #333;
+  line-height: 1.4;
+}
+
+/* Additional Sections */
+.additional-section {
+  margin-bottom: 10mm;
+  padding: 4mm;
+  background-color: #f9fafc;
+  border-radius: 2mm;
+  border-left: 3px solid var(--navy);
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.prime-renov-section {
+  background-color: #f0f8ff !important;
+  border-left: 3px solid #1e40af !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.terms-section {
+  background-color: #f9f9f9 !important;
+  border-left: 3px solid #6B7280 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.additional-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 3mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.additional-content {
+  font-size: 9px;
+  color: #444;
+  line-height: 1.5;
+}
+
+/* Improved Financial Summary Styling */
+.finance-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12mm;
+  width: 100%;
+  page-break-inside: avoid; /* Prevent breaking inside financial summary */
+  page-break-before: auto; /* Allow page break before if needed */
+}
+
+/* Signature and payment method section */
+.signature-payment-section {
+  width: 48%;
+  padding-right: 5mm;
+}
+
+.signature-area {
+  margin-bottom: 5mm;
+  border-radius: 2mm;
+  padding: 4mm;
+  background-color: #f9f9f9;
+  border: 1px solid #e5e7eb;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.signature-instruction {
+  font-size: 10px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8mm;
+  text-align: center;
+}
+
+.signature-line {
+  height: 0.5mm;
+  background-color: #d1d5db;
+  margin-bottom: 5mm;
+}
+
+.signature-date-line {
+  font-size: 9px;
+  color: #333;
+}
+
+.payment-method {
+  border-radius: 2mm;
+  padding: 4mm;
+  background-color: #f9f9f9;
+  border: 1px solid #e5e7eb;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.payment-method-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2mm;
+}
+
+.payment-method-options {
+  font-size: 9px;
+  color: #555;
+}
+
+/* Finance summary */
+.finance-summary {
+  width: 45%;
+  border-radius: 2mm;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  background-color: white;
+}
+
+.finance-header {
+  background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%);
+  color: white;
+  padding: 2.5mm 3mm;
+  font-size: 12px;
+  font-weight: 600;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.finance-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2mm 3mm;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.finance-label {
+  font-size: 9px;
+  font-weight: 500;
+  color: #555;
+}
+
+.finance-value {
+  font-size: 10px;
+  font-weight: 600;
+  color: #333;
+}
+
+.primes .finance-label, .primes .finance-value {
+  color: #047857;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.final-total {
+  background-color: var(--extra-light-blue);
+  padding: 3mm;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.final-total .finance-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+/* Finance note */
+.finance-note {
+  padding: 0 3mm 2mm 3mm;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.finance-note-text {
+  font-size: 8px;
+  color: #666;
+  font-style: italic;
+  margin-top: -1mm;
+}
+
+/* Financing Section */
+.financing-section {
+  margin-bottom: 10mm;
+  padding: 4mm;
+  background-color: #fff8e6;
+  border-radius: 2mm;
+  border-left: 3px solid #f59e0b;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.financing-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 3mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.financing-subtitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-top: 3mm;
+  margin-bottom: 2mm;
+}
+
+.financing-content {
+  font-size: 9px;
+  color: #444;
+  line-height: 1.5;
+}
+
+.financing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2mm;
+  margin-top: 3mm;
+}
+
+.financing-row {
+  display: flex;
+  align-items: center;
+}
+
+.financing-label {
+  font-size: 9px;
+  color: #555;
+  font-weight: 500;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.financing-value {
+  font-size: 10px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* PDF embedding styles */
+.pdf-container {
+  width: 297mm; /* Landscape width */
+  height: 210mm; /* Landscape height */
+  overflow: hidden;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  page-break-before: always;
+  page-break-after: always;
+}
+
+.pdf-embed {
+  width: 100%;
+  height: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Print-specific optimizations */
+@media print {
+  body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .page {
+    margin: 0;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    width: 210mm;
+    height: 297mm;
+  }
+  
+  .content {
+    padding: 10mm 15mm;
+  }
+  
+  .print-button {
+    display: none;
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  thead, .finance-header, .footer-accent, .header-accent {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* PDF print optimizations */
+  .pdf-page {
+    overflow: hidden;
+    page-break-before: always;
+  }
+  
+  .landscape-page {
+    width: 297mm;
+    height: 210mm;
+    overflow: visible;
+    size: landscape;
+  }
+  
+  .pdf-container {
+    transform: scale(1);
+    transform-origin: top left;
+  }
+}
+
+/* Optimizations for preview mode */
+.print-button {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  padding: 8px 16px;
+  background-color: #213f5b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 9999;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.print-button:hover {
+  background-color: #2c5480;
+}
+`;
+
+// Main PDF generation function with improved page layout
 export const generateDevisPDF = (
   tableItems: TableItem[],
   quoteNumber: string,
@@ -1167,7 +1098,6 @@ export const generateDevisPDF = (
   totals: FinancialTotals,
   dealId?: string,
   additionalInfo?: string,
-  // sizingNotes: SizingNote[] = [],
   financingData: FinancingData | null = null,
   incentivesData: IncentivesData | null = null,
   validUntilDate?: string,
@@ -1189,7 +1119,7 @@ export const generateDevisPDF = (
     clientNumber: '76-750595907',
   }
 ) => {
-  // Check if operations exist in the tableItems - using a more consistent method
+  // Check if operations exist in the tableItems
   const hasOperations = tableItems.some(item => 
     (item.id && item.id.startsWith('op-')) || 
     (item.reference && (
@@ -1197,14 +1127,6 @@ export const generateDevisPDF = (
       ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
     ))
   );
-
-  // Ensure these values are properly passed to the getFinancialSummary function
-  console.log("PDF Generator Debug:", {
-    hasOperations,
-    dealId,
-    hasPrimeRenov: totals.primeRenov !== undefined && totals.primeRenov > 0,
-    primeMPRValue: incentivesData?.primeMPR
-  });
 
   // Check if we should show MaPrimeRenov conditions
   const showMaPrimeRenovConditions = hasOperations && 
@@ -1215,63 +1137,34 @@ export const generateDevisPDF = (
   // Format date
   const formattedDate = formatDate(quoteDate);
 
-  // Add finance note styles
-  const additionalStyles = `
-    /* MaPrimeRenov note styling */
-    .finance-note {
-      padding: 0 4mm 2mm 4mm;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .finance-note-text {
-      font-size: 8px;
-      color: #666;
-      font-style: italic;
-      margin-top: -1mm;
-    }
-  `;
-  
-  // Generate HTML content
+  // Generate HTML content with optimized layout and improved pagination
   const htmlContent = `
     <!DOCTYPE html>
     <html>
       <head>
         <title>Devis ${quoteNumber}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="color-scheme" content="light">
         <style>
+          @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
           ${getCommonStyles()}
           ${getDevisStyles()}
-          ${additionalStyles}
           
-          /* Add print-specific styles */
-          @media print {
-            body {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            
-            .print-button {
-              display: none;
-            }
+          /* Additional pagination styles */
+          @page {
+            size: A4;
+            margin: 0;
           }
           
-          /* Add a print button style */
-          .print-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            z-index: 9999;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          /* Style for table headers that repeat on each page */
+          table thead {
+            display: table-header-group;
           }
           
-          .print-button:hover {
-            background-color: #2563eb;
+          /* Force a page break before the recapitulatif if needed */
+          .page-break-before {
+            page-break-before: always;
           }
         </style>
       </head>
@@ -1279,15 +1172,13 @@ export const generateDevisPDF = (
         <!-- Add a print button -->
         <button class="print-button" onclick="window.print()">Imprimer</button>
         
-        <!-- Page 1 -->
+        <!-- Page 1 and continued pages for content -->
         <div class="page">
           <div class="gradient-overlay"></div>
-          <div class="vignette"></div>
-          <div class="bottom-left-decoration"></div>
           ${getCompanyHeader()}
           
           <!-- Main Content -->
-          <div class="content" style="margin-top: 0mm;">
+          <div class="content">
             <div class="main-content">
               ${getCustomerAndQuoteInfo(
                 clientName, 
@@ -1304,44 +1195,124 @@ export const generateDevisPDF = (
 
               ${additionalInfo ? getAdditionalInfo(additionalInfo) : ''}
               ${showMaPrimeRenovConditions && totals.primeRenov !== undefined ? getMaPrimeRenovConditions(totals.primeRenov) : ''}
-              ${getTermes(dealId)} <!-- Always include the Termes et conditions section -->
+              ${getTermes(dealId)}
               ${financingData ? getFinancingSection(financingData) : ''}
-              ${getFinancialSummary(totals, dealId, incentivesData, hasOperations)}
+              
+              <!-- Financial summary with potential page break -->
+              <div id="financial-summary-section">
+                ${getFinancialSummary(totals, dealId, incentivesData, hasOperations)}
+              </div>
             </div>
           </div>
           
-          ${getCompanyFooter('Page 1/2')}
+          ${getCompanyFooter('Page 1/')}
         </div>
         
-        <!-- Page 2 -->
-        <div class="page">
-          <div class="gradient-overlay"></div>
-          <div class="vignette"></div>
-          <div class="bottom-left-decoration"></div>
-          ${getCompanyHeader()}
-          
-          <!-- Main Content -->
-          <div class="content">
-            <div class="main-content">
-              ${getTermsAndConditions(quoteNumber, formattedDate)}
-            </div>
+        <!-- CGV.pdf Page (Landscape) -->
+        <div class="page pdf-page landscape-page">
+          <div class="pdf-container">
+            <iframe class="pdf-embed" src="/CGV.pdf#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=FitH" frameborder="0"></iframe>
           </div>
-          
-          ${getCompanyFooter('Page 2/2')}
         </div>
+        
+        <script>
+          // Force loading of all fonts and images before print
+          document.fonts.ready.then(() => {
+            console.log("All fonts are loaded");
+            
+            // Wait for images to load
+            const images = document.querySelectorAll('img');
+            let loadedImages = 0;
+            
+            if (images.length === 0) {
+              initializePagination();
+            } else {
+              images.forEach(img => {
+                if (img.complete) {
+                  loadedImages++;
+                  if (loadedImages === images.length) {
+                    initializePagination();
+                  }
+                } else {
+                  img.addEventListener('load', () => {
+                    loadedImages++;
+                    if (loadedImages === images.length) {
+                      initializePagination();
+                    }
+                  });
+                  
+                  // Also handle errors
+                  img.addEventListener('error', () => {
+                    loadedImages++;
+                    if (loadedImages === images.length) {
+                      initializePagination();
+                    }
+                  });
+                }
+              });
+            }
+          });
+          
+          // Function to check if financial summary needs its own page
+          function initializePagination() {
+            // Fix table headers on every page
+            const tableHeaders = document.querySelectorAll('table thead');
+            tableHeaders.forEach(header => {
+              header.style.display = 'table-header-group';
+            });
+            
+            // Dynamically update page numbers
+            const footers = document.querySelectorAll('.page-number');
+            footers.forEach((footer, index) => {
+              footer.textContent = 'Page ' + (index + 1) + '/' + (footers.length + 1); // +1 for the landscape PDF page
+            });
+            
+            // Check if financial summary needs to break to a new page
+            const financialSummary = document.getElementById('financial-summary-section');
+            if (financialSummary) {
+              const rect = financialSummary.getBoundingClientRect();
+              const pageHeight = 297; // mm
+              const footerHeight = 35; // mm
+              
+              // Convert px to mm for comparison (rough approximation)
+              const pxToMm = 0.264583;
+              const summaryPosInMm = rect.top * pxToMm;
+              
+              // If summary is too close to bottom of page, add page break
+              if (summaryPosInMm > (pageHeight - footerHeight - 80)) {
+                financialSummary.classList.add('page-break-before');
+              }
+            }
+          }
+          
+          // Add event listener for before printing
+          window.addEventListener('beforeprint', () => {
+            // Any last-minute adjustments before printing
+            document.querySelector('.print-button').style.display = 'none';
+          });
+          
+          // Add event listener for after printing
+          window.addEventListener('afterprint', () => {
+            // Restore any elements that were hidden for printing
+            document.querySelector('.print-button').style.display = 'block';
+          });
+        </script>
       </body>
     </html>
   `;
   
-  // Open a new tab instead of using the print window
+  // Open a new tab with improved error handling
   const newTab = window.open('', '_blank');
   if (!newTab) {
     alert('Le bloqueur de fenêtres pop-up a empêché l\'ouverture de l\'aperçu. Veuillez autoriser les fenêtres pop-up pour ce site.');
     return;
   }
   
-  // Write the HTML content to the new tab
+  // Write the HTML content to the new tab with improved rendering
   newTab.document.open();
   newTab.document.write(htmlContent);
   newTab.document.close();
+  
+  // Focus the new tab
+  newTab.focus();
 };
