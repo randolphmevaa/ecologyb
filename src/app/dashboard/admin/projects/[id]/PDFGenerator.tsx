@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { SizingNote, TableItem, FinancialTotals, FinancingData, DPMairieData, IncentivesData } from './types';
 import { generateDevisPDF } from './devis-pdf-generator';
+import { generateFacturePDF } from './facture-pdf-generator';
 import { generateSizingNotePDF } from './sizing-note-pdf-generator';
 import { IndivisionData } from './AddIndivisionModal';
 
@@ -48,13 +49,19 @@ interface PDFGeneratorProps {
   dpMairieData?: DPMairieData | null;
   indivisionData?: IndivisionData | null;
   incentivesData?: IncentivesData;
-  customName?: string; // Add the customName prop
-  // Add new date fields
+  customName?: string; 
+  // Add the date fields
   validUntilDate?: string;
   preVisitDate?: string;
   estimatedWorkDate?: string;
   commitmentDate?: string;
   clientDetails: ClientDetails;
+  // Add these missing invoice-related props
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  paymentDueDate?: string;
+  installationDate?: string;
+  workCompletionDate?: string;
 }
 
 // Update the pdfPreviewPaths object to use the PUBLIC_URL environment variable
@@ -76,6 +83,7 @@ const pdfPreviewPaths: Record<string, string | null> = {
   "dossier-cee": null,
   "devis": null, // No preview available yet
   "sizing-note": null, // No preview available yet
+  "facture": null,
   // Default fallback for any other documents
   "default": null
 };
@@ -93,12 +101,18 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
   dpMairieData = null,
   indivisionData = null,
   incentivesData = null,
-  // customName = "", // Add with default value
+  // customName = "",
   validUntilDate = "",
   preVisitDate = "",
   estimatedWorkDate = "",
   commitmentDate = "",
-  clientDetails
+  clientDetails,
+  // Add defaults for invoice-related properties
+  invoiceNumber = "",
+  invoiceDate = "",
+  paymentDueDate = "",
+  installationDate = "",
+  workCompletionDate = ""
 }) => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [hoveredDocId, setHoveredDocId] = useState<string | null>(null);
@@ -389,6 +403,28 @@ const handleGenerateDevisPDF = () => {
     estimatedWorkDate,   // Add estimated work date
     commitmentDate,
     clientDetails
+  );
+  setDropdownVisible(false);
+};
+
+const handleGenerateFacturePDF = () => {
+  // Generate invoice PDF using similar parameters as the quote
+  generateFacturePDF(
+    tableItems,
+    invoiceNumber,        // Use invoice number 
+    invoiceDate,          // Use invoice date
+    clientName,
+    totals,
+    dealId,
+    additionalInfo,
+    financingData,
+    incentivesData,
+    paymentDueDate,       // Include payment due date
+    installationDate,     // Pass installation date
+    workCompletionDate,   // Pass work completion date
+    quoteNumber,          // Pass quote number for reference
+    quoteDate,            // Pass quote date for reference
+    clientDetails         // Pass client details object
   );
   setDropdownVisible(false);
 };
@@ -1379,12 +1415,21 @@ const generateDocument = (documentType: string) => {
   setDropdownVisible(false);
 };
 
+// Make the invoice option only appear if there's an invoice date
+const invoiceItem = invoiceDate ? [{ 
+  id: "facture", 
+  label: "Facture", 
+  icon: <DocumentIcon className="h-4 w-4 text-red-500" />, 
+  action: handleGenerateFacturePDF 
+}] : [];
+
   // Group documents by category for better organization but with standardized icon colors
   const documentCategories = [
     {
       name: "Documents de base",
       items: [
         { id: "devis", label: "Devis", icon: <DocumentIcon className="h-4 w-4 text-blue-500" />, action: handleGenerateDevisPDF },
+        ...invoiceItem,
         { id: "devis-sans-prix", label: "Devis sans prix", icon: <DocumentIcon className="h-4 w-4 text-blue-500" />, action: () => generateDocument("Devis sans prix") }
       ]
     },

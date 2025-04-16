@@ -1,5 +1,13 @@
-// Optimized Devis PDF Generator Module
-// Improved for perfect A4 printing and professional layout
+// Facture (Invoice) PDF Generator Module
+// Based on the Devis PDF Generator with invoice-specific modifications
+
+// Import utilities from pdf-utils
+import { 
+  formatDate, 
+  getCommonStyles, 
+  getCompanyHeader, 
+  getCompanyFooter,
+} from './pdf-utils';
 
 // Store custom filename
 let customFilename = "";
@@ -19,14 +27,6 @@ export const setCustomFilename = (filename: string) => {
 export const getCustomFilename = () => {
   return customFilename;
 };
-
-// Import utilities from pdf-utils
-import { 
-  formatDate, 
-  getCommonStyles, 
-  getCompanyHeader, 
-  getCompanyFooter,
-} from './pdf-utils';
 
 // Define proper interfaces to replace 'any' types
 interface TableItem {
@@ -85,17 +85,18 @@ const getDealName = (dealId?: string): string => {
   return dealMap[dealId] || dealId;
 };
 
-// ===== IMPROVED LAYOUT COMPONENTS =====
+// ===== IMPROVED LAYOUT COMPONENTS FOR INVOICE =====
 
-// Update the getCustomerAndQuoteInfo function with improved spacing and typography
-const getCustomerAndQuoteInfo = (
+// Update the getCustomerAndInvoiceInfo function with improved spacing and typography
+const getCustomerAndInvoiceInfo = (
   clientName: string, 
-  quoteNumber: string, 
-  quoteDate: string, 
-  validUntilDate?: string,
-  preVisitDate?: string,
-  estimatedWorkDate?: string,
-  commitmentDate?: string,
+  invoiceNumber: string, 
+  invoiceDate: string, 
+  quoteNumber: string,
+  quoteDate: string,
+  paymentDueDate?: string,
+  installationDate?: string,
+  workCompletionDate?: string,
   dealId?: string,
   clientDetails?: {
     street?: string,
@@ -120,43 +121,46 @@ const getCustomerAndQuoteInfo = (
     }
   }
 ) => `
-  <!-- Client and Devis Info -->
+  <!-- Client and Invoice Info -->
   <div class="info-grid">
     <div class="info-box client-box">
-      <h3 class="box-title" style="margin-bottom: 2mm;">DEVIS : ${quoteNumber}</h3>
+      <h3 class="box-title" style="margin-bottom: 2mm;">FACTURE : ${invoiceNumber}</h3>
       <div style="font-size: 11px; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px solid rgba(0,0,0,0.05);">
         Numéro client : ${clientDetails?.clientNumber || 'N/A'}
       </div>
       <div class="info-row">
-        <div class="info-label">Date</div>
+        <div class="info-label">Date de facture</div>
+        <div class="info-value">${formatDate(invoiceDate)}</div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-label">N° de devis</div>
+        <div class="info-value">${quoteNumber}</div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-label">Date du devis</div>
         <div class="info-value">${formatDate(quoteDate)}</div>
       </div>
       
-      ${validUntilDate ? `
+      ${paymentDueDate ? `
       <div class="info-row">
-        <div class="info-label">Valable jusqu'au</div>
-        <div class="info-value">${formatDate(validUntilDate)}</div>
+        <div class="info-label">Date d'échéance</div>
+        <div class="info-value">${formatDate(paymentDueDate)}</div>
       </div>
       ` : ''}
 
-      ${preVisitDate ? `
+      ${installationDate ? `
       <div class="info-row">
-        <div class="info-label">Prévisite/Audit</div>
-        <div class="info-value">${formatDate(preVisitDate)}</div>
+        <div class="info-label">Date de pose</div>
+        <div class="info-value">${formatDate(installationDate)}</div>
       </div>
       ` : ''}
 
-      ${estimatedWorkDate ? `
+      ${workCompletionDate ? `
       <div class="info-row">
-        <div class="info-label">Travaux prévus</div>
-        <div class="info-value">${formatDate(estimatedWorkDate)}</div>
-      </div>
-      ` : ''}
-
-      ${commitmentDate ? `
-      <div class="info-row">
-        <div class="info-label">Engagement</div>
-        <div class="info-value">${formatDate(commitmentDate)}</div>
+        <div class="info-label">Fin des travaux</div>
+        <div class="info-value">${formatDate(workCompletionDate)}</div>
       </div>
       ` : ''}
       
@@ -299,6 +303,28 @@ const getTermes = (dealId?: string): string => {
   `;
 };
 
+// Improved Payment Information section for invoices
+const getPaymentInformation = (paymentDueDate?: string): string => {
+  const formattedDate = paymentDueDate ? formatDate(paymentDueDate) : 'À réception de facture';
+  
+  return `
+    <!-- Payment Information -->
+    <div class="additional-section payment-section" style="margin-top: 8mm; background-color: #fff8e6; border-left: 3px solid #f59e0b;">
+      <h3 class="additional-title">Informations de paiement</h3>
+      <div class="additional-content">
+        <p>Cette facture est payable au plus tard le ${formattedDate}.</p>
+        <p>Modes de paiement acceptés : Chèque, Carte bancaire, Virement bancaire.</p>
+        <p><strong>Coordonnées bancaires :</strong><br>
+        IBAN : FR76 0000 0000 0000 0000 0000 000<br>
+        BIC : XXXXXXXX<br>
+        Banque : Exemple Banque<br>
+        Titulaire : ECOLOGY'B</p>
+        <p class="small-print">En cas de retard de paiement, une pénalité de 3 fois le taux d'intérêt légal sera appliquée, ainsi qu'une indemnité forfaitaire pour frais de recouvrement de 40€ (articles L.441-6 et D.441-5 du Code de Commerce).</p>
+      </div>
+    </div>
+  `;
+};
+
 // Improved Financial Summary with better alignment and typography
 const getFinancialSummary = (
   totals: FinancialTotals, 
@@ -315,17 +341,17 @@ const getFinancialSummary = (
     <div class="finance-wrapper">
       <!-- Signature Section (Left Side) -->
       <div class="signature-payment-section">
-        <div class="signature-area">
-          <div class="signature-instruction">
-            Apposer signature précédée de la mention<br>
-            "Lu et approuvé, bon pour accord"
-          </div>
-          <div class="signature-line"></div>
-          <div class="signature-date-line">Le : _____________________</div>
-        </div>
         <div class="payment-method">
           <div class="payment-method-title">Mode de paiement :</div>
           <div class="payment-method-options">Chèque, CB ou virement bancaire</div>
+        </div>
+        
+        <!-- For invoices, show "Facture acquittée" stamp instead of signature area -->
+        <div class="invoice-stamp">
+          <p>Facture acquittée le : ______________________</p>
+          <div class="stamp-placeholder">
+            <div class="stamp-text">PAYÉ</div>
+          </div>
         </div>
       </div>
       
@@ -530,10 +556,10 @@ const getFinancingSection = (financingData: FinancingData) => {
   `;
 };
 
-// ===== IMPROVED STYLES =====
+// ===== IMPROVED STYLES FOR INVOICE =====
 
-// Improved getDevisStyles function with enhanced background pattern and print styles
-const getDevisStyles = () => `
+// Improved getFactureStyles function with enhanced background pattern and print styles
+const getFactureStyles = () => `
 /* Enhanced A4 Print Optimization */
 @page {
   size: A4;
@@ -774,6 +800,13 @@ tr:nth-child(even) {
   print-color-adjust: exact !important;
 }
 
+.payment-section {
+  background-color: #fff8e6 !important;
+  border-left: 3px solid #f59e0b !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
 .additional-title {
   font-size: 13px;
   font-weight: 600;
@@ -787,6 +820,55 @@ tr:nth-child(even) {
   font-size: 9px;
   color: #444;
   line-height: 1.5;
+}
+
+.small-print {
+  font-size: 8px;
+  color: #666;
+  margin-top: 2mm;
+}
+
+/* Invoice Stamp */
+.invoice-stamp {
+  margin-top: 5mm;
+  border-radius: 2mm;
+  padding: 4mm;
+  background-color: #f9f9f9;
+  border: 1px solid #e5e7eb;
+  position: relative;
+  min-height: 60mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.invoice-stamp p {
+  font-size: 10px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 10mm;
+}
+
+.stamp-placeholder {
+  position: relative;
+  width: 50mm;
+  height: 30mm;
+  border: 2px dashed #d1d5db;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 2mm;
+}
+
+.stamp-text {
+  font-size: 24px;
+  font-weight: 700;
+  color: rgba(220, 38, 38, 0.2);
+  transform: rotate(-15deg);
+  letter-spacing: 5px;
 }
 
 /* Improved Financial Summary Styling */
@@ -986,31 +1068,6 @@ tr:nth-child(even) {
   font-weight: 600;
 }
 
-/* PDF embedding styles */
-.pdf-container {
-  width: 297mm; /* Landscape width */
-  height: 210mm; /* Landscape height */
-  overflow: hidden;
-  position: relative;
-  margin: 0;
-  padding: 0;
-  page-break-before: always;
-  page-break-after: always;
-}
-
-.pdf-embed {
-  width: 100%;
-  height: 100%;
-  border: none;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
 /* Print-specific optimizations */
 @media print {
   body {
@@ -1047,24 +1104,6 @@ tr:nth-child(even) {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
-  /* PDF print optimizations */
-  .pdf-page {
-    overflow: hidden;
-    page-break-before: always;
-  }
-  
-  .landscape-page {
-    width: 297mm;
-    height: 210mm;
-    overflow: visible;
-    size: landscape;
-  }
-  
-  .pdf-container {
-    transform: scale(1);
-    transform-origin: top left;
-  }
 }
 
 /* Optimizations for preview mode */
@@ -1090,230 +1129,233 @@ tr:nth-child(even) {
 `;
 
 // Main PDF generation function with improved page layout
-export const generateDevisPDF = (
-  tableItems: TableItem[],
-  quoteNumber: string,
-  quoteDate: string,
-  clientName: string = "Client",
-  totals: FinancialTotals,
-  dealId?: string,
-  additionalInfo?: string,
-  financingData: FinancingData | null = null,
-  incentivesData: IncentivesData | null = null,
-  validUntilDate?: string,
-  preVisitDate?: string,
-  estimatedWorkDate?: string,
-  commitmentDate?: string,
-  clientDetails = {
-    street: '13 ROUTE DU POINT GAGNARD',
-    postalCode: '13014',
-    city: 'MARSEILLE',
-    cadastralParcel: '000 / ZA / 0061',
-    phoneNumber: '+336122336',
-    zone: 'ZONE H3',
-    houseType: 'Maison individuelle',
-    houseAge: 'de + 15 ans',
-    precarity: 'Modeste',
-    heatingType: 'Bois',
-    dwellingType: 'Maison individuelle',
-    clientNumber: '76-750595907',
+export const generateFacturePDF = (
+tableItems: TableItem[],
+invoiceNumber: string,
+invoiceDate: string,
+clientName: string = "Client",
+totals: FinancialTotals,
+dealId?: string,
+additionalInfo?: string,
+financingData: FinancingData | null = null,
+incentivesData: IncentivesData | null = null,
+paymentDueDate?: string,
+installationDate?: string, 
+workCompletionDate?: string,
+quoteNumber: string = "DEVIS-####",
+quoteDate: string = "",
+clientDetails?: {
+  street?: string,
+  postalCode?: string,
+  city?: string,
+  cadastralParcel?: string,
+  phoneNumber?: string,
+  zone?: string,
+  houseType?: string,
+  houseAge?: string,
+  precarity?: string,
+  heatingType?: string,
+  dwellingType?: string,
+  clientNumber?: string,
+  subcontractor?: {
+    name?: string,
+    address?: string,
+    leader?: string,
+    siret?: string,
+    decennialNumber?: string,
+    qualifications?: string[]
   }
+}
 ) => {
-  // Check if operations exist in the tableItems
-  const hasOperations = tableItems.some(item => 
-    (item.id && item.id.startsWith('op-')) || 
-    (item.reference && (
-      item.reference.startsWith('BAR-TH-') || 
-      ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
-    ))
-  );
+// Check if operations exist in the tableItems
+const hasOperations = tableItems.some(item => 
+  (item.id && item.id.startsWith('op-')) || 
+  (item.reference && (
+    item.reference.startsWith('BAR-TH-') || 
+    ["BAR-TH-171", "BAR-TH-104", "BAR-TH-113", "BAR-TH-143"].includes(item.reference)
+  ))
+);
 
-  // Check if we should show MaPrimeRenov conditions
-  const showMaPrimeRenovConditions = hasOperations && 
-                                    incentivesData && 
-                                    incentivesData.activiteMaPrimeRenov && 
-                                    totals.primeRenov !== undefined;
-  
-  // Format date
-  const formattedDate = formatDate(quoteDate);
+// Check if we should show MaPrimeRenov conditions
+const showMaPrimeRenovConditions = hasOperations && 
+                                  incentivesData && 
+                                  incentivesData.activiteMaPrimeRenov && 
+                                  totals.primeRenov !== undefined;
 
-  // Generate HTML content with optimized layout and improved pagination
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Devis ${quoteNumber}</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="color-scheme" content="light">
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-          ${getCommonStyles()}
-          ${getDevisStyles()}
-          
-          /* Additional pagination styles */
-          @page {
-            size: A4;
-            margin: 0;
-          }
-          
-          /* Style for table headers that repeat on each page */
-          table thead {
-            display: table-header-group;
-          }
-          
-          /* Force a page break before the recapitulatif if needed */
-          .page-break-before {
-            page-break-before: always;
-          }
-        </style>
-      </head>
-      <body>
-        <!-- Add a print button -->
-        <button class="print-button" onclick="window.print()">Imprimer</button>
+// Format date
+const formattedInvoiceDate = formatDate(invoiceDate);
+
+// Generate HTML content with optimized layout and improved pagination
+const htmlContent = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Facture ${invoiceNumber}</title>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="color-scheme" content="light">
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        ${getCommonStyles()}
+        ${getFactureStyles()}
         
-        <!-- Page 1 and continued pages for content -->
-        <div class="page">
-          <div class="gradient-overlay"></div>
-          ${getCompanyHeader()}
-          
-          <!-- Main Content -->
-          <div class="content">
-            <div class="main-content">
-              ${getCustomerAndQuoteInfo(
-                clientName, 
-                quoteNumber, 
-                formattedDate, 
-                validUntilDate,
-                preVisitDate,
-                estimatedWorkDate,
-                commitmentDate,
-                dealId, 
-                clientDetails
-              )}
-              ${getProductsTable(tableItems)}
+        /* Additional pagination styles */
+        @page {
+          size: A4;
+          margin: 0;
+        }
+        
+        /* Style for table headers that repeat on each page */
+        table thead {
+          display: table-header-group;
+        }
+        
+        /* Force a page break before the recapitulatif if needed */
+        .page-break-before {
+          page-break-before: always;
+        }
+      </style>
+    </head>
+    <body>
+      <!-- Add a print button -->
+      <button class="print-button" onclick="window.print()">Imprimer</button>
+      
+      <!-- Page 1 and continued pages for content -->
+      <div class="page">
+        <div class="gradient-overlay"></div>
+        ${getCompanyHeader()} <!-- Pass true to indicate this is an invoice -->
+        
+        <!-- Main Content -->
+        <div class="content">
+          <div class="main-content">
+            ${getCustomerAndInvoiceInfo(
+              clientName, 
+              invoiceNumber, 
+              formattedInvoiceDate,
+              quoteNumber,
+              quoteDate,
+              paymentDueDate,
+              installationDate,
+              workCompletionDate,
+              dealId, 
+              clientDetails
+            )}
+            ${getProductsTable(tableItems)}
 
-              ${additionalInfo ? getAdditionalInfo(additionalInfo) : ''}
-              ${showMaPrimeRenovConditions && totals.primeRenov !== undefined ? getMaPrimeRenovConditions(totals.primeRenov) : ''}
-              ${getTermes(dealId)}
-              ${financingData ? getFinancingSection(financingData) : ''}
-              
-              <!-- Financial summary with potential page break -->
-              <div id="financial-summary-section">
-                ${getFinancialSummary(totals, dealId, incentivesData, hasOperations)}
-              </div>
+            ${additionalInfo ? getAdditionalInfo(additionalInfo) : ''}
+            ${getPaymentInformation(paymentDueDate)}
+            ${showMaPrimeRenovConditions && totals.primeRenov !== undefined ? getMaPrimeRenovConditions(totals.primeRenov) : ''}
+            ${getTermes(dealId)}
+            ${financingData ? getFinancingSection(financingData) : ''}
+            
+            <!-- Financial summary with potential page break -->
+            <div id="financial-summary-section">
+              ${getFinancialSummary(totals, dealId, incentivesData, hasOperations)}
             </div>
           </div>
+        </div>
+        
+        ${getCompanyFooter('Page 1/')} <!-- Pass true to indicate this is an invoice -->
+      </div>
+      
+      <script>
+        // Force loading of all fonts and images before print
+        document.fonts.ready.then(() => {
+          console.log("All fonts are loaded");
           
-          ${getCompanyFooter('Page 1/')}
-        </div>
-        
-        <!-- CGV.pdf Page (Landscape) -->
-        <div class="page pdf-page landscape-page">
-          <div class="pdf-container">
-            <iframe class="pdf-embed" src="/CGV.pdf#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=FitH" frameborder="0"></iframe>
-          </div>
-        </div>
-        
-        <script>
-          // Force loading of all fonts and images before print
-          document.fonts.ready.then(() => {
-            console.log("All fonts are loaded");
-            
-            // Wait for images to load
-            const images = document.querySelectorAll('img');
-            let loadedImages = 0;
-            
-            if (images.length === 0) {
-              initializePagination();
-            } else {
-              images.forEach(img => {
-                if (img.complete) {
+          // Wait for images to load
+          const images = document.querySelectorAll('img');
+          let loadedImages = 0;
+          
+          if (images.length === 0) {
+            initializePagination();
+          } else {
+            images.forEach(img => {
+              if (img.complete) {
+                loadedImages++;
+                if (loadedImages === images.length) {
+                  initializePagination();
+                }
+              } else {
+                img.addEventListener('load', () => {
                   loadedImages++;
                   if (loadedImages === images.length) {
                     initializePagination();
                   }
-                } else {
-                  img.addEventListener('load', () => {
-                    loadedImages++;
-                    if (loadedImages === images.length) {
-                      initializePagination();
-                    }
-                  });
-                  
-                  // Also handle errors
-                  img.addEventListener('error', () => {
-                    loadedImages++;
-                    if (loadedImages === images.length) {
-                      initializePagination();
-                    }
-                  });
-                }
-              });
-            }
+                });
+                
+                // Also handle errors
+                img.addEventListener('error', () => {
+                  loadedImages++;
+                  if (loadedImages === images.length) {
+                    initializePagination();
+                  }
+                });
+              }
+            });
+          }
+        });
+        
+        // Function to check if financial summary needs its own page
+        function initializePagination() {
+          // Fix table headers on every page
+          const tableHeaders = document.querySelectorAll('table thead');
+          tableHeaders.forEach(header => {
+            header.style.display = 'table-header-group';
           });
           
-          // Function to check if financial summary needs its own page
-          function initializePagination() {
-            // Fix table headers on every page
-            const tableHeaders = document.querySelectorAll('table thead');
-            tableHeaders.forEach(header => {
-              header.style.display = 'table-header-group';
-            });
+          // Dynamically update page numbers
+          const footers = document.querySelectorAll('.page-number');
+          footers.forEach((footer, index) => {
+            footer.textContent = 'Page ' + (index + 1) + '/' + footers.length; // Updated page count calculation
+          });
+          
+          // Check if financial summary needs to break to a new page
+          const financialSummary = document.getElementById('financial-summary-section');
+          if (financialSummary) {
+            const rect = financialSummary.getBoundingClientRect();
+            const pageHeight = 297; // mm
+            const footerHeight = 35; // mm
             
-            // Dynamically update page numbers
-            const footers = document.querySelectorAll('.page-number');
-            footers.forEach((footer, index) => {
-              footer.textContent = 'Page ' + (index + 1) + '/' + (footers.length + 1); // +1 for the landscape PDF page
-            });
+            // Convert px to mm for comparison (rough approximation)
+            const pxToMm = 0.264583;
+            const summaryPosInMm = rect.top * pxToMm;
             
-            // Check if financial summary needs to break to a new page
-            const financialSummary = document.getElementById('financial-summary-section');
-            if (financialSummary) {
-              const rect = financialSummary.getBoundingClientRect();
-              const pageHeight = 297; // mm
-              const footerHeight = 35; // mm
-              
-              // Convert px to mm for comparison (rough approximation)
-              const pxToMm = 0.264583;
-              const summaryPosInMm = rect.top * pxToMm;
-              
-              // If summary is too close to bottom of page, add page break
-              if (summaryPosInMm > (pageHeight - footerHeight - 80)) {
-                financialSummary.classList.add('page-break-before');
-              }
+            // If summary is too close to bottom of page, add page break
+            if (summaryPosInMm > (pageHeight - footerHeight - 80)) {
+              financialSummary.classList.add('page-break-before');
             }
           }
-          
-          // Add event listener for before printing
-          window.addEventListener('beforeprint', () => {
-            // Any last-minute adjustments before printing
-            document.querySelector('.print-button').style.display = 'none';
-          });
-          
-          // Add event listener for after printing
-          window.addEventListener('afterprint', () => {
-            // Restore any elements that were hidden for printing
-            document.querySelector('.print-button').style.display = 'block';
-          });
-        </script>
-      </body>
-    </html>
-  `;
-  
-  // Open a new tab with improved error handling
-  const newTab = window.open('', '_blank');
-  if (!newTab) {
-    alert('Le bloqueur de fenêtres pop-up a empêché l\'ouverture de l\'aperçu. Veuillez autoriser les fenêtres pop-up pour ce site.');
-    return;
-  }
-  
-  // Write the HTML content to the new tab with improved rendering
-  newTab.document.open();
-  newTab.document.write(htmlContent);
-  newTab.document.close();
-  
-  // Focus the new tab
-  newTab.focus();
-};
+        }
+        
+        // Add event listener for before printing
+        window.addEventListener('beforeprint', () => {
+          // Any last-minute adjustments before printing
+          document.querySelector('.print-button').style.display = 'none';
+        });
+        
+        // Add event listener for after printing
+        window.addEventListener('afterprint', () => {
+          // Restore any elements that were hidden for printing
+          document.querySelector('.print-button').style.display = 'block';
+        });
+      </script>
+    </body>
+  </html>
+`;
 
+// Open a new tab with improved error handling
+const newTab = window.open('', '_blank');
+if (!newTab) {
+  alert('Le bloqueur de fenêtres pop-up a empêché l\'ouverture de l\'aperçu. Veuillez autoriser les fenêtres pop-up pour ce site.');
+  return;
+}
+
+// Write the HTML content to the new tab with improved rendering
+newTab.document.open();
+newTab.document.write(htmlContent);
+newTab.document.close();
+
+// Focus the new tab
+newTab.focus();
+};

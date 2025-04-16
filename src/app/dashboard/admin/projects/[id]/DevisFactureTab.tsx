@@ -4284,9 +4284,8 @@ const totals = useMemo(() => {
     const primeCEE = kwhCumac * dealRatio;
     
     // Create a rich formatted name with HTML styling for bold text instead of markdown
-    const formattedName = `<span style="font-weight: bold">${operation.reference}</span> Mise en place d'une pompe à chaleur (PAC) de type air/eau.<br/><br/>Type de température : <span style="font-weight: bold">${temperatureType}</span><br/>Marque : <span style="font-weight: bold">${productBrand}</span><br/>Référence : <span style="font-weight: bold">${productReference}</span><br/>L'efficacité énergétique saisonnière est de : <span style="font-weight: bold">127 %</span> calculée selon le règlement (EU) n°813/2013 de la commission du 2 aout 2013.<br/>La surface chauffée par la PAC est de <span style="font-weight: bold">${operation.heatedArea || 120} m2</span><br/>Surface habitable : <span style="font-weight: bold">${operation.livingArea || 120} m2</span><br/>Type de logement : <span style="font-weight: bold">${operation.housingType || "Maison individuelle"}</span><br/>Classe du régulateur :<br/>Usage couvert par la PAC : <span style="font-weight: bold">${operation.pumpUsage || "Chauffage seul"}</span><br/>Dépose et remplacement d'une chaudière au <span style="font-weight: bold">${operation.oldBoilerType || "Gaz"}</span><br/><br/>Kwh Cumac : <span style="font-weight: bold">${kwhCumac}</span><br/>Prime ${dealId} : <span style="font-weight: bold">${primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span><br/><br/>
-Description : <span style="font-weight: bold">${productDescription}</span><br/><br/>
-${subContractorInfo}`;
+const formattedName = `<span style="font-weight: bold">${operation.reference}</span> Mise en place d'une pompe à chaleur (PAC) de type air/eau.<br/><br/>Type de température : <span style="font-weight: bold">${temperatureType}</span><br/>Marque : <span style="font-weight: bold">${productBrand}</span><br/>Référence : <span style="font-weight: bold">${productReference}</span><br/>L'efficacité énergétique saisonnière est de : <span style="font-weight: bold">127 %</span> calculée selon le règlement (EU) n°813/2013 de la commission du 2 aout 2013.<br/>La surface chauffée par la PAC est de <span style="font-weight: bold">${operation.heatedArea || 120} m2</span><br/>Surface habitable : <span style="font-weight: bold">${operation.livingArea || 120} m2</span><br/>Type de logement : <span style="font-weight: bold">${operation.housingType || "Maison individuelle"}</span><br/>Classe du régulateur :<br/>Usage couvert par la PAC : <span style="font-weight: bold">${operation.pumpUsage || "Chauffage seul"}</span><br/>Dépose et remplacement d'une chaudière au <span style="font-weight: bold">${operation.oldBoilerType || "Gaz"}</span><br/><br/>Kwh Cumac : <span style="font-weight: bold">${kwhCumac}</span>${primeCEE !== 0 ? `<br/>Prime ${dealId} : <span style="font-weight: bold">${primeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>` : ''}<br/><br/>
+Description : <span style="font-weight: bold">${productDescription}</span>${subContractorInfo ? `<br/><br/>${subContractorInfo}` : ''}<br/><br/>`;
     
     const richOperation = {
       ...newOperation,
@@ -4384,9 +4383,85 @@ ${subContractorInfo}`;
     setQuoteDocuments(prev => prev.filter(doc => doc.id !== id));
   };
 
-  // Add this function to handle saving incentives
+  // Modify the handleSaveIncentives function to also update table items
   const handleSaveIncentives = (incentives: IncentivesData) => {
     setIncentivesData(incentives);
+    
+    // Update any operation's description text that contains Prime values
+    updateOperationDescriptionsWithNewPrimes(incentives);
+  };
+
+  // Add this new function to update operation descriptions
+  const updateOperationDescriptionsWithNewPrimes = (newIncentives: IncentivesData) => {
+    setTableItems(prevItems => {
+      return prevItems.map(item => {
+        // Only process items that are operations
+        if (item.id?.startsWith('op-') && item.reference) {
+          // Check if we have a specific prime for this operation
+          const ceeKey = `primeCEE_${item.reference}`;
+          let updatedPrimeCEE = 0;
+          
+          // Check if we have a specific incentive value for this operation
+          if (newIncentives[ceeKey]) {
+            updatedPrimeCEE = parseFloat(newIncentives[ceeKey] as string || '0');
+          } else {
+            // Otherwise calculate based on kwhCumac * dealRatio
+            let kwhCumac = 0;
+            if ('productId' in item && item.productId) {
+              const product = products.find(p => p.id === item.productId);
+              if (product) {
+                kwhCumac = product.kwhCumac;
+              }
+            } else {
+              // Fallback values based on operation type
+              if (item.reference === 'BAR-TH-101') kwhCumac = 510530;
+              else if (item.reference === 'BAR-TH-104') kwhCumac = 628730;
+              else if (item.reference === 'BAR-TH-112-Granulés') kwhCumac = 950440;
+              else if (item.reference === 'BAR-TH-171') kwhCumac = 615400;
+            }
+            
+            updatedPrimeCEE = kwhCumac * dealRatio;
+          }
+          
+          // Format the new prime value
+          const formattedPrime = updatedPrimeCEE.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+          
+          // Update the name field by replacing the Prime value part or removing it if zero
+          let updatedName = item.name;
+          
+          // Use regex to find the Prime value part
+          const primeRegex = new RegExp(`<br/>Prime ${dealId} : <span style="font-weight: bold">[^<]+</span>`);
+          
+          if (updatedPrimeCEE === 0) {
+            // If prime is zero, remove the line completely
+            updatedName = updatedName.replace(primeRegex, '');
+          } else {
+            // If prime exists, update it
+            if (updatedName.match(primeRegex)) {
+              updatedName = updatedName.replace(
+                primeRegex, 
+                `<br/>Prime ${dealId} : <span style="font-weight: bold">${formattedPrime}</span>`
+              );
+            } else {
+              // If prime line doesn't exist yet, add it before the last <br/><br/>
+              updatedName = updatedName.replace(
+                /<br\/><br\/>(?!.*<br\/><br\/>)/,
+                `<br/>Prime ${dealId} : <span style="font-weight: bold">${formattedPrime}</span><br/><br/>`
+              );
+            }
+          }
+          
+          // Return updated item
+          return {
+            ...item,
+            name: updatedName
+          };
+        }
+        
+        // Return unchanged non-operation items
+        return item;
+      });
+    });
   };
   
   // Modified handleAction function to handle sizing note actions
@@ -5155,12 +5230,18 @@ ${subContractorInfo}`;
                   indivisionData={indivisionData}
                   incentivesData={incentivesData}
                   customName={customName}
-                  // Pass the additional date fields
+                  // Pass the date fields
                   validUntilDate={validUntilDate}
                   preVisitDate={preVisitDate}
                   estimatedWorkDate={estimatedWorkDate}
                   commitmentDate={commitmentDate}
                   clientDetails={clientDetails}
+                  // Add the invoice-related props
+                  invoiceNumber={invoiceNumber}
+                  invoiceDate={invoiceDate}
+                  paymentDueDate={paymentDueDate}
+                  installationDate={installationDate}
+                  workCompletionDate={workCompletionDate}
                 />
               </div>
             </div>
