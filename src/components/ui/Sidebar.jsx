@@ -100,41 +100,92 @@ export function Sidebar({ role }) {
   if (role === "Sales Representative / Account Executive") {
     navigation = [
       { name: "Accueil", href: "/dashboard/sales", icon: HomeIcon },
-      { name: "Prospects", href: "/dashboard/sales/leads", icon: UserCircleIcon },
-      { name: "Opportunités", href: "/dashboard/sales/opportunities", icon: BriefcaseIcon },
-      { name: "Clients & Organisations", href: "/dashboard/sales/contacts-organizations", icon: UserCircleIcon },
+      { name: "Tâches", href: "/dashboard/sales/tasks", icon: BriefcaseIcon },
+      { name: "Prospects", href: "/dashboard/sales/leads", icon: UserIcon },
+      { name: "Clients", href: "/dashboard/sales/contacts-organizations", icon: UserCircleIcon },
+      { name: "Status", href: "/dashboard/sales/status", icon: TagIcon },
       { name: "Chat", href: "/dashboard/sales/emails", icon: EnvelopeIcon },
       { name: "Agenda", href: "/dashboard/sales/calendar", icon: CalendarIcon },
+      { name: "Facturation / Paiements", href: "/dashboard/sales/opportunities", icon: CreditCardIcon },
+      { name: "Service Après-Vente", href: "/dashboard/sales/sav", icon: LifebuoyIcon },
+      {
+        name: "Applications",
+        icon: IoIosApps,
+        children: [
+          { name: "Whatsapp", href: "/dashboard/sales/whatsapp", iconType: "image", iconSrc: "/whatsapp.png"},
+          { name: "Gmail", href: "/dashboard/sales/gmail", iconType: "image", iconSrc: "/gmail.png"},
+          { name: "Drive", href: "/dashboard/sales/drive", iconType: "image", iconSrc: "/drive.png"},
+        ],
+      },
     ];
   } else if (role === "Project / Installation Manager") {
     navigation = [
       { name: "Accueil", href: "/dashboard/pm", icon: HomeIcon },
       { name: "Projets", href: "/dashboard/pm/projects", icon: FolderIcon },
       { name: "Tâches", href: "/dashboard/pm/tasks", icon: ClipboardDocumentCheckIcon },
+      { name: "Clients", href: "/dashboard/pm/contacts-organizations", icon: UserCircleIcon },
       // { name: "Service Après-Vente", href: "/dashboard/pm/tickets", icon: LifebuoyIcon },
       { name: "Agenda", href: "/dashboard/pm/calendar", icon: CalendarIcon },
       { name: "Chat", href: "/dashboard/pm/emails", icon: EnvelopeIcon },
       { name: "Facturation / Paiements", href: "/dashboard/pm/billing", icon: CreditCardIcon },
+      { name: "Rapports / Statistiques", href: "/dashboard/pm/report", icon: DocumentIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/pm/documents", icon: DocumentIcon },
       { name: "Service Après-Vente", href: "/dashboard/pm/support", icon: LifebuoyIcon },
+      {
+        name: "Applications",
+        icon: IoIosApps,
+        children: [
+          { name: "Whatsapp", href: "/dashboard/pm/whatsapp", iconType: "image", iconSrc: "/whatsapp.png"},
+          { name: "Gmail", href: "/dashboard/pm/gmail", iconType: "image", iconSrc: "/gmail.png"},
+          { name: "Drive", href: "/dashboard/pm/drive", iconType: "image", iconSrc: "/drive.png"},
+          // { name: "Facebook Ads", href: "/dashboard/admin/fb", iconType: "image", iconSrc: "/fb.png"},
+          // { name: "Dext", href: "/dashboard/admin/dext", iconType: "image", iconSrc: "/dext.png"},
+          // { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", iconType: "image", iconSrc: "/Group 9.svg" },
+          // { name: "Effy Pro", href: "/dashboard/admin/effy-pro", iconType: "image", iconSrc: "/effy.png" },
+          // { name: "Qualigaz", href: "/dashboard/admin/qualigaz", iconType: "image", iconSrc: "/qualigaz.png" },
+          // { name: "Fidealis", href: "/dashboard/admin/fidealis", iconType: "image", iconSrc: "/fidealis.png" },
+          // { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", iconType: "image", iconSrc: "/anah.png" },
+        ],
+      },
       { name: "Paramètres de la Régie", href: "/dashboard/pm/reglages", icon: SettingsIcon },
     ];
   } else if (role === "Technician / Installer") {
     navigation = [
       { name: "Accueil", href: "/dashboard/technician", icon: HomeIcon },
       { name: "Tâches / Jobs", href: "/dashboard/technician/tasks", icon: ClipboardDocumentCheckIcon },
-      { name: "Projets", href: "/dashboard/technician/projects", icon: FolderIcon },
+      { name: "Clients", href: "/dashboard/technician/contacts-organizations", icon: UserCircleIcon },
+      { name: "Chat", href: "/dashboard/technician/chat", icon: ClipboardDocumentCheckIcon },
       { name: "Agenda", href: "/dashboard/technician/calendar", icon: CalendarIcon },
+      { name: "Projets", href: "/dashboard/technician/projects", icon: FolderIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/technician/documents", icon: DocumentIcon },
     ];
   } else if (role === "Customer Support / Service Representative") {
     navigation = [
       { name: "Accueil", href: "/dashboard/support", icon: HomeIcon },
-      { name: "Service Après-Vente", href: "/dashboard/support/tickets", icon: LifebuoyIcon },
-      { name: "Clients & Organisations", href: "/dashboard/support/contacts-organizations", icon: UserCircleIcon },
+      { name: "Tâches", href: "/dashboard/support/tasks", icon: BriefcaseIcon },
+      { name: "Prospects", href: "/dashboard/support/leads", icon: UserIcon },
+      { name: "Clients", href: "/dashboard/support/contacts-organizations", icon: UserCircleIcon },
+      { name: "Status", href: "/dashboard/support/status", icon: TagIcon },
       { name: "Chat", href: "/dashboard/support/emails", icon: EnvelopeIcon },
       { name: "Agenda", href: "/dashboard/support/calendar", icon: CalendarIcon },
-      { name: "Documents / Bibliothèque", href: "/dashboard/support/documents", icon: DocumentIcon },
+      { name: "Facturation / Paiements", href: "/dashboard/support/opportunities", icon: CreditCardIcon },
+      { name: "Service Après-Vente", href: "/dashboard/support/sav", icon: LifebuoyIcon },
+      {
+        name: "Applications",
+        icon: IoIosApps,
+        children: [
+          { name: "Whatsapp", href: "/dashboard/support/whatsapp", iconType: "image", iconSrc: "/whatsapp.png"},
+          { name: "Gmail", href: "/dashboard/support/gmail", iconType: "image", iconSrc: "/gmail.png"},
+          { name: "Drive", href: "/dashboard/support/drive", iconType: "image", iconSrc: "/drive.png"},
+          // { name: "Facebook Ads", href: "/dashboard/admin/fb", iconType: "image", iconSrc: "/fb.png"},
+          // { name: "Dext", href: "/dashboard/admin/dext", iconType: "image", iconSrc: "/dext.png"},
+          // { name: "MaPrimeRénov'", href: "/dashboard/admin/mpr", iconType: "image", iconSrc: "/Group 9.svg" },
+          // { name: "Effy Pro", href: "/dashboard/admin/effy-pro", iconType: "image", iconSrc: "/effy.png" },
+          // { name: "Qualigaz", href: "/dashboard/admin/qualigaz", iconType: "image", iconSrc: "/qualigaz.png" },
+          // { name: "Fidealis", href: "/dashboard/admin/fidealis", iconType: "image", iconSrc: "/fidealis.png" },
+          // { name: "Mon Projet ANAH", href: "/dashboard/admin/anah", iconType: "image", iconSrc: "/anah.png" },
+        ],
+      },
     ];
   } else if (role === "Client / Customer (Client Portal)") {
     navigation = [
@@ -156,7 +207,7 @@ export function Sidebar({ role }) {
         children: [
           // { name: "Tâches", href: "/dashboard/admin/tasks", icon: ClipboardDocumentCheckIcon, badge: 3 },
           // { name: "Clients & Organisations", href: "/dashboard/admin/contacts-organizations", icon: UserCircleIcon },
-          { name: "Prospects", href: "/dashboard/admin/leads", icon: UserCircleIcon},
+          { name: "Prospects", href: "/dashboard/admin/leads", icon: UserIcon},
           { name: "Clients", href: "/dashboard/admin/projects", icon: UserCircleIcon },
           
           
