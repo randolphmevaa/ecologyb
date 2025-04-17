@@ -5,7 +5,7 @@ import Link from "next/link";
 // import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Header } from "@/components/Header";
-import { useGlobalIFrame } from "@/contexts/GlobalIFrameContext"; // Added iframe context
+import { useGlobalIFrame } from "./../contexts/GlobalIFrameContext"; // Added iframe context
 import {
   MagnifyingGlassIcon,
   XMarkIcon,

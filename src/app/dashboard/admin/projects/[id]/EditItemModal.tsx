@@ -63,7 +63,7 @@ interface EditItemModalProps {
 // Mock data for dropdowns
 const housingTypes = ["Maison", "Appartement"];
 const pumpUsages = ["Chauffage", "Chauffage et eau sanitaire"];
-const boilerTypes = ["Charbon", "Fioul", "Gaz", "Bois", "Électrique", "Autre"];
+const boilerTypes = ["Charbon", "Fioul autre qu'à condensation", "Gaz autre qu'à condensation", "Bois", "Électrique", "Autre"];
 const unitOptions = ["Pièce(s)", "m²", "m³", "mètre(s)", "kg", "heure(s)", "kwh", "ml"];
 const operationCodes = [
   { id: 'BAR-TH-101', name: 'BAR-TH-101 - Chaudière individuelle à haute performance énergétique' },

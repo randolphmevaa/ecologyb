@@ -2222,7 +2222,7 @@ const AddOperationModal: React.FC<{
   ];
 
   // Boiler types
-  const boilerTypes = ["Charbon", "Fioul", "Gaz", "Bois", "Électrique", "Autre"];
+  const boilerTypes = ["Charbon", "Fioul autre qu'à condensation", "Gaz autre qu'à condensation", "Bois", "Électrique", "Autre"];
   
   // Housing types
   const housingTypes = ["Maison", "Appartement"];

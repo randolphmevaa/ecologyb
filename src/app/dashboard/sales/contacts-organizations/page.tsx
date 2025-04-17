@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Header } from "@/components/Header";
-import { useGlobalIFrame } from "@/contexts/GlobalIFrameContext";
+import { useGlobalIFrame } from "./../contexts/GlobalIFrameContext"; // Added iframe context
 import {
   MagnifyingGlassIcon,
   XMarkIcon,

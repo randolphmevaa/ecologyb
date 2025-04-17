@@ -33,8 +33,8 @@ import {
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 // import CommentsSection from "./CommentsSection";
-import { Button } from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
+// import { Button } from "@/components/ui/Button";
+// import { useRouter } from "next/navigation";
 
 // ------------------------------------------------------
 // Type Definitions
@@ -598,7 +598,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
   contact: contactProp,
   // commentData,
 }) => {
-  const router = useRouter();
+  // const router = useRouter();
   // const [saveStatus] = useState("Sauvegardé");
   const [weather, setWeather] = useState<{
       temp: number;
@@ -1100,24 +1100,24 @@ useEffect(() => {
   }
 
   // Function to navigate to the dynamic edit page
-  const handleEditClick = () => {
-    // Navigate to a dynamic route for editing (e.g., /modifier/[id])
-    router.push(`/dashboard/admin/projects/modifier/${dossier._id}`);
-  };
+  // const handleEditClick = () => {
+  //   // Navigate to a dynamic route for editing (e.g., /modifier/[id])
+  //   router.push(`/dashboard/admin/projects/modifier/${dossier._id}`);
+  // };
 
   return (
     <div className="flex gap-8">
       {/* Left Column: Main Sections */}
       <div className="flex-1 space-y-10">
         {/* "Modifier" Button on top */}
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
         <Button
           onClick={handleEditClick}
           className="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded"
         >
             Modifier
           </Button>
-        </div>
+        </div> */}
 
         {/* --- Information du client (IMPROVED) --- */}
         <motion.section

@@ -58,8 +58,9 @@ import AddCommentForm from "./AddCommentForm";
  * - searchPlaceholder: Placeholder text for the search input.
  * - user: The current user object.
  * - contactId: An optional contact ID (passed to modals).
+ * - createBaseUrl: Base URL for create actions (varies by role).
  */
-function HeaderLayout({ createDropdownItems, navigation, searchPlaceholder, user, contactId }) {
+function HeaderLayout({ createDropdownItems, navigation, searchPlaceholder, user, contactId, createBaseUrl }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
@@ -283,8 +284,9 @@ function HeaderLayout({ createDropdownItems, navigation, searchPlaceholder, user
       setModalType(type);
       setShowModal(true);
     } else {
-      // For simple routing actions (adjust the routes as needed):
-      router.push(`/dashboard/admin/contacts-organizations/add-${type}`);
+      // For simple routing actions using the provided base URL (with a fallback if not provided)
+      const baseUrl = createBaseUrl || "/dashboard/admin/contacts-organizations";
+      router.push(`${baseUrl}/add-${type}`);
     }
   };
 
@@ -953,43 +955,555 @@ function HeaderLayout({ createDropdownItems, navigation, searchPlaceholder, user
               </Menu>
             )}
 
-            {/* Notification Bell */}
+            {/* Notification Bell with Animation */}
             <Menu as="div" className="relative">
-              <Menu.Button
-                as={motion.button}
-                className="relative p-2 rounded-xl hover:bg-gray-50 group"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <BellIcon className="h-6 w-6 text-gray-600 group-hover:text-primary transition-colors" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-xs text-white shadow-sm">
-                  3
-                </div>
-              </Menu.Button>
-              <Transition
-                as={Fragment}
-                enter="transition ease-out duration-100"
-                enterFrom="transform opacity-0 scale-95"
-                enterTo="transform opacity-1 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="transform opacity-1 scale-100"
-                leaveTo="transform opacity-0 scale-95"
-              >
-                <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-2xl border border-gray-100 focus:outline-none p-2 z-50">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <div
-                        className={cn(
-                          "px-4 py-2 text-sm",
-                          active ? "bg-gray-100" : ""
-                        )}
+              {({ open }) => (
+                <>
+                  <Menu.Button
+                    as={motion.button}
+                    className="relative p-2 rounded-xl hover:bg-gray-50 group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <motion.div
+                      initial={{ rotate: 0 }}
+                      animate={open ? { rotate: [0, -10, 10, -10, 10, 0] } : {}}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                    >
+                      <BellIcon className="h-6 w-6 text-gray-600 group-hover:text-[#213f5b] transition-colors" />
+                      <motion.div 
+                        className="absolute -top-1 -right-1 flex items-center justify-center"
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
                       >
-                        Pas de notification
+                        <span className="relative flex h-4 w-4">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-xs text-white justify-center items-center font-medium shadow-sm">
+                            8
+                          </span>
+                        </span>
+                      </motion.div>
+                    </motion.div>
+                  </Menu.Button>
+                  
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="transform opacity-0 scale-95 translate-y-2"
+                    enterTo="transform opacity-1 scale-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="transform opacity-1 scale-100 translate-y-0"
+                    leaveTo="transform opacity-0 scale-95 translate-y-2"
+                  >
+                    <Menu.Items className="absolute right-0 mt-2 w-[420px] max-h-[85vh] origin-top-right rounded-xl bg-white shadow-2xl border border-gray-100/40 focus:outline-none overflow-hidden z-50 backdrop-blur-sm">
+                      {/* Elegant Header */}
+                      <div className="px-4 py-3 border-b border-gray-100 flex flex-col bg-gradient-to-r from-[#213f5b]/5 to-[#bfddf9]/10">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-sm font-medium text-[#213f5b] flex items-center">
+                            <BellIcon className="h-4 w-4 mr-2 text-[#4facfe]" />
+                            Centre de Notifications
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <button className="text-xs text-[#4facfe] hover:text-[#213f5b] transition-colors flex items-center">
+                              <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex items-center gap-1"
+                              >
+                                <span>Tout marquer comme lu</span>
+                              </motion.div>
+                            </button>
+                            <button className="text-gray-400 hover:text-[#213f5b] transition-colors p-1 rounded-full hover:bg-gray-100">
+                              <Cog6ToothIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Tabs */}
+                        <div className="flex gap-1 pb-1">
+                          <button className="px-3 py-1.5 text-xs font-medium bg-[#4facfe] text-white rounded-md hover:bg-[#1d6fa5] transition-colors">
+                            Toutes (8)
+                          </button>
+                          <button className="px-3 py-1.5 text-xs font-medium text-[#213f5b] hover:bg-[#4facfe]/10 rounded-md transition-colors">
+                            Non lues (5)
+                          </button>
+                          <button className="px-3 py-1.5 text-xs font-medium text-[#213f5b] hover:bg-[#4facfe]/10 rounded-md transition-colors flex items-center">
+                            <SparklesIcon className="h-3 w-3 mr-1" />
+                            Importantes (2)
+                          </button>
+                        </div>
                       </div>
-                    )}
-                  </Menu.Item>
-                </Menu.Items>
-              </Transition>
+                      
+                      {/* Search Filter */}
+                      <div className="px-4 py-2 bg-gray-50/80 border-b border-gray-100">
+                        <div className="relative flex items-center">
+                          <MagnifyingGlassIcon className="absolute left-3 h-4 w-4 text-gray-400" />
+                          <input 
+                            type="text" 
+                            placeholder="Rechercher dans les notifications..." 
+                            className="w-full pl-9 pr-4 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4facfe] focus:border-[#4facfe]"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Notification List with Time Grouping */}
+                      <div className="max-h-[60vh] overflow-y-auto divide-y divide-gray-50 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent hover:scrollbar-thumb-gray-300">
+                        {/* Today Group */}
+                        <div>
+                          <div className="sticky top-0 z-10 px-4 py-1.5 text-xs font-medium text-gray-500 bg-gray-50/90 backdrop-blur-sm border-b border-gray-100/80 flex items-center justify-between">
+                            <span>Aujourd'hui</span>
+                            <span className="bg-[#4facfe]/10 text-[#213f5b] px-1.5 py-0.5 rounded-full text-xs">4 nouvelles</span>
+                          </div>
+                          
+                          {/* High Priority Notification */}
+                          <Menu.Item>
+                            {({ active }) => (
+                              <motion.div 
+                                initial={{ opacity: 0.8 }}
+                                whileHover={{ opacity: 1 }}
+                                className={`px-4 py-3 ${active ? "bg-[#4facfe]/5" : ""} relative group transition-all duration-200`}
+                              >
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
+                                <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                                <div className="flex">
+                                  <div className="mr-3 flex-shrink-0">
+                                    <div className="relative">
+                                      <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center shadow-sm border border-red-200">
+                                        <SparklesIcon className="h-6 w-6 text-red-600" />
+                                      </div>
+                                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-medium border border-white">!</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-1.5">
+                                        <p className="text-sm font-semibold text-[#213f5b]">Impayé signalé</p>
+                                        <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] rounded-full uppercase tracking-wide font-bold">
+                                          Urgent
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <span className="relative flex h-2 w-2">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                        </span>
+                                        <span className="text-xs text-gray-400 whitespace-nowrap">Il y a 15 min</span>
+                                      </div>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mt-1 mb-3 leading-relaxed">
+                                      La facture <span className="font-medium text-[#213f5b]">FACT-2025-143</span> (3,850.00€) pour le projet <span className="font-medium text-[#213f5b]">ENER-2025-059</span> est en retard de paiement depuis 14 jours.
+                                    </p>
+                                    <div className="flex gap-2">
+                                      <button className="px-2.5 py-1.5 text-xs font-medium bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors shadow-sm">
+                                        Contacter le client
+                                      </button>
+                                      <button className="px-2.5 py-1.5 text-xs text-[#213f5b] bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                                        Voir la facture
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </Menu.Item>
+                          
+                          {/* Projet notification with user avatar */}
+                          <Menu.Item>
+                            {({ active }) => (
+                              <motion.div 
+                                initial={{ opacity: 0.8 }}
+                                whileHover={{ opacity: 1 }}
+                                className={`px-4 py-3 ${active ? "bg-[#4facfe]/5" : ""} relative group transition-all duration-200`}
+                              >
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#4facfe]"></div>
+                                <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                                <div className="flex">
+                                  <div className="mr-3 flex-shrink-0">
+                                    <div className="relative">
+                                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#4facfe] to-[#1d6fa5] flex items-center justify-center shadow-sm">
+                                        <FolderIcon className="h-6 w-6 text-white" />
+                                      </div>
+                                      <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-white p-0.5 shadow">
+                                        <div className="h-full w-full rounded-full bg-[#213f5b] flex items-center justify-center text-[10px] text-white font-bold">
+                                          CS
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-1.5">
+                                        <p className="text-sm font-semibold text-[#213f5b]">Nouveau projet assigné</p>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <span className="relative flex h-2 w-2">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4facfe] opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4facfe]"></span>
+                                        </span>
+                                        <span className="text-xs text-gray-400 whitespace-nowrap">Il y a 28 min</span>
+                                      </div>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mt-1 mb-2 leading-relaxed">
+                                      <span className="font-medium text-[#213f5b]">Caroline Sanchez</span> vous a assigné le projet <span className="font-medium text-[#213f5b]">ENER-2025-086</span> pour l'installation de panneaux photovoltaïques (33,6m²) au 24 Rue du Moulin, 75012 Paris.
+                                    </p>
+                                    <div className="p-2 bg-[#f8fafc] rounded-md border border-gray-100 mb-3 text-xs text-gray-500 flex items-center">
+                                      <CalendarIcon className="h-3 w-3 mr-1.5 text-[#4facfe]" />
+                                      Date d'installation prévue: <span className="font-medium text-[#213f5b] ml-1">15 Mai 2025</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button className="px-2.5 py-1.5 text-xs font-medium bg-[#4facfe] text-white rounded-md hover:bg-[#1d6fa5] transition-colors shadow-sm">
+                                        Voir le projet
+                                      </button>
+                                      <button className="px-2.5 py-1.5 text-xs text-[#213f5b] bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                                        Confirmer réception
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </Menu.Item>
+                          
+                          {/* Document notification with preview */}
+                          <Menu.Item>
+                            {({ active }) => (
+                              <motion.div 
+                                initial={{ opacity: 0.8 }}
+                                whileHover={{ opacity: 1 }}
+                                className={`px-4 py-3 ${active ? "bg-[#4facfe]/5" : ""} relative group transition-all duration-200`}
+                              >
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>
+                                <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                                <div className="flex">
+                                  <div className="mr-3 flex-shrink-0">
+                                    <div className="relative">
+                                      <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center shadow-sm border border-green-200">
+                                        <DocumentIcon className="h-6 w-6 text-green-600" />
+                                      </div>
+                                      <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-white p-0.5 shadow">
+                                        <div className="h-full w-full rounded-full bg-green-500 flex items-center justify-center">
+                                          <TicketIcon className="h-3 w-3 text-white" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-1.5">
+                                        <p className="text-sm font-semibold text-[#213f5b]">Document signé</p>
+                                        <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] rounded-full uppercase tracking-wide font-bold">
+                                          Nouveau
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <span className="relative flex h-2 w-2">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                        </span>
+                                        <span className="text-xs text-gray-400 whitespace-nowrap">Aujourd'hui à 9:15</span>
+                                      </div>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mt-1 mb-2 leading-relaxed">
+                                      <span className="font-medium text-[#213f5b]">Sophie Leroux</span> a signé le contrat pour le projet <span className="font-medium text-[#213f5b]">ENER-2025-067</span>.
+                                    </p>
+                                    
+                                    {/* Document Preview */}
+                                    <div className="flex items-center gap-2 p-2 bg-[#f8fafc] rounded-md border border-gray-100 mb-3 group-hover:border-green-200 transition-all">
+                                      <div className="w-8 h-10 bg-white shadow-sm border border-gray-200 flex flex-col">
+                                        <div className="h-2 bg-green-500 w-full"></div>
+                                        <div className="flex-1 p-1">
+                                          <div className="w-full h-1 bg-gray-200 mb-1"></div>
+                                          <div className="w-3/4 h-1 bg-gray-200 mb-1"></div>
+                                          <div className="w-1/2 h-1 bg-gray-200"></div>
+                                        </div>
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-xs font-medium text-[#213f5b] truncate">Contrat_Installation_ENER-2025-067.pdf</div>
+                                        <div className="text-[10px] text-gray-500 flex items-center">
+                                          <span>Signé électroniquement le 17/04/2025</span>
+                                          <span className="mx-1">•</span>
+                                          <span>2.4 MB</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex gap-2">
+                                      <button className="px-2.5 py-1.5 text-xs font-medium bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors shadow-sm">
+                                        Voir le document
+                                      </button>
+                                      <button className="px-2.5 py-1.5 text-xs text-[#213f5b] bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                                        Marquer comme lu
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </Menu.Item>
+                          
+                          {/* Chat notification */}
+                          <Menu.Item>
+                            {({ active }) => (
+                              <motion.div 
+                                initial={{ opacity: 0.8 }}
+                                whileHover={{ opacity: 1 }}
+                                className={`px-4 py-3 ${active ? "bg-[#4facfe]/5" : ""} relative group transition-all duration-200`}
+                              >
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500"></div>
+                                <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                                <div className="flex">
+                                  <div className="mr-3 flex-shrink-0">
+                                    <div className="relative">
+                                      <div className="h-12 w-12 rounded-full bg-white shadow-sm border border-gray-200 p-0.5">
+                                        <div className="h-full w-full rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden">
+                                          <div className="h-full w-full rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-indigo-800">
+                                            JD
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-white p-0.5 shadow">
+                                        <div className="h-full w-full rounded-full bg-indigo-500 flex items-center justify-center">
+                                          <ChatBubbleBottomCenterIcon className="h-3 w-3 text-white" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-1.5">
+                                        <p className="text-sm font-semibold text-[#213f5b]">Nouveau message</p>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <span className="relative flex h-2 w-2">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                                        </span>
+                                        <span className="text-xs text-gray-400 whitespace-nowrap">Aujourd'hui à 11:39</span>
+                                      </div>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mt-1 mb-2 font-medium">
+                                      Jean Dupont: <span className="font-normal">Bonjour, est-ce que vous pourriez me confirmer la date d'installation pour les panneaux photovoltaïques ?</span>
+                                    </p>
+                                    <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 mb-3">
+                                      <div className="flex items-start gap-2">
+                                        <div className="w-1 h-full bg-indigo-200 rounded-full"></div>
+                                        <div className="flex-1">
+                                          <p className="text-xs text-indigo-700">Projet associé:</p>
+                                          <p className="text-xs font-medium text-indigo-900">ENER-2025-034: Installation 18 panneaux (Résidentiel)</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button className="px-2.5 py-1.5 text-xs font-medium bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors shadow-sm">
+                                        Répondre
+                                      </button>
+                                      <button className="px-2.5 py-1.5 text-xs text-[#213f5b] bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                                        Voir la conversation
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </Menu.Item>
+                        </div>
+                        
+                        {/* Yesterday Group */}
+                        <div>
+                          <div className="sticky top-0 z-10 px-4 py-1.5 text-xs font-medium text-gray-500 bg-gray-50/90 backdrop-blur-sm border-b border-gray-100/80 flex items-center justify-between">
+                            <span>Hier</span>
+                            <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-xs">3 notifications</span>
+                          </div>
+                          
+                          {/* Warning notification */}
+                          <Menu.Item>
+                            {({ active }) => (
+                              <motion.div 
+                                initial={{ opacity: 0.8 }}
+                                whileHover={{ opacity: 1 }}
+                                className={`px-4 py-3 ${active ? "bg-[#4facfe]/5" : ""} relative group transition-all duration-200`}
+                              >
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
+                                <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                                <div className="flex">
+                                  <div className="mr-3 flex-shrink-0">
+                                    <div className="relative">
+                                      <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center shadow-sm border border-amber-200">
+                                        <CalendarIcon className="h-6 w-6 text-amber-600" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-1.5">
+                                        <p className="text-sm font-semibold text-[#213f5b]">Rappel important</p>
+                                        <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] rounded-full uppercase tracking-wide">
+                                          Rappel
+                                        </span>
+                                      </div>
+                                      <span className="text-xs text-gray-400 whitespace-nowrap">Hier à 15:42</span>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mt-1 mb-2 leading-relaxed">
+                                      Réunion client avec <span className="font-medium text-[#213f5b]">Martin Dubois</span> concernant le projet <span className="font-medium text-[#213f5b]">ENER-2025-042</span> demain à 14h00.
+                                    </p>
+                                    <div className="p-2 bg-amber-50 rounded-md border border-amber-100 mb-3 text-xs">
+                                      <div className="flex items-center text-amber-800">
+                                        <MapPinIcon className="h-3 w-3 mr-1.5 text-amber-600" />
+                                        <span className="font-medium">42 Avenue des Lilas, 75020 Paris</span>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button className="px-2.5 py-1.5 text-xs font-medium bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors shadow-sm">
+                                        Ajouter à l'agenda
+                                      </button>
+                                      <button className="px-2.5 py-1.5 text-xs text-[#213f5b] bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                                        Ignorer
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </Menu.Item>
+                          
+                          {/* Two more notification stubs */}
+                          <Menu.Item>
+                            {({ active }) => (
+                              <div className={`px-4 py-3 ${active ? "bg-[#4facfe]/5" : ""} relative group transition-all duration-200 opacity-90`}>
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500"></div>
+                                <div className="flex">
+                                  <div className="mr-3 flex-shrink-0">
+                                    <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center shadow-sm border border-purple-200">
+                                      <TruckIcon className="h-6 w-6 text-purple-600" />
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-sm font-medium text-[#213f5b]">Livraison programmée</p>
+                                      <span className="text-xs text-gray-400 whitespace-nowrap">Hier à 10:26</span>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mt-1 mb-2">
+                                      Les composants pour le projet <span className="font-medium text-[#213f5b]">ENER-2025-053</span> seront livrés demain entre 9h et 12h.
+                                    </p>
+                                    <div className="flex gap-2">
+                                      <button className="px-2.5 py-1.5 text-xs font-medium bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors shadow-sm">
+                                        Détails de livraison
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </Menu.Item>
+                        </div>
+                        
+                        {/* Cette Semaine Group */}
+                        <div>
+                          <div className="sticky top-0 z-10 px-4 py-1.5 text-xs font-medium text-gray-500 bg-gray-50/90 backdrop-blur-sm border-b border-gray-100/80">
+                            Cette Semaine
+                          </div>
+                          
+                          <Menu.Item>
+                            {({ active }) => (
+                              <div className={`px-4 py-3 ${active ? "bg-[#4facfe]/5" : ""} relative group transition-all duration-200 opacity-85`}>
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500"></div>
+                                <div className="flex">
+                                  <div className="mr-3 flex-shrink-0">
+                                    <div className="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center shadow-sm border border-teal-200">
+                                      <ShoppingBagIcon className="h-6 w-6 text-teal-600" />
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-sm font-medium text-[#213f5b]">Nouvelle commande</p>
+                                      <span className="text-xs text-gray-400 whitespace-nowrap">Lundi à 14:15</span>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mt-1 mb-2">
+                                      Commande <span className="font-medium text-[#213f5b]">CMD-4502</span> confirmée: 12 panneaux photovoltaïques et 2 onduleurs.
+                                    </p>
+                                    <div className="flex gap-2">
+                                      <button className="px-2.5 py-1.5 text-xs font-medium bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors shadow-sm">
+                                        Détails de la commande
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </Menu.Item>
+                        </div>
+                      </div>
+                      
+                      {/* Empty state (hidden when there are notifications) */}
+                      <div className="hidden py-8 px-4 text-center">
+                        <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-r from-gray-50 to-gray-100 mb-4 border border-gray-200">
+                          <BellIcon className="h-10 w-10 text-gray-300" />
+                        </div>
+                        <p className="text-sm font-medium text-[#213f5b]">Aucune notification</p>
+                        <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">Les notifications concernant vos projets, clients et tâches apparaîtront ici.</p>
+                        <button className="mt-4 px-4 py-2 text-xs font-medium text-[#4facfe] border border-[#4facfe]/30 rounded-lg hover:bg-[#4facfe]/5 transition-colors">
+                          Configurer mes notifications
+                        </button>
+                      </div>
+                      
+                      {/* Loading state (hidden by default) */}
+                      <div className="hidden py-8 px-4 text-center">
+                        <div className="inline-flex items-center justify-center h-16 w-16 mb-4">
+                          <svg className="animate-spin h-10 w-10 text-[#4facfe]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        </div>
+                        <p className="text-sm font-medium text-[#213f5b]">Chargement des notifications</p>
+                        <p className="text-xs text-gray-500 mt-1">Veuillez patienter un instant...</p>
+                      </div>
+                      
+                      {/* Footer with Enhancement */}
+                      <div className="border-t border-gray-100 p-3 bg-gradient-to-r from-[#f8fafc] to-white">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center text-xs text-gray-500">
+                            <ArrowPathIcon className="h-3 w-3 mr-1" />
+                            <span>Dernière mise à jour: il y a 2 minutes</span>
+                          </div>
+                          <button className="flex items-center justify-center h-6 w-6 rounded-full hover:bg-gray-100 text-gray-400 hover:text-[#213f5b] transition-colors">
+                            <ArrowPathIcon className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <Link
+                          href="/dashboard/admin/notifications"
+                          className="flex items-center justify-center w-full py-2 text-xs font-medium text-white bg-[#213f5b] hover:bg-[#1a324a] rounded-lg transition-colors shadow-sm"
+                        >
+                          <span>Voir toutes les notifications</span>
+                          <svg className="ml-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      </div>
+                    </Menu.Items>
+                  </Transition>
+                </>
+              )}
             </Menu>
 
             {/* Profile Dropdown */}
@@ -1119,6 +1633,9 @@ function SalesHeader({ user, contactId }) {
 
   const searchPlaceholder = "Rechercher dans Sales...";
 
+  // Specify the base URL for create actions in sales role
+  const createBaseUrl = "/dashboard/sales/add";
+
   return (
     <HeaderLayout
       createDropdownItems={createDropdownItems}
@@ -1126,6 +1643,7 @@ function SalesHeader({ user, contactId }) {
       searchPlaceholder={searchPlaceholder}
       user={user}
       contactId={contactId}
+      createBaseUrl={createBaseUrl}
     />
   );
 }
@@ -1153,6 +1671,9 @@ function PMHeader({ user, contactId }) {
   ];
 
   const searchPlaceholder = "Rechercher dans PM...";
+  
+  // Specify the base URL for create actions in PM role
+  const createBaseUrl = "/dashboard/pm/add";
 
   return (
     <HeaderLayout
@@ -1161,6 +1682,7 @@ function PMHeader({ user, contactId }) {
       searchPlaceholder={searchPlaceholder}
       user={user}
       contactId={contactId}
+      createBaseUrl={createBaseUrl}
     />
   );
 }
@@ -1184,6 +1706,9 @@ function TechnicianHeader({ user, contactId }) {
   ];
 
   const searchPlaceholder = "Rechercher dans Technician...";
+  
+  // Specify the base URL for create actions in Technician role
+  const createBaseUrl = "/dashboard/technician/add";
 
   return (
     <HeaderLayout
@@ -1192,6 +1717,7 @@ function TechnicianHeader({ user, contactId }) {
       searchPlaceholder={searchPlaceholder}
       user={user}
       contactId={contactId}
+      createBaseUrl={createBaseUrl}
     />
   );
 }
@@ -1215,6 +1741,9 @@ function SupportHeader({ user, contactId }) {
   ];
 
   const searchPlaceholder = "Rechercher dans Support...";
+  
+  // Specify the base URL for create actions in Support role
+  const createBaseUrl = "/dashboard/support/add";
 
   return (
     <HeaderLayout
@@ -1223,6 +1752,7 @@ function SupportHeader({ user, contactId }) {
       searchPlaceholder={searchPlaceholder}
       user={user}
       contactId={contactId}
+      createBaseUrl={createBaseUrl}
     />
   );
 }
@@ -1243,6 +1773,9 @@ function ClientHeader({ user, contactId }) {
   // Clients might not need a "Créer" dropdown.
   const createDropdownItems = [];
   const searchPlaceholder = "Rechercher dans Client Portal...";
+  
+  // Specify the base URL for create actions in Client role
+  const createBaseUrl = "/client/add";
 
   return (
     <HeaderLayout
@@ -1251,6 +1784,7 @@ function ClientHeader({ user, contactId }) {
       searchPlaceholder={searchPlaceholder}
       user={user}
       contactId={contactId}
+      createBaseUrl={createBaseUrl}
     />
   );
 }
@@ -1322,6 +1856,9 @@ function AdminHeader({ user, contactId }) {
   ];
 
   const searchPlaceholder = "Rechercher dans Admin...";
+  
+  // Specify the base URL for create actions in Admin role
+  const createBaseUrl = "/dashboard/admin/contacts-organizations";
 
   return (
     <HeaderLayout
@@ -1330,6 +1867,7 @@ function AdminHeader({ user, contactId }) {
       searchPlaceholder={searchPlaceholder}
       user={user}
       contactId={contactId}
+      createBaseUrl={createBaseUrl}
     />
   );
 }
