@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+// import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
 import { Header } from "@/components/Header";
 import { useGlobalIFrame } from "./../contexts/GlobalIFrameContext"; // Added iframe context
 import {
@@ -21,10 +22,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
-import { 
-  ChevronLeftIcon, 
-  SearchIcon
-} from "lucide-react";
+import { ChevronLeftIcon, SearchIcon } from "lucide-react";
 
 // Define status option type
 type StatusOption = {
@@ -35,13 +33,6 @@ type StatusOption = {
   textColor: string;
   borderColor: string;
   icon: React.ReactNode;
-};
-
-// Define status info return type
-type StatusInfo = {
-  color: string;
-  textColor: string;
-  icon: React.ReactNode | null;
 };
 
 // Sample status options with detailed information
@@ -92,6 +83,13 @@ const statusOptions: StatusOption[] = [
     icon: <ExclamationCircleIcon className="h-4 w-4 mr-1" />
   }
 ];
+
+// Define status info return type
+type StatusInfo = {
+  color: string;
+  textColor: string;
+  icon: React.ReactNode | null;
+};
 
 // Get status details for a given status value
 const getStatusDetails = (statusValue: string): StatusOption => {
@@ -222,8 +220,19 @@ type Dossier = {
     surfaceChauffee?: string;
     circuitChauffageFonctionnel?: string;
   };
-  status?: string; // For status display
+  status?: string; // Added field for status display
 };
+
+// Define your timeline steps
+const steps = [
+  "Prise de contact",
+  "En attente des documents",
+  "Instruction du dossier",
+  "Dossier Accepter",
+  "Installation",
+  "Contrôle",
+  "Dossier clôturé",
+];
 
 // Define API response type to avoid using 'any'
 type RawDossierData = {
@@ -249,18 +258,7 @@ type RawDossierData = {
   description?: string;
 };
 
-// Define timeline steps
-const steps = [
-  "Prise de contact",
-  "En attente des documents",
-  "Instruction du dossier",
-  "Dossier Accepter",
-  "Installation",
-  "Contrôle",
-  "Dossier clôturé",
-];
-
-export default function ClientsPage() {
+export default function ProjectsPage() {
   // Get the global iframe context
   const { openIframe } = useGlobalIFrame();
 
@@ -276,7 +274,7 @@ export default function ClientsPage() {
 
   // Filtering state
   const [searchQuery, setSearchQuery] = useState<string>("");
-  // One filter for solution (mimicking SalesContactsOrganizations)
+  // Filter by typeTravaux instead of solution
   const [filter, setFilter] = useState("Tous");
 
   // Pagination
@@ -321,7 +319,7 @@ export default function ClientsPage() {
     return `linear-gradient(90deg, ${baseColor}, ${lighterColor})`;
   };
 
-  // Fetch projects (dossiers) from the API
+  // Fetch projects (dossiers) - Updated to fetch from API
   const fetchProjects = async () => {
     setLoading(true);
     
@@ -353,13 +351,13 @@ export default function ClientsPage() {
       
       // Process dossiers to include client name and other necessary display fields
       const processedDossiers = dossiersData.map((dossier: RawDossierData): Dossier => {
-        const contact = dossier.contactId ? contactsMap[dossier.contactId] : undefined;
+        const contact = dossier.contactId ? contactsMap[dossier.contactId] : null;
         
         // Generate fallback status based on etape
         let status = "En attente de paiement";
         const step = Number(dossier.etape?.charAt(0) || 0);
-        if (step >= 6) status = "Terminé";
-        else if (step >= 4) status = "En cours";
+        if (step >= 3) status = "En cours";
+        else if (step >= 2) status = "En attente des documents";
         
         return {
           ...dossier,
@@ -378,52 +376,66 @@ export default function ClientsPage() {
     } catch (error) {
       console.error('Error fetching data:', error);
       // Fallback to sample data in case of error
-      // This would include your sample data as a fallback
       const sampleProjects: Dossier[] = [
         {
           _id: "1",
-          contactId: "sample-contact-1", // Added to satisfy type requirements
           numero: "D2023-001",
           client: "Martin Dupont",
           projet: "Installation chauffage",
           typeDeLogement: "Maison individuelle",
-          surfaceChauffee: "120",
+          surfaceChauffee: 120,
           solution: "Pompes a chaleur",
-          etape: "5 Installation",
+          etape: "1 Prise de contact",
           valeur: "15000",
           typeTravaux: "Mono-geste",
           codePostal: "75001",
-          status: "En cours"
+          status: "En cours",
+          contactId: "sample-contact-1" // Add contactId to satisfy type
         },
         {
           _id: "2",
-          contactId: "sample-contact-2",
           numero: "D2023-002",
           client: "Sophie Martin",
           projet: "Rénovation énergétique",
           typeDeLogement: "Appartement",
-          surfaceChauffee: "85",
+          surfaceChauffee: 85,
           solution: "Panneaux photovoltaique",
-          etape: "6 Contrôle",
+          etape: "2 En attente des documents",
           valeur: "8500",
           typeTravaux: "Rénovation d'ampleur",
           codePostal: "69002",
-          status: "En attente de paiement"
+          status: "En attente de paiement",
+          contactId: "sample-contact-2"
         },
         {
           _id: "3",
-          contactId: "sample-contact-3",
           numero: "D2023-003",
           client: "Jean Leclerc",
           projet: "Installation chauffe-eau",
           typeDeLogement: "Maison individuelle",
-          surfaceChauffee: "150",
+          surfaceChauffee: 150,
           solution: "Chauffe-eau thermodynamique",
-          etape: "7 Dossier clôturé",
+          etape: "3 Instruction du dossier",
           valeur: "3200",
           typeTravaux: "Mono-geste",
           codePostal: "33000",
-          status: "Payé"
+          status: "Payé",
+          contactId: "sample-contact-3"
+        },
+        {
+          _id: "4",
+          numero: "D2023-004",
+          client: "Marie Rousseau",
+          projet: "Système solaire",
+          typeDeLogement: "Maison individuelle",
+          surfaceChauffee: 180,
+          solution: "Système Solaire Combiné",
+          etape: "4 Dossier Accepter",
+          valeur: "12000",
+          typeTravaux: "Financement",
+          codePostal: "59000",
+          status: "Terminé",
+          contactId: "sample-contact-4"
         }
       ];
       
@@ -436,7 +448,7 @@ export default function ClientsPage() {
   // NEW: Add hint for double-click action
   useEffect(() => {
     // Show a tooltip on first visit
-    const hasSeenDoubleClickHint = localStorage.getItem('hasSeenDoubleClickHint');
+    const hasSeenDoubleClickHint = localStorage.getItem('hasSeenDoubleClickHint_prospects');
     if (!hasSeenDoubleClickHint && projects.length > 0) {
       // Set tooltip visibility
       setTimeout(() => {
@@ -459,7 +471,7 @@ export default function ClientsPage() {
           }, 500);
         }, 5000);
         
-        localStorage.setItem('hasSeenDoubleClickHint', 'true');
+        localStorage.setItem('hasSeenDoubleClickHint_prospects', 'true');
       }, 1000);
     }
   }, [projects.length]);
@@ -478,31 +490,32 @@ export default function ClientsPage() {
     return etape;
   };
 
-  // Filtering logic (ensuring string conversion)
+  // Filtering logic updated to filter by typeTravaux instead of solution
   const filteredProjects = projects.filter((project) => {
-    // Only include steps 5, 6, 7
-    const includedSteps = [5, 6, 7];
+    // 1) Identify whether the project step is in the "excluded" set
+    //    (5 = Installation, 6 = Contrôle, 7 = Dossier clôturé)
+    const excludedSteps = [5, 6, 7];
     const stepNumber = parseInt(project.etape?.charAt(0) ?? "0", 10);
-  
-    // If the project's etape is not 5, 6, or 7, exclude it
-    if (!includedSteps.includes(stepNumber)) {
+
+    // If the step is among the excluded ones, return false immediately
+    if (excludedSteps.includes(stepNumber)) {
       return false;
     }
-  
-    // Existing search & filter checks
+
+    // 2) Proceed with search & filter logic:
     const query = searchQuery.toLowerCase();
     const matchesSearch =
       String(project.client || "").toLowerCase().includes(query) ||
       String(project.projet || "").toLowerCase().includes(query) ||
       String(project.numero || "").toLowerCase().includes(query);
-  
+
     // Filter by typeTravaux instead of solution
     const matchesTypeTravaux =
       filter === "Tous" ||
       (project.typeTravaux?.toLowerCase() === filter.toLowerCase());
-  
+
     return matchesSearch && matchesTypeTravaux;
-  });  
+  });
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredProjects.length / pageSize);
@@ -517,21 +530,21 @@ export default function ClientsPage() {
     setCurrentPage(1);
   };
 
-  // 2. Compute *all stats* from the filteredProjects array.
+  // 2) Compute stats from the *filtered* projects
   const totalClientsCount = filteredProjects.length;
 
-  // For stageStats
+  // For stageStats, reduce over the *filtered* array
   const stageStats = filteredProjects.reduce((acc: { [key: string]: number }, project) => {
     const stageNumber = project.etape?.charAt(0) || "N/A";
     acc[stageNumber] = (acc[stageNumber] || 0) + 1;
     return acc;
   }, {} as { [key: string]: number });
 
-  // Add type travaux filter options
+  // Define typeTravaux filter options - Updated from solution to typeTravaux
   const typeTravauxOptions = [
     "Tous",
     "Mono-geste",
-    "Financement", 
+    "Financement",
     "Rénovation d'ampleur",
     "Panneaux photovoltaique"
   ];
@@ -601,10 +614,10 @@ export default function ClientsPage() {
               <div className="flex items-start md:items-center justify-between flex-col md:flex-row">
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-white">
-                    Liste des Clients
+                    Liste des Prospects
                   </h1>
                   <p className="mt-2 md:mt-4 text-base md:text-lg text-[#d2fcb2]">
-                    Gérez et consultez tous les dossiers projets pour des solutions
+                    Gérez et consultez tous les dossiers prospects pour des solutions
                     énergétiques spécialisées.
                   </p>
                 </div>
@@ -622,100 +635,101 @@ export default function ClientsPage() {
 
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
             {/* Stats Section - Updated with new labels and improved UI */}
-            <motion.div
-              className="mb-6 md:mb-8 grid grid-cols-2 lg:grid-cols-4 gap-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              {/* Total Clients */}
-              <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
-                <div className="flex h-full">
-                  <div className="w-2 bg-gradient-to-b from-[#4facfe] to-[#1d6fa5]"></div>
-                  <div className="flex-1 p-4 md:p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm text-gray-500 font-medium">Total Clients</p>
-                        <h3 className="text-xl md:text-2xl font-bold text-[#213f5b] mt-1">
-                          {totalClientsCount}
-                        </h3>
-                      </div>
-                      <div className="p-2 md:p-3 rounded-full bg-[#4facfe]/10 group-hover:bg-[#4facfe]/20 transition-all">
-                        <UserGroupIcon className="h-5 w-5 md:h-6 md:w-6 text-[#4facfe]" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    <motion.div
+      className="mb-6 md:mb-8 grid grid-cols-2 lg:grid-cols-4 gap-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.2 }}
+    >
+      {/* Total Prospects */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
+        <div className="flex h-full">
+          <div className="w-2 bg-gradient-to-b from-[#4facfe] to-[#1d6fa5]"></div>
+          <div className="flex-1 p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs md:text-sm text-gray-500 font-medium">Total Prospects</p>
+                <h3 className="text-xl md:text-2xl font-bold text-[#213f5b] mt-1">
+                  {totalClientsCount}
+                </h3>
               </div>
+              <div className="p-2 md:p-3 rounded-full bg-[#4facfe]/10 group-hover:bg-[#4facfe]/20 transition-all">
+                <UserGroupIcon className="h-5 w-5 md:h-6 md:w-6 text-[#4facfe]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Projets en Installation */}
-              <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
-                <div className="flex h-full">
-                  <div className="w-2 bg-gradient-to-b from-[#43e97b] to-[#38f9d7]"></div>
-                  <div className="flex-1 p-4 md:p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm text-gray-500 font-medium">Projets en Installation</p>
-                        <h3 className="text-xl md:text-2xl font-bold text-[#213f5b] mt-1">
-                          {stageStats["5"] || 0}
-                        </h3>
-                      </div>
-                      <div className="p-2 md:p-3 rounded-full bg-[#43e97b]/10 group-hover:bg-[#43e97b]/20 transition-all">
-                        <BuildingOfficeIcon className="h-5 w-5 md:h-6 md:w-6 text-[#43e97b]" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      {/* Projet en Attente de documents */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
+        <div className="flex h-full">
+          <div className="w-2 bg-gradient-to-b from-[#43e97b] to-[#38f9d7]"></div>
+          <div className="flex-1 p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs md:text-sm text-gray-500 font-medium">Projet en Attente de documents</p>
+                <h3 className="text-xl md:text-2xl font-bold text-[#213f5b] mt-1">
+                  {stageStats["2"] || 0}
+                </h3>
               </div>
+              <div className="p-2 md:p-3 rounded-full bg-[#43e97b]/10 group-hover:bg-[#43e97b]/20 transition-all">
+                <ArrowPathIcon className="h-5 w-5 md:h-6 md:w-6 text-[#43e97b]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Projets en Contrôle */}
-              <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
-                <div className="flex h-full">
-                  <div className="w-2 bg-gradient-to-b from-[#f7b91b] to-[#f59e0b]"></div>
-                  <div className="flex-1 p-4 md:p-6">
-                    <div>
-                      <p className="text-xs md:text-sm text-gray-500 font-medium">Projets en Contrôle</p>
-                      <h3 className="text-lg font-bold text-[#213f5b] mt-1">
-                        {stageStats["6"] || 0}
-                      </h3>
-                      <div className="mt-2 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#f7b91b] to-[#f59e0b]"
-                          style={{
-                            width: `${((stageStats["6"] || 0) / totalClientsCount) * 100}%`,
-                          }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {Math.round(((stageStats["6"] || 0) / totalClientsCount) * 100) || 0}% des projets
-                      </p>
-                    </div>
-                  </div>
-                </div>
+      {/* Projet en Attente d'octroie */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
+        <div className="flex h-full">
+          <div className="w-2 bg-gradient-to-b from-[#f7b91b] to-[#f59e0b]"></div>
+          <div className="flex-1 p-4 md:p-6">
+            <div>
+              <p className="text-xs md:text-sm text-gray-500 font-medium">Projet en Attente d&apos;octroie</p>
+              <h3 className="text-lg font-bold text-[#213f5b] mt-1">
+                {stageStats["3"] || 0}
+              </h3>
+              <div className="mt-2 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#f7b91b] to-[#f59e0b]"
+                  style={{
+                    width: `${((stageStats["3"] || 0) / (totalClientsCount || 1)) * 100}%`,
+                  }}
+                ></div>
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {Math.round(((stageStats["3"] || 0) / (totalClientsCount || 1)) * 100) || 0}% des projets
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Projets Complétés */}
-              <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
-                <div className="flex h-full">
-                  <div className="w-2 bg-gradient-to-b from-[#38c2de] to-[#1d6fa5]"></div>
-                  <div className="flex-1 p-4 md:p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm text-gray-500 font-medium">
-                          Projets Complétés
-                        </p>
-                        <h3 className="text-xl md:text-2xl font-bold text-[#213f5b] mt-1">
-                          {stageStats["7"] || 0}
-                        </h3>
-                      </div>
-                      <div className="p-2 md:p-3 rounded-full bg-[#38c2de]/10 group-hover:bg-[#38c2de]/20 transition-all">
-                        <ChartBarIcon className="h-5 w-5 md:h-6 md:w-6 text-[#38c2de]" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      {/* Projet en Attente d'Installation */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
+        <div className="flex h-full">
+          <div className="w-2 bg-gradient-to-b from-[#38c2de] to-[#1d6fa5]"></div>
+          <div className="flex-1 p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs md:text-sm text-gray-500 font-medium">
+                  Projet en Attente d&apos;Installation
+                </p>
+                <h3 className="text-xl md:text-2xl font-bold text-[#213f5b] mt-1">
+                  {stageStats["4"] || 0}
+                </h3>
               </div>
-            </motion.div>
+              <div className="p-2 md:p-3 rounded-full bg-[#38c2de]/10 group-hover:bg-[#38c2de]/20 transition-all">
+                <BuildingOfficeIcon className="h-5 w-5 md:h-6 md:w-6 text-[#38c2de]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+
 
             {/* Search Bar & Filter Buttons */}
             <div className="mb-6 md:mb-8 bg-white p-4 rounded-xl shadow-sm border border-[#bfddf9]/30">
@@ -822,7 +836,7 @@ export default function ClientsPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {paginatedProjects.map((project) => {
-                  // Use fetched contact data if available with safeguards
+                  // Use fetched contact data if available
                   const contact = project.contactId
                     ? contacts[project.contactId]
                     : null;
@@ -838,10 +852,11 @@ export default function ClientsPage() {
                     ? contact.mailingAddress
                     : project.informationLogement?.typeDeLogement || project.codePostal || "Adresse non disponible";
                   const solution = project.solution || "Non spécifié";
-                  const typeTravaux = project.typeTravaux || "Non spécifié";
                   const stepNumber = Number(project.etape?.charAt(0)) || 1;
+                  // Add typeTravaux to be displayed in the card
+                  const typeTravaux = project.typeTravaux || "Non spécifié";
                   
-                  // Get status details
+                  // Get status details for this project
                   const statusDetail = getStatusDetails(project.status || "En attente de paiement");
 
                   return (
@@ -910,7 +925,7 @@ export default function ClientsPage() {
                           </div>
                         </div>
 
-                        {/* TYPE DE TRAVAUX Section */}
+                        {/* TYPE DE TRAVAUX Section - New section to display typeTravaux */}
                         <div className="mb-2">
                           <p className="text-xs font-bold text-[#213f5b]/70 uppercase mb-1 flex items-center">
                             <span className="w-3 h-0.5 bg-[#f7b91b] mr-1"></span>
@@ -1031,7 +1046,7 @@ export default function ClientsPage() {
                         </button>
                       </div>
                       
-                      {/* Double-click handler for opening iframe - Now uses the global iframe context */}
+                      {/* Double-click handler for opening iframe - Added from ClientsPage */}
                       <div 
                         className="absolute inset-0 cursor-pointer" 
                         onDoubleClick={() => openIframe(project._id, project.numero)}
@@ -1098,220 +1113,237 @@ export default function ClientsPage() {
           </div>
         </main>
       </div>
-
       {/* Project Detail Slide-Over Panel */}
-      {selectedProject && (
-        <motion.div 
-          className="fixed inset-0 z-40"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {/* Backdrop */}
+      <AnimatePresence>
+        {selectedProject && (
           <motion.div 
-            className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm"
+            className="fixed inset-0 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSelectedProject(null)}
-          />
-          
-          {/* Slide-over panel */}
-          <motion.div 
-            className="absolute top-0 right-0 bottom-0 w-full max-w-md bg-white shadow-xl flex flex-col"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="text-2xl font-bold text-[#213f5b]">Détails du projet</h2>
-              <button 
-                onClick={() => setSelectedProject(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+            {/* Backdrop */}
+            <motion.div 
+              className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedProject(null)}
+            />
             
-            <div className="flex-1 overflow-auto p-6">
-              {/* Project Header with Status - UPDATED */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-gray-500">#{selectedProject.numero}</span>
-                  
-                  {/* Status Badge - UPDATED */}
-                  {selectedProject.status && (
-                    <span 
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-                      style={{ 
-                        backgroundColor: getStatusDetails(selectedProject.status).bgColor,
-                        color: getStatusDetails(selectedProject.status).textColor,
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        borderColor: getStatusDetails(selectedProject.status).borderColor
-                      }}
-                    >
-                      {getStatusDetails(selectedProject.status).icon}
-                      {selectedProject.status}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="flex items-center space-x-2 mt-2">
-                  <span 
-                    className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
-                    style={{ 
-                      backgroundColor: getStatusInfo(selectedProject.etape).color,
-                      color: getStatusInfo(selectedProject.etape).textColor 
-                    }}
-                  >
-                    {getStatusInfo(selectedProject.etape).icon}
-                    {selectedProject.etape}
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-[#213f5b] mt-2">{selectedProject.typeDeLogement}</h3>
+            {/* Slide-over panel */}
+            <motion.div 
+              className="absolute top-0 right-0 bottom-0 w-full max-w-md bg-white shadow-xl flex flex-col"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            >
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 className="text-2xl font-bold text-[#213f5b]">Détails du projet</h2>
+                <button 
+                  onClick={() => setSelectedProject(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
               
-              {/* Project Details */}
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Solution</h4>
-                  <p className="text-[#213f5b]">{selectedProject.solution}</p>
-                </div>
-                
-                {/* Type de Travaux */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Type de Travaux</h4>
-                  <p className="text-[#213f5b]">{selectedProject.typeTravaux || "Non spécifié"}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Surface chauffée</h4>
-                  <p className="text-[#213f5b]">{selectedProject.surfaceChauffee} m²</p>
-                </div>
-                
-                {/* Timeline using real data - enhanced styling */}
-                <div className="mt-8">
-                  <h4 className="text-sm font-medium text-gray-500 mb-4">Progression du projet</h4>
-                  
-                  <div className="relative">
-                    <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-[#4facfe]/30 via-[#43e97b]/30 to-[#1d6fa5]/30"></div>
+              <div className="flex-1 overflow-auto p-6">
+                {/* Project Header with Status - UPDATED */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-500">#{selectedProject.numero}</span>
                     
-                    <div className="space-y-6">
-                      {steps.map((step, index) => {
-                        const stepNumber = index + 1;
-                        let bgColor, icon;
-                        if (stepNumber < currentStep) {
-                          // Completed steps
-                          bgColor = "bg-gradient-to-r from-[#43e97b] to-[#38f9d7]";
-                          icon = (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          );
-                        } else if (stepNumber === currentStep) {
-                          // Current step
-                          bgColor = "bg-gradient-to-r from-[#4facfe] to-[#4bb8fe]";
-                          icon = (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          );
-                        } else {
-                          // Pending steps
-                          bgColor = "bg-gray-200";
-                          icon = <span className="text-xs font-medium text-gray-500">{stepNumber}</span>;
-                        }
-                        return (
-                          <div className="flex" key={index}>
-                            <div className={`flex-shrink-0 h-8 w-8 rounded-full ${bgColor} flex items-center justify-center relative z-10 shadow-sm`}>
-                              {icon}
+                    {/* Status Badge - UPDATED */}
+                    {selectedProject.status && (
+                      <span 
+                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                        style={{ 
+                          backgroundColor: getStatusDetails(selectedProject.status).bgColor,
+                          color: getStatusDetails(selectedProject.status).textColor,
+                          borderWidth: '1px',
+                          borderStyle: 'solid',
+                          borderColor: getStatusDetails(selectedProject.status).borderColor
+                        }}
+                      >
+                        {getStatusDetails(selectedProject.status).icon}
+                        {selectedProject.status}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 mt-2">
+                    <span 
+                      className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
+                      style={{ 
+                        backgroundColor: getStatusInfo(selectedProject.etape).color,
+                        color: getStatusInfo(selectedProject.etape).textColor 
+                      }}
+                    >
+                      {getStatusInfo(selectedProject.etape).icon}
+                      {selectedProject.etape}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold text-[#213f5b] mt-2">{selectedProject.typeDeLogement}</h3>
+                </div>
+                
+                {/* Project Details */}
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-2">Solution</h4>
+                    <p className="text-[#213f5b]">{selectedProject.solution}</p>
+                  </div>
+                  
+                  {/* Add Type de Travaux to detail view */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-2">Type de Travaux</h4>
+                    <p className="text-[#213f5b]">{selectedProject.typeTravaux || "Non spécifié"}</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-2">Surface chauffée</h4>
+                    <p className="text-[#213f5b]">{selectedProject.surfaceChauffee} m²</p>
+                  </div>
+                  
+                  {/* Timeline using real data - enhanced styling */}
+                  <div className="mt-8">
+                    <h4 className="text-sm font-medium text-gray-500 mb-4">Progression du projet</h4>
+                    
+                    <div className="relative">
+                      <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-[#4facfe]/30 via-[#43e97b]/30 to-[#1d6fa5]/30"></div>
+                      
+                      <div className="space-y-6">
+                        {steps.map((step, index) => {
+                          const stepNumber = index + 1;
+                          let bgColor, icon;
+                          if (stepNumber < currentStep) {
+                            // Completed steps
+                            bgColor = "bg-gradient-to-r from-[#43e97b] to-[#38f9d7]";
+                            icon = (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            );
+                          } else if (stepNumber === currentStep) {
+                            // Current step
+                            bgColor = "bg-gradient-to-r from-[#4facfe] to-[#4bb8fe]";
+                            icon = (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            );
+                          } else {
+                            // Pending steps
+                            bgColor = "bg-gray-200";
+                            icon = <span className="text-xs font-medium text-gray-500">{stepNumber}</span>;
+                          }
+                          return (
+                            <div className="flex" key={index}>
+                              <div className={`flex-shrink-0 h-8 w-8 rounded-full ${bgColor} flex items-center justify-center relative z-10 shadow-sm`}>
+                                {icon}
+                              </div>
+                              <div className="ml-4">
+                                <h5 className={`text-sm font-medium ${stepNumber <= currentStep ? "text-[#213f5b]" : "text-gray-400"}`}>{step}</h5>
+                                {/* Optionally, add dates for each step if available */}
+                                {stepNumber === currentStep && (
+                                  <p className="text-xs text-[#4facfe] mt-1">En cours</p>
+                                )}
+                              </div>
                             </div>
-                            <div className="ml-4">
-                              <h5 className={`text-sm font-medium ${stepNumber <= currentStep ? "text-[#213f5b]" : "text-gray-400"}`}>{step}</h5>
-                              {/* Optionally, add dates for each step if available */}
-                              {stepNumber === currentStep && (
-                                <p className="text-xs text-[#4facfe] mt-1">En cours</p>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="p-6 border-t border-gray-100">
-              {/* Status section at bottom - NEW */}
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Status du dossier</h4>
-                <div 
-                  className="p-3 rounded-lg flex items-center justify-between"
-                  style={{ 
-                    backgroundColor: getStatusDetails(selectedProject.status || "En attente de paiement").bgColor,
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: getStatusDetails(selectedProject.status || "En attente de paiement").borderColor
-                  }}
-                >
-                  <div className="flex items-center">
-                    {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
-                    <span 
-                      className="ml-2 font-medium"
-                      style={{ color: getStatusDetails(selectedProject.status || "En attente de paiement").textColor }}
-                    >
-                      {selectedProject.status || "En attente de paiement"}
-                    </span>
-                  </div>
-                  
+              
+              <div className="p-6 border-t border-gray-100">
+                {/* Status section at bottom - NEW */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Status du dossier</h4>
                   <div 
-                    className="h-8 w-8 rounded-full flex items-center justify-center"
+                    className="p-3 rounded-lg flex items-center justify-between"
                     style={{ 
-                      backgroundColor: `${getStatusDetails(selectedProject.status || "En attente de paiement").textColor}20`
+                      backgroundColor: getStatusDetails(selectedProject.status || "En attente de paiement").bgColor,
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
+                      borderColor: getStatusDetails(selectedProject.status || "En attente de paiement").borderColor
                     }}
                   >
-                    {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
+                    <div className="flex items-center">
+                      {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
+                      <span 
+                        className="ml-2 font-medium"
+                        style={{ color: getStatusDetails(selectedProject.status || "En attente de paiement").textColor }}
+                      >
+                        {selectedProject.status || "En attente de paiement"}
+                      </span>
+                    </div>
+                    
+                    <div 
+                      className="h-8 w-8 rounded-full flex items-center justify-center"
+                      style={{ 
+                        backgroundColor: `${getStatusDetails(selectedProject.status || "En attente de paiement").textColor}20`
+                      }}
+                    >
+                      {getStatusDetails(selectedProject.status || "En attente de paiement").icon}
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Button options */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Open in floating window */}
-                <button 
-                  onClick={() => {
-                    openIframe(selectedProject._id, selectedProject.numero);
-                    setSelectedProject(null); // Close the detail panel
-                  }}
-                  className="py-3 rounded-xl text-white font-medium relative overflow-hidden bg-gradient-to-r from-[#38c2de] to-[#1d6fa5] hover:opacity-90 transition-all"
-                >
-                  <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
-                  Ouvrir Fenêtre
-                </button>
                 
-                {/* Voir tous les details */}
-                <a
-                  href={`/dashboard/sales/contacts-organizations/${selectedProject._id}`}
-                  className="block"
-                >
-                  <button
-                    className="w-full py-3 rounded-xl text-white font-medium relative overflow-hidden bg-gradient-to-r from-[#213f5b] to-[#1a324a] hover:opacity-90 transition-all"
+                {/* Button options - UPDATED from ClientsPage */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Open in floating window */}
+                  <button 
+                    onClick={() => {
+                      openIframe(selectedProject._id, selectedProject.numero);
+                      setSelectedProject(null); // Close the detail panel
+                    }}
+                    className="py-3 rounded-xl text-white font-medium relative overflow-hidden bg-gradient-to-r from-[#38c2de] to-[#1d6fa5] hover:opacity-90 transition-all"
                   >
                     <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
-                    Voir tous les details
+                    Ouvrir Fenêtre
                   </button>
-                </a>
-
+                  
+                  {/* Voir tous les details */}
+                  <a
+                    href={`/dashboard/sales/leads/${selectedProject._id}`}
+                    className="block"
+                  >
+                    <button
+                      className="w-full py-3 rounded-xl text-white font-medium relative overflow-hidden bg-gradient-to-r from-[#213f5b] to-[#1a324a] hover:opacity-90 transition-all"
+                    >
+                      <div className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
+                      Voir tous les details
+                    </button>
+                  </a>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* Add some CSS for animations */}
+      <style jsx global>{`
+        .shimmer {
+          animation: shimmer 2s infinite linear;
+          background-size: 1000px 100%;
+        }
+        
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </div>
   );
 }
