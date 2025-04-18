@@ -3,6 +3,7 @@ import React, { ReactNode } from "react";
 import { Sidebar } from "@/components/ui/Sidebar";
 import type { Metadata } from "next";
 import ProtectedPage from "@/components/ProtectedPage";
+import { GlobalIFrameProvider } from "./contexts/GlobalIFrameContext";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -45,10 +46,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <ProtectedPage allowedRoles={allowedRoles}>
+      <GlobalIFrameProvider>
       <div className="flex">
         <Sidebar role="Project / Installation Manager" />
         <main className="flex-1">{children}</main>
       </div>
+      </GlobalIFrameProvider>
     </ProtectedPage>
   );
 }

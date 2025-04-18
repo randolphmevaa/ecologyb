@@ -143,6 +143,7 @@ const permissionsData: Record<RoleKey, string[]> = {
     "accès_chat",
     "agenda",
     "gestion_tâches",
+    "accès_documents"
   ],
   "Customer Support / Service Representative": [
     "créer_client",
@@ -190,6 +191,7 @@ const permissionDescriptions: Record<string, string> = {
   "applications": "Accès aux applications externes (Gmail, Drive, Whatsapp, etc.)",
   "gestion_tâches": "Gestion des tâches assignées",
   "accès_chat": "Accès au système de messagerie interne",
+  "accès_documents": "Accès aux documents et à la bibliothèque de ressources",
   
   // Régie (Project Manager) specific permissions
   "accès_clients": "Accès aux données clients",

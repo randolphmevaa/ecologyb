@@ -121,14 +121,14 @@ export function Sidebar({ role }) {
   } else if (role === "Project / Installation Manager") {
     navigation = [
       { name: "Accueil", href: "/dashboard/pm", icon: HomeIcon },
-      { name: "Projets", href: "/dashboard/pm/projects", icon: FolderIcon },
+      // { name: "Clients", href: "/dashboard/pm/contacts-organizations", icon: UserCircleIcon },
+      { name: "Clients", href: "/dashboard/pm/projects", icon: UserCircleIcon },
       { name: "Tâches", href: "/dashboard/pm/tasks", icon: ClipboardDocumentCheckIcon },
-      { name: "Clients", href: "/dashboard/pm/contacts-organizations", icon: UserCircleIcon },
       // { name: "Service Après-Vente", href: "/dashboard/pm/tickets", icon: LifebuoyIcon },
       { name: "Agenda", href: "/dashboard/pm/calendar", icon: CalendarIcon },
       { name: "Chat", href: "/dashboard/pm/emails", icon: EnvelopeIcon },
       { name: "Facturation / Paiements", href: "/dashboard/pm/billing", icon: CreditCardIcon },
-      { name: "Rapports / Statistiques", href: "/dashboard/pm/report", icon: DocumentIcon },
+      { name: "Rapports / Statistiques", href: "/dashboard/pm/report", icon: ChartBarIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/pm/documents", icon: DocumentIcon },
       { name: "Service Après-Vente", href: "/dashboard/pm/support", icon: LifebuoyIcon },
       {
@@ -152,11 +152,11 @@ export function Sidebar({ role }) {
   } else if (role === "Technician / Installer") {
     navigation = [
       { name: "Accueil", href: "/dashboard/technician", icon: HomeIcon },
-      { name: "Tâches / Jobs", href: "/dashboard/technician/tasks", icon: ClipboardDocumentCheckIcon },
+      { name: "Tâches / Jobs", href: "/dashboard/technician/projects", icon: ClipboardDocumentCheckIcon },
       { name: "Clients", href: "/dashboard/technician/contacts-organizations", icon: UserCircleIcon },
-      { name: "Chat", href: "/dashboard/technician/chat", icon: ClipboardDocumentCheckIcon },
+      { name: "Chat", href: "/dashboard/technician/chat", icon: EnvelopeIcon },
       { name: "Agenda", href: "/dashboard/technician/calendar", icon: CalendarIcon },
-      { name: "Projets", href: "/dashboard/technician/projects", icon: FolderIcon },
+      // { name: "Projets", href: "/dashboard/technician/projects", icon: FolderIcon },
       { name: "Documents / Bibliothèque", href: "/dashboard/technician/documents", icon: DocumentIcon },
     ];
   } else if (role === "Customer Support / Service Representative") {
